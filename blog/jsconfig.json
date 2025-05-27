@@ -1,9 +1,9 @@
-{
+ç{
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/components/*": ["components/*"],
-      "@/data/*": ["data/*"],
+      "@/content/*": ["content/*"],
       "@/layouts/*": ["layouts/*"],
       "@/css/*": ["css/*"],
       "contentlayer/generated": ["./.contentlayer/generated"]
