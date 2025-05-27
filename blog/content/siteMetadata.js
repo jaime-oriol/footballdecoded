@@ -1,139 +1,170 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
+  // === IDENTIDAD PROFESIONAL FOOTBALLDECODED ===
   title: 'FootballDecoded',
-  author: 'Jaime Oriol Goicoechea',
+  author: 'Jaime Oriol',
   headerTitle: 'FootballDecoded',
-  description: 'Análisis táctico y técnico del fútbol de élite desde la estructura, los datos y la ingeniería aplicada. Portfolio especializado en la intersección entre táctica, métricas cuantitativas y metodologías avanzadas de análisis futbolístico.',
+  description: 'Portfolio técnico y analítico de referencia en fútbol profesional. Análisis táctico avanzado, métricas cuantitativas y scouting funcional orientado a la integración en cuerpos técnicos de clubes de élite europeos.',
   language: 'es-ES',
-  theme: 'system', // system, dark or light
-  siteUrl: 'https://footballdecoded.com', // Actualizar cuando tengas el dominio definitivo
-  siteRepo: 'https://github.com/jaime-oriol/footballdecoded', // Repositorio público del proyecto
-  siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
-  socialBanner: `${process.env.BASE_PATH || ''}/static/images/footballdecoded-social-banner.png`,
-  mastodon: '',
-  email: 'joriolgo@gmail.com',
-  github: 'https://github.com/jaime-oriol',
-  x: 'https://x.com/JaimeOriol_',
-  twitter: 'https://twitter.com/JaimeOriol_', // Mantener ambos por compatibilidad
-  facebook: '',
-  youtube: '', // Preparado para futuras visualizaciones en video
-  linkedin: 'https://www.linkedin.com/in/jaime-oriol-goicoechea-801313276/',
-  threads: '',
-  instagram: 'https://www.instagram.com/orio1_/',
-  medium: '', // Preparado para cross-posting de artículos técnicos
-  bluesky: '',
   locale: 'es-ES',
 
-  // Configuración de navegación
-  stickyNav: true, // Navegación fija para mejor experiencia en análisis largos
+  // === CONFIGURACIÓN TÉCNICA PROFESIONAL ===
+  theme: 'system', // system, dark or light
+  siteUrl: 'https://footballdecoded.com',
+  siteRepo: 'https://github.com/jaime-oriol/FootballDecoded',
+  siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
+  socialBanner: `${process.env.BASE_PATH || ''}/static/images/football-decoded-banner.jpg`,
+  mastodon: '',
 
-  // Configuración de analytics para tracking profesional
+  // === SEO TÉCNICO ESPECIALIZADO ===
+  keywords: [
+    'análisis táctico fútbol',
+    'métricas avanzadas fútbol',
+    'scouting funcional',
+    'estructuras tácticas',
+    'visualización datos deportivos',
+    'análisis cuantitativo fútbol',
+    'tactical analysis',
+    'football analytics',
+    'sports data science',
+    'football scouting',
+    'xG metrics',
+    'PPDA analysis',
+    'football tactical structures'
+  ],
+
+  // === CONFIGURACIÓN DE ANALYTICS PROFESIONAL ===
   analytics: {
-    // Umami Analytics - Recomendado para privacidad y análisis detallado
+    // Umami configurado y activo
     umamiAnalytics: {
-      umamiWebsiteId: process.env.NEXT_UMAMI_ID,
-      // src: 'https://eu.umami.is/script.js' // Si usas servidor europeo
+      // Recomendado para portfolio profesional (privacidad)
+      umamiWebsiteId: '00cdd21e-95b5-41a4-b2c1-aa12fd3fde2b',
+      umamiSrc: 'https://cloud.umami.is/script.js'
     },
-
-    // Google Analytics - Alternativa para análisis más profundo
-    // googleAnalytics: {
-    //   googleAnalyticsId: process.env.NEXT_GA_ID, // e.g. G-XXXXXXX
-    // },
-
-    // Plausible Analytics - Alternativa centrada en privacidad
-    // plausibleAnalytics: {
-    //   plausibleDataDomain: 'footballdecoded.com',
-    //   src: 'https://plausible.io/js/script.js'
-    // },
-
-    // Simple Analytics - Opción minimalista
-    // simpleAnalytics: {},
-
-    // PostHog - Para análisis de comportamiento avanzado
-    // posthogAnalytics: {
-    //   posthogProjectApiKey: process.env.NEXT_POSTHOG_KEY,
-    // },
+    // Otras opciones disponibles pero no activas
+    plausibleAnalytics: {
+      plausibleDataDomain: '', // e.g. footballdecoded.com
+    },
+    simpleAnalytics: {},
+    posthogAnalytics: {
+      posthogProjectApiKey: '', // e.g. 123e4567-e89b-12d3-a456-426614174000
+    },
+    googleAnalytics: {
+      googleAnalyticsId: '', // e.g. G-XXXXXXX
+    },
   },
 
-  // Configuración de newsletter para audiencia técnica
-  newsletter: {
-    // Buttondown - Recomendado para contenido técnico y análisis
-    // provider: 'buttondown',
-
-    // Mailchimp - Para audiencia más amplia
-    // provider: 'mailchimp',
-
-    // ConvertKit - Para funnel de contenido profesional
-    // provider: 'convertkit',
-
-    // Klaviyo - Para segmentación avanzada
-    // provider: 'klaviyo',
-
-    // EmailOctopus - Alternativa económica
-    // provider: 'emailoctopus',
-
-    // Beehive - Para creators de contenido técnico
-    // provider: 'beehiiv',
-
-    provider: '', // Activar cuando esté listo para captar audiencia
-  },
-
-  // Sistema de comentarios profesional
+  // === SISTEMA DE COMENTARIOS TÉCNICO ===
   comments: {
-    provider: 'giscus', // GitHub Discussions - ideal para audiencia técnica
+    // GitHub Discussions - Ideal para audiencia técnica
     giscusConfig: {
-      // Configuración para GitHub Discussions
-      // Visita https://giscus.app/ para configurar
-      repo: process.env.NEXT_PUBLIC_GISCUS_REPO, // 'jaime-oriol/footballdecoded'
-      repositoryId: process.env.NEXT_PUBLIC_GISCUS_REPOSITORY_ID,
-      category: process.env.NEXT_PUBLIC_GISCUS_CATEGORY, // 'General' o 'Announcements'
-      categoryId: process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID,
-      mapping: 'pathname', // Mapeo por URL - más estable para SEO
-      reactions: '1', // Habilitar reacciones para engagement
-      metadata: '0', // No enviar metadata por privacidad
-      theme: 'light', // Tema por defecto
-      darkTheme: 'transparent_dark', // Tema para modo oscuro
-      themeURL: '', // URL de tema personalizado si se necesita
-      lang: 'es', // Idioma de la interfaz
+      repo: 'jaime-oriol/FootballDecoded',
+      repositoryId: 'R_kgDOOxLT5g',
+      category: 'General',
+      categoryId: 'DIC_kwDOOxLT5s4Cqo_m',
+      mapping: 'pathname',
+      reactions: '1',
+      metadata: '0',
+      inputPosition: 'bottom',
+      theme: 'preferred_color_scheme',
+      lang: 'es',
+      loading: 'lazy',
     },
-
-    // Utterances - Alternativa basada en GitHub Issues
-    // utterancesConfig: {
-    //   repo: process.env.NEXT_PUBLIC_UTTERANCES_REPO,
-    //   issueTerm: 'pathname',
-    //   label: 'Comment 💬',
-    //   theme: 'github-light',
-    //   darkTheme: 'github-dark',
-    // },
-
-    // Disqus - Para audiencia más general
-    // disqusConfig: {
-    //   shortname: process.env.NEXT_PUBLIC_DISQUS_SHORTNAME,
-    // },
   },
 
-  // Sistema de búsqueda
+  // === CONFIGURACIÓN DE BÚSQUEDA TÉCNICA ===
   search: {
-    provider: 'kbar', // Búsqueda local con comando ⌘+K
+    provider: 'kbar', // kbar or algolia
     kbarConfig: {
-      searchDocumentsPath: `${process.env.BASE_PATH || ''}/search.json`,
-      // Configuración adicional para búsqueda avanzada
-      // defaultActions: definidos en SearchProvider personalizado
-      // onSearchDocumentsLoad: función personalizada para procesamiento
+      searchDocumentsPath: `${process.env.BASE_PATH || ''}/search.json`, // path to load documents to search
+      // Términos técnicos priorizados para búsqueda
+      defaultActions: [
+        {
+          id: 'tactical-structures',
+          name: 'Tactical Structures',
+          keywords: 'táctica estructuras sistemas formaciones',
+          section: 'Análisis Técnico',
+        },
+        {
+          id: 'functional-scouting',
+          name: 'Functional Scouting',
+          keywords: 'scouting funcional perfiles jugadores',
+          section: 'Análisis Técnico',
+        },
+        {
+          id: 'tactical-metrics',
+          name: 'Tactical Metrics Lab',
+          keywords: 'métricas avanzadas datos programación',
+          section: 'Análisis Técnico',
+        }
+      ]
     },
-
-    // Algolia DocSearch - Para búsqueda más avanzada cuando crezca el contenido
-    // provider: 'algolia',
-    // algoliaConfig: {
-    //   appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-    //   apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
-    //   indexName: 'footballdecoded',
-    //   contextualSearch: true,
-    //   externalUrlRegex: 'external\\.com|domain\\.com',
-    //   searchParameters: {},
-    //   searchPagePath: 'search',
-    // },
+    algoliaConfig: {
+      appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+      apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY,
+      indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX_NAME,
+    },
   },
+
+  // === CONFIGURACIÓN DE NEWSLETTER PROFESIONAL ===
+  newsletter: {
+    // Recomendado: ConvertKit para audiencia técnica profesional
+    provider: 'convertkit',
+  },
+
+  // === CONFIGURACIÓN DE CONTACTO EMPRESARIAL ===
+  contactForm: {
+    provider: 'netlify', // netlify, formspree, or custom
+    // Configuración específica para consultas profesionales
+    subjects: [
+      'Colaboración Técnica',
+      'Oportunidad Laboral',
+      'Consultoría Analítica',
+      'Proyecto Conjunto',
+      'Otro'
+    ]
+  },
+
+  // === OPEN GRAPH PROFESIONAL ===
+  openGraph: {
+    type: 'website',
+    site_name: 'FootballDecoded',
+    title: 'FootballDecoded - Análisis Táctico y Métricas Avanzadas',
+    description: 'Portfolio técnico especializado en análisis táctico, scouting funcional y métricas avanzadas de fútbol profesional.',
+    images: [
+      {
+        url: `${process.env.BASE_PATH || ''}/static/images/football-decoded-og.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'FootballDecoded - Análisis Técnico de Fútbol Profesional'
+      }
+    ]
+  },
+
+  // === TWITTER CARDS TÉCNICO ===
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FootballDecoded - Análisis Táctico Profesional',
+    description: 'Portfolio técnico: análisis táctico, scouting funcional y métricas avanzadas para cuerpos técnicos de élite.',
+    images: [`${process.env.BASE_PATH || ''}/static/images/football-decoded-twitter.jpg`],
+  },
+
+  // === STRUCTURED DATA PROFESIONAL ===
+  structuredData: {
+    type: 'ProfessionalService',
+    name: 'FootballDecoded',
+    description: 'Servicios de análisis táctico y métricas avanzadas para fútbol profesional',
+    serviceType: 'Análisis Deportivo Profesional',
+    areaServed: 'Europa',
+    availableLanguage: ['es', 'en'],
+    knowsAbout: [
+      'Análisis Táctico',
+      'Scouting Funcional',
+      'Métricas Avanzadas',
+      'Visualización de Datos Deportivos',
+      'Programación Aplicada al Fútbol'
+    ]
+  }
 }
 
 module.exports = siteMetadata
