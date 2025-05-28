@@ -16,7 +16,7 @@ export default function Page() {
     <>
       {/* Galería de fotos a pantalla completa */}
       <PhotoCarousel />
-      
+
       {/* Nueva sección biográfica */}
       <BioSection />
     </>
