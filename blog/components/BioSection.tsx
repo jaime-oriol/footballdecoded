@@ -1,10 +1,15 @@
 const BioSection = () => {
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <div className="mx-auto max-w-4xl px-6 py-16 sm:px-8 lg:px-12">
+    <div className="bg-white dark:bg-gray-950 relative">
+      {/* Línea de separación sutil */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent"></div>
+      
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 xl:max-w-5xl xl:px-0">
         <div className="prose prose-lg dark:prose-invert max-w-none">
-          <h2 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 dark:text-gray-100 mb-8">
+          <h2 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 dark:text-gray-100 mb-8 relative">
             Sobre mí
+            {/* Pequeño acento visual */}
+            <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-primary-500 rounded-full"></div>
           </h2>
           
           <div className="space-y-6 text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -28,9 +33,11 @@ const BioSection = () => {
               Cuando veo fútbol, no veo solo el balón: veo estructuras, decisiones, intenciones. Veo patrones que se repiten... hasta que alguien los rompe. Y siempre me hago la misma pregunta: <strong>¿se puede medir esto? ¿Se puede explicar?</strong>
             </p>
             
-            <p>
-              <strong className="text-primary-600 dark:text-primary-400">FootballDecoded</strong> nació de ahí. No es un blog de opinión. Es un espacio donde intento traducir el juego a datos, y los datos a juego. Combinar lo que se ve con lo que se puede probar. No elegir entre intuición y estadística, sino unirlas.
-            </p>
+            <div className="relative pl-6 border-l-2 border-primary-500/20 bg-gray-50/50 dark:bg-gray-800/30 py-4 pr-4 rounded-r-lg">
+              <p className="mb-0">
+                <strong className="text-primary-600 dark:text-primary-400">FootballDecoded</strong> nació de ahí. No es un blog de opinión. Es un espacio donde intento traducir el juego a datos, y los datos a juego. Combinar lo que se ve con lo que se puede probar. No elegir entre intuición y estadística, sino unirlas.
+              </p>
+            </div>
             
             <p>
               Estudio un doble grado en <em>Business Analytics e Ingeniería Informática</em>, porque creo que el futuro del análisis pasa justo por ahí: por saber de fútbol, pero también de datos, de visualización, de cómo hacer que la información cuente algo útil para quien toma decisiones.
@@ -40,8 +47,10 @@ const BioSection = () => {
               Este blog es mi laboratorio. Aquí encontrarás análisis tácticos serios, visualizaciones que cuentan cosas y muchas preguntas abiertas. Porque si hay algo que tengo claro es que las mejores respuestas no nacen del dogma.
             </p>
             
-            <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            <p className="text-lg font-medium text-gray-900 dark:text-gray-100 relative">
               Nacen de observar, medir, comparar. Y, sobre todo, de la curiosidad de seguir preguntando.
+              {/* Pequeño detalle visual al final */}
+              <span className="inline-block ml-2 w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
             </p>
           </div>
         </div>
