@@ -4,6 +4,7 @@ import AuthorLayout from '@/layouts/AuthorLayout'
 import { coreContent } from 'pliny/utils/contentlayer'
 import { genPageMetadata } from 'app/seo'
 import PhotoCarousel from '@/components/PhotoCarousel'
+import BioSection from '@/components/BioSection'
 
 export const metadata = genPageMetadata({ title: 'About' })
 
@@ -16,10 +17,8 @@ export default function Page() {
       {/* Galería de fotos a pantalla completa */}
       <PhotoCarousel />
       
-      {/* Contenido original del about */}
-      <AuthorLayout content={mainContent}>
-        <MDXLayoutRenderer code={author.body.code} />
-      </AuthorLayout>
+      {/* Nueva sección biográfica */}
+      <BioSection />
     </>
   )
 }
