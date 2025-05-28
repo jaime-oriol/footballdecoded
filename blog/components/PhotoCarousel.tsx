@@ -62,7 +62,7 @@ const PhotoCarousel = () => {
     <div className="relative w-full bg-gray-50 dark:bg-gray-900">
       {/* Contenedor principal del carrusel */}
       <div 
-        className="relative h-80 md:h-96 lg:h-[28rem] overflow-hidden"
+        className="relative h-96 md:h-[28rem] lg:h-[32rem] overflow-hidden"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -124,13 +124,6 @@ const PhotoCarousel = () => {
             aria-label={`Ir a la imagen ${index + 1}`}
           />
         ))}
-      </div>
-
-      {/* Información de la imagen actual (opcional) */}
-      <div className="absolute bottom-16 left-4 right-4 text-center">
-        <p className="text-white text-sm bg-black/50 px-3 py-1 rounded-lg backdrop-blur-sm">
-          {photos[currentIndex].alt}
-        </p>
       </div>
     </div>
   )
