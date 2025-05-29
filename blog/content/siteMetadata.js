@@ -159,7 +159,7 @@ const siteMetadata = {
   },
 
   // === TWITTER CARDS TÉCNICO ===
-  twitter: {
+  twitterCard: {
     card: 'summary_large_image',
     title: 'FootballDecoded - Análisis Táctico Profesional',
     description:
