@@ -40,10 +40,10 @@ export default function ArticleCard({ post }: ArticleCardProps) {
   const displayImage = image || '/static/images/default-article.jpg'
 
   return (
-    <article className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-      <Link href={`/blog/${slug}`} className="block">
-        {/* Imagen - aspecto reducido para equilibrio */}
-        <div className="relative aspect-[16/8] overflow-hidden">
+    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <Link href={`/blog/${slug}`} className="flex h-full flex-col">
+        {/* Imagen - aspecto 16:9 optimizado para grid */}
+        <div className="relative aspect-[16/9] overflow-hidden">
           <Image
             src={displayImage}
             alt={title}
@@ -54,31 +54,34 @@ export default function ArticleCard({ post }: ArticleCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {/* [TÍTULO] → en negrita */}
-          <h2 className="group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-3 line-clamp-2 text-xl leading-tight font-bold text-gray-900 transition-colors dark:text-gray-100">
-            {title}
-          </h2>
-
-          {/* [SECCIÓN] → pill (solo una, sin tags extra ni etiquetas múltiples) */}
+        {/* Content - flexible para ocupar el resto del espacio */}
+        <div className="flex flex-1 flex-col p-5">
+          {/* SECCIÓN como pill */}
           {section && (
-            <div className="mb-4">
+            <div className="mb-3">
               <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getSectionColor(section)}`}
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getSectionColor(section)}`}
               >
                 {getSectionLabel(section)}
               </span>
             </div>
           )}
 
-          {/* Layout inferior: [LEER ANÁLISIS COMPLETO] a la izquierda, [FECHA] a la derecha */}
-          <div className="flex items-center justify-between">
-            {/* [Leer análisis completo →] → siempre debajo, alineado a la izquierda */}
-            <div className="text-primary-600 group-hover:text-primary-500 dark:text-primary-400 dark:group-hover:text-primary-300 flex items-center text-sm font-medium transition-colors">
-              <span>Leer análisis completo</span>
+          {/* TÍTULO - limitado a 2 líneas */}
+          <h2 className="group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-4 line-clamp-2 text-lg leading-tight font-bold text-gray-900 transition-colors dark:text-gray-100">
+            {title}
+          </h2>
+
+          {/* Spacer flexible para empujar el footer hacia abajo */}
+          <div className="flex-1" />
+
+          {/* Footer - siempre al final */}
+          <div className="flex items-center justify-between pt-4">
+            {/* LEER ANÁLISIS COMPLETO */}
+            <div className="text-primary-600 group-hover:text-primary-500 dark:text-primary-400 dark:group-hover:text-primary-300 flex items-center text-sm font-medium transition-all duration-200">
+              <span>Leer análisis</span>
               <svg
-                className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                className="ml-1.5 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -90,10 +93,10 @@ export default function ArticleCard({ post }: ArticleCardProps) {
               </svg>
             </div>
 
-            {/* [Fecha] → abajo a la derecha */}
+            {/* FECHA */}
             <time
               dateTime={date}
-              className="flex-shrink-0 text-sm font-medium text-gray-500 dark:text-gray-400"
+              className="flex-shrink-0 text-sm text-gray-500 dark:text-gray-400"
             >
               {formatDate(date, siteMetadata.locale)}
             </time>
