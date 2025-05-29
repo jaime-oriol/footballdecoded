@@ -1,12 +1,65 @@
-import { genPageMetadata } from 'app/seo'
+'use client'
 
-export const metadata = genPageMetadata({
-  title: 'Contacto - FootballDecoded',
-  description:
-    'Contacta con FootballDecoded para colaboraciones técnicas, consultas analíticas y oportunidades profesionales en cuerpos técnicos de fútbol.',
-})
+import { useState } from 'react'
+import { genPageMetadata } from 'app/seo'
+import emailjs from '@emailjs/browser'
 
 export default function Contact() {
+  const [formData, setFormData] = useState({
+    from_email: '',
+    subject: '',
+    organization: '',
+    message: '',
+    from_name: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState('')
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitStatus('')
+
+    try {
+      const templateParams = {
+        from_name: formData.organization || 'Usuario anónimo',
+        from_email: formData.from_email,
+        subject: formData.subject,
+        organization: formData.organization,
+        message: formData.message,
+        reply_to: formData.from_email,
+        to_name: 'Jaime Oriol',
+        to_email: 'joriolgo@gmail.com'
+      }
+
+      const result = await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+        templateParams,
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
+      )
+
+      if (result.status === 200) {
+        setSubmitStatus('success')
+        setFormData({ from_email: '', subject: '', organization: '', message: '', from_name: '' })
+      } else {
+        setSubmitStatus('error')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -20,9 +73,8 @@ export default function Contact() {
         </div>
 
         <div className="pt-8">
-          <div className="mx-auto max-w-2xl">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0">
             <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-              {/* Información de contacto */}
               <div className="mb-8">
                 <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Hablemos de fútbol y análisis
@@ -49,19 +101,54 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Formulario de contacto */}
-              <form className="space-y-6">
+              {submitStatus === 'success' && (
+                <div className="mb-6 rounded-lg bg-green-50 p-4 border border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        ¡Mensaje enviado correctamente! Te responderé en las próximas 24-48 horas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div className="mb-6 rounded-lg bg-red-50 p-4 border border-red-200 dark:bg-red-900/20 dark:border-red-800">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                        Error al enviar el mensaje. Por favor, inténtalo de nuevo o contáctame directamente en joriolgo@gmail.com
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="from_email"
                     className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
                   >
                     Email *
                   </label>
                   <input
                     type="email"
-                    id="email"
-                    name="email"
+                    id="from_email"
+                    name="from_email"
+                    value={formData.from_email}
+                    onChange={handleChange}
                     required
                     className="focus:ring-primary-500 focus:border-primary-500 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                     placeholder="tu@email.com"
@@ -78,15 +165,17 @@ export default function Contact() {
                   <select
                     id="subject"
                     name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
                     required
                     className="focus:ring-primary-500 focus:border-primary-500 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                   >
                     <option value="">Selecciona una opción</option>
-                    <option value="colaboracion">Colaboración Técnica</option>
-                    <option value="oportunidad">Oportunidad Laboral</option>
-                    <option value="consultoria">Consultoría Analítica</option>
-                    <option value="proyecto">Proyecto Conjunto</option>
-                    <option value="otro">Otro</option>
+                    <option value="Colaboración Técnica">Colaboración Técnica</option>
+                    <option value="Oportunidad Laboral">Oportunidad Laboral</option>
+                    <option value="Consultoría Analítica">Consultoría Analítica</option>
+                    <option value="Proyecto Conjunto">Proyecto Conjunto</option>
+                    <option value="Otro">Otro</option>
                   </select>
                 </div>
 
@@ -95,14 +184,16 @@ export default function Contact() {
                     htmlFor="organization"
                     className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
                   >
-                    Organización / Club
+                    Organización / Club / Persona
                   </label>
                   <input
                     type="text"
                     id="organization"
                     name="organization"
+                    value={formData.organization}
+                    onChange={handleChange}
                     className="focus:ring-primary-500 focus:border-primary-500 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Nombre del club o organización"
+                    placeholder="Nombre del club, empresa o tu nombre personal"
                   />
                 </div>
 
@@ -117,6 +208,8 @@ export default function Contact() {
                     id="message"
                     name="message"
                     rows={6}
+                    value={formData.message}
+                    onChange={handleChange}
                     required
                     className="focus:ring-primary-500 focus:border-primary-500 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                     placeholder="Describe tu consulta, proyecto o propuesta..."
@@ -126,14 +219,24 @@ export default function Contact() {
                 <div>
                   <button
                     type="submit"
-                    className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 flex w-full justify-center rounded-md border border-transparent px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                    disabled={isSubmitting}
+                    className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed flex w-full justify-center items-center rounded-md border border-transparent px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
                   >
-                    Enviar mensaje
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Enviando...
+                      </>
+                    ) : (
+                      'Enviar mensaje'
+                    )}
                   </button>
                 </div>
               </form>
 
-              {/* Información adicional */}
               <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-700">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -146,7 +249,13 @@ export default function Contact() {
                     >
                       GitHub
                     </a>{' '}
-                    para ver mis proyectos técnicos.
+                    para ver mis proyectos técnicos o contactarme directamente en{' '}
+                    <a
+                      href="mailto:joriolgo@gmail.com"
+                      className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                    >
+                      joriolgo@gmail.com
+                    </a>
                   </p>
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
                     Respondo normalmente en 24-48 horas.
