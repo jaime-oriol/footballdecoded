@@ -1,13 +1,16 @@
 import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
 import { allBlogs } from 'contentlayer/generated'
 import { genPageMetadata } from 'app/seo'
-import ListLayout from '@/layouts/ListLayoutWithTags'
+import ArticlesLayout from '@/components/ArticlesLayout'
 
-const POSTS_PER_PAGE = 5
+const POSTS_PER_PAGE = 4
 
-export const metadata = genPageMetadata({ title: 'Blog' })
+export const metadata = genPageMetadata({ 
+  title: 'Artículos',
+  description: 'Análisis táctico avanzado, scouting funcional y métricas aplicadas al fútbol profesional.'
+})
 
-export default async function BlogPage(props: { searchParams: Promise<{ page: string }> }) {
+export default async function BlogPage() {
   const posts = allCoreContent(sortPosts(allBlogs))
   const pageNumber = 1
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE)
@@ -18,11 +21,11 @@ export default async function BlogPage(props: { searchParams: Promise<{ page: st
   }
 
   return (
-    <ListLayout
+    <ArticlesLayout
       posts={posts}
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
-      title="All Posts"
+      title="Todos los Artículos"
     />
   )
 }
