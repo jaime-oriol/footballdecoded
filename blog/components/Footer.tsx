@@ -14,7 +14,7 @@ export default function Footer() {
           <SocialIcon kind="github" href={siteMetadata.github} size={6} />
           <SocialIcon kind="instagram" href={siteMetadata.instagram} size={6} />
         </div>
-        
+
         {/* Información de copyright */}
         <div className="mb-2 flex space-x-2 text-sm text-gray-500 dark:text-gray-400">
           <div>{siteMetadata.author}</div>
@@ -23,7 +23,7 @@ export default function Footer() {
           <div>{` • `}</div>
           <Link href="/">{siteMetadata.title}</Link>
         </div>
-        
+
         {/* Descripción profesional breve */}
         <div className="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>Análisis táctico y métricas avanzadas para el fútbol profesional</p>

@@ -15,7 +15,7 @@ const siteMetadata = {
   x: 'https://x.com/JaimeOriol_',
   linkedin: 'https://www.linkedin.com/in/jaime-oriol-goicoechea-801313276/',
   instagram: 'https://www.instagram.com/orio1_/',
-  
+
   // Otras redes no utilizadas (mantenidas para compatibilidad)
   twitter: '', // Dejamos vacío ya que usamos X
   facebook: '',
