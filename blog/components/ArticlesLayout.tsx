@@ -137,9 +137,9 @@ export default function ArticlesLayout({
             </div>
           )}
 
-          {/* Articles Grid - Single Column, max 4 per page */}
+          {/* Articles Grid - 2x2 Layout (2 columns on desktop, 1 column on mobile) */}
           {displayPosts.length > 0 && (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
               {displayPosts.map((post) => (
                 <ArticleCard key={post.slug} post={post} />
               ))}
