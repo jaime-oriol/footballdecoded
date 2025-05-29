@@ -34,7 +34,7 @@ const SectionsBar = () => {
     <div className="w-full border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-0">
         {/* Barra de secciones */}
-        <nav className="flex space-x-8 overflow-x-auto scrollbar-hide" aria-label="Secciones">
+        <nav className="scrollbar-hide flex space-x-8 overflow-x-auto" aria-label="Secciones">
           {sections.map((section) => {
             const isActive = pathname === section.href
 
@@ -49,18 +49,18 @@ const SectionsBar = () => {
                 }`}
               >
                 {/* Título de la sección */}
-                <span className="whitespace-nowrap text-sm font-semibold lg:text-base">
+                <span className="text-sm font-semibold whitespace-nowrap lg:text-base">
                   {section.title}
                 </span>
-                
+
                 {/* Descripción */}
-                <span className="mt-1 hidden text-xs text-gray-500 dark:text-gray-500 md:block lg:text-sm">
+                <span className="mt-1 hidden text-xs text-gray-500 md:block lg:text-sm dark:text-gray-500">
                   {section.description}
                 </span>
 
                 {/* Indicador activo - línea inferior */}
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200 ${
+                  className={`absolute right-0 bottom-0 left-0 h-0.5 rounded-full transition-all duration-200 ${
                     isActive
                       ? 'bg-primary-500 opacity-100'
                       : 'bg-transparent opacity-0 group-hover:bg-gray-300 group-hover:opacity-50 dark:group-hover:bg-gray-600'
