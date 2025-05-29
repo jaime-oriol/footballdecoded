@@ -7,28 +7,28 @@ const POSTS_PER_PAGE = 4
 
 export const generateStaticParams = async () => {
   const allPosts = allCoreContent(sortPosts(allBlogs))
-  const publishedPosts = allPosts.filter(post => !post.draft)
-  const sectionPosts = publishedPosts.filter(post => post.section === 'tactical-metrics-lab')
+  const publishedPosts = allPosts.filter((post) => !post.draft)
+  const sectionPosts = publishedPosts.filter((post) => post.section === 'tactical-metrics-lab')
   const totalPages = Math.ceil(sectionPosts.length / POSTS_PER_PAGE)
-  
-  return Array.from({ length: totalPages }, (_, i) => ({ 
-    page: (i + 1).toString() 
+
+  return Array.from({ length: totalPages }, (_, i) => ({
+    page: (i + 1).toString(),
   }))
 }
 
-export default async function TacticalMetricsLabPaginationPage(props: { 
-  params: Promise<{ page: string }> 
+export default async function TacticalMetricsLabPaginationPage(props: {
+  params: Promise<{ page: string }>
 }) {
   const params = await props.params
   const pageNumber = parseInt(params.page)
-  
+
   if (isNaN(pageNumber) || pageNumber <= 0) {
     return notFound()
   }
 
   const allPosts = allCoreContent(sortPosts(allBlogs))
-  const publishedPosts = allPosts.filter(post => !post.draft)
-  const sectionPosts = publishedPosts.filter(post => post.section === 'tactical-metrics-lab')
+  const publishedPosts = allPosts.filter((post) => !post.draft)
+  const sectionPosts = publishedPosts.filter((post) => post.section === 'tactical-metrics-lab')
   const totalPages = Math.ceil(sectionPosts.length / POSTS_PER_PAGE)
 
   if (pageNumber > totalPages) {

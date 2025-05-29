@@ -39,13 +39,13 @@ const Header = () => {
               if (link.title === 'Artículos') {
                 return <ArticleDropdown key="articles" />
               }
-              
+
               // Para el resto de enlaces, usar el componente normal
               return (
                 <Link
                   key={link.title}
                   href={link.href}
-                  className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap"
+                  className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium whitespace-nowrap text-gray-900 dark:text-gray-100"
                 >
                   {link.title}
                 </Link>

@@ -33,7 +33,11 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <svg className="mr-3 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
             </svg>
             Anterior
           </Link>
@@ -41,7 +45,7 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
           <div></div>
         )}
       </div>
-      
+
       <div className="hidden md:flex">
         <span className="text-sm text-gray-700 dark:text-gray-300">
           Página <span className="font-medium">{currentPage}</span> de{' '}
@@ -57,7 +61,11 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
           >
             Siguiente
             <svg className="ml-3 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
             </svg>
           </Link>
         ) : (
@@ -73,7 +81,7 @@ export default function ArticlesLayout({
   title,
   initialDisplayPosts = [],
   pagination,
-  section
+  section,
 }: ArticlesLayoutProps) {
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
@@ -84,7 +92,7 @@ export default function ArticlesLayout({
         <ArticlesSidebar />
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="min-w-0 flex-1">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
@@ -92,9 +100,12 @@ export default function ArticlesLayout({
             </h1>
             {section && (
               <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
-                {section === 'tactical-structures' && 'Análisis de sistemas, fases y principios del juego moderno.'}
-                {section === 'scouting' && 'Identificación de perfiles por función táctica mediante datos.'}
-                {section === 'tactical-metrics-lab' && 'Cuantificación avanzada del impacto táctico mediante datos y programación.'}
+                {section === 'tactical-structures' &&
+                  'Análisis de sistemas, fases y principios del juego moderno.'}
+                {section === 'scouting' &&
+                  'Identificación de perfiles por función táctica mediante datos.'}
+                {section === 'tactical-metrics-lab' &&
+                  'Cuantificación avanzada del impacto táctico mediante datos y programación.'}
               </p>
             )}
           </div>
@@ -102,17 +113,26 @@ export default function ArticlesLayout({
           {/* Empty State */}
           {!displayPosts.length && (
             <div className="py-16 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                 Próximamente
               </h3>
               <p className="mt-2 text-gray-500 dark:text-gray-400">
-                {section 
+                {section
                   ? `Los análisis de ${section.replace('-', ' ')} estarán disponibles pronto.`
-                  : 'Los primeros análisis estarán disponibles pronto.'
-                }
+                  : 'Los primeros análisis estarán disponibles pronto.'}
               </p>
             </div>
           )}
@@ -129,8 +149,8 @@ export default function ArticlesLayout({
           {/* Pagination - Solo si hay más de 1 página */}
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-12">
-              <Pagination 
-                currentPage={pagination.currentPage} 
+              <Pagination
+                currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
                 basePath={section ? `/blog/${section}` : '/blog'}
               />

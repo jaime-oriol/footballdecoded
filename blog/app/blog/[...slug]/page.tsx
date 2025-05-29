@@ -37,7 +37,7 @@ export async function generateMetadata(props: {
   if (post.image) {
     imageList = [post.image]
   }
-  
+
   const ogImages = imageList.map((img) => {
     return {
       url: img && img.includes('http') ? img : siteMetadata.siteUrl + img,
@@ -75,11 +75,11 @@ export const generateStaticParams = async () => {
 export default async function Page(props: { params: Promise<{ slug: string[] }> }) {
   const params = await props.params
   const slug = decodeURI(params.slug.join('/'))
-  
+
   // Filter out drafts in production
-  const sortedCoreContents = allCoreContent(sortPosts(allBlogs.filter(post => !post.draft)))
+  const sortedCoreContents = allCoreContent(sortPosts(allBlogs.filter((post) => !post.draft)))
   const postIndex = sortedCoreContents.findIndex((p) => p.slug === slug)
-  
+
   if (postIndex === -1) {
     return notFound()
   }
@@ -87,7 +87,7 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
   const prev = sortedCoreContents[postIndex + 1]
   const next = sortedCoreContents[postIndex - 1]
   const post = allBlogs.find((p) => p.slug === slug) as Blog
-  
+
   // Si el post está en draft, no mostrarlo en producción
   if (post.draft && process.env.NODE_ENV === 'production') {
     return notFound()
@@ -98,7 +98,7 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
     const authorResults = allAuthors.find((p) => p.slug === author)
     return coreContent(authorResults as Authors)
   })
-  
+
   const mainContent = coreContent(post)
   const jsonLd = post.structuredData
   jsonLd['author'] = authorDetails.map((author) => {

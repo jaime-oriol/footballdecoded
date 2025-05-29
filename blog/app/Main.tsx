@@ -60,14 +60,25 @@ export default function Home({ posts }) {
 
           {!posts.length && (
             <div className="py-16 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="mx-auto mb-4 h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">
                 Próximamente
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
-                Los primeros análisis tácticos, scouting funcional y métricas avanzadas estarán disponibles muy pronto.
+                Los primeros análisis tácticos, scouting funcional y métricas avanzadas estarán
+                disponibles muy pronto.
               </p>
             </div>
           )}
@@ -87,11 +98,15 @@ export default function Home({ posts }) {
           <div className="flex justify-center pt-10">
             <Link
               href="/blog"
-              className="border-primary-500 text-primary-600 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-400 dark:hover:text-primary-300 inline-flex items-center rounded-lg border bg-white px-8 py-3 text-base font-medium transition-all duration-200 shadow-sm hover:shadow-md dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="border-primary-500 text-primary-600 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-400 dark:hover:text-primary-300 inline-flex items-center rounded-lg border bg-white px-8 py-3 text-base font-medium shadow-sm transition-all duration-200 hover:shadow-md dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               Ver todos los artículos
               <svg className="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </Link>
           </div>

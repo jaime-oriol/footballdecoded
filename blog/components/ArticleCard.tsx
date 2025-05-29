@@ -57,14 +57,16 @@ export default function ArticleCard({ post }: ArticleCardProps) {
         {/* Content */}
         <div className="p-6">
           {/* [TÍTULO] → en negrita */}
-          <h2 className="text-xl font-bold leading-tight text-gray-900 transition-colors group-hover:text-primary-600 dark:text-gray-100 dark:group-hover:text-primary-400 mb-3 line-clamp-2">
+          <h2 className="group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-3 line-clamp-2 text-xl leading-tight font-bold text-gray-900 transition-colors dark:text-gray-100">
             {title}
           </h2>
 
           {/* [SECCIÓN] → pill (solo una, sin tags extra ni etiquetas múltiples) */}
           {section && (
             <div className="mb-4">
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getSectionColor(section)}`}>
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getSectionColor(section)}`}
+              >
                 {getSectionLabel(section)}
               </span>
             </div>
@@ -73,25 +75,25 @@ export default function ArticleCard({ post }: ArticleCardProps) {
           {/* Layout inferior: [LEER ANÁLISIS COMPLETO] a la izquierda, [FECHA] a la derecha */}
           <div className="flex items-center justify-between">
             {/* [Leer análisis completo →] → siempre debajo, alineado a la izquierda */}
-            <div className="flex items-center text-sm font-medium text-primary-600 transition-colors group-hover:text-primary-500 dark:text-primary-400 dark:group-hover:text-primary-300">
+            <div className="text-primary-600 group-hover:text-primary-500 dark:text-primary-400 dark:group-hover:text-primary-300 flex items-center text-sm font-medium transition-colors">
               <span>Leer análisis completo</span>
-              <svg 
-                className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" 
-                fill="currentColor" 
+              <svg
+                className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                fill="currentColor"
                 viewBox="0 0 20 20"
               >
-                <path 
-                  fillRule="evenodd" 
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" 
-                  clipRule="evenodd" 
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
                 />
               </svg>
             </div>
-            
+
             {/* [Fecha] → abajo a la derecha */}
-            <time 
+            <time
               dateTime={date}
-              className="text-sm font-medium text-gray-500 dark:text-gray-400 flex-shrink-0"
+              className="flex-shrink-0 text-sm font-medium text-gray-500 dark:text-gray-400"
             >
               {formatDate(date, siteMetadata.locale)}
             </time>

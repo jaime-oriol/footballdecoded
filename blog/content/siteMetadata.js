@@ -4,7 +4,8 @@ const siteMetadata = {
   title: 'FootballDecoded',
   author: 'Jaime Oriol',
   headerTitle: 'FootballDecoded',
-  description: 'Portfolio técnico y analítico de referencia en fútbol profesional. Análisis táctico avanzado, métricas cuantitativas y scouting funcional orientado a la integración en cuerpos técnicos de clubes de élite europeos.',
+  description:
+    'Portfolio técnico y analítico de referencia en fútbol profesional. Análisis táctico avanzado, métricas cuantitativas y scouting funcional orientado a la integración en cuerpos técnicos de clubes de élite europeos.',
   language: 'es-ES',
   locale: 'es-ES',
 
@@ -30,7 +31,7 @@ const siteMetadata = {
     'football scouting',
     'xG metrics',
     'PPDA analysis',
-    'football tactical structures'
+    'football tactical structures',
   ],
 
   // === CONFIGURACIÓN DE ANALYTICS PROFESIONAL ===
@@ -39,7 +40,7 @@ const siteMetadata = {
     umamiAnalytics: {
       // Recomendado para portfolio profesional (privacidad)
       umamiWebsiteId: '00cdd21e-95b5-41a4-b2c1-aa12fd3fde2b',
-      umamiSrc: 'https://cloud.umami.is/script.js'
+      umamiSrc: 'https://cloud.umami.is/script.js',
     },
     // Otras opciones disponibles pero no activas
     plausibleAnalytics: {
@@ -96,8 +97,8 @@ const siteMetadata = {
           name: 'Tactical Metrics Lab',
           keywords: 'métricas avanzadas datos programación',
           section: 'Análisis Técnico',
-        }
-      ]
+        },
+      ],
     },
     algoliaConfig: {
       appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
@@ -121,8 +122,8 @@ const siteMetadata = {
       'Oportunidad Laboral',
       'Consultoría Analítica',
       'Proyecto Conjunto',
-      'Otro'
-    ]
+      'Otro',
+    ],
   },
 
   // === OPEN GRAPH PROFESIONAL ===
@@ -130,22 +131,24 @@ const siteMetadata = {
     type: 'website',
     site_name: 'FootballDecoded',
     title: 'FootballDecoded - Análisis Táctico y Métricas Avanzadas',
-    description: 'Portfolio técnico especializado en análisis táctico, scouting funcional y métricas avanzadas de fútbol profesional.',
+    description:
+      'Portfolio técnico especializado en análisis táctico, scouting funcional y métricas avanzadas de fútbol profesional.',
     images: [
       {
         url: `${process.env.BASE_PATH || ''}/static/images/football-decoded-og.jpg`,
         width: 1200,
         height: 630,
-        alt: 'FootballDecoded - Análisis Técnico de Fútbol Profesional'
-      }
-    ]
+        alt: 'FootballDecoded - Análisis Técnico de Fútbol Profesional',
+      },
+    ],
   },
 
   // === TWITTER CARDS TÉCNICO ===
   twitter: {
     card: 'summary_large_image',
     title: 'FootballDecoded - Análisis Táctico Profesional',
-    description: 'Portfolio técnico: análisis táctico, scouting funcional y métricas avanzadas para cuerpos técnicos de élite.',
+    description:
+      'Portfolio técnico: análisis táctico, scouting funcional y métricas avanzadas para cuerpos técnicos de élite.',
     images: [`${process.env.BASE_PATH || ''}/static/images/football-decoded-twitter.jpg`],
   },
 
@@ -162,9 +165,9 @@ const siteMetadata = {
       'Scouting Funcional',
       'Métricas Avanzadas',
       'Visualización de Datos Deportivos',
-      'Programación Aplicada al Fútbol'
-    ]
-  }
+      'Programación Aplicada al Fútbol',
+    ],
+  },
 }
 
 module.exports = siteMetadata
