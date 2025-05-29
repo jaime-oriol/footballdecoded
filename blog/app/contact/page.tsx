@@ -15,10 +15,28 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState('')
 
-  // Inicializar EmailJS cuando se monte el componente
   useEffect(() => {
     emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!)
   }, [])
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) return false
+    
+    const disposableDomains = [
+      '10minutemail.com', 'guerrillamail.com', 'mailinator.com',
+      'tempmail.org', 'yopmail.com', 'trashmail.com'
+    ]
+    const domain = email.split('@')[1]?.toLowerCase()
+    if (disposableDomains.includes(domain)) return false
+    
+    const validDomains = [
+      'gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com',
+      'icloud.com', 'protonmail.com', 'live.com', 'msn.com'
+    ]
+    
+    return validDomains.includes(domain) || domain.includes('.')
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -31,6 +49,12 @@ export default function Contact() {
     e.preventDefault()
     setIsSubmitting(true)
     setSubmitStatus('')
+
+    if (!validateEmail(formData.from_email)) {
+      setSubmitStatus('invalid-email')
+      setIsSubmitting(false)
+      return
+    }
 
     try {
       const templateParams = {
@@ -116,6 +140,23 @@ export default function Contact() {
                     <div className="ml-3">
                       <p className="text-sm font-medium text-green-800 dark:text-green-200">
                         ¡Mensaje enviado correctamente! Te responderé en las próximas 24-48 horas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {submitStatus === 'invalid-email' && (
+                <div className="mb-6 rounded-lg bg-yellow-50 p-4 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                        Por favor, usa un email válido de un proveedor reconocido (Gmail, Outlook, etc.)
                       </p>
                     </div>
                   </div>
