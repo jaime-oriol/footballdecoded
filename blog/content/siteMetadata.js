@@ -9,13 +9,28 @@ const siteMetadata = {
   language: 'es-ES',
   locale: 'es-ES',
 
+  // === CONTACTO Y REDES SOCIALES ===
+  email: 'joriolgo@gmail.com',
+  github: 'https://github.com/jaime-oriol',
+  x: 'https://x.com/JaimeOriol_',
+  linkedin: 'https://www.linkedin.com/in/jaime-oriol-goicoechea-801313276/',
+  instagram: 'https://www.instagram.com/orio1_/',
+  
+  // Otras redes no utilizadas (mantenidas para compatibilidad)
+  twitter: '', // Dejamos vacío ya que usamos X
+  facebook: '',
+  youtube: '',
+  bluesky: '',
+  threads: '',
+  medium: '',
+  mastodon: '',
+
   // === CONFIGURACIÓN TÉCNICA PROFESIONAL ===
   theme: 'system', // system, dark or light
   siteUrl: 'https://footballdecoded.com',
   siteRepo: 'https://github.com/jaime-oriol/FootballDecoded',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/football-decoded-banner.jpg`,
-  mastodon: '',
 
   // === SEO TÉCNICO ESPECIALIZADO ===
   keywords: [
