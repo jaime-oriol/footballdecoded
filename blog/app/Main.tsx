@@ -1,7 +1,5 @@
 import Link from '@/components/Link'
-import siteMetadata from '@/content/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
-import NewsletterForm from 'pliny/ui/NewsletterForm'
 import ArticleCardHome from '@/components/ArticleCardHome'
 
 const MAX_DISPLAY = 3
@@ -83,7 +81,7 @@ export default function Home({ posts }) {
             </div>
           )}
 
-          {/* Lista de artículos con ArticleCardHome - mejor spacing */}
+          {/* Lista de artículos con ArticleCardHome */}
           {posts.length > 0 && (
             <div className="space-y-6">
               {posts.slice(0, MAX_DISPLAY).map((post) => (
@@ -111,45 +109,6 @@ export default function Home({ posts }) {
             </Link>
           </div>
         )}
-
-        {/* === SECCIÓN DE NEWSLETTER === */}
-        <div className="pt-8">
-          <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-800/50">
-            <h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Newsletter de Análisis Táctico
-            </h3>
-            <p className="mb-4 text-gray-600 dark:text-gray-400">
-              Recibe análisis exclusivos, métricas avanzadas y tendencias tácticas directamente en
-              tu correo.
-            </p>
-            {siteMetadata.newsletter?.provider && <NewsletterForm />}
-          </div>
-        </div>
-
-        {/* === ACCESO AL FEED RSS === */}
-        <div className="pt-6 pb-4">
-          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-            <div>
-              <Link href="/about" className="hover:text-primary-600 dark:hover:text-primary-400">
-                Jaime Oriol
-              </Link>
-              {' • '}
-              <span>© 2024 FootballDecoded</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/feed.xml"
-                className="hover:text-primary-600 dark:hover:text-primary-400 flex items-center transition-colors"
-                title="Feed RSS - FootballDecoded"
-              >
-                <svg className="mr-1 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6.503 20.752c0 1.794-1.456 3.248-3.251 3.248S0 22.546 0 20.752s1.456-3.248 3.252-3.248 3.251 1.454 3.251 3.248zM1.677 6.155v4.301c5.493 0 9.942 4.448 9.942 9.94h4.299c0-7.837-6.403-14.241-14.241-14.241zM1.677.014v4.301C9.447.314 15.686 6.553 15.686 14.323H19.985C19.985 7.036 12.964.014 1.677.014z" />
-                </svg>
-                RSS Feed
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     </>
   )
