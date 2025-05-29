@@ -23,7 +23,7 @@ const ArticleDropdown = () => {
       description: 'Análisis de sistemas, fases y principios del juego moderno.',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
         </svg>
       )
     },
@@ -43,7 +43,7 @@ const ArticleDropdown = () => {
       description: 'Cuantificación avanzada del impacto táctico mediante datos y programación.',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
       )
     }
@@ -68,29 +68,37 @@ const ArticleDropdown = () => {
         </svg>
       </button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute top-full left-1/2 z-50 mt-2 w-80 -translate-x-1/2 transform">
-          {/* Arrow pointer */}
-          <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white border-l border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700"></div>
-          
-          {/* Menu content */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-            <div className="p-2">
+      {/* Dropdown Menu - Grid 2x2 Layout */}
+      <div 
+        className={`absolute top-full left-1/2 mt-2 w-96 -translate-x-1/2 transform transition-all duration-200 ${
+          isOpen 
+            ? 'visible opacity-100 translate-y-0 z-[9999]' 
+            : 'invisible opacity-0 -translate-y-2 z-[-1]'
+        }`}
+        style={{ zIndex: isOpen ? 9999 : -1 }}
+      >
+        {/* Arrow pointer */}
+        <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white border-l border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700"></div>
+        
+        {/* Menu content */}
+        <div className="rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+          <div className="p-3">
+            {/* Grid 2x2 Layout */}
+            <div className="grid grid-cols-2 gap-2">
               {sections.map((section, index) => (
                 <Link
                   key={section.href}
                   href={section.href}
-                  className="flex items-start rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="flex flex-col items-start rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 min-h-[80px]"
                 >
-                  <div className="text-primary-500 dark:text-primary-400 mr-3 mt-0.5 flex-shrink-0">
+                  <div className="text-primary-500 dark:text-primary-400 mb-2 flex-shrink-0">
                     {section.icon}
                   </div>
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                  <div className="w-full">
+                    <div className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1">
                       {section.title}
                     </div>
-                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                       {section.description}
                     </div>
                   </div>
@@ -99,7 +107,7 @@ const ArticleDropdown = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
