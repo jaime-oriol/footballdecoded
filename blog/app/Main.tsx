@@ -1,8 +1,8 @@
 import Link from '@/components/Link'
-import Tag from '@/components/Tag'
 import siteMetadata from '@/content/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 import NewsletterForm from 'pliny/ui/NewsletterForm'
+import ArticleCardHome from '@/components/ArticleCardHome'
 
 const MAX_DISPLAY = 3
 
@@ -54,78 +54,45 @@ export default function Home({ posts }) {
 
         {/* === SECCIÓN DE ARTÍCULOS RECIENTES === */}
         <div className="pt-8">
-          <h2 className="mb-6 text-2xl leading-8 font-bold tracking-tight text-gray-900 dark:text-gray-100">
+          <h2 className="mb-8 text-2xl leading-8 font-bold tracking-tight text-gray-900 dark:text-gray-100">
             Análisis Recientes
           </h2>
 
           {!posts.length && (
-            <div className="py-12 text-center">
-              <p className="text-lg text-gray-500 dark:text-gray-400">
-                Próximamente: análisis tácticos, scouting funcional y métricas avanzadas.
+            <div className="py-16 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Próximamente
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Los primeros análisis tácticos, scouting funcional y métricas avanzadas estarán disponibles muy pronto.
               </p>
             </div>
           )}
 
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {posts.slice(0, MAX_DISPLAY).map((post) => {
-              const { slug, date, title, summary, tags } = post
-              return (
-                <li key={slug} className="py-8">
-                  <article>
-                    <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
-                      <dl>
-                        <dt className="sr-only">Publicado el</dt>
-                        <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                          <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
-                        </dd>
-                      </dl>
-                      <div className="space-y-5 xl:col-span-3">
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="text-2xl leading-8 font-bold tracking-tight">
-                              <Link
-                                href={`/blog/${slug}`}
-                                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-900 transition-colors dark:text-gray-100"
-                              >
-                                {title}
-                              </Link>
-                            </h3>
-                            <div className="mt-2 flex flex-wrap">
-                              {tags.map((tag) => (
-                                <Tag key={tag} text={tag} />
-                              ))}
-                            </div>
-                          </div>
-                          <div className="prose max-w-none text-gray-500 dark:text-gray-400">
-                            {summary}
-                          </div>
-                        </div>
-                        <div className="text-base leading-6 font-medium">
-                          <Link
-                            href={`/blog/${slug}`}
-                            className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                            aria-label={`Leer "${title}"`}
-                          >
-                            Leer análisis completo &rarr;
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                </li>
-              )
-            })}
-          </ul>
+          {/* Lista de artículos con ArticleCardHome - mejor spacing */}
+          {posts.length > 0 && (
+            <div className="space-y-6">
+              {posts.slice(0, MAX_DISPLAY).map((post) => (
+                <ArticleCardHome key={post.slug} post={post} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* === ENLACE A TODOS LOS ARTÍCULOS === */}
-        {posts.length > MAX_DISPLAY && (
-          <div className="flex justify-center pt-8">
+        {posts.length > 0 && (
+          <div className="flex justify-center pt-10">
             <Link
               href="/blog"
-              className="border-primary-500 text-primary-600 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-400 dark:hover:text-primary-300 inline-flex items-center rounded-md border bg-white px-6 py-3 text-base font-medium transition-all duration-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="border-primary-500 text-primary-600 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-400 dark:hover:text-primary-300 inline-flex items-center rounded-lg border bg-white px-8 py-3 text-base font-medium transition-all duration-200 shadow-sm hover:shadow-md dark:bg-gray-800 dark:hover:bg-gray-700"
             >
               Ver todos los artículos
+              <svg className="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
             </Link>
           </div>
         )}
