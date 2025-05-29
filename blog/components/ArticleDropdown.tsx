@@ -10,7 +10,6 @@ const ArticleDropdown = () => {
     {
       href: '/blog',
       title: 'Todos los artículos',
-      description: 'Vista completa',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -25,7 +24,6 @@ const ArticleDropdown = () => {
     {
       href: '/blog/tactical-structures',
       title: 'Tactical Structures',
-      description: 'Análisis de sistemas, fases y principios del juego moderno.',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -40,7 +38,6 @@ const ArticleDropdown = () => {
     {
       href: '/blog/scouting',
       title: 'Scouting',
-      description: 'Identificación de perfiles por función táctica mediante datos.',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -55,7 +52,6 @@ const ArticleDropdown = () => {
     {
       href: '/blog/tactical-metrics-lab',
       title: 'Tactical Metrics Lab',
-      description: 'Cuantificación avanzada del impacto táctico mediante datos y programación.',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -103,23 +99,20 @@ const ArticleDropdown = () => {
         {/* Menu content */}
         <div className="rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
           <div className="p-3">
-            {/* Grid 2x2 Layout */}
+            {/* Grid 2x2 Layout - SIN DESCRIPCIONES */}
             <div className="grid grid-cols-2 gap-2">
               {sections.map((section, index) => (
                 <Link
                   key={section.href}
                   href={section.href}
-                  className="flex min-h-[80px] flex-col items-start rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="flex min-h-[60px] flex-col items-start rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
                   <div className="text-primary-500 dark:text-primary-400 mb-2 flex-shrink-0">
                     {section.icon}
                   </div>
                   <div className="w-full">
-                    <div className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {section.title}
-                    </div>
-                    <div className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                      {section.description}
                     </div>
                   </div>
                 </Link>
