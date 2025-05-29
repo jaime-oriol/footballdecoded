@@ -84,9 +84,9 @@ const ArticleDropdown = () => {
         </svg>
       </button>
 
-      {/* Dropdown Menu - Grid 2x2 Layout */}
+      {/* Dropdown Menu - Horizontal Layout */}
       <div
-        className={`absolute top-full left-1/2 mt-2 w-96 -translate-x-1/2 transform transition-all duration-200 ${
+        className={`absolute top-full left-1/2 mt-2 w-auto -translate-x-1/2 transform transition-all duration-200 ${
           isOpen
             ? 'visible z-[9999] translate-y-0 opacity-100'
             : 'invisible z-[-1] -translate-y-2 opacity-0'
@@ -99,18 +99,18 @@ const ArticleDropdown = () => {
         {/* Menu content */}
         <div className="rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
           <div className="p-3">
-            {/* Grid 2x2 Layout - SIN DESCRIPCIONES */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Horizontal Layout - 4 elementos uno detrás de otro */}
+            <div className="flex space-x-2">
               {sections.map((section, index) => (
                 <Link
                   key={section.href}
                   href={section.href}
-                  className="flex min-h-[60px] flex-col items-start rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="flex min-w-[140px] flex-col items-center rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
                   <div className="text-primary-500 dark:text-primary-400 mb-2 flex-shrink-0">
                     {section.icon}
                   </div>
-                  <div className="w-full">
+                  <div className="text-center">
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {section.title}
                     </div>
