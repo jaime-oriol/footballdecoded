@@ -81,7 +81,7 @@ export default function Contact() {
         setSubmitStatus('error')
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error al enviar:', error)
       setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)
