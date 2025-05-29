@@ -42,8 +42,8 @@ export default function ArticleCardHome({ post }: ArticleCardHomeProps) {
   return (
     <article className="group rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 overflow-hidden">
       <Link href={`/blog/${slug}`} className="flex items-stretch">
-        {/* Imagen a la izquierda - MÁS GRANDE y pegada a bordes */}
-        <div className="relative flex-shrink-0 w-40 overflow-hidden">
+        {/* Imagen a la izquierda - MÁS ANCHA para que se vea bien */}
+        <div className="relative flex-shrink-0 w-56 overflow-hidden">
           <div className="absolute inset-0">
             <Image
               src={displayImage}
