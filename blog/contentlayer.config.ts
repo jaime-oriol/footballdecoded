@@ -95,7 +95,7 @@ function createSearchIndex(allBlogs) {
 
 export const Blog = defineDocumentType(() => ({
   name: 'Blog',
-  filePathPattern: 'analysis/**/*.mdx',
+  filePathPattern: 'articles/**/*.mdx', // Cambiado de 'analysis/**/*.mdx' a 'articles/**/*.mdx'
   contentType: 'mdx',
   fields: {
     title: { type: 'string', required: true },
@@ -105,10 +105,12 @@ export const Blog = defineDocumentType(() => ({
     draft: { type: 'boolean' },
     summary: { type: 'string' },
     images: { type: 'json' },
+    image: { type: 'string' }, // Nueva imagen destacada
     authors: { type: 'list', of: { type: 'string' } },
     layout: { type: 'string' },
     bibliography: { type: 'string' },
     canonicalUrl: { type: 'string' },
+    section: { type: 'string', required: true }, // Nuevo campo obligatorio
   },
   computedFields: {
     ...computedFields,
@@ -121,12 +123,15 @@ export const Blog = defineDocumentType(() => ({
         datePublished: doc.date,
         dateModified: doc.lastmod || doc.date,
         description: doc.summary,
-        image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
+        image: doc.image || doc.images?.[0] || siteMetadata.socialBanner,
         url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
+        articleSection: doc.section, // Agregar sección a structured data
       }),
     },
   },
 }))
+
+// El resto del archivo permanece igual...
 
 export const Authors = defineDocumentType(() => ({
   name: 'Authors',

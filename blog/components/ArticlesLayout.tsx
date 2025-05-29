@@ -1,13 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
 import Link from '@/components/Link'
-import Tag from '@/components/Tag'
-import siteMetadata from '@/content/siteMetadata'
 import ArticlesSidebar from '@/components/ArticlesSidebar'
+import ArticleCard from '@/components/ArticleCard'
 
 interface PaginationProps {
   totalPages: number
@@ -28,9 +25,9 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
   const nextPage = currentPage + 1 <= totalPages
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 pt-6 dark:border-gray-700">
+    <div className="flex items-center justify-between border-t border-gray-200 pt-8 dark:border-gray-700">
       <div className="flex w-0 flex-1 justify-start">
-        {prevPage && (
+        {prevPage ? (
           <Link
             href={currentPage - 1 === 1 ? basePath : `${basePath}/page/${currentPage - 1}`}
             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
@@ -40,6 +37,8 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
             </svg>
             Anterior
           </Link>
+        ) : (
+          <div></div>
         )}
       </div>
       
@@ -51,7 +50,7 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
       </div>
 
       <div className="flex w-0 flex-1 justify-end">
-        {nextPage && (
+        {nextPage ? (
           <Link
             href={`${basePath}/page/${currentPage + 1}`}
             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
@@ -61,6 +60,8 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
             </svg>
           </Link>
+        ) : (
+          <div></div>
         )}
       </div>
     </div>
@@ -79,7 +80,7 @@ export default function ArticlesLayout({
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-0">
       <div className="flex gap-8">
-        {/* Sidebar */}
+        {/* Sidebar - Consistente en todas las vistas */}
         <ArticlesSidebar />
 
         {/* Main Content */}
@@ -90,25 +91,24 @@ export default function ArticlesLayout({
               {title}
             </h1>
             {section && (
-              <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
+              <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
                 {section === 'tactical-structures' && 'Análisis de sistemas, fases y principios del juego moderno.'}
                 {section === 'scouting' && 'Identificación de perfiles por función táctica mediante datos.'}
                 {section === 'tactical-metrics-lab' && 'Cuantificación avanzada del impacto táctico mediante datos y programación.'}
-                {!section && 'Análisis técnico y táctico sobre el fútbol profesional.'}
               </p>
             )}
           </div>
 
-          {/* Articles List */}
+          {/* Empty State */}
           {!displayPosts.length && (
-            <div className="py-12 text-center">
+            <div className="py-16 text-center">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                 Próximamente
               </h3>
-              <p className="mt-1 text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-gray-500 dark:text-gray-400">
                 {section 
                   ? `Los análisis de ${section.replace('-', ' ')} estarán disponibles pronto.`
                   : 'Los primeros análisis estarán disponibles pronto.'
@@ -117,73 +117,16 @@ export default function ArticlesLayout({
             </div>
           )}
 
-          <div className="space-y-8">
-            {displayPosts.map((post) => {
-              const { slug, date, title, summary, tags } = post
-              return (
-                <article key={slug} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    <time dateTime={date}>
-                      {formatDate(date, siteMetadata.locale)}
-                    </time>
-                    {tags && tags.length > 0 && (
-                      <>
-                        <span className="mx-2">•</span>
-                        <div className="flex flex-wrap gap-2">
-                          {tags.slice(0, 2).map((tag) => (
-                            <Tag key={tag} text={tag} />
-                          ))}
-                          {tags.length > 2 && (
-                            <span className="text-xs text-gray-400">
-                              +{tags.length - 2} más
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h2 className="text-xl leading-8 font-bold tracking-tight">
-                        <Link
-                          href={`/blog/${slug}`}
-                          className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-900 transition-colors dark:text-gray-100"
-                        >
-                          {title}
-                        </Link>
-                      </h2>
-                    </div>
-                    
-                    {summary && (
-                      <div className="prose max-w-none text-gray-600 dark:text-gray-300">
-                        {summary}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <Link
-                        href={`/blog/${slug}`}
-                        className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 inline-flex items-center text-sm font-medium transition-colors"
-                      >
-                        Leer análisis completo
-                        <svg className="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </Link>
-                      
-                      {/* Reading time placeholder */}
-                      <span className="text-xs text-gray-400">
-                        ~{Math.ceil((summary?.length || 0) / 200)} min lectura
-                      </span>
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
+          {/* Articles Grid - Single Column, max 4 per page */}
+          {displayPosts.length > 0 && (
+            <div className="space-y-6">
+              {displayPosts.map((post) => (
+                <ArticleCard key={post.slug} post={post} />
+              ))}
+            </div>
+          )}
 
-          {/* Pagination */}
+          {/* Pagination - Solo si hay más de 1 página */}
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-12">
               <Pagination 

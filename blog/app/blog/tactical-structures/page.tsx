@@ -6,22 +6,20 @@ import ArticlesLayout from '@/components/ArticlesLayout'
 const POSTS_PER_PAGE = 4
 
 export const metadata = genPageMetadata({ 
-  title: 'Artículos',
-  description: 'Análisis táctico avanzado, scouting funcional y métricas aplicadas al fútbol profesional.'
+  title: 'Tactical Structures',
+  description: 'Análisis de sistemas, fases y principios del juego moderno.'
 })
 
-export default async function BlogPage() {
-  // Obtener TODOS los posts y ordenarlos (más reciente primero)
+export default async function TacticalStructuresPage() {
   const allPosts = allCoreContent(sortPosts(allBlogs))
-  
-  // Filtrar solo los posts publicados (no drafts)
   const publishedPosts = allPosts.filter(post => !post.draft)
   
-  const pageNumber = 1
-  const totalPages = Math.ceil(publishedPosts.length / POSTS_PER_PAGE)
+  // Filtrar solo posts de esta sección
+  const sectionPosts = publishedPosts.filter(post => post.section === 'tactical-structures')
   
-  // Mostrar exactamente los primeros 4 artículos
-  const initialDisplayPosts = publishedPosts.slice(0, POSTS_PER_PAGE)
+  const pageNumber = 1
+  const totalPages = Math.ceil(sectionPosts.length / POSTS_PER_PAGE)
+  const initialDisplayPosts = sectionPosts.slice(0, POSTS_PER_PAGE)
   
   const pagination = {
     currentPage: pageNumber,
@@ -30,10 +28,11 @@ export default async function BlogPage() {
 
   return (
     <ArticlesLayout
-      posts={publishedPosts}
+      posts={sectionPosts}
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
-      title="Todos los Artículos"
+      title="Tactical Structures"
+      section="tactical-structures"
     />
   )
 }
