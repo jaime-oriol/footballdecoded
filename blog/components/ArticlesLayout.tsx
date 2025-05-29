@@ -3,7 +3,7 @@
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
 import Link from '@/components/Link'
-import ArticlesSidebar from '@/components/ArticlesSidebar'
+import SectionsBar from '@/components/SectionsBar'
 import ArticleCard from '@/components/ArticleCard'
 
 interface PaginationProps {
@@ -86,30 +86,30 @@ export default function ArticlesLayout({
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-0">
-      <div className="flex gap-8">
-        {/* Sidebar - Consistente en todas las vistas */}
-        <ArticlesSidebar />
+    <div className="mx-auto max-w-7xl">
+      {/* Header del título - ARRIBA DE TODO */}
+      <div className="px-4 pt-6 pb-8 sm:px-6 xl:px-0">
+        <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
+          {title}
+        </h1>
+        {section && (
+          <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
+            {section === 'tactical-structures' &&
+              'Análisis de sistemas, fases y principios del juego moderno.'}
+            {section === 'scouting' &&
+              'Identificación de perfiles por función táctica mediante datos.'}
+            {section === 'tactical-metrics-lab' &&
+              'Cuantificación avanzada del impacto táctico mediante datos y programación.'}
+          </p>
+        )}
+      </div>
 
-        {/* Main Content */}
-        <main className="min-w-0 flex-1">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
-              {title}
-            </h1>
-            {section && (
-              <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
-                {section === 'tactical-structures' &&
-                  'Análisis de sistemas, fases y principios del juego moderno.'}
-                {section === 'scouting' &&
-                  'Identificación de perfiles por función táctica mediante datos.'}
-                {section === 'tactical-metrics-lab' &&
-                  'Cuantificación avanzada del impacto táctico mediante datos y programación.'}
-              </p>
-            )}
-          </div>
+      {/* BARRA HORIZONTAL DE SECCIONES - JUSTO DEBAJO DEL TÍTULO */}
+      <SectionsBar />
 
+      {/* CONTENIDO PRINCIPAL - DEBAJO DE LA BARRA */}
+      <div className="px-4 sm:px-6 xl:px-0">
+        <main className="py-8">
           {/* Empty State */}
           {!displayPosts.length && (
             <div className="py-16 text-center">
