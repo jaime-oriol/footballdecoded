@@ -5,6 +5,7 @@ import Link from './Link'
 import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
 import SearchButton from './SearchButton'
+import ArticleDropdown from './ArticleDropdown'
 
 const Header = () => {
   let headerClass = 'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10'
@@ -32,15 +33,23 @@ const Header = () => {
         <div className="no-scrollbar hidden max-w-40 items-center gap-x-4 overflow-x-auto sm:flex md:max-w-72 lg:max-w-96">
           {headerNavLinks
             .filter((link) => link.href !== '/')
-            .map((link) => (
-              <Link
-                key={link.title}
-                href={link.href}
-                className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium text-gray-900 dark:text-gray-100"
-              >
-                {link.title}
-              </Link>
-            ))}
+            .map((link) => {
+              // Si es el enlace de artículos, usar el dropdown
+              if (link.title === 'Artículos') {
+                return <ArticleDropdown key="articles" />
+              }
+              
+              // Para el resto de enlaces, usar el componente normal
+              return (
+                <Link
+                  key={link.title}
+                  href={link.href}
+                  className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium text-gray-900 dark:text-gray-100"
+                >
+                  {link.title}
+                </Link>
+              )
+            })}
         </div>
         <SearchButton />
         <ThemeSwitch />
