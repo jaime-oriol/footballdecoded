@@ -138,11 +138,14 @@
   @apply my-5;
 }
 
-.no-scrollbar::-webkit-scrollbar {
+/* Scrollbar utilities - Updated with scrollbar-hide */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
-.no-scrollbar {
+.no-scrollbar,
+.scrollbar-hide {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
