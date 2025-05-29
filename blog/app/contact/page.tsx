@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { genPageMetadata } from 'app/seo'
 import emailjs from '@emailjs/browser'
 
@@ -14,6 +14,11 @@ export default function Contact() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState('')
+
+  // Inicializar EmailJS cuando se monte el componente
+  useEffect(() => {
+    emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!)
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -42,8 +47,7 @@ export default function Contact() {
       const result = await emailjs.send(
         process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
         process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        templateParams,
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
+        templateParams
       )
 
       if (result.status === 200) {
