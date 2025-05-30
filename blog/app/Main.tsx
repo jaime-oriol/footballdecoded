@@ -109,6 +109,33 @@ export default function Home({ posts }) {
             </Link>
           </div>
         )}
+
+        {/* === CALL TO ACTION NEWSLETTER === */}
+        <div className="pt-8">
+          <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-primary-50 to-white p-6 shadow-sm dark:border-gray-700 dark:from-primary-900/10 dark:to-gray-800">
+            <div className="text-center">
+              <h2 className="mb-3 text-xl font-bold text-gray-900 dark:text-gray-100">
+                📩 Newsletter Semanal
+              </h2>
+              <p className="mb-4 text-gray-600 dark:text-gray-400">
+                Cada lunes, las <strong>5 noticias más importantes del mundo del fútbol</strong> contadas con criterio, sin ruido, y con algo de opinión propia.
+              </p>
+              <Link
+                href="/newsletter"
+                className="inline-flex items-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
+                Suscribirse gratis
+                <svg className="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   )
