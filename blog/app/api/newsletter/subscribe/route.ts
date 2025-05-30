@@ -41,7 +41,7 @@ async function saveSubscribers(subscribers: NewsletterSubscriber[]): Promise<voi
     if (!existsSync(DATA_DIR)) {
       await mkdir(DATA_DIR, { recursive: true })
     }
-    
+
     await writeFile(SUBSCRIBERS_FILE, JSON.stringify(subscribers, null, 2))
   } catch (error) {
     console.error('Error saving subscribers:', error)
@@ -63,7 +63,7 @@ function generateConfirmationToken(): string {
 // Enviar email de confirmación
 async function sendConfirmationEmail(email: string, token: string) {
   const confirmationUrl = `https://footballdecoded.com/newsletter/confirm?token=${token}`
-  
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'FootballDecoded Newsletter <newsletter@footballdecoded.com>',
@@ -132,24 +132,20 @@ export async function POST(request: NextRequest) {
 
     // Validaciones básicas
     if (!email) {
-      return NextResponse.json(
-        { error: 'Email es requerido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email es requerido' }, { status: 400 })
     }
 
     if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { error: 'Email no válido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email no válido' }, { status: 400 })
     }
 
     // Leer suscriptores existentes
     const subscribers = await getSubscribers()
 
     // Verificar si ya está suscrito
-    const existingSubscriber = subscribers.find(sub => sub.email.toLowerCase() === email.toLowerCase())
+    const existingSubscriber = subscribers.find(
+      (sub) => sub.email.toLowerCase() === email.toLowerCase()
+    )
     if (existingSubscriber) {
       if (existingSubscriber.confirmed) {
         return NextResponse.json(
@@ -178,7 +174,7 @@ export async function POST(request: NextRequest) {
       confirmed: false,
       confirmationToken,
       ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
+      userAgent: request.headers.get('user-agent') || 'unknown',
     }
 
     // Añadir a la lista
@@ -192,16 +188,13 @@ export async function POST(request: NextRequest) {
 
     // Respuesta exitosa
     return NextResponse.json({
-      message: '¡Perfecto! Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada.',
-      email: email
+      message:
+        '¡Perfecto! Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada.',
+      email: email,
     })
-
   } catch (error) {
     console.error('Newsletter subscription error:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
@@ -209,24 +202,21 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const subscribers = await getSubscribers()
-    const confirmedSubscribers = subscribers.filter(sub => sub.confirmed)
-    
+    const confirmedSubscribers = subscribers.filter((sub) => sub.confirmed)
+
     return NextResponse.json({
       total: subscribers.length,
       confirmed: confirmedSubscribers.length,
       pending: subscribers.length - confirmedSubscribers.length,
       latest: confirmedSubscribers.slice(-5).reverse(), // Últimos 5 confirmados
-      recentCount: confirmedSubscribers.filter(sub => {
+      recentCount: confirmedSubscribers.filter((sub) => {
         const subDate = new Date(sub.subscribedAt)
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         return subDate > weekAgo
-      }).length
+      }).length,
     })
   } catch (error) {
     console.error('Error getting newsletter stats:', error)
-    return NextResponse.json(
-      { error: 'Error obteniendo estadísticas' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error obteniendo estadísticas' }, { status: 500 })
   }
 }
