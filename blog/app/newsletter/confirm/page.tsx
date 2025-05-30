@@ -1,11 +1,11 @@
 // app/newsletter/confirm/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from '@/components/Link'
 
-export default function NewsletterConfirmPage() {
+function ConfirmContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'invalid'>('loading')
   const [message, setMessage] = useState('')
   const searchParams = useSearchParams()
@@ -42,10 +42,11 @@ export default function NewsletterConfirmPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 xl:max-w-5xl xl:px-0">
       <div className="text-center">
+        
         {/* Loading */}
         {status === 'loading' && (
           <div className="space-y-4">
-            <div className="border-primary-200 border-t-primary-600 mx-auto h-12 w-12 animate-spin rounded-full border-4"></div>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Confirmando suscripción...
             </h1>
@@ -67,7 +68,7 @@ export default function NewsletterConfirmPage() {
                 />
               </svg>
             </div>
-
+            
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 🎉 ¡Suscripción confirmada!
@@ -77,12 +78,12 @@ export default function NewsletterConfirmPage() {
               </p>
             </div>
 
-            <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6">
+            <div className="rounded-lg bg-primary-50 p-6 dark:bg-primary-900/20">
               <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
                 ¿Qué viene ahora?
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Cada <strong>lunes por la mañana</strong> recibirás las 5 noticias más importantes
+                Cada <strong>lunes por la mañana</strong> recibirás las 5 noticias más importantes 
                 del mundo del fútbol, contadas con criterio y con mi análisis personal.
               </p>
             </div>
@@ -90,7 +91,7 @@ export default function NewsletterConfirmPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Link
                 href="/"
-                className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white transition-colors"
+                className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
               >
                 Explorar el blog
               </Link>
@@ -116,12 +117,14 @@ export default function NewsletterConfirmPage() {
                 />
               </svg>
             </div>
-
+            
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Error al confirmar
               </h1>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">{message}</p>
+              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                {message}
+              </p>
             </div>
 
             <div className="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">
@@ -135,7 +138,7 @@ export default function NewsletterConfirmPage() {
 
             <Link
               href="/newsletter"
-              className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
             >
               Volver a la newsletter
             </Link>
@@ -154,7 +157,7 @@ export default function NewsletterConfirmPage() {
                 />
               </svg>
             </div>
-
+            
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Enlace no válido
@@ -166,13 +169,31 @@ export default function NewsletterConfirmPage() {
 
             <Link
               href="/newsletter"
-              className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
             >
               Suscribirse de nuevo
             </Link>
           </div>
         )}
+
       </div>
     </div>
+  )
+}
+
+export default function NewsletterConfirmPage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 xl:max-w-5xl xl:px-0">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Cargando...
+          </h1>
+        </div>
+      </div>
+    }>
+      <ConfirmContent />
+    </Suspense>
   )
 }
