@@ -26,21 +26,21 @@ function getBaseUrl(request: NextRequest): string {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:3000'
   }
-  
+
   // En producción con Vercel
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`
   }
-  
+
   // URL configurada manualmente
   if (process.env.NEXTAUTH_URL) {
     return process.env.NEXTAUTH_URL
   }
-  
+
   // Fallback usando headers de la request
   const host = request.headers.get('host')
   const protocol = request.headers.get('x-forwarded-proto') || 'https'
-  
+
   return `${protocol}://${host}`
 }
 

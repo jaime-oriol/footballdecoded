@@ -117,9 +117,7 @@ export default function NewsletterForm({ className = '' }: NewsletterFormProps) 
                 <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
                   ¡Perfecto!
                 </h3>
-                <p className="mt-1 text-sm text-green-700 dark:text-green-300">
-                  {message}
-                </p>
+                <p className="mt-1 text-sm text-green-700 dark:text-green-300">{message}</p>
                 <p className="mt-2 text-xs text-green-600 dark:text-green-400">
                   Revisa tu bandeja de entrada (y la carpeta de spam por si acaso).
                 </p>
