@@ -115,7 +115,7 @@ export default function Home({ posts }) {
           <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-primary-50 to-white p-6 shadow-sm dark:border-gray-700 dark:from-primary-900/10 dark:to-gray-800">
             <div className="text-center">
               <h2 className="mb-3 text-xl font-bold text-gray-900 dark:text-gray-100">
-                📩 Newsletter Semanal
+                Newsletter Semanal
               </h2>
               <p className="mb-4 text-gray-600 dark:text-gray-400">
                 Cada lunes, las <strong>5 noticias más importantes del mundo del fútbol</strong> contadas con criterio, sin ruido, y con algo de opinión propia.
