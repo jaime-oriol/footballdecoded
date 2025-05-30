@@ -120,24 +120,6 @@ export default function Newsletter() {
                   </div>
                 </div>
               </div>
-
-              {/* Preview de ejemplo */}
-              <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Vista previa de ejemplo
-                </h3>
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-600 dark:bg-gray-700/30">
-                  <div className="mb-2 font-medium text-gray-900 dark:text-gray-100">
-                    FootballDecoded Newsletter #1 - 3 de febrero, 2025
-                  </div>
-                  <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                    <p><strong>1. El Madrid gana el Clásico con polémica</strong> → Mi reflexión sobre el penalti que no se pitó...</p>
-                    <p><strong>2. Mbappé marca su primer hat-trick</strong> → Por fin parece cómodo en la banda izquierda...</p>
-                    <p><strong>3. Fichaje bomba: Haaland al PSG</strong> → Los números no mienten, pero algo no cuadra...</p>
-                    <p className="text-xs italic">+ 2 noticias más y la recomendación de la semana</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
