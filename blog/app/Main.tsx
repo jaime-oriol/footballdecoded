@@ -1,6 +1,6 @@
 import Link from '@/components/Link'
 import { formatDate } from 'pliny/utils/formatDate'
-import ArticleCardHome from '@/components/ArticleCardHome'
+import ArticleCard from '@/components/ArticleCard'
 
 const MAX_DISPLAY = 3
 
@@ -81,11 +81,11 @@ export default function Home({ posts }) {
             </div>
           )}
 
-          {/* Lista de artículos con ArticleCardHome */}
+          {/* Lista de artículos con ArticleCard unificado */}
           {posts.length > 0 && (
             <div className="space-y-6">
               {posts.slice(0, MAX_DISPLAY).map((post) => (
-                <ArticleCardHome key={post.slug} post={post} />
+                <ArticleCard key={post.slug} post={post} />
               ))}
             </div>
           )}

@@ -3,7 +3,7 @@
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
 import Link from '@/components/Link'
-import SectionsBar from '@/components/SectionsBar'
+import SectionsNavigation from '@/components/SectionsNavigation'
 import ArticleCard from '@/components/ArticleCard'
 
 interface PaginationProps {
@@ -87,7 +87,7 @@ export default function ArticlesLayout({
 
   return (
     <div className="mx-auto max-w-7xl">
-      {/* Header del título - ARRIBA DE TODO */}
+      {/* Header del título */}
       <div className="px-4 pt-6 pb-8 sm:px-6 xl:px-0">
         <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
           {title}
@@ -104,10 +104,10 @@ export default function ArticlesLayout({
         )}
       </div>
 
-      {/* BARRA HORIZONTAL DE SECCIONES - JUSTO DEBAJO DEL TÍTULO */}
-      <SectionsBar />
+      {/* BARRA HORIZONTAL DE SECCIONES - REEMPLAZA SectionsBar */}
+      <SectionsNavigation variant="bar" />
 
-      {/* CONTENIDO PRINCIPAL - DEBAJO DE LA BARRA */}
+      {/* CONTENIDO PRINCIPAL */}
       <div className="px-4 sm:px-6 xl:px-0">
         <main className="py-8">
           {/* Empty State */}
@@ -137,16 +137,16 @@ export default function ArticlesLayout({
             </div>
           )}
 
-          {/* Articles Grid - 2x2 Layout (2 columns on desktop, 1 column on mobile) */}
+          {/* Articles - CAMBIADO A UNA SOLA COLUMNA para cards horizontales */}
           {displayPosts.length > 0 && (
-            <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2">
+            <div className="space-y-6">
               {displayPosts.map((post) => (
                 <ArticleCard key={post.slug} post={post} />
               ))}
             </div>
           )}
 
-          {/* Pagination - Solo si hay más de 1 página */}
+          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-12">
               <Pagination

@@ -5,7 +5,7 @@ import Link from './Link'
 import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
 import SearchButton from './SearchButton'
-import ArticleDropdown from './ArticleDropdown'
+import SectionsNavigation from './SectionsNavigation'
 
 const Header = () => {
   let headerClass = 'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10'
@@ -30,14 +30,13 @@ const Header = () => {
         </div>
       </Link>
       <div className="flex items-center space-x-4 leading-5 sm:-mr-6 sm:space-x-6">
-        {/* CAMBIO IMPORTANTE: Removemos overflow-x-auto y ajustamos para dropdown */}
         <div className="hidden items-center gap-x-4 sm:flex md:gap-x-6 lg:gap-x-8">
           {headerNavLinks
             .filter((link) => link.href !== '/')
             .map((link) => {
-              // Si es el enlace de artículos, usar el dropdown
+              // Si es el enlace de artículos, usar el dropdown unificado
               if (link.title === 'Artículos') {
-                return <ArticleDropdown key="articles" />
+                return <SectionsNavigation key="articles" variant="dropdown" />
               }
 
               // Para el resto de enlaces, usar el componente normal
