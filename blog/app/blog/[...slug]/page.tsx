@@ -1,3 +1,4 @@
+// blog/app/blog/[...slug]/page.tsx
 import 'css/prism.css'
 import 'katex/dist/katex.css'
 
@@ -76,19 +77,25 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
   const params = await props.params
   const slug = decodeURI(params.slug.join('/'))
 
-  // Filter out drafts in production
-  const sortedCoreContents = allCoreContent(sortPosts(allBlogs.filter((post) => !post.draft)))
+  // CORREGIDO: Filtrar drafts ANTES de procesar y calcular índices
+  const publishedBlogs = allBlogs.filter((post) => !post.draft)
+  const sortedCoreContents = allCoreContent(sortPosts(publishedBlogs))
+  
+  // Buscar el índice del post actual en la lista ya filtrada
   const postIndex = sortedCoreContents.findIndex((p) => p.slug === slug)
 
   if (postIndex === -1) {
     return notFound()
   }
 
-  const prev = sortedCoreContents[postIndex + 1]
-  const next = sortedCoreContents[postIndex - 1]
-  const post = allBlogs.find((p) => p.slug === slug) as Blog
+  // Calcular anterior y siguiente basándose en la lista ya filtrada
+  const prev = sortedCoreContents[postIndex + 1] || null
+  const next = sortedCoreContents[postIndex - 1] || null
+  
+  // Buscar el post completo original
+  const post = publishedBlogs.find((p) => p.slug === slug) as Blog
 
-  // Si el post está en draft, no mostrarlo en producción
+  // Si el post está en draft, no mostrarlo en producción (doble check)
   if (post.draft && process.env.NODE_ENV === 'production') {
     return notFound()
   }
