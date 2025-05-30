@@ -42,11 +42,10 @@ function ConfirmContent() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 xl:max-w-5xl xl:px-0">
       <div className="text-center">
-        
         {/* Loading */}
         {status === 'loading' && (
           <div className="space-y-4">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
+            <div className="border-primary-200 border-t-primary-600 mx-auto h-12 w-12 animate-spin rounded-full border-4"></div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Confirmando suscripción...
             </h1>
@@ -68,7 +67,7 @@ function ConfirmContent() {
                 />
               </svg>
             </div>
-            
+
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 🎉 ¡Suscripción confirmada!
@@ -78,12 +77,12 @@ function ConfirmContent() {
               </p>
             </div>
 
-            <div className="rounded-lg bg-primary-50 p-6 dark:bg-primary-900/20">
+            <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6">
               <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
                 ¿Qué viene ahora?
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Cada <strong>lunes por la mañana</strong> recibirás las 5 noticias más importantes 
+                Cada <strong>lunes por la mañana</strong> recibirás las 5 noticias más importantes
                 del mundo del fútbol, contadas con criterio y con mi análisis personal.
               </p>
             </div>
@@ -91,7 +90,7 @@ function ConfirmContent() {
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Link
                 href="/"
-                className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
+                className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white transition-colors"
               >
                 Explorar el blog
               </Link>
@@ -117,14 +116,12 @@ function ConfirmContent() {
                 />
               </svg>
             </div>
-            
+
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Error al confirmar
               </h1>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                {message}
-              </p>
+              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">{message}</p>
             </div>
 
             <div className="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">
@@ -138,7 +135,7 @@ function ConfirmContent() {
 
             <Link
               href="/newsletter"
-              className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
+              className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white transition-colors"
             >
               Volver a la newsletter
             </Link>
@@ -157,7 +154,7 @@ function ConfirmContent() {
                 />
               </svg>
             </div>
-            
+
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Enlace no válido
@@ -169,13 +166,12 @@ function ConfirmContent() {
 
             <Link
               href="/newsletter"
-              className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
+              className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white transition-colors"
             >
               Suscribirse de nuevo
             </Link>
           </div>
         )}
-
       </div>
     </div>
   )
@@ -183,16 +179,18 @@ function ConfirmContent() {
 
 export default function NewsletterConfirmPage() {
   return (
-    <Suspense fallback={
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 xl:max-w-5xl xl:px-0">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
-          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Cargando...
-          </h1>
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 xl:max-w-5xl xl:px-0">
+          <div className="text-center">
+            <div className="border-primary-200 border-t-primary-600 mx-auto h-12 w-12 animate-spin rounded-full border-4"></div>
+            <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Cargando...
+            </h1>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ConfirmContent />
     </Suspense>
   )
