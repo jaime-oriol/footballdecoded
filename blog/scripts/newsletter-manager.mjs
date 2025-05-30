@@ -1,5 +1,5 @@
 // scripts/newsletter-manager.mjs
-import { readFile, writeFile } from 'fs/promises'
+import { readFile, writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
@@ -9,179 +9,140 @@ const SUBSCRIBERS_FILE = path.join(DATA_DIR, 'newsletter-subscribers.json')
 async function getSubscribers() {
   try {
     if (!existsSync(SUBSCRIBERS_FILE)) {
-      console.log('No hay archivo de suscriptores todavía.')
+      console.log('❌ No hay archivo de suscriptores.')
       return []
     }
     const data = await readFile(SUBSCRIBERS_FILE, 'utf8')
     return JSON.parse(data)
   } catch (error) {
-    console.error('Error leyendo suscriptores:', error)
+    console.error('❌ Error leyendo suscriptores:', error)
     return []
   }
 }
 
-async function exportToCSV() {
+async function exportEmails() {
   const subscribers = await getSubscribers()
   const confirmedSubscribers = subscribers.filter((sub) => sub.confirmed)
 
   if (confirmedSubscribers.length === 0) {
-    console.log('No hay suscriptores confirmados para exportar.')
+    console.log('📭 No hay emails confirmados.')
     return
   }
 
-  // Crear CSV
-  const csvHeader = 'Email,Fecha de suscripción,Fecha de confirmación,IP\n'
-  const csvRows = confirmedSubscribers
-    .map(
-      (sub) => `${sub.email},${sub.subscribedAt},${sub.confirmedAt || 'N/A'},${sub.ip || 'unknown'}`
-    )
-    .join('\n')
+  // Crear directorio si no existe
+  if (!existsSync(DATA_DIR)) {
+    await mkdir(DATA_DIR, { recursive: true })
+  }
 
-  const csvContent = csvHeader + csvRows
-  const csvFile = path.join(
-    DATA_DIR,
-    `newsletter-confirmed-${new Date().toISOString().split('T')[0]}.csv`
-  )
+  const today = new Date().toISOString().split('T')[0]
 
+  // 1. Lista simple de emails (para copiar/pegar)
+  const emailsList = confirmedSubscribers.map(sub => sub.email).join('\n')
+  const emailsFile = path.join(DATA_DIR, 'confirmed-emails.txt')
+  await writeFile(emailsFile, emailsList)
+
+  // 2. Lista con fechas (más info)
+  const emailsWithDates = confirmedSubscribers.map(sub => {
+    const date = new Date(sub.confirmedAt || sub.subscribedAt).toLocaleDateString()
+    return `${sub.email} - ${date}`
+  }).join('\n')
+  const detailedFile = path.join(DATA_DIR, 'emails-with-dates.txt')
+  await writeFile(detailedFile, emailsWithDates)
+
+  // 3. CSV simple
+  const csvContent = [
+    'email,fecha_confirmacion',
+    ...confirmedSubscribers.map(sub => {
+      const date = sub.confirmedAt || sub.subscribedAt
+      return `${sub.email},${date}`
+    })
+  ].join('\n')
+  
+  const csvFile = path.join(DATA_DIR, `emails-${today}.csv`)
   await writeFile(csvFile, csvContent)
-  console.log(`✅ Exportado a: ${csvFile}`)
-  console.log(`📊 Total suscriptores confirmados: ${confirmedSubscribers.length}`)
-}
 
-async function showStats() {
-  const subscribers = await getSubscribers()
-  const confirmedSubscribers = subscribers.filter((sub) => sub.confirmed)
-  const pendingSubscribers = subscribers.filter((sub) => !sub.confirmed)
-
-  console.log('\n📈 ESTADÍSTICAS NEWSLETTER')
+  console.log('\n✅ ARCHIVOS ACTUALIZADOS:')
+  console.log(`📧 Emails simples: ${emailsFile}`)
+  console.log(`📅 Con fechas: ${detailedFile}`)
+  console.log(`📊 CSV del día: ${csvFile}`)
+  console.log(`\n📈 Total confirmados: ${confirmedSubscribers.length}`)
+  
+  // Mostrar los emails en consola para copy/paste rápido
+  console.log('\n📋 EMAILS PARA COPIAR:')
   console.log('='.repeat(40))
-  console.log(`Total suscriptores: ${subscribers.length}`)
-  console.log(`✅ Confirmados: ${confirmedSubscribers.length}`)
-  console.log(`⏳ Pendientes: ${pendingSubscribers.length}`)
-
-  if (subscribers.length > 0) {
-    // Porcentaje de confirmación
-    const confirmationRate = ((confirmedSubscribers.length / subscribers.length) * 100).toFixed(1)
-    console.log(`📊 Tasa de confirmación: ${confirmationRate}%`)
-
-    // Últimos 7 días
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    const recentConfirmed = confirmedSubscribers.filter(
-      (sub) => new Date(sub.confirmedAt || sub.subscribedAt) > weekAgo
-    )
-    console.log(`🆕 Confirmados esta semana: ${recentConfirmed.length}`)
-
-    if (confirmedSubscribers.length > 0) {
-      // Primer y último confirmado
-      const sortedConfirmed = [...confirmedSubscribers].sort(
-        (a, b) =>
-          new Date(a.confirmedAt || a.subscribedAt) - new Date(b.confirmedAt || b.subscribedAt)
-      )
-      console.log(
-        `🥇 Primer confirmado: ${new Date(sortedConfirmed[0].confirmedAt || sortedConfirmed[0].subscribedAt).toLocaleDateString()}`
-      )
-      console.log(
-        `🏆 Último confirmado: ${new Date(sortedConfirmed[sortedConfirmed.length - 1].confirmedAt || sortedConfirmed[sortedConfirmed.length - 1].subscribedAt).toLocaleDateString()}`
-      )
-
-      // Últimos 5 confirmados
-      console.log('\n📧 Últimos 5 suscriptores confirmados:')
-      confirmedSubscribers
-        .slice(-5)
-        .reverse()
-        .forEach((sub, i) => {
-          const confirmDate = sub.confirmedAt
-            ? new Date(sub.confirmedAt).toLocaleDateString()
-            : 'Confirmación pendiente'
-          console.log(`${i + 1}. ${sub.email} - ${confirmDate}`)
-        })
-    }
-
-    if (pendingSubscribers.length > 0) {
-      console.log('\n⏳ Suscriptores pendientes de confirmación:')
-      pendingSubscribers.slice(0, 5).forEach((sub, i) => {
-        const subscribeDate = new Date(sub.subscribedAt).toLocaleDateString()
-        console.log(`${i + 1}. ${sub.email} - Suscrito: ${subscribeDate}`)
-      })
-      if (pendingSubscribers.length > 5) {
-        console.log(`... y ${pendingSubscribers.length - 5} más`)
-      }
-    }
-  }
+  confirmedSubscribers.forEach(sub => console.log(sub.email))
   console.log('='.repeat(40))
 }
 
-async function exportEmailList() {
+async function showList() {
   const subscribers = await getSubscribers()
   const confirmedSubscribers = subscribers.filter((sub) => sub.confirmed)
 
   if (confirmedSubscribers.length === 0) {
-    console.log('No hay emails confirmados para exportar.')
+    console.log('📭 No hay emails confirmados.')
     return
   }
 
-  const emailList = confirmedSubscribers.map((sub) => sub.email).join('\n')
-  const emailFile = path.join(
-    DATA_DIR,
-    `confirmed-emails-${new Date().toISOString().split('T')[0]}.txt`
-  )
-
-  await writeFile(emailFile, emailList)
-  console.log(`✅ Lista de emails confirmados exportada a: ${emailFile}`)
-  console.log(`📧 Total emails confirmados: ${confirmedSubscribers.length}`)
+  console.log(`\n📧 LISTA ACTUALIZADA (${confirmedSubscribers.length} confirmados):`)
+  console.log('='.repeat(50))
+  
+  confirmedSubscribers.forEach((sub, index) => {
+    const date = new Date(sub.confirmedAt || sub.subscribedAt).toLocaleDateString()
+    console.log(`${index + 1}. ${sub.email} - ${date}`)
+  })
+  
+  console.log('='.repeat(50))
 }
 
-async function exportAllEmails() {
+async function showAll() {
   const subscribers = await getSubscribers()
 
   if (subscribers.length === 0) {
-    console.log('No hay emails para exportar.')
+    console.log('📭 No hay suscriptores.')
     return
   }
 
-  const allEmailsList = subscribers
-    .map((sub) => `${sub.email} - ${sub.confirmed ? 'Confirmado' : 'Pendiente'}`)
-    .join('\n')
-  const allEmailsFile = path.join(
-    DATA_DIR,
-    `all-emails-${new Date().toISOString().split('T')[0]}.txt`
-  )
-
-  await writeFile(allEmailsFile, allEmailsList)
-  console.log(`✅ Lista completa exportada a: ${allEmailsFile}`)
-  console.log(`📧 Total emails: ${subscribers.length}`)
+  console.log(`\n📋 TODOS LOS SUSCRIPTORES (${subscribers.length} total):`)
+  console.log('='.repeat(60))
+  
+  subscribers.forEach((sub, index) => {
+    const status = sub.confirmed ? '✅' : '⏳'
+    const date = new Date(sub.subscribedAt).toLocaleDateString()
+    console.log(`${index + 1}. ${status} ${sub.email} - ${date}`)
+  })
+  
+  console.log('='.repeat(60))
+  
+  const confirmed = subscribers.filter(s => s.confirmed).length
+  console.log(`\n📊 Confirmados: ${confirmed} | Pendientes: ${subscribers.length - confirmed}`)
 }
 
 // Comando principal
 const command = process.argv[2]
 
 switch (command) {
-  case 'stats':
-    await showStats()
+  case 'list':
+    await showList()
     break
-  case 'export-csv':
-    await exportToCSV()
+  case 'export':
+    await exportEmails()
     break
-  case 'export-emails':
-    await exportEmailList()
-    break
-  case 'export-all':
-    await exportAllEmails()
+  case 'all':
+    await showAll()
     break
   default:
     console.log(`
-📧 NEWSLETTER MANAGER
-====================
+📧 NEWSLETTER MANAGER - SIMPLE
+==============================
 
 Comandos disponibles:
 
-  npm run newsletter stats           - Mostrar estadísticas detalladas
-  npm run newsletter export-csv      - Exportar solo confirmados a CSV
-  npm run newsletter export-emails   - Exportar solo emails confirmados
-  npm run newsletter export-all      - Exportar todos (confirmados + pendientes)
+  npm run newsletter list     - Ver emails confirmados
+  npm run newsletter export   - Exportar a archivos locales
+  npm run newsletter all      - Ver todos (confirmados + pendientes)
 
 Ejemplos:
-  npm run newsletter stats
-  npm run newsletter export-emails
+  npm run newsletter list     # Ver la lista actual
+  npm run newsletter export   # Actualizar archivos locales
 `)
 }
