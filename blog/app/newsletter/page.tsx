@@ -1,5 +1,5 @@
 import { genPageMetadata } from 'app/seo'
-import NewsletterForm from 'pliny/ui/NewsletterForm'
+import NewsletterForm from '@/components/NewsletterForm'
 
 export const metadata = genPageMetadata({
   title: 'Newsletter - FootballDecoded Semanal',
