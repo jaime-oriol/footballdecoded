@@ -59,7 +59,7 @@ export default function ArticleCard({ post }: ArticleCardProps) {
         {/* Contenido a la derecha */}
         <div className="min-w-0 flex-1 p-6">
           {/* TÍTULO en negrita y más grande */}
-          <h3 className="group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-4 line-clamp-2 text-xl leading-snug font-bold text-gray-900 transition-colors dark:text-gray-100 lg:text-2xl">
+          <h3 className="group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-4 line-clamp-2 text-xl leading-snug font-bold text-gray-900 transition-colors lg:text-2xl dark:text-gray-100">
             {title}
           </h3>
 
