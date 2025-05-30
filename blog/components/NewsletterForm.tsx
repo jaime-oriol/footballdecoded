@@ -43,8 +43,9 @@ export default function NewsletterForm({ className = '' }: NewsletterFormProps) 
 
   return (
     <div className={className}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Input y botón más grandes y llamativos */}
+        <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex-1">
             <label htmlFor="newsletter-email" className="sr-only">
               Email
@@ -57,17 +58,17 @@ export default function NewsletterForm({ className = '' }: NewsletterFormProps) 
               placeholder="tu@email.com"
               required
               disabled={status === 'loading'}
-              className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+              className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 w-full rounded-xl border border-gray-300 px-6 py-4 text-lg text-gray-900 placeholder-gray-500 shadow-sm transition-all disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
             />
           </div>
           <button
             type="submit"
             disabled={status === 'loading' || !email}
-            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 inline-flex items-center justify-center rounded-md px-6 py-3 text-base font-medium text-white transition-colors focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 inline-flex items-center justify-center rounded-xl px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-200 focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
           >
             {status === 'loading' ? (
               <>
-                <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg className="mr-3 h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle
                     className="opacity-25"
                     cx="12"
@@ -85,40 +86,69 @@ export default function NewsletterForm({ className = '' }: NewsletterFormProps) 
                 Enviando...
               </>
             ) : (
-              'Suscribirse'
+              <>
+                Suscribirse gratis
+                <svg className="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </>
             )}
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* Mensajes de estado - mejorados visualmente */}
         {status === 'success' && (
-          <div className="rounded-md bg-green-50 p-4 dark:bg-green-900/20">
-            <div className="flex">
-              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p className="ml-3 text-sm font-medium text-green-800 dark:text-green-200">
-                {message}
-              </p>
+          <div className="rounded-xl bg-green-50 p-6 shadow-sm dark:bg-green-900/20">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
+                  ¡Perfecto!
+                </h3>
+                <p className="mt-1 text-sm text-green-700 dark:text-green-300">
+                  {message}
+                </p>
+                <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                  Revisa tu bandeja de entrada (y la carpeta de spam por si acaso).
+                </p>
+              </div>
             </div>
           </div>
         )}
 
         {status === 'error' && (
-          <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
-            <div className="flex">
-              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p className="ml-3 text-sm font-medium text-red-800 dark:text-red-200">{message}</p>
+          <div className="rounded-xl bg-red-50 p-6 shadow-sm dark:bg-red-900/20">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Ups, algo salió mal
+                </h3>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300">{message}</p>
+                <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                  Inténtalo de nuevo o contacta en newsletter@footballdecoded.com
+                </p>
+              </div>
             </div>
           </div>
         )}
