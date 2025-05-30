@@ -1,3 +1,4 @@
+// layouts/PostLayout.tsx
 import { ReactNode } from 'react'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog, Authors } from 'contentlayer/generated'
@@ -16,8 +17,8 @@ const postDateTemplate: Intl.DateTimeFormatOptions = {
 interface LayoutProps {
   content: CoreContent<Blog>
   authorDetails: CoreContent<Authors>[]
-  next?: { path: string; title: string }
-  prev?: { path: string; title: string }
+  next?: { path: string; title: string; slug: string } | null
+  prev?: { path: string; title: string; slug: string } | null
   children: ReactNode
 }
 
@@ -139,17 +140,17 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               </div>
             )}
 
-            {/* Navegación entre artículos */}
+            {/* Navegación entre artículos - CORREGIDO */}
             {(prev || next) && (
               <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-700">
                 <div className="flex justify-between">
-                  {prev && prev.path && (
+                  {prev && (
                     <div className="w-1/2 pr-4">
                       <p className="mb-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">
                         Artículo anterior
                       </p>
                       <Link
-                        href={`/${prev.path}`}
+                        href={`/blog/${prev.slug}`}
                         className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 block text-lg font-medium transition-colors"
                       >
                         {prev.title}
@@ -157,13 +158,13 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                     </div>
                   )}
 
-                  {next && next.path && (
+                  {next && (
                     <div className="w-1/2 pl-4 text-right">
                       <p className="mb-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">
                         Siguiente artículo
                       </p>
                       <Link
-                        href={`/${next.path}`}
+                        href={`/blog/${next.slug}`}
                         className="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 block text-lg font-medium transition-colors"
                       >
                         {next.title}
