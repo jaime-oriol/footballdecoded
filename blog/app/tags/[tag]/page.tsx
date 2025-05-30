@@ -1,7 +1,7 @@
 import { slug } from 'github-slugger'
 import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
 import siteMetadata from '@/content/siteMetadata'
-import ArticlesLayout from '@/components/ArticlesLayout'  // Cambio aquí
+import SimpleTagLayout from '@/components/SimpleTagLayout'
 import { allBlogs } from 'contentlayer/generated'
 import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
@@ -52,11 +52,11 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
   }
 
   return (
-    <ArticlesLayout
+    <SimpleTagLayout
       posts={filteredPosts}
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
-      title={`Tag: ${title}`}
+      title={title}
     />
   )
 }

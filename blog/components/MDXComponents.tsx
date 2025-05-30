@@ -5,7 +5,7 @@ import type { MDXComponents } from 'mdx/types'
 import Image from './Image'
 import CustomLink from './Link'
 
-// Simple table wrapper inline
+// Table wrapper inline - ya no necesitamos archivo separado
 const TableWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full overflow-x-auto">
     <table>{children}</table>
