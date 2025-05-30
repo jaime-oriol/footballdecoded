@@ -75,7 +75,7 @@ export default function SimpleTagLayout({
             {title}
           </h1>
         </div>
-        
+
         <ul>
           {!displayPosts.length && 'No posts found.'}
           {displayPosts.map((post) => {
@@ -99,7 +99,10 @@ export default function SimpleTagLayout({
                       {tags && (
                         <div className="flex flex-wrap">
                           {tags.map((tag) => (
-                            <span key={tag} className="mr-3 text-sm font-medium text-primary-500 uppercase">
+                            <span
+                              key={tag}
+                              className="text-primary-500 mr-3 text-sm font-medium uppercase"
+                            >
                               {tag}
                             </span>
                           ))}
