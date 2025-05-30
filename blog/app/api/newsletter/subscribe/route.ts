@@ -20,6 +20,30 @@ interface NewsletterSubscriber {
 const DATA_DIR = path.join(process.cwd(), 'data')
 const SUBSCRIBERS_FILE = path.join(DATA_DIR, 'newsletter-subscribers.json')
 
+// Función para obtener la URL base correcta
+function getBaseUrl(request: NextRequest): string {
+  // En desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000'
+  }
+  
+  // En producción con Vercel
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // URL configurada manualmente
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL
+  }
+  
+  // Fallback usando headers de la request
+  const host = request.headers.get('host')
+  const protocol = request.headers.get('x-forwarded-proto') || 'https'
+  
+  return `${protocol}://${host}`
+}
+
 // Función para leer suscriptores existentes
 async function getSubscribers(): Promise<NewsletterSubscriber[]> {
   try {
@@ -61,8 +85,8 @@ function generateConfirmationToken(): string {
 }
 
 // Enviar email de confirmación
-async function sendConfirmationEmail(email: string, token: string) {
-  const confirmationUrl = `https://footballdecoded.com/newsletter/confirm?token=${token}`
+async function sendConfirmationEmail(email: string, token: string, baseUrl: string) {
+  const confirmationUrl = `${baseUrl}/newsletter/confirm?token=${token}`
 
   try {
     const { data, error } = await resend.emails.send({
@@ -100,6 +124,9 @@ async function sendConfirmationEmail(email: string, token: string) {
           <div style="background: #f1f5f9; border-radius: 6px; padding: 15px; margin-top: 25px;">
             <p style="margin: 0; font-size: 14px; color: #64748b;">
               Si no te has suscrito a esta newsletter, puedes ignorar este email.
+            </p>
+            <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8;">
+              URL de confirmación: ${confirmationUrl}
             </p>
           </div>
           
@@ -155,7 +182,8 @@ export async function POST(request: NextRequest) {
       } else {
         // Reenviar email de confirmación
         if (existingSubscriber.confirmationToken) {
-          await sendConfirmationEmail(email, existingSubscriber.confirmationToken)
+          const baseUrl = getBaseUrl(request)
+          await sendConfirmationEmail(email, existingSubscriber.confirmationToken, baseUrl)
         }
         return NextResponse.json(
           { message: 'Te hemos reenviado el email de confirmación. Revisa tu bandeja de entrada.' },
@@ -184,7 +212,8 @@ export async function POST(request: NextRequest) {
     await saveSubscribers(subscribers)
 
     // Enviar email de confirmación
-    await sendConfirmationEmail(email, confirmationToken)
+    const baseUrl = getBaseUrl(request)
+    await sendConfirmationEmail(email, confirmationToken, baseUrl)
 
     // Respuesta exitosa
     return NextResponse.json({
