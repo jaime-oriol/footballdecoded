@@ -47,17 +47,14 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token')
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Token de confirmación requerido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Token de confirmación requerido' }, { status: 400 })
     }
 
     // Leer suscriptores
     const subscribers = await getSubscribers()
 
     // Buscar suscriptor con este token
-    const subscriberIndex = subscribers.findIndex(sub => sub.confirmationToken === token)
+    const subscriberIndex = subscribers.findIndex((sub) => sub.confirmationToken === token)
 
     if (subscriberIndex === -1) {
       return NextResponse.json(
@@ -72,7 +69,7 @@ export async function GET(request: NextRequest) {
     if (subscriber.confirmed) {
       return NextResponse.json({
         message: 'Tu suscripción ya había sido confirmada anteriormente',
-        email: subscriber.email
+        email: subscriber.email,
       })
     }
 
@@ -81,7 +78,7 @@ export async function GET(request: NextRequest) {
       ...subscriber,
       confirmed: true,
       confirmedAt: new Date().toISOString(),
-      confirmationToken: undefined // Eliminar el token usado
+      confirmationToken: undefined, // Eliminar el token usado
     }
 
     // Guardar cambios
@@ -90,14 +87,10 @@ export async function GET(request: NextRequest) {
     // Respuesta de éxito
     return NextResponse.json({
       message: '¡Suscripción confirmada correctamente! Recibirás la newsletter cada lunes.',
-      email: subscriber.email
+      email: subscriber.email,
     })
-
   } catch (error) {
     console.error('Newsletter confirmation error:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
