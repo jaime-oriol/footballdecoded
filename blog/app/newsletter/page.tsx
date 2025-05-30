@@ -28,8 +28,9 @@ export default function Newsletter() {
                   Suscríbete a la newsletter de FootballDecoded
                 </h2>
                 <p className="leading-relaxed text-gray-600 dark:text-gray-400">
-                  Cada lunes, en tu correo: <strong>las 5 noticias más importantes del mundo del fútbol</strong>, 
-                  contadas con criterio, sin ruido, y con algo de opinión propia.
+                  Cada lunes, en tu correo:{' '}
+                  <strong>las 5 noticias más importantes del mundo del fútbol</strong>, contadas con
+                  criterio, sin ruido, y con algo de opinión propia.
                 </p>
               </div>
 
@@ -52,7 +53,8 @@ export default function Newsletter() {
                         Resultados y partidos clave
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Lo más importante que pasó en el campo durante el fin de semana, explicado sin exageraciones.
+                        Lo más importante que pasó en el campo durante el fin de semana, explicado
+                        sin exageraciones.
                       </p>
                     </div>
                   </div>
@@ -76,7 +78,8 @@ export default function Newsletter() {
                         Golazos, momentos virales y curiosidades
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Lo que se compartió, lo que generó conversación, y lo que vale la pena volver a ver.
+                        Lo que se compartió, lo que generó conversación, y lo que vale la pena
+                        volver a ver.
                       </p>
                     </div>
                   </div>
@@ -88,7 +91,8 @@ export default function Newsletter() {
                         Una reflexión personal
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Un comentario rápido mío sobre algo que me llamó la atención, siempre relacionado con el juego.
+                        Un comentario rápido mío sobre algo que me llamó la atención, siempre
+                        relacionado con el juego.
                       </p>
                     </div>
                   </div>

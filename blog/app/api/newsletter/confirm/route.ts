@@ -73,9 +73,9 @@ export async function GET(request: NextRequest) {
         </body>
         </html>
         `,
-        { 
+        {
           status: 400,
-          headers: { 'Content-Type': 'text/html' }
+          headers: { 'Content-Type': 'text/html' },
         }
       )
     }
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     const subscribers = await getSubscribers()
 
     // Buscar suscriptor con este token
-    const subscriberIndex = subscribers.findIndex(sub => sub.confirmationToken === token)
+    const subscriberIndex = subscribers.findIndex((sub) => sub.confirmationToken === token)
 
     if (subscriberIndex === -1) {
       return new NextResponse(
@@ -113,9 +113,9 @@ export async function GET(request: NextRequest) {
         </body>
         </html>
         `,
-        { 
+        {
           status: 404,
-          headers: { 'Content-Type': 'text/html' }
+          headers: { 'Content-Type': 'text/html' },
         }
       )
     }
@@ -151,9 +151,9 @@ export async function GET(request: NextRequest) {
         </body>
         </html>
         `,
-        { 
+        {
           status: 200,
-          headers: { 'Content-Type': 'text/html' }
+          headers: { 'Content-Type': 'text/html' },
         }
       )
     }
@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
       ...subscriber,
       confirmed: true,
       confirmedAt: new Date().toISOString(),
-      confirmationToken: undefined // Eliminar el token usado
+      confirmationToken: undefined, // Eliminar el token usado
     }
 
     // Guardar cambios
@@ -233,12 +233,11 @@ export async function GET(request: NextRequest) {
       </body>
       </html>
       `,
-      { 
+      {
         status: 200,
-        headers: { 'Content-Type': 'text/html' }
+        headers: { 'Content-Type': 'text/html' },
       }
     )
-
   } catch (error) {
     console.error('Newsletter confirmation error:', error)
     return new NextResponse(
@@ -267,9 +266,9 @@ export async function GET(request: NextRequest) {
       </body>
       </html>
       `,
-      { 
+      {
         status: 500,
-        headers: { 'Content-Type': 'text/html' }
+        headers: { 'Content-Type': 'text/html' },
       }
     )
   }

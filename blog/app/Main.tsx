@@ -112,17 +112,18 @@ export default function Home({ posts }) {
 
         {/* === CALL TO ACTION NEWSLETTER === */}
         <div className="pt-8">
-          <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-primary-50 to-white p-6 shadow-sm dark:border-gray-700 dark:from-primary-900/10 dark:to-gray-800">
+          <div className="from-primary-50 dark:from-primary-900/10 rounded-lg border border-gray-200 bg-gradient-to-br to-white p-6 shadow-sm dark:border-gray-700 dark:to-gray-800">
             <div className="text-center">
               <h2 className="mb-3 text-xl font-bold text-gray-900 dark:text-gray-100">
                 Newsletter Semanal
               </h2>
               <p className="mb-4 text-gray-600 dark:text-gray-400">
-                Cada lunes, las <strong>5 noticias más importantes del mundo del fútbol</strong> contadas con criterio, sin ruido, y con algo de opinión propia.
+                Cada lunes, las <strong>5 noticias más importantes del mundo del fútbol</strong>{' '}
+                contadas con criterio, sin ruido, y con algo de opinión propia.
               </p>
               <Link
                 href="/newsletter"
-                className="inline-flex items-center rounded-lg bg-primary-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 inline-flex items-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm transition-colors focus:ring-2 focus:ring-offset-2"
               >
                 Suscribirse gratis
                 <svg className="ml-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
