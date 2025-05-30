@@ -12,14 +12,14 @@ const OUTPUT_DIR = path.join(process.cwd(), 'exports')
 async function getSubscribersFromAPI() {
   try {
     console.log(`🔗 Conectando a: ${API_URL}/api/newsletter/subscribe`)
-    
+
     const response = await fetch(`${API_URL}/api/newsletter/subscribe`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         // Si necesitas autenticación, añádela aquí
         // 'Authorization': 'Bearer your-token'
-      }
+      },
     })
 
     if (!response.ok) {
@@ -40,14 +40,14 @@ async function getSubscribersFromAPI() {
 
 async function exportEmailsFromAPI() {
   const stats = await getSubscribersFromAPI()
-  
+
   if (!stats || !stats.latest) {
     console.log('❌ No se pudieron obtener los datos de la API')
     return
   }
 
   // Filtrar solo confirmados
-  const confirmedSubscribers = stats.latest.filter(sub => sub.confirmed)
+  const confirmedSubscribers = stats.latest.filter((sub) => sub.confirmed)
 
   if (confirmedSubscribers.length === 0) {
     console.log('📭 No hay emails confirmados.')
@@ -63,28 +63,30 @@ async function exportEmailsFromAPI() {
 
   try {
     // 1. Lista simple de emails
-    const emailsList = confirmedSubscribers.map(sub => sub.email).join('\n')
+    const emailsList = confirmedSubscribers.map((sub) => sub.email).join('\n')
     const emailsFile = path.join(OUTPUT_DIR, 'confirmed-emails.txt')
     await writeFile(emailsFile, emailsList)
 
     // 2. Lista con fechas
-    const emailsWithDates = confirmedSubscribers.map(sub => {
-      const date = new Date(sub.confirmedAt || sub.subscribedAt).toLocaleDateString()
-      return `${sub.email} - ${date}`
-    }).join('\n')
+    const emailsWithDates = confirmedSubscribers
+      .map((sub) => {
+        const date = new Date(sub.confirmedAt || sub.subscribedAt).toLocaleDateString()
+        return `${sub.email} - ${date}`
+      })
+      .join('\n')
     const detailedFile = path.join(OUTPUT_DIR, 'emails-with-dates.txt')
     await writeFile(detailedFile, emailsWithDates)
 
     // 3. CSV
     const csvContent = [
       'email,fecha_confirmacion,fecha_suscripcion',
-      ...confirmedSubscribers.map(sub => {
+      ...confirmedSubscribers.map((sub) => {
         const confirmedDate = sub.confirmedAt || 'N/A'
         const subscribedDate = sub.subscribedAt || 'N/A'
         return `${sub.email},${confirmedDate},${subscribedDate}`
-      })
+      }),
     ].join('\n')
-    
+
     const csvFile = path.join(OUTPUT_DIR, `emails-${today}.csv`)
     await writeFile(csvFile, csvContent)
 
@@ -93,13 +95,12 @@ async function exportEmailsFromAPI() {
     console.log(`📅 Con fechas: ${detailedFile}`)
     console.log(`📊 CSV del día: ${csvFile}`)
     console.log(`\n📈 Total confirmados: ${confirmedSubscribers.length}`)
-    
+
     // Mostrar emails para copy/paste
     console.log('\n📋 EMAILS PARA COPIAR:')
     console.log('='.repeat(40))
-    confirmedSubscribers.forEach(sub => console.log(sub.email))
+    confirmedSubscribers.forEach((sub) => console.log(sub.email))
     console.log('='.repeat(40))
-
   } catch (error) {
     console.error('❌ Error escribiendo archivos:', error.message)
   }
@@ -107,7 +108,7 @@ async function exportEmailsFromAPI() {
 
 async function showListFromAPI() {
   const stats = await getSubscribersFromAPI()
-  
+
   if (!stats) {
     console.log('❌ No se pudieron obtener los datos')
     return
@@ -125,12 +126,12 @@ async function showListFromAPI() {
   console.log('='.repeat(40))
 
   if (stats.latest && stats.latest.length > 0) {
-    const confirmedSubs = stats.latest.filter(sub => sub.confirmed)
-    
+    const confirmedSubs = stats.latest.filter((sub) => sub.confirmed)
+
     if (confirmedSubs.length > 0) {
       console.log('\n📧 EMAILS CONFIRMADOS:')
       confirmedSubs.forEach((sub, index) => {
-        const date = sub.confirmedAt 
+        const date = sub.confirmedAt
           ? new Date(sub.confirmedAt).toLocaleDateString()
           : new Date(sub.subscribedAt).toLocaleDateString()
         console.log(`${index + 1}. ${sub.email} - ${date}`)
@@ -142,9 +143,9 @@ async function showListFromAPI() {
 async function testConnection() {
   console.log('🧪 PROBANDO CONEXIÓN A LA API...')
   console.log(`🔗 URL: ${API_URL}/api/newsletter/subscribe`)
-  
+
   const stats = await getSubscribersFromAPI()
-  
+
   if (stats) {
     console.log('✅ Conexión exitosa!')
     console.log('📊 Datos recibidos:', JSON.stringify(stats, null, 2))

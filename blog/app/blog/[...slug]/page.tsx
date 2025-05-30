@@ -80,7 +80,7 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
   // CORREGIDO: Filtrar drafts ANTES de procesar y calcular índices
   const publishedBlogs = allBlogs.filter((post) => !post.draft)
   const sortedCoreContents = allCoreContent(sortPosts(publishedBlogs))
-  
+
   // Buscar el índice del post actual en la lista ya filtrada
   const postIndex = sortedCoreContents.findIndex((p) => p.slug === slug)
 
@@ -91,7 +91,7 @@ export default async function Page(props: { params: Promise<{ slug: string[] }> 
   // Calcular anterior y siguiente basándose en la lista ya filtrada
   const prev = sortedCoreContents[postIndex + 1] || null
   const next = sortedCoreContents[postIndex - 1] || null
-  
+
   // Buscar el post completo original
   const post = publishedBlogs.find((p) => p.slug === slug) as Blog
 
