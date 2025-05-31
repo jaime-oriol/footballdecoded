@@ -13,6 +13,7 @@ const handler = NextAuth({
     async session({ session, token }) {
       // Añadir el ID del usuario a la sesión
       if (session.user && token.sub) {
+        // @ts-ignore - NextAuth types don't include id by default
         session.user.id = token.sub
       }
       return session
@@ -25,7 +26,6 @@ const handler = NextAuth({
       return token
     },
   },
-  // Eliminamos las páginas personalizadas para usar las por defecto
 })
 
 export { handler as GET, handler as POST }
