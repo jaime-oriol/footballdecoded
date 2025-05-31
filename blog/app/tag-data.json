@@ -1,11 +1,4 @@
 {
-  "scouting": 3,
-  "centrales": 1,
-  "juego-aereo": 1,
-  "laterales": 1,
-  "premier": 1,
-  "mediocentro": 1,
-  "laliga": 1,
   "presión": 1,
   "guardiola": 1,
   "sistema": 1,
@@ -14,5 +7,12 @@
   "posesión": 1,
   "transiciones": 1,
   "defensa": 1,
-  "táctica": 1
+  "táctica": 1,
+  "scouting": 3,
+  "centrales": 1,
+  "juego-aereo": 1,
+  "laterales": 1,
+  "premier": 1,
+  "mediocentro": 1,
+  "laliga": 1
 }
