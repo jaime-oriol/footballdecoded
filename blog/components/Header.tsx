@@ -6,6 +6,7 @@ import MobileNav from './MobileNav'
 import ThemeSwitch from './ThemeSwitch'
 import SearchButton from './SearchButton'
 import SectionsNavigation from './SectionsNavigation'
+import AuthButton from './AuthButton'
 
 const Header = () => {
   let headerClass = 'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10'
@@ -51,6 +52,7 @@ const Header = () => {
               )
             })}
         </div>
+        <AuthButton />
         <SearchButton />
         <ThemeSwitch />
         <MobileNav />
