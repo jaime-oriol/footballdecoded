@@ -25,7 +25,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
     try {
       setLoading(true)
       setError('')
-      
+
       const response = await fetch(`/api/comments/${postSlug}`)
       const data = await response.json()
 
@@ -59,7 +59,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
     const date = new Date(timestamp)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) {
       return 'Hace menos de una hora'
     } else if (diffInHours < 24) {
@@ -75,7 +75,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(word => word[0])
+      .map((word) => word[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
@@ -84,9 +84,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   if (loading) {
     return (
       <div className="mt-8">
-        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
-          Comentarios
-        </h3>
+        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">Comentarios</h3>
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-2 text-gray-500">
             <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -114,9 +112,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   if (error) {
     return (
       <div className="mt-8">
-        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
-          Comentarios
-        </h3>
+        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">Comentarios</h3>
         <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
           <div className="flex items-center">
             <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -136,10 +132,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   return (
     <div className="mt-8">
       <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
-        {comments.length > 0 
-          ? `Comentarios (${comments.length})` 
-          : 'Comentarios'
-        }
+        {comments.length > 0 ? `Comentarios (${comments.length})` : 'Comentarios'}
       </h3>
 
       {comments.length === 0 ? (
@@ -174,7 +167,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
               <div className="flex items-start space-x-4">
                 {/* Avatar con iniciales */}
                 <div className="flex-shrink-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                  <div className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium">
                     {getInitials(comment.name)}
                   </div>
                 </div>
@@ -197,7 +190,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
 
                   {/* Mensaje del comentario */}
                   <div className="mt-3">
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="leading-relaxed text-gray-700 dark:text-gray-300">
                       {comment.message}
                     </p>
                   </div>
@@ -208,7 +201,12 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                       type="button"
                       className="flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     >
-                      <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="mr-1 h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -222,7 +220,12 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                       type="button"
                       className="flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     >
-                      <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="mr-1 h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"

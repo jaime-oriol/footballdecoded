@@ -36,7 +36,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
         setName('')
         setEmail('')
         setMessage('')
-        
+
         // Notificar al componente padre que se añadió un comentario
         if (onCommentAdded) {
           onCommentAdded()
@@ -61,7 +61,10 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
         {/* Nombre y Email en una fila */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="comment-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="comment-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Nombre *
             </label>
             <input
@@ -71,13 +74,16 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
               onChange={(e) => setName(e.target.value)}
               required
               disabled={status === 'loading'}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-primary-400"
+              className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               placeholder="Tu nombre"
             />
           </div>
-          
+
           <div>
-            <label htmlFor="comment-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="comment-email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Email *
             </label>
             <input
@@ -87,7 +93,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={status === 'loading'}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-primary-400"
+              className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               placeholder="tu@email.com"
             />
           </div>
@@ -95,7 +101,10 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
 
         {/* Mensaje */}
         <div>
-          <label htmlFor="comment-message" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor="comment-message"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Comentario *
           </label>
           <textarea
@@ -105,7 +114,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
             onChange={(e) => setMessage(e.target.value)}
             required
             disabled={status === 'loading'}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-primary-400"
+            className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             placeholder="Comparte tu opinión sobre este análisis..."
             minLength={10}
           />
@@ -119,7 +128,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
           <button
             type="submit"
             disabled={status === 'loading' || !name || !email || !message}
-            className="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+            className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
           >
             {status === 'loading' ? (
               <>
@@ -197,9 +206,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
                 <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
                   Error al enviar
                 </h3>
-                <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                  {errorMessage}
-                </p>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
               </div>
             </div>
           </div>
@@ -210,7 +217,12 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
       <div className="mt-6 rounded-md bg-gray-50 p-4 dark:bg-gray-800/50">
         <div className="flex items-start">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -221,7 +233,8 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
           </div>
           <div className="ml-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Los comentarios se publican automáticamente. Por favor, mantén un tono constructivo y relacionado con el análisis táctico.
+              Los comentarios se publican automáticamente. Por favor, mantén un tono constructivo y
+              relacionado con el análisis táctico.
             </p>
           </div>
         </div>

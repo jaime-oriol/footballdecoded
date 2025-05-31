@@ -26,12 +26,12 @@ const DATA_DIR = path.join(process.cwd(), 'data', 'comments')
 // Función para leer comentarios de un post
 async function getCommentsForPost(slug: string): Promise<CommentsData> {
   const filePath = path.join(DATA_DIR, `${slug}.json`)
-  
+
   try {
     if (!existsSync(filePath)) {
       return { postSlug: slug, comments: [] }
     }
-    
+
     const data = await readFile(filePath, 'utf8')
     return JSON.parse(data)
   } catch (error) {
@@ -74,31 +74,28 @@ function generateCommentId(): string {
 function isLikelySpam(name: string, message: string): boolean {
   const spamKeywords = ['viagra', 'casino', 'bitcoin', 'crypto', 'loan', 'mortgage']
   const text = `${name} ${message}`.toLowerCase()
-  
+
   // Detectar múltiples enlaces
   const linkCount = (text.match(/https?:\/\//g) || []).length
   if (linkCount > 2) return true
-  
+
   // Detectar palabras spam
-  return spamKeywords.some(keyword => text.includes(keyword))
+  return spamKeywords.some((keyword) => text.includes(keyword))
 }
 
 // GET - Obtener comentarios aprobados de un post
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params
     const commentsData = await getCommentsForPost(slug)
-    
+
     // Solo devolver comentarios aprobados
-    const approvedComments = commentsData.comments.filter(comment => comment.approved)
-    
+    const approvedComments = commentsData.comments.filter((comment) => comment.approved)
+
     return NextResponse.json({
       postSlug: slug,
       comments: approvedComments,
-      total: approvedComments.length
+      total: approvedComments.length,
     })
   } catch (error) {
     console.error('Error getting comments:', error)
@@ -117,17 +114,11 @@ export async function POST(
 
     // Validaciones básicas
     if (!name || !email || !message) {
-      return NextResponse.json(
-        { error: 'Todos los campos son obligatorios' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Todos los campos son obligatorios' }, { status: 400 })
     }
 
     if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { error: 'Email no válido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email no válido' }, { status: 400 })
     }
 
     // Sanitizar inputs
@@ -143,10 +134,7 @@ export async function POST(
 
     // Detectar spam
     if (isLikelySpam(cleanName, cleanMessage)) {
-      return NextResponse.json(
-        { error: 'Comentario detectado como spam' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Comentario detectado como spam' }, { status: 400 })
     }
 
     // Crear nuevo comentario
@@ -157,18 +145,16 @@ export async function POST(
       message: cleanMessage,
       timestamp: new Date().toISOString(),
       approved: true, // Aprobación automática como solicitaste
-      ip: request.headers.get('x-forwarded-for') || 
-          request.headers.get('x-real-ip') || 
-          'unknown',
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || 'unknown',
     }
 
     // Leer comentarios existentes
     const commentsData = await getCommentsForPost(slug)
-    
+
     // Añadir nuevo comentario
     commentsData.comments.push(newComment)
-    
+
     // Guardar
     await saveCommentsForPost(slug, commentsData)
 
@@ -179,8 +165,8 @@ export async function POST(
         id: newComment.id,
         name: newComment.name,
         message: newComment.message,
-        timestamp: newComment.timestamp
-      }
+        timestamp: newComment.timestamp,
+      },
     })
   } catch (error) {
     console.error('Error adding comment:', error)
