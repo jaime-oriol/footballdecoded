@@ -29,12 +29,12 @@ interface LayoutProps {
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
   const { filePath, path, slug, date, title, image, section } = content
   const displayImage = image || '/static/images/default-article-banner.jpg'
-
+  
   // Estado para refrescar comentarios cuando se añade uno nuevo
   const [refreshComments, setRefreshComments] = useState(0)
 
   const handleCommentAdded = () => {
-    setRefreshComments((prev) => prev + 1)
+    setRefreshComments(prev => prev + 1)
   }
 
   const getSectionLabel = (section: string) => {
@@ -144,10 +144,16 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
             {/* Sistema de comentarios personalizado */}
             <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-700">
               {/* Lista de comentarios existentes */}
-              <CommentsList postSlug={slug} refreshTrigger={refreshComments} />
-
+              <CommentsList 
+                postSlug={slug.split('/').pop() || slug} 
+                refreshTrigger={refreshComments}
+              />
+              
               {/* Formulario para nuevos comentarios */}
-              <CommentForm postSlug={slug} onCommentAdded={handleCommentAdded} />
+              <CommentForm 
+                postSlug={slug.split('/').pop() || slug} 
+                onCommentAdded={handleCommentAdded}
+              />
             </div>
 
             {/* Comentarios Giscus (comentado por ahora) */}
