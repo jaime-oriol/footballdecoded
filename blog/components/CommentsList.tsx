@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { formatDate } from 'pliny/utils/formatDate'
 import siteMetadata from '@/content/siteMetadata'
+import Image from '@/components/Image'
 
 interface Reply {
   id: string
@@ -10,6 +11,7 @@ interface Reply {
   message: string
   timestamp: string
   likes: number
+  avatar?: string // NUEVO: Avatar del usuario
 }
 
 interface Comment {
@@ -19,6 +21,7 @@ interface Comment {
   timestamp: string
   likes: number
   replies: Reply[]
+  avatar?: string // NUEVO: Avatar del usuario
 }
 
 interface CommentsListProps {
@@ -255,11 +258,21 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
               {/* Comentario principal */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-start space-x-4">
-                  {/* Avatar con iniciales */}
+                  {/* Avatar con foto de Google o iniciales */}
                   <div className="flex-shrink-0">
-                    <div className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium">
-                      {getInitials(comment.name)}
-                    </div>
+                    {comment.avatar ? (
+                      <Image
+                        src={comment.avatar}
+                        alt={comment.name}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <div className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium">
+                        {getInitials(comment.name)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Contenido del comentario */}
@@ -395,9 +408,19 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                     >
                       <div className="flex items-start space-x-3">
                         <div className="flex-shrink-0">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:text-gray-300">
-                            {getInitials(reply.name)}
-                          </div>
+                          {reply.avatar ? (
+                            <Image
+                              src={reply.avatar}
+                              alt={reply.name}
+                              width={32}
+                              height={32}
+                              className="rounded-full"
+                            />
+                          ) : (
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:text-gray-300">
+                              {getInitials(reply.name)}
+                            </div>
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between">

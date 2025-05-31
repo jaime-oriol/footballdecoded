@@ -17,6 +17,7 @@ interface Comment {
   likes: number
   replies: Reply[]
   parentId?: string // Para respuestas anidadas
+  avatar?: string // NUEVO: Avatar del usuario
 }
 
 interface Reply {
@@ -27,6 +28,7 @@ interface Reply {
   timestamp: string
   approved: boolean
   likes: number
+  avatar?: string // NUEVO: Avatar del usuario
 }
 
 interface CommentsData {
@@ -123,7 +125,7 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const { name, email, message } = await request.json()
+    const { name, email, message, avatar } = await request.json()
 
     // Validaciones básicas
     if (!name || !email || !message) {
@@ -163,6 +165,7 @@ export async function POST(
       likes: 0,
       replies: [],
       parentId: undefined,
+      avatar: avatar || undefined, // NUEVO: Guardar avatar
     }
 
     // Leer comentarios existentes
@@ -182,6 +185,7 @@ export async function POST(
         name: newComment.name,
         message: newComment.message,
         timestamp: newComment.timestamp,
+        avatar: newComment.avatar,
       },
     })
   } catch (error) {

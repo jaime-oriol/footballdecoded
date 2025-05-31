@@ -9,7 +9,7 @@ export default function AuthButton() {
   if (status === 'loading') {
     return (
       <div className="flex items-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600"></div>
+        <div className="border-t-primary-600 h-6 w-6 animate-spin rounded-full border-2 border-gray-300"></div>
       </div>
     )
   }
@@ -26,7 +26,7 @@ export default function AuthButton() {
             className="rounded-full"
           />
         )}
-        <span className="hidden text-sm text-gray-700 dark:text-gray-300 lg:block">
+        <span className="hidden text-sm text-gray-700 lg:block dark:text-gray-300">
           {session.user?.name?.split(' ')[0]}
         </span>
         <button
@@ -42,7 +42,7 @@ export default function AuthButton() {
   return (
     <button
       onClick={() => signIn('google')}
-      className="flex items-center space-x-1 rounded-md bg-primary-600 px-3 py-2 text-xs text-white hover:bg-primary-700"
+      className="bg-primary-600 hover:bg-primary-700 flex items-center space-x-1 rounded-md px-3 py-2 text-xs text-white"
     >
       <svg className="h-3 w-3" viewBox="0 0 24 24">
         <path
