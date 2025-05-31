@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession, signIn } from 'next-auth/react'
+import Image from '@/components/Image'
 
 interface CommentFormProps {
   postSlug: string
@@ -8,14 +10,19 @@ interface CommentFormProps {
 }
 
 export default function CommentForm({ postSlug, onCommentAdded }: CommentFormProps) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const { data: session } = useSession()
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!session) {
+      signIn('google')
+      return
+    }
+
     setStatus('loading')
     setErrorMessage('')
 
@@ -25,19 +32,20 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ 
+          name: session.user?.name || 'Usuario',
+          email: session.user?.email || '',
+          message,
+          avatar: session.user?.image || ''
+        }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
         setStatus('success')
-        // Limpiar formulario
-        setName('')
-        setEmail('')
         setMessage('')
 
-        // Notificar al componente padre que se añadió un comentario
         if (onCommentAdded) {
           onCommentAdded()
         }
@@ -51,61 +59,78 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
     }
   }
 
+  // Si no está logueado, mostrar botón de login
+  if (!session) {
+    return (
+      <div className="mt-8">
+        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
+          Deja tu comentario
+        </h3>
+        
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
+          <svg className="mx-auto mb-4 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          
+          <h4 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+            Inicia sesión para comentar
+          </h4>
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+            Usa tu cuenta de Google para comentar de forma rápida y segura
+          </p>
+          
+          <button
+            onClick={() => signIn('google')}
+            className="inline-flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <span>Iniciar sesión con Google</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mt-8">
       <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
         Deja tu comentario
       </h3>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Nombre y Email en una fila */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="comment-name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Nombre *
-            </label>
-            <input
-              id="comment-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={status === 'loading'}
-              className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-              placeholder="Tu nombre"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="comment-email"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Email *
-            </label>
-            <input
-              id="comment-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={status === 'loading'}
-              className="focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-              placeholder="tu@email.com"
-            />
-          </div>
+      {/* Mostrar usuario logueado */}
+      <div className="mb-4 flex items-center space-x-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+        {session.user?.image && (
+          <Image
+            src={session.user.image}
+            alt={session.user.name || 'Usuario'}
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+        )}
+        <div>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Comentando como <strong>{session.user?.name}</strong>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {session.user?.email}
+          </p>
         </div>
+      </div>
 
-        {/* Mensaje */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Solo el mensaje, nombre y email se toman de la sesión */}
         <div>
           <label
             htmlFor="comment-message"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Comentario *
+            Tu comentario *
           </label>
           <textarea
             id="comment-message"
@@ -119,7 +144,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
             minLength={10}
           />
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Mínimo 10 caracteres. Tu email no será publicado.
+            Mínimo 10 caracteres.
           </p>
         </div>
 
@@ -127,7 +152,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
         <div>
           <button
             type="submit"
-            disabled={status === 'loading' || !name || !email || !message}
+            disabled={status === 'loading' || !message || message.length < 10}
             className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
           >
             {status === 'loading' ? (
@@ -212,33 +237,6 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
           </div>
         )}
       </form>
-
-      {/* Información adicional */}
-      <div className="mt-6 rounded-md bg-gray-50 p-4 dark:bg-gray-800/50">
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Los comentarios se publican automáticamente. Por favor, mantén un tono constructivo y
-              relacionado con el análisis táctico.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

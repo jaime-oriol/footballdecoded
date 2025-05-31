@@ -25,11 +25,7 @@ const handler = NextAuth({
       return token
     },
   },
-  pages: {
-    // Opcional: páginas personalizadas de autenticación
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
+  // Eliminamos las páginas personalizadas para usar las por defecto
 })
 
 export { handler as GET, handler as POST }

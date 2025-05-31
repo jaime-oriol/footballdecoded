@@ -116,8 +116,8 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
             {authorDetails.length > 0 && (
               <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-700">
                 <div className="flex items-center">
-                  {authorDetails.map((author) => (
-                    <div key={author.name} className="flex items-center">
+                  {authorDetails.map((author, index) => (
+                    <div key={`${author.name}-${index}`} className="flex items-center">
                       {author.avatar && (
                         <Image
                           src={author.avatar}

@@ -9,31 +9,31 @@ export default function AuthButton() {
   if (status === 'loading') {
     return (
       <div className="flex items-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600"></div>
       </div>
     )
   }
 
   if (session) {
     return (
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2">
         {session.user?.image && (
           <Image
             src={session.user.image}
             alt={session.user.name || 'Usuario'}
-            width={32}
-            height={32}
+            width={28}
+            height={28}
             className="rounded-full"
           />
         )}
-        <span className="text-sm text-gray-700 dark:text-gray-300">
-          {session.user?.name}
+        <span className="hidden text-sm text-gray-700 dark:text-gray-300 lg:block">
+          {session.user?.name?.split(' ')[0]}
         </span>
         <button
           onClick={() => signOut()}
-          className="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
+          className="rounded-md bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600"
         >
-          Cerrar sesión
+          Salir
         </button>
       </div>
     )
@@ -42,9 +42,9 @@ export default function AuthButton() {
   return (
     <button
       onClick={() => signIn('google')}
-      className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+      className="flex items-center space-x-1 rounded-md bg-primary-600 px-3 py-2 text-xs text-white hover:bg-primary-700"
     >
-      <svg className="h-4 w-4" viewBox="0 0 24 24">
+      <svg className="h-3 w-3" viewBox="0 0 24 24">
         <path
           fill="currentColor"
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -62,7 +62,7 @@ export default function AuthButton() {
           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
         />
       </svg>
-      <span>Iniciar sesión con Google</span>
+      <span className="hidden sm:block">Google</span>
     </button>
   )
 }
