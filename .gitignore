@@ -6,3 +6,10 @@ blog/data/*.json
 blog/data/newsletter-*.csv
 blog/data/confirmed-emails-*.txt
 blog/data/all-emails-*.txt
+
+# Comments data - contains user names, emails and messages
+blog/data/comments/
+blog/data/comments/*.json
+blog/data/comments-*.json
+blog/exports/comments/
+blog/exports/comments-*.json
