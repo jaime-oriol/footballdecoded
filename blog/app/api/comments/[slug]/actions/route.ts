@@ -39,12 +39,12 @@ const DATA_DIR = path.join(process.cwd(), 'data', 'comments')
 // Función para leer comentarios de un post
 async function getCommentsForPost(slug: string): Promise<CommentsData> {
   const filePath = path.join(DATA_DIR, `${slug}.json`)
-  
+
   try {
     if (!existsSync(filePath)) {
       return { postSlug: slug, comments: [] }
     }
-    
+
     const data = await readFile(filePath, 'utf8')
     return JSON.parse(data)
   } catch (error) {
@@ -93,10 +93,10 @@ export async function POST(
     switch (action) {
       case 'like':
         return await handleLike(slug, commentId)
-      
+
       case 'reply':
         return await handleReply(slug, commentId, name, email, message, request)
-      
+
       default:
         return NextResponse.json({ error: 'Acción no válida' }, { status: 400 })
     }
@@ -110,37 +110,37 @@ export async function POST(
 async function handleLike(slug: string, commentId: string) {
   try {
     const commentsData = await getCommentsForPost(slug)
-    
+
     // Buscar el comentario principal
-    const commentIndex = commentsData.comments.findIndex(c => c.id === commentId)
-    
+    const commentIndex = commentsData.comments.findIndex((c) => c.id === commentId)
+
     if (commentIndex !== -1) {
       // Es un comentario principal
       commentsData.comments[commentIndex].likes += 1
       await saveCommentsForPost(slug, commentsData)
-      
+
       return NextResponse.json({
         success: true,
         likes: commentsData.comments[commentIndex].likes,
-        commentId: commentId
+        commentId: commentId,
       })
     }
-    
+
     // Buscar en las respuestas
     for (let i = 0; i < commentsData.comments.length; i++) {
-      const replyIndex = commentsData.comments[i].replies.findIndex(r => r.id === commentId)
+      const replyIndex = commentsData.comments[i].replies.findIndex((r) => r.id === commentId)
       if (replyIndex !== -1) {
         commentsData.comments[i].replies[replyIndex].likes += 1
         await saveCommentsForPost(slug, commentsData)
-        
+
         return NextResponse.json({
           success: true,
           likes: commentsData.comments[i].replies[replyIndex].likes,
-          commentId: commentId
+          commentId: commentId,
         })
       }
     }
-    
+
     return NextResponse.json({ error: 'Comentario no encontrado' }, { status: 404 })
   } catch (error) {
     console.error('Error handling like:', error)
@@ -150,27 +150,21 @@ async function handleLike(slug: string, commentId: string) {
 
 // Manejar respuestas
 async function handleReply(
-  slug: string, 
-  parentId: string, 
-  name: string, 
-  email: string, 
+  slug: string,
+  parentId: string,
+  name: string,
+  email: string,
   message: string,
   request: NextRequest
 ) {
   try {
     // Validaciones
     if (!name || !email || !message) {
-      return NextResponse.json(
-        { error: 'Todos los campos son obligatorios' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Todos los campos son obligatorios' }, { status: 400 })
     }
 
     if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { error: 'Email no válido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email no válido' }, { status: 400 })
     }
 
     const cleanName = sanitizeInput(name)
@@ -184,10 +178,10 @@ async function handleReply(
     }
 
     const commentsData = await getCommentsForPost(slug)
-    
+
     // Buscar el comentario padre
-    const parentIndex = commentsData.comments.findIndex(c => c.id === parentId)
-    
+    const parentIndex = commentsData.comments.findIndex((c) => c.id === parentId)
+
     if (parentIndex === -1) {
       return NextResponse.json({ error: 'Comentario padre no encontrado' }, { status: 404 })
     }
@@ -200,12 +194,12 @@ async function handleReply(
       message: cleanMessage,
       timestamp: new Date().toISOString(),
       approved: true, // Aprobación automática
-      likes: 0
+      likes: 0,
     }
 
     // Añadir respuesta al comentario padre
     commentsData.comments[parentIndex].replies.push(newReply)
-    
+
     // Guardar
     await saveCommentsForPost(slug, commentsData)
 
@@ -216,8 +210,8 @@ async function handleReply(
         name: newReply.name,
         message: newReply.message,
         timestamp: newReply.timestamp,
-        likes: newReply.likes
-      }
+        likes: newReply.likes,
+      },
     })
   } catch (error) {
     console.error('Error adding reply:', error)

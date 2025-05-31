@@ -38,7 +38,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
     try {
       setLoading(true)
       setError('')
-      
+
       const response = await fetch(`/api/comments/${postSlug}`)
       const data = await response.json()
 
@@ -71,26 +71,26 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   const handleLike = async (commentId: string) => {
     if (likingComments.has(commentId)) return // Prevenir doble click
 
-    setLikingComments(prev => new Set(prev).add(commentId))
+    setLikingComments((prev) => new Set(prev).add(commentId))
 
     try {
       const response = await fetch(`/api/comments/${postSlug}/actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'like', commentId })
+        body: JSON.stringify({ action: 'like', commentId }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
         // Actualizar el contador de likes localmente
-        setComments(prevComments => 
-          prevComments.map(comment => {
+        setComments((prevComments) =>
+          prevComments.map((comment) => {
             if (comment.id === commentId) {
               return { ...comment, likes: data.likes }
             }
             // Buscar en respuestas
-            const updatedReplies = comment.replies.map(reply => 
+            const updatedReplies = comment.replies.map((reply) =>
               reply.id === commentId ? { ...reply, likes: data.likes } : reply
             )
             return { ...comment, replies: updatedReplies }
@@ -100,7 +100,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
     } catch (error) {
       console.error('Error liking comment:', error)
     } finally {
-      setLikingComments(prev => {
+      setLikingComments((prev) => {
         const newSet = new Set(prev)
         newSet.delete(commentId)
         return newSet
@@ -124,8 +124,8 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
           commentId: parentId,
           name: replyForm.name,
           email: replyForm.email,
-          message: replyForm.message
-        })
+          message: replyForm.message,
+        }),
       })
 
       const data = await response.json()
@@ -150,7 +150,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
     const date = new Date(timestamp)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) {
       return 'Hace menos de una hora'
     } else if (diffInHours < 24) {
@@ -166,7 +166,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(word => word[0])
+      .map((word) => word[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
@@ -175,9 +175,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   if (loading) {
     return (
       <div className="mt-8">
-        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
-          Comentarios
-        </h3>
+        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">Comentarios</h3>
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-2 text-gray-500">
             <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -205,9 +203,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   if (error) {
     return (
       <div className="mt-8">
-        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
-          Comentarios
-        </h3>
+        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">Comentarios</h3>
         <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
           <div className="flex items-center">
             <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -227,10 +223,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   return (
     <div className="mt-8">
       <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-gray-100">
-        {comments.length > 0 
-          ? `Comentarios (${comments.length})` 
-          : 'Comentarios'
-        }
+        {comments.length > 0 ? `Comentarios (${comments.length})` : 'Comentarios'}
       </h3>
 
       {comments.length === 0 ? (
@@ -264,7 +257,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                 <div className="flex items-start space-x-4">
                   {/* Avatar con iniciales */}
                   <div className="flex-shrink-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                    <div className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium">
                       {getInitials(comment.name)}
                     </div>
                   </div>
@@ -287,7 +280,7 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
 
                     {/* Mensaje del comentario */}
                     <div className="mt-3">
-                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <p className="leading-relaxed text-gray-700 dark:text-gray-300">
                         {comment.message}
                       </p>
                     </div>
@@ -298,9 +291,14 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                         type="button"
                         onClick={() => handleLike(comment.id)}
                         disabled={likingComments.has(comment.id)}
-                        className="flex items-center text-sm text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 disabled:opacity-50"
+                        className="flex items-center text-sm text-gray-500 hover:text-red-500 disabled:opacity-50 dark:text-gray-400 dark:hover:text-red-400"
                       >
-                        <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="mr-1 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -315,7 +313,12 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                         onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                         className="flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                       >
-                        <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="mr-1 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -336,14 +339,16 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                               type="text"
                               placeholder="Tu nombre"
                               value={replyForm.name}
-                              onChange={(e) => setReplyForm({...replyForm, name: e.target.value})}
+                              onChange={(e) => setReplyForm({ ...replyForm, name: e.target.value })}
                               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
                             />
                             <input
                               type="email"
                               placeholder="tu@email.com"
                               value={replyForm.email}
-                              onChange={(e) => setReplyForm({...replyForm, email: e.target.value})}
+                              onChange={(e) =>
+                                setReplyForm({ ...replyForm, email: e.target.value })
+                              }
                               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
                             />
                           </div>
@@ -351,13 +356,15 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                             rows={3}
                             placeholder="Tu respuesta..."
                             value={replyForm.message}
-                            onChange={(e) => setReplyForm({...replyForm, message: e.target.value})}
+                            onChange={(e) =>
+                              setReplyForm({ ...replyForm, message: e.target.value })
+                            }
                             className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
                           />
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleReply(comment.id)}
-                              className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                              className="bg-primary-600 hover:bg-primary-700 rounded-md px-4 py-2 text-sm font-medium text-white"
                             >
                               Enviar respuesta
                             </button>
@@ -382,7 +389,10 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
               {comment.replies && comment.replies.length > 0 && (
                 <div className="ml-8 space-y-4">
                   {comment.replies.map((reply) => (
-                    <div key={reply.id} className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50">
+                    <div
+                      key={reply.id}
+                      className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50"
+                    >
                       <div className="flex items-start space-x-3">
                         <div className="flex-shrink-0">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:text-gray-300">
@@ -404,9 +414,14 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
                           <button
                             onClick={() => handleLike(reply.id)}
                             disabled={likingComments.has(reply.id)}
-                            className="mt-2 flex items-center text-xs text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 disabled:opacity-50"
+                            className="mt-2 flex items-center text-xs text-gray-500 hover:text-red-500 disabled:opacity-50 dark:text-gray-400 dark:hover:text-red-400"
                           >
-                            <svg className="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg
+                              className="mr-1 h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"

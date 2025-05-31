@@ -14,6 +14,19 @@ interface Comment {
   approved: boolean
   ip?: string
   userAgent?: string
+  likes: number
+  replies: Reply[]
+  parentId?: string // Para respuestas anidadas
+}
+
+interface Reply {
+  id: string
+  name: string
+  email: string
+  message: string
+  timestamp: string
+  approved: boolean
+  likes: number
 }
 
 interface CommentsData {
@@ -147,6 +160,9 @@ export async function POST(
       approved: true, // Aprobación automática como solicitaste
       ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || 'unknown',
+      likes: 0,
+      replies: [],
+      parentId: undefined,
     }
 
     // Leer comentarios existentes
