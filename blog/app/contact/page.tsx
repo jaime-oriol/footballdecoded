@@ -1,4 +1,5 @@
 import { genPageMetadata } from 'app/seo'
+import Link from '@/components/Link'
 
 export const metadata = genPageMetadata({ title: 'Contacto' })
 
