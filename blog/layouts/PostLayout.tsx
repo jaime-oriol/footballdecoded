@@ -41,8 +41,10 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
     switch (section) {
       case 'tactical-structures':
         return 'Tactical Structures'
-      case 'scouting':
-        return 'Scouting'
+      case 'analytical-scouting':
+        return 'Analytical Scouting'
+      case 'scouting': // Backward compatibility
+        return 'Analytical Scouting'
       case 'tactical-metrics-lab':
         return 'Tactical Metrics Lab'
       default:
@@ -54,7 +56,9 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
     switch (section) {
       case 'tactical-structures':
         return 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200'
-      case 'scouting':
+      case 'analytical-scouting':
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
+      case 'scouting': // Backward compatibility
         return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
       case 'tactical-metrics-lab':
         return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200'

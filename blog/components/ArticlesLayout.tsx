@@ -90,7 +90,9 @@ export default function ArticlesLayout({
     switch (section) {
       case 'tactical-structures':
         return 'Análisis de sistemas, fases y principios del juego moderno.'
-      case 'scouting':
+      case 'analytical-scouting':
+        return 'Identificación de perfiles por función táctica mediante datos.'
+      case 'scouting': // Backward compatibility
         return 'Identificación de perfiles por función táctica mediante datos.'
       case 'tactical-metrics-lab':
         return 'Cuantificación avanzada del impacto táctico mediante datos y programación.'

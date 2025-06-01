@@ -15,7 +15,7 @@ const sections: Section[] = [
   {
     href: '/blog',
     title: 'Todos los artículos',
-    description: 'Vista completa de análisis técnicos',
+    description: 'Vista completa',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -30,7 +30,7 @@ const sections: Section[] = [
   {
     href: '/blog/tactical-structures',
     title: 'Tactical Structures',
-    description: 'Sistemas y principios del juego moderno',
+    description: 'Sistemas y principios',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -43,9 +43,9 @@ const sections: Section[] = [
     ),
   },
   {
-    href: '/blog/scouting',
-    title: 'Scouting',
-    description: 'Perfiles funcionales por rol táctico',
+    href: '/blog/analytical-scouting',
+    title: 'Analytical Scouting',
+    description: 'Perfiles funcionales',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -60,7 +60,7 @@ const sections: Section[] = [
   {
     href: '/blog/tactical-metrics-lab',
     title: 'Tactical Metrics Lab',
-    description: 'Métricas cuantitativas aplicadas',
+    description: 'Métricas avanzadas',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -212,29 +212,11 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-headings truncate font-medium">{section.title}</div>
-                  <div className="font-body mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    {section.description}
-                  </div>
                 </div>
               </Link>
             )
           })}
         </nav>
-
-        {/* Información adicional */}
-        <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
-          <div className="font-body space-y-3 text-xs text-slate-500 dark:text-slate-400">
-            <div>
-              <div className="font-headings mb-1 font-medium text-slate-700 dark:text-slate-300">
-                Enfoque técnico
-              </div>
-              <p>
-                Análisis basado en datos, visualización táctica y métricas aplicadas al fútbol
-                profesional.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </aside>
   )

@@ -13,8 +13,10 @@ const getSectionLabel = (section: string) => {
   switch (section) {
     case 'tactical-structures':
       return 'Tactical Structures'
-    case 'scouting':
-      return 'Scouting'
+    case 'analytical-scouting':
+      return 'Analytical Scouting'
+    case 'scouting': // Backward compatibility
+      return 'Analytical Scouting'
     case 'tactical-metrics-lab':
       return 'Tactical Metrics Lab'
     default:
@@ -26,7 +28,9 @@ const getSectionColor = (section: string) => {
   switch (section) {
     case 'tactical-structures':
       return 'bg-sky-600 text-white'
-    case 'scouting':
+    case 'analytical-scouting':
+      return 'bg-emerald-600 text-white'
+    case 'scouting': // Backward compatibility
       return 'bg-emerald-600 text-white'
     case 'tactical-metrics-lab':
       return 'bg-indigo-600 text-white'
