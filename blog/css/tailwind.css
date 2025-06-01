@@ -6,24 +6,31 @@
 
 /* Core theme configuration */
 @theme {
-  /* Font families */
+  /* Font families - Sistema FootballDecoded */
   --font-sans:
-    var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  
+  --font-headings:
+    var(--font-inter), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    
+  --font-mono:
+    var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-  /* Colors */
-  /* Copied from https://tailwindcss.com/docs/theme#default-theme-variable-reference */
-  --color-primary-50: oklch(0.971 0.014 343.198);
-  --color-primary-100: oklch(0.948 0.028 342.258);
-  --color-primary-200: oklch(0.899 0.061 343.231);
-  --color-primary-300: oklch(0.823 0.12 346.018);
-  --color-primary-400: oklch(0.718 0.202 349.761);
-  --color-primary-500: oklch(0.656 0.241 354.308);
-  --color-primary-600: oklch(0.592 0.249 0.584);
-  --color-primary-700: oklch(0.525 0.223 3.958);
-  --color-primary-800: oklch(0.459 0.187 3.815);
-  --color-primary-900: oklch(0.408 0.153 2.432);
-  --color-primary-950: oklch(0.284 0.109 3.907);
+  /* Colors - Paleta FootballDecoded basada en slate, sky, indigo */
+  --color-primary-50: oklch(0.971 0.014 220.198);
+  --color-primary-100: oklch(0.948 0.028 220.258);
+  --color-primary-200: oklch(0.899 0.061 220.231);
+  --color-primary-300: oklch(0.823 0.12 225.018);
+  --color-primary-400: oklch(0.718 0.202 230.761);
+  --color-primary-500: oklch(0.656 0.241 235.308);
+  --color-primary-600: oklch(0.592 0.249 240.584);
+  --color-primary-700: oklch(0.525 0.223 245.958);
+  --color-primary-800: oklch(0.459 0.187 250.815);
+  --color-primary-900: oklch(0.408 0.153 255.432);
+  --color-primary-950: oklch(0.284 0.109 260.907);
 
   --color-gray-50: oklch(0.985 0.002 247.839);
   --color-gray-100: oklch(0.967 0.003 264.542);
@@ -37,7 +44,7 @@
   --color-gray-900: oklch(0.21 0.034 264.665);
   --color-gray-950: oklch(0.13 0.028 261.692);
 
-  /* Line heights */
+  /* Line heights - Jerarquía FootballDecoded */
   --line-height-11: 2.75rem;
   --line-height-12: 3rem;
   --line-height-13: 3.25rem;
@@ -49,13 +56,34 @@
   --z-80: 80;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+/* Configuración de familias tipográficas */
+@layer base {
+  /* Asignación de familias por elemento */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headings);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+  }
+  
+  body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: var(--leading-relaxed);
+  }
+  
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+  
+  /* Elementos técnicos con mono */
+  .metric, .stat, .score, .percentage {
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+}
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+/*
+  Compatibilidad de bordes por defecto
 */
 @layer base {
   *,
@@ -63,61 +91,142 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-slate-200, currentColor);
   }
 
   a,
   button {
-    outline-color: var(--color-primary-500);
+    outline-color: var(--color-sky-500);
   }
 
   a:focus-visible,
   button:focus-visible {
     outline: 2px solid;
     border-radius: var(--radius-sm);
-    outline-color: var(--color-primary-500);
+    outline-color: var(--color-sky-500);
   }
 }
 
 @layer utilities {
+  /* Utilidades tipográficas FootballDecoded */
+  .font-headings {
+    font-family: var(--font-headings);
+  }
+  
+  .font-body {
+    font-family: var(--font-sans);
+  }
+  
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Prose personalizado para artículos */
   .prose {
+    /* Enlaces */
     & a {
-      color: var(--color-primary-500);
+      color: var(--color-sky-700);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+      
       &:hover {
-        color: var(--color-primary-600);
+        color: var(--color-sky-800);
+        text-decoration-thickness: 2px;
       }
+      
       & code {
-        color: var(--color-primary-400);
+        color: var(--color-sky-600);
       }
     }
+    
+    /* Títulos */
     & :where(h1, h2) {
+      font-family: var(--font-headings);
       font-weight: 700;
       letter-spacing: var(--tracking-tight);
+      color: var(--color-slate-900);
     }
+    
     & h3 {
+      font-family: var(--font-headings);
       font-weight: 600;
+      color: var(--color-slate-800);
     }
+    
+    /* Código inline */
     & :where(code):not(pre code) {
-      color: var(--color-indigo-500);
+      font-family: var(--font-mono);
+      color: var(--color-indigo-600);
+      background-color: var(--color-slate-100);
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      font-size: 0.875em;
+    }
+    
+    /* Citas */
+    & blockquote {
+      border-left: 4px solid var(--color-slate-300);
+      padding-left: 1rem;
+      font-style: italic;
+      color: var(--color-slate-600);
     }
   }
 
+  /* Modo oscuro */
   .prose-invert {
     & a {
-      color: var(--color-primary-500);
+      color: var(--color-sky-400);
+      
       &:hover {
-        color: var(--color-primary-400);
+        color: var(--color-sky-300);
       }
+      
       & code {
-        color: var(--color-primary-400);
+        color: var(--color-sky-400);
       }
     }
+    
     & :where(h1, h2, h3, h4, h5, h6) {
-      color: var(--color-gray-100);
+      color: var(--color-slate-100);
     }
+    
+    & :where(code):not(pre code) {
+      color: var(--color-indigo-400);
+      background-color: var(--color-slate-800);
+    }
+    
+    & blockquote {
+      border-left-color: var(--color-slate-600);
+      color: var(--color-slate-400);
+    }
+  }
+  
+  /* Utilidades semánticas FootballDecoded */
+  .text-concept {
+    color: var(--color-sky-700);
+  }
+  
+  .dark .text-concept {
+    color: var(--color-sky-400);
+  }
+  
+  .badge-role {
+    background-color: var(--color-sky-100);
+    color: var(--color-sky-800);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .dark .badge-role {
+    background-color: var(--color-sky-900);
+    color: var(--color-sky-200);
   }
 }
 
+/* Elementos específicos */
 .task-list-item::before {
   @apply hidden;
 }
@@ -127,7 +236,7 @@
 }
 
 .footnotes {
-  @apply mt-12 border-t border-gray-200 pt-8 dark:border-gray-700;
+  @apply mt-12 border-t border-slate-200 pt-8 dark:border-slate-700;
 }
 
 .data-footnote-backref {
@@ -138,7 +247,7 @@
   @apply my-5;
 }
 
-/* Scrollbar utilities - Updated with scrollbar-hide */
+/* Scrollbar utilities */
 .no-scrollbar::-webkit-scrollbar,
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -146,11 +255,11 @@
 
 .no-scrollbar,
 .scrollbar-hide {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* https://stackoverflow.com/questions/61083813/how-to-avoid-internal-autofill-selected-style-to-be-applied */
+/* Autofill styles */
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
   transition:
@@ -162,6 +271,7 @@ input:-webkit-autofill:focus {
   overflow: auto hidden;
 }
 
+/* Content header links */
 .content-header-link {
   opacity: 0;
   margin-left: -24px;
