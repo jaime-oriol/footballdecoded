@@ -158,9 +158,12 @@ export const components: MDXComponents = {
   StatCard,
   TechnicalQuote,
 
-  // Headings con tipografía optimizada - CON CONTENT CHECK
+  // Headings con tipografía optimizada - CON CONTENT CHECK Y ACCESIBILIDAD
   h1: (props) => {
-    if (!props.children) return null
+    // Si no hay children o es empty, no renderizar nada
+    if (!props.children || (typeof props.children === 'string' && props.children.trim() === '')) {
+      return null
+    }
     return (
       <h1
         className="font-headings mt-8 mb-4 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100"
@@ -169,7 +172,10 @@ export const components: MDXComponents = {
     )
   },
   h2: (props) => {
-    if (!props.children) return null
+    // Si no hay children o es empty, no renderizar nada
+    if (!props.children || (typeof props.children === 'string' && props.children.trim() === '')) {
+      return null
+    }
     return (
       <h2
         className="font-headings mt-8 mb-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
@@ -178,7 +184,10 @@ export const components: MDXComponents = {
     )
   },
   h3: (props) => {
-    if (!props.children) return null
+    // Si no hay children o es empty, no renderizar nada
+    if (!props.children || (typeof props.children === 'string' && props.children.trim() === '')) {
+      return null
+    }
     return (
       <h3
         className="font-headings mt-6 mb-3 text-xl font-semibold text-slate-900 dark:text-slate-100"
