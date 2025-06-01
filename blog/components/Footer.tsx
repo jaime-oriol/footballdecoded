@@ -34,9 +34,6 @@ export default function Footer() {
           <p className="font-body text-sm text-slate-600 dark:text-slate-400">
             Análisis táctico y métricas avanzadas para el fútbol profesional
           </p>
-          <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-500">
-            Construido con Next.js • Desplegado en Vercel
-          </p>
         </div>
       </div>
     </footer>
