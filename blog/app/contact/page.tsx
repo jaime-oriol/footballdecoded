@@ -5,102 +5,162 @@ export const metadata = genPageMetadata({ title: 'Contacto' })
 export default function Contact() {
   return (
     <>
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <div className="space-y-2 pt-6 pb-8 md:space-y-5">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
+      <div className="divide-y divide-slate-200 dark:divide-slate-700">
+        
+        {/* Header profesional */}
+        <div className="max-w-prose mx-auto px-4 sm:px-6 space-y-3 pt-8 pb-8">
+          <h1 className="font-headings text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Contacto
           </h1>
+          <p className="font-body text-xl text-slate-600 dark:text-slate-400">
+            Colaboraciones, feedback técnico y consultoría analítica
+          </p>
         </div>
 
         <div className="pt-8">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0">
-            <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-              {/* ÁREAS DE ESPECIALIZACIÓN */}
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            
+            {/* Card principal de contacto */}
+            <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              
+              {/* Áreas de especialización */}
               <div className="mb-8">
-                <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-                  <h3 className="mb-2 font-semibold text-gray-900 dark:text-gray-100">
-                    Áreas de especialización:
-                  </h3>
-                  <ul className="space-y-1 text-sm">
-                    <li>• Análisis táctico y estructural</li>
-                    <li>• Scouting funcional y player typing</li>
-                    <li>• Métricas avanzadas y programación aplicada</li>
-                    <li>• Visualización de datos deportivos</li>
-                    <li>• Consultoría analítica para clubes</li>
-                  </ul>
+                <h2 className="font-headings text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6">
+                  Áreas de especialización
+                </h2>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[
+                    {
+                      title: "Análisis táctico",
+                      description: "Estructuras de juego, sistemas y principios del fútbol moderno",
+                      icon: "🎯"
+                    },
+                    {
+                      title: "Scouting funcional", 
+                      description: "Identificación de perfiles por rol y función táctica específica",
+                      icon: "🔍"
+                    },
+                    {
+                      title: "Métricas avanzadas",
+                      description: "Desarrollo de KPIs y modelos cuantitativos aplicados",
+                      icon: "📊"
+                    },
+                    {
+                      title: "Visualización de datos",
+                      description: "Dashboards interactivos y reportes ejecutivos para clubes",
+                      icon: "📈"
+                    }
+                  ].map((area, index) => (
+                    <div key={index} className="flex items-start space-x-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50">
+                      <div className="flex-shrink-0 text-lg">{area.icon}</div>
+                      <div className="min-w-0">
+                        <h3 className="font-headings font-medium text-slate-900 dark:text-slate-100 mb-1">
+                          {area.title}
+                        </h3>
+                        <p className="font-body text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                          {area.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* INFORMACIÓN SIMPLE PARA EL EMAIL */}
-              <div className="mb-8 rounded-lg border border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-800/50">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Qué incluir en tu email
+              {/* Guía para el contacto */}
+              <div className="mb-8 rounded-lg border border-slate-300 bg-slate-50 p-6 dark:border-slate-600 dark:bg-slate-800/50">
+                <h3 className="font-headings text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+                  Qué incluir en tu mensaje
                 </h3>
 
-                <div className="space-y-3 text-gray-700 dark:text-gray-300">
+                <div className="space-y-3 font-body text-slate-700 dark:text-slate-300">
                   <div className="flex items-start">
-                    <span className="mr-3 text-gray-500 dark:text-gray-400">•</span>
+                    <span className="mr-3 text-sky-500 dark:text-sky-400">•</span>
                     <div>
-                      <strong>Motivo del contacto:</strong> Por qué me escribes
+                      <strong className="text-slate-900 dark:text-slate-100">Motivo del contacto:</strong> Colaboración, consultoría, feedback o propuesta específica
                     </div>
                   </div>
 
                   <div className="flex items-start">
-                    <span className="mr-3 text-gray-500 dark:text-gray-400">•</span>
+                    <span className="mr-3 text-sky-500 dark:text-sky-400">•</span>
                     <div>
-                      <strong>Nombre y organización:</strong> Quién eres y dónde trabajas
+                      <strong className="text-slate-900 dark:text-slate-100">Contexto profesional:</strong> Tu rol, organización o proyecto actual
                     </div>
                   </div>
 
                   <div className="flex items-start">
-                    <span className="mr-3 text-gray-500 dark:text-gray-400">•</span>
+                    <span className="mr-3 text-sky-500 dark:text-sky-400">•</span>
                     <div>
-                      <strong>Mensaje:</strong> Detalles del proyecto o propuesta
+                      <strong className="text-slate-900 dark:text-slate-100">Alcance:</strong> Detalles del proyecto, timeline y objetivos específicos
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* EMAIL CLICKEABLE ANCHO COMPLETO */}
-              <a
-                href="mailto:joriolgo@gmail.com"
-                className="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500/25 mb-8 block w-full rounded-lg px-6 py-4 text-center text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl focus:ring-4"
-              >
-                <svg
-                  className="mr-3 inline h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {/* EMAIL principal - destacado */}
+              <div className="mb-8">
+                <a
+                  href="mailto:joriolgo@gmail.com"
+                  className="block w-full rounded-lg bg-sky-600 px-6 py-4 text-center font-body text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:bg-sky-700 hover:shadow-xl focus:ring-4 focus:ring-sky-500/25"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                joriolgo@gmail.com
-              </a>
+                  <svg
+                    className="mr-3 inline h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  joriolgo@gmail.com
+                </a>
+              </div>
 
-              {/* INFORMACIÓN ADICIONAL Y FOOTER */}
-              <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-700">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+              {/* Información adicional */}
+              <div className="border-t border-slate-200 pt-6 dark:border-slate-700">
+                <div className="text-center space-y-3">
+                  <p className="font-body text-sm text-slate-600 dark:text-slate-400">
                     También puedes encontrarme en{' '}
                     <a
                       href="https://github.com/jaime-oriol"
-                      className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                      className="text-concept hover:text-sky-600 dark:hover:text-sky-300 font-medium transition-colors"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       GitHub
                     </a>{' '}
-                    para ver mis proyectos técnicos
+                    para revisar mis proyectos técnicos
                   </p>
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                    Respondo normalmente en 24-48 horas
-                  </p>
+                  <div className="flex items-center justify-center space-x-4 font-mono text-xs text-slate-500 dark:text-slate-500">
+                    <span>• Respuesta típica: 24-48h</span>
+                    <span>• Zona horaria: CET (Madrid)</span>
+                    <span>• Idiomas: ES/EN</span>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            {/* CTA complementario */}
+            <div className="mt-8 text-center">
+              <p className="font-body text-slate-600 dark:text-slate-400 mb-4">
+                ¿Prefieres ver mi trabajo antes de contactar?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                  href="/blog"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  Explorar análisis
+                </a>
+                <a
+                  href="/newsletter"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  Leer newsletter
+                </a>
               </div>
             </div>
           </div>

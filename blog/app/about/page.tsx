@@ -7,10 +7,10 @@ export const metadata = genPageMetadata({ title: 'About' })
 export default function Page() {
   return (
     <>
-      {/* Galería de fotos a pantalla completa */}
+      {/* Galería de fotos profesional */}
       <PhotoCarousel />
 
-      {/* Nueva sección biográfica */}
+      {/* Sección biográfica con tipografía FootballDecoded */}
       <BioSection />
     </>
   )
