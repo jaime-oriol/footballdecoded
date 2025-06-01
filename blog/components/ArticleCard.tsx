@@ -65,22 +65,23 @@ export default function ArticleCard({ post }: ArticleCardProps) {
         </div>
 
         {/* Contenido principal - tipografía FootballDecoded */}
-        <div className="relative min-w-0 flex-1 space-y-4 p-6">
-          {/* ETIQUETA DE SECCIÓN - Esquina superior derecha del contenedor */}
-          {section && (
-            <div className="absolute top-3 right-3 z-10">
+        <div className="min-w-0 flex-1 space-y-4 p-6">
+          {/* Header con título y etiqueta de sección en la misma línea */}
+          <div className="flex items-start justify-between gap-4">
+            {/* TÍTULO */}
+            <h3 className="font-headings text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400 flex-1">
+              {title}
+            </h3>
+            
+            {/* ETIQUETA DE SECCIÓN */}
+            {section && (
               <span
-                className={`inline-flex items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-sm ${getSectionColor(section)}`}
+                className={`inline-flex items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-sm flex-shrink-0 ${getSectionColor(section)}`}
               >
                 {getSectionLabel(section)}
               </span>
-            </div>
-          )}
-
-          {/* TÍTULO - Ahora en la posición principal */}
-          <h3 className="font-headings text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400">
-            {title}
-          </h3>
+            )}
+          </div>
 
           {/* Summary/descripción si existe */}
           {summary && (

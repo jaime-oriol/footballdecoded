@@ -85,19 +85,19 @@ const BioSection = () => {
             Perfil técnico
           </h3>
           <div className="grid gap-3 text-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-body text-slate-600 dark:text-slate-400">Formación</span>
               <span className="font-mono text-slate-900 dark:text-slate-100">
                 Business Analytics + Ing. Informática
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-body text-slate-600 dark:text-slate-400">Especialización</span>
               <span className="font-mono text-slate-900 dark:text-slate-100">
                 Análisis táctico + Métricas avanzadas
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-body text-slate-600 dark:text-slate-400">Herramientas</span>
               <span className="font-mono text-slate-900 dark:text-slate-100">
                 Python, R, SQL, Tableau
