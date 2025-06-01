@@ -8,14 +8,18 @@ import CustomLink from './Link'
 // Table wrapper con diseño profesional
 const TableWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-    <table className="w-full border-collapse bg-white dark:bg-slate-800">
-      {children}
-    </table>
+    <table className="w-full border-collapse bg-white dark:bg-slate-800">{children}</table>
   </div>
 )
 
 // Componente para destacar conceptos técnicos
-const TechnicalConcept = ({ children, type = 'default' }: { children: React.ReactNode; type?: 'metric' | 'role' | 'system' | 'default' }) => {
+const TechnicalConcept = ({
+  children,
+  type = 'default',
+}: {
+  children: React.ReactNode
+  type?: 'metric' | 'role' | 'system' | 'default'
+}) => {
   const getStyles = (type: string) => {
     switch (type) {
       case 'metric':
@@ -30,14 +34,22 @@ const TechnicalConcept = ({ children, type = 'default' }: { children: React.Reac
   }
 
   return (
-    <span className={`inline-flex items-center rounded px-2 py-0.5 text-sm font-medium ${getStyles(type)}`}>
+    <span
+      className={`inline-flex items-center rounded px-2 py-0.5 text-sm font-medium ${getStyles(type)}`}
+    >
       {children}
     </span>
   )
 }
 
 // Callout para notas importantes
-const Callout = ({ children, type = 'info' }: { children: React.ReactNode; type?: 'info' | 'warning' | 'success' | 'insight' }) => {
+const Callout = ({
+  children,
+  type = 'info',
+}: {
+  children: React.ReactNode
+  type?: 'info' | 'warning' | 'success' | 'insight'
+}) => {
   const getStyles = (type: string) => {
     switch (type) {
       case 'warning':
@@ -75,11 +87,16 @@ const Callout = ({ children, type = 'info' }: { children: React.ReactNode; type?
 }
 
 // Stat card para métricas
-const StatCard = ({ title, value, description, trend }: { 
-  title: string; 
-  value: string; 
-  description?: string; 
-  trend?: 'up' | 'down' | 'neutral' 
+const StatCard = ({
+  title,
+  value,
+  description,
+  trend,
+}: {
+  title: string
+  value: string
+  description?: string
+  trend?: 'up' | 'down' | 'neutral'
 }) => {
   const getTrendIcon = (trend?: string) => {
     switch (trend) {
@@ -95,14 +112,18 @@ const StatCard = ({ title, value, description, trend }: {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
       <div className="flex items-center justify-between">
-        <h3 className="font-body text-sm font-medium text-slate-600 dark:text-slate-400">{title}</h3>
+        <h3 className="font-body text-sm font-medium text-slate-600 dark:text-slate-400">
+          {title}
+        </h3>
         {getTrendIcon(trend)}
       </div>
       <div className="mt-2 flex items-baseline">
-        <span className="font-mono text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</span>
+        <span className="font-mono text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          {value}
+        </span>
       </div>
       {description && (
-        <p className="mt-1 font-body text-xs text-slate-500 dark:text-slate-400">{description}</p>
+        <p className="font-body mt-1 text-xs text-slate-500 dark:text-slate-400">{description}</p>
       )}
     </div>
   )
@@ -115,7 +136,7 @@ const TechnicalQuote = ({ children, source }: { children: React.ReactNode; sourc
       {children}
     </div>
     {source && (
-      <cite className="mt-2 block font-body text-sm text-slate-500 dark:text-slate-400">
+      <cite className="font-body mt-2 block text-sm text-slate-500 dark:text-slate-400">
         — {source}
       </cite>
     )}
@@ -130,29 +151,38 @@ export const components: MDXComponents = {
   pre: Pre,
   table: TableWrapper,
   BlogNewsletterForm,
-  
+
   // Componentes personalizados FootballDecoded
   TechnicalConcept,
   Callout,
   StatCard,
   TechnicalQuote,
-  
+
   // Headings con tipografía optimizada
   h1: (props) => (
-    <h1 className="font-headings text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-8 mb-4" {...props} />
+    <h1
+      className="font-headings mt-8 mb-4 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100"
+      {...props}
+    />
   ),
   h2: (props) => (
-    <h2 className="font-headings text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 mt-8 mb-4" {...props} />
+    <h2
+      className="font-headings mt-8 mb-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+      {...props}
+    />
   ),
   h3: (props) => (
-    <h3 className="font-headings text-xl font-semibold text-slate-900 dark:text-slate-100 mt-6 mb-3" {...props} />
+    <h3
+      className="font-headings mt-6 mb-3 text-xl font-semibold text-slate-900 dark:text-slate-100"
+      {...props}
+    />
   ),
-  
+
   // Párrafos optimizados
   p: (props) => (
-    <p className="font-body leading-relaxed text-slate-700 dark:text-slate-300 mb-4" {...props} />
+    <p className="font-body mb-4 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />
   ),
-  
+
   // Listas con mejor espaciado
   ul: (props) => (
     <ul className="font-body space-y-2 text-slate-700 dark:text-slate-300" {...props} />
@@ -160,17 +190,18 @@ export const components: MDXComponents = {
   ol: (props) => (
     <ol className="font-body space-y-2 text-slate-700 dark:text-slate-300" {...props} />
   ),
-  
+
   // Código inline con monospace
   code: (props) => (
-    <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100" {...props} />
+    <code
+      className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+      {...props}
+    />
   ),
-  
+
   // Strong/emphasis con colores semánticos
   strong: (props) => (
     <strong className="font-semibold text-slate-900 dark:text-slate-100" {...props} />
   ),
-  em: (props) => (
-    <em className="italic text-slate-600 dark:text-slate-400" {...props} />
-  ),
+  em: (props) => <em className="text-slate-600 italic dark:text-slate-400" {...props} />,
 }

@@ -21,8 +21,8 @@ export default function Footer() {
           <div>{` • `}</div>
           <div>{`© ${new Date().getFullYear()}`}</div>
           <div>{` • `}</div>
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="transition-colors hover:text-slate-700 dark:hover:text-slate-300"
           >
             {siteMetadata.title}

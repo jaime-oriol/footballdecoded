@@ -57,12 +57,12 @@ export default function ArticleCard({ post }: ArticleCardProps) {
         </div>
 
         {/* Contenido principal - tipografía FootballDecoded */}
-        <div className="min-w-0 flex-1 p-6 space-y-4">
+        <div className="min-w-0 flex-1 space-y-4 p-6">
           {/* Badge de sección con colores semánticos */}
           {section && (
             <div>
               <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium font-mono ${getSectionColor(section)}`}
+                className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-sm font-medium ${getSectionColor(section)}`}
               >
                 {getSectionLabel(section)}
               </span>
@@ -70,13 +70,13 @@ export default function ArticleCard({ post }: ArticleCardProps) {
           )}
 
           {/* Título con Inter, optimizado para scan reading */}
-          <h3 className="font-headings text-xl lg:text-2xl font-semibold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 dark:text-slate-100 dark:group-hover:text-sky-400">
+          <h3 className="font-headings text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400">
             {title}
           </h3>
 
           {/* Summary/descripción si existe */}
           {summary && (
-            <p className="font-body text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
+            <p className="font-body line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               {summary}
             </p>
           )}

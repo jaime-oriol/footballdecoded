@@ -9,29 +9,31 @@ export default function AuthButton() {
   if (status === 'loading') {
     return (
       <div className="flex items-center">
-        <div className="border-t-primary-600 h-6 w-6 animate-spin rounded-full border-2 border-gray-300"></div>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-sky-600"></div>
       </div>
     )
   }
 
   if (session) {
     return (
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-3">
         {session.user?.image && (
           <Image
             src={session.user.image}
             alt={session.user.name || 'Usuario'}
-            width={28}
-            height={28}
-            className="rounded-full"
+            width={32}
+            height={32}
+            className="rounded-full border border-slate-200 dark:border-slate-700"
           />
         )}
-        <span className="hidden text-sm text-gray-700 lg:block dark:text-gray-300">
-          {session.user?.name?.split(' ')[0]}
-        </span>
+        <div className="hidden lg:block">
+          <span className="font-body text-sm font-medium text-slate-700 dark:text-slate-300">
+            {session.user?.name?.split(' ')[0]}
+          </span>
+        </div>
         <button
           onClick={() => signOut()}
-          className="rounded-md bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600"
+          className="font-body rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 focus:ring-2 focus:ring-red-500/20"
         >
           Salir
         </button>
@@ -42,7 +44,7 @@ export default function AuthButton() {
   return (
     <button
       onClick={() => signIn('google')}
-      className="bg-primary-600 hover:bg-primary-700 flex items-center space-x-1 rounded-md px-3 py-2 text-xs text-white"
+      className="font-body flex items-center space-x-2 rounded-lg bg-sky-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-sky-700 focus:ring-2 focus:ring-sky-500/20"
     >
       <svg className="h-3 w-3" viewBox="0 0 24 24">
         <path

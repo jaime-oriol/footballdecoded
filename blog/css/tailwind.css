@@ -10,14 +10,14 @@
   --font-sans:
     var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  
+
   --font-headings:
-    var(--font-inter), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    
+    var(--font-inter), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+
   --font-mono:
-    var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco,
-    Consolas, 'Liberation Mono', 'Courier New', monospace;
+    var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
 
   /* Colors - Paleta FootballDecoded basada en slate, sky, indigo */
   --color-primary-50: oklch(0.971 0.014 220.198);
@@ -59,24 +59,34 @@
 /* Configuración de familias tipográficas */
 @layer base {
   /* Asignación de familias por elemento */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-headings);
     font-weight: 600;
     letter-spacing: var(--tracking-tight);
   }
-  
+
   body {
     font-family: var(--font-sans);
     font-weight: 400;
     line-height: var(--leading-relaxed);
   }
-  
-  code, pre, .font-mono {
+
+  code,
+  pre,
+  .font-mono {
     font-family: var(--font-mono);
   }
-  
+
   /* Elementos técnicos con mono */
-  .metric, .stat, .score, .percentage {
+  .metric,
+  .stat,
+  .score,
+  .percentage {
     font-family: var(--font-mono);
     font-weight: 500;
   }
@@ -110,11 +120,11 @@
   .font-headings {
     font-family: var(--font-headings);
   }
-  
+
   .font-body {
     font-family: var(--font-sans);
   }
-  
+
   .font-mono {
     font-family: var(--font-mono);
   }
@@ -153,18 +163,18 @@
       text-decoration-thickness: 1px;
       text-underline-offset: 2px;
       font-weight: 500;
-      
+
       &:hover {
         color: var(--color-sky-800);
         text-decoration-thickness: 2px;
       }
-      
+
       & code {
         color: var(--color-sky-600);
         background-color: var(--color-sky-50);
       }
     }
-    
+
     /* Títulos con Inter y espaciado optimizado */
     & :where(h1, h2, h3, h4, h5, h6) {
       font-family: var(--font-headings);
@@ -172,7 +182,7 @@
       letter-spacing: var(--tracking-tight);
       scroll-margin-top: 2rem;
     }
-    
+
     & h1 {
       font-size: 2.25em;
       margin-top: 0;
@@ -180,7 +190,7 @@
       line-height: 1.1111111;
       font-weight: 700;
     }
-    
+
     & h2 {
       font-size: 1.875em;
       margin-top: 1.6em;
@@ -188,7 +198,7 @@
       line-height: 1.3333333;
       font-weight: 600;
     }
-    
+
     & h3 {
       font-size: 1.5em;
       margin-top: 1.6em;
@@ -196,7 +206,7 @@
       line-height: 1.6;
       font-weight: 600;
     }
-    
+
     /* Código inline con mejor legibilidad */
     & :where(code):not(pre code) {
       font-family: var(--font-mono);
@@ -207,7 +217,7 @@
       font-size: 0.875em;
       font-weight: 500;
     }
-    
+
     /* Bloques de código */
     & pre {
       background-color: var(--tw-prose-pre-bg);
@@ -219,7 +229,7 @@
       overflow-x: auto;
       padding: 1.1428571em 1.2857143em;
     }
-    
+
     & pre code {
       color: var(--tw-prose-pre-code);
       font-family: var(--font-mono);
@@ -227,7 +237,7 @@
       font-weight: 400;
       line-height: inherit;
     }
-    
+
     /* Citas mejoradas para análisis */
     & blockquote {
       border-left: 4px solid var(--tw-prose-quote-borders);
@@ -239,20 +249,21 @@
       padding: 1rem 1.5rem;
       border-radius: 0 0.5rem 0.5rem 0;
     }
-    
+
     /* Listas con mejor espaciado */
-    & ul, & ol {
+    & ul,
+    & ol {
       margin-top: 1.25em;
       margin-bottom: 1.25em;
       padding-left: 1.625em;
     }
-    
+
     & li {
       margin-top: 0.5em;
       margin-bottom: 0.5em;
       font-family: var(--font-sans);
     }
-    
+
     /* Tablas para datos técnicos */
     & table {
       width: 100%;
@@ -266,11 +277,11 @@
       overflow: hidden;
       border: 1px solid var(--color-slate-200);
     }
-    
+
     & thead {
       background-color: var(--color-slate-50);
     }
-    
+
     & thead th {
       font-family: var(--font-headings);
       font-weight: 600;
@@ -279,16 +290,17 @@
       padding: 0.75rem;
       border-bottom: 1px solid var(--color-slate-200);
     }
-    
+
     & tbody td {
       vertical-align: baseline;
       padding: 0.75rem;
       border-bottom: 1px solid var(--color-slate-100);
       font-family: var(--font-sans);
     }
-    
+
     /* Métricas y datos numéricos */
-    & .metric, & .stat {
+    & .metric,
+    & .stat {
       font-family: var(--font-mono);
       font-weight: 600;
       color: var(--color-indigo-700);
@@ -313,62 +325,63 @@
     --tw-prose-pre-bg: var(--color-slate-800);
     --tw-prose-th-borders: var(--color-slate-600);
     --tw-prose-td-borders: var(--color-slate-700);
-    
+
     & a {
       color: var(--tw-prose-links);
-      
+
       &:hover {
         color: var(--color-sky-300);
       }
-      
+
       & code {
         color: var(--color-sky-400);
         background-color: var(--color-sky-900);
       }
     }
-    
+
     & :where(code):not(pre code) {
       color: var(--tw-prose-code);
       background-color: var(--color-slate-800);
     }
-    
+
     & blockquote {
       border-left-color: var(--tw-prose-quote-borders);
       color: var(--tw-prose-quotes);
       background-color: var(--color-slate-800);
     }
-    
+
     & table {
       border-color: var(--color-slate-700);
     }
-    
+
     & thead {
       background-color: var(--color-slate-800);
     }
-    
+
     & thead th {
       color: var(--color-slate-100);
       border-bottom-color: var(--color-slate-600);
     }
-    
+
     & tbody td {
       border-bottom-color: var(--color-slate-700);
     }
-    
-    & .metric, & .stat {
+
+    & .metric,
+    & .stat {
       color: var(--color-indigo-400);
     }
   }
-  
+
   /* Utilidades semánticas FootballDecoded */
   .text-concept {
     color: var(--color-sky-700);
   }
-  
+
   .dark .text-concept {
     color: var(--color-sky-400);
   }
-  
+
   .badge-role {
     background-color: var(--color-sky-100);
     color: var(--color-sky-800);
@@ -377,7 +390,7 @@
     font-size: 0.875rem;
     font-weight: 500;
   }
-  
+
   .dark .badge-role {
     background-color: var(--color-sky-900);
     color: var(--color-sky-200);

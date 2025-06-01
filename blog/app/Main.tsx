@@ -9,61 +9,61 @@ export default function Home({ posts }) {
     <>
       <div className="divide-y divide-slate-200 dark:divide-slate-700">
         {/* === SECCIÓN INTRODUCTORIA PROFESIONAL === */}
-        <div className="max-w-prose mx-auto px-4 sm:px-6 space-y-6 pt-8 pb-10">
+        <div className="mx-auto max-w-prose space-y-6 px-4 pt-8 pb-10 sm:px-6">
           {/* Título principal con Inter */}
-          <h1 className="font-headings text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="font-headings text-4xl font-bold tracking-tight text-slate-900 lg:text-5xl dark:text-slate-100">
             FootballDecoded
           </h1>
-          
+
           {/* Cita destacada */}
           <div className="border-l-4 border-slate-400 pl-4 italic">
-            <blockquote className="text-lg text-slate-600 dark:text-slate-400 font-body leading-relaxed">
+            <blockquote className="font-body text-lg leading-relaxed text-slate-600 dark:text-slate-400">
               "El fútbol es como el ajedrez, pero sin dados." — Lukas Podolski
             </blockquote>
           </div>
 
           {/* Descripción principal con IBM Plex Sans */}
-          <div className="space-y-6 font-body leading-relaxed text-slate-700 dark:text-slate-300">
+          <div className="font-body space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
             <p className="text-lg">
-              <strong className="text-concept font-medium">FootballDecoded</strong> parte de esa idea: el fútbol está lleno de
-              estructuras, decisiones y patrones… pero sigue siendo impredecible. No se deja
-              atrapar del todo por los números, ni por la intuición. Y ahí, en ese espacio
-              intermedio, es donde ocurre lo interesante.
+              <strong className="text-concept font-medium">FootballDecoded</strong> parte de esa
+              idea: el fútbol está lleno de estructuras, decisiones y patrones… pero sigue siendo
+              impredecible. No se deja atrapar del todo por los números, ni por la intuición. Y ahí,
+              en ese espacio intermedio, es donde ocurre lo interesante.
             </p>
 
             <p>
               Este blog es mi forma de explorar el juego desde un lugar que conecta dos mundos: el
-              análisis táctico y el pensamiento cuantitativo. Desde la ingeniería hasta la
-              pizarra. Aquí no se trata de reducir el fútbol a datos, sino de usarlos para ver más
-              claro. Para entender mejor.
+              análisis táctico y el pensamiento cuantitativo. Desde la ingeniería hasta la pizarra.
+              Aquí no se trata de reducir el fútbol a datos, sino de usarlos para ver más claro.
+              Para entender mejor.
             </p>
 
             <p>
               Trabajo con herramientas de análisis avanzadas, modelos de datos y visualizaciones
               tácticas, pero siempre con el foco en lo que pasa en el campo. Analizo sistemas de
-              juego, identifico perfiles funcionales de jugadores, y desarrollo métricas que
-              buscan traducir comportamientos colectivos en conocimiento útil y aplicable.
+              juego, identifico perfiles funcionales de jugadores, y desarrollo métricas que buscan
+              traducir comportamientos colectivos en conocimiento útil y aplicable.
             </p>
 
-            <p className="text-slate-600 dark:text-slate-400 italic">
+            <p className="text-slate-600 italic dark:text-slate-400">
               <em>FootballDecoded</em> es mi proyecto académico y profesional. Una forma de
               construir criterio, compartir ideas y aportar una visión rigurosa, visual y práctica
-              sobre el fútbol de élite. Porque si el juego es cada vez más complejo, merece
-              también una forma más profunda - y honesta - de contarlo.
+              sobre el fútbol de élite. Porque si el juego es cada vez más complejo, merece también
+              una forma más profunda - y honesta - de contarlo.
             </p>
           </div>
         </div>
 
         {/* === SECCIÓN DE ARTÍCULOS RECIENTES === */}
         <div className="pt-10">
-          <div className="max-w-prose mx-auto px-4 sm:px-6">
-            <h2 className="font-headings text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 mb-8">
+          <div className="mx-auto max-w-prose px-4 sm:px-6">
+            <h2 className="font-headings mb-8 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Análisis Recientes
             </h2>
           </div>
 
           {!posts.length && (
-            <div className="max-w-prose mx-auto px-4 sm:px-6 py-16 text-center">
+            <div className="mx-auto max-w-prose px-4 py-16 text-center sm:px-6">
               <svg
                 className="mx-auto mb-4 h-12 w-12 text-slate-400"
                 fill="none"
@@ -77,10 +77,10 @@ export default function Home({ posts }) {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <h3 className="font-headings text-xl font-medium text-slate-900 dark:text-slate-100 mb-2">
+              <h3 className="font-headings mb-2 text-xl font-medium text-slate-900 dark:text-slate-100">
                 Próximamente
               </h3>
-              <p className="text-slate-500 dark:text-slate-400 font-body">
+              <p className="font-body text-slate-500 dark:text-slate-400">
                 Los primeros análisis tácticos, scouting funcional y métricas avanzadas estarán
                 disponibles muy pronto.
               </p>
@@ -118,14 +118,17 @@ export default function Home({ posts }) {
 
         {/* === CALL TO ACTION NEWSLETTER === */}
         <div className="pt-10">
-          <div className="max-w-prose mx-auto px-4 sm:px-6">
+          <div className="mx-auto max-w-prose px-4 sm:px-6">
             <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-sky-50 to-white p-6 shadow-sm dark:border-slate-700 dark:from-sky-900/10 dark:to-slate-800">
-              <div className="text-center space-y-4">
+              <div className="space-y-4 text-center">
                 <h2 className="font-headings text-xl font-semibold text-slate-900 dark:text-slate-100">
                   Newsletter Semanal
                 </h2>
                 <p className="font-body text-slate-600 dark:text-slate-400">
-                  Cada lunes, las <strong className="text-concept">5 noticias más importantes del mundo del fútbol</strong>{' '}
+                  Cada lunes, las{' '}
+                  <strong className="text-concept">
+                    5 noticias más importantes del mundo del fútbol
+                  </strong>{' '}
                   contadas con criterio, sin ruido, y con algo de opinión propia.
                 </p>
                 <Link

@@ -18,21 +18,21 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
-  weight: ['400', '500', '600', '700']
+  weight: ['400', '500', '600', '700'],
 })
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-ibm-plex-sans',
-  weight: ['300', '400', '500', '600']
+  weight: ['300', '400', '500', '600'],
 })
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-ibm-plex-mono',
-  weight: ['400', '500', '600']
+  weight: ['400', '500', '600'],
 })
 
 export const metadata: Metadata = {
@@ -111,9 +111,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
       <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
       <link rel="alternate" type="application/rss+xml" href={`${basePath}/feed.xml`} />
-      
+
       {/* Sistema tipográfico FootballDecoded: Inter para títulos, IBM Plex Sans para texto */}
-      <body className="bg-white font-body text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100 pl-[calc(100vw-100%)]">
+      <body className="font-body bg-white pl-[calc(100vw-100%)] text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100">
         <AuthSessionProvider>
           <ThemeProviders>
             <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />

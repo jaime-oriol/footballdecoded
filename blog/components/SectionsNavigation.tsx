@@ -15,7 +15,7 @@ const sections: Section[] = [
   {
     href: '/blog',
     title: 'Todos los artículos',
-    description: 'Vista completa de análisis',
+    description: 'Vista completa de análisis técnicos',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -30,7 +30,7 @@ const sections: Section[] = [
   {
     href: '/blog/tactical-structures',
     title: 'Tactical Structures',
-    description: 'Análisis estructural del juego moderno',
+    description: 'Sistemas y principios del juego moderno',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -45,7 +45,7 @@ const sections: Section[] = [
   {
     href: '/blog/scouting',
     title: 'Scouting',
-    description: 'Perfiles funcionales y tácticos por rol',
+    description: 'Perfiles funcionales por rol táctico',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -60,7 +60,7 @@ const sections: Section[] = [
   {
     href: '/blog/tactical-metrics-lab',
     title: 'Tactical Metrics Lab',
-    description: 'Métricas aplicadas al rendimiento colectivo e individual',
+    description: 'Métricas cuantitativas aplicadas',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -90,7 +90,7 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
         onMouseLeave={() => setIsOpen(false)}
       >
         {/* Trigger Button */}
-        <button className="hover:text-primary-500 dark:hover:text-primary-400 flex items-center font-medium text-gray-900 dark:text-gray-100">
+        <button className="font-body flex items-center font-medium text-slate-700 transition-colors hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-400">
           Artículos
           <svg
             className={`ml-1 h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -112,24 +112,27 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
           style={{ zIndex: isOpen ? 9999 : -1 }}
         >
           {/* Arrow pointer */}
-          <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-t border-l border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"></div>
+          <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-t border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"></div>
 
           {/* Menu content */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
-            <div className="p-3">
-              <div className="flex space-x-2">
+          <div className="rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
+            <div className="p-2">
+              <div className="flex space-x-1">
                 {sections.map((section) => (
                   <Link
                     key={section.href}
                     href={section.href}
-                    className="flex min-w-[140px] flex-col items-center rounded-md p-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="flex min-w-[140px] flex-col items-center rounded-lg p-3 text-center transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50"
                   >
-                    <div className="text-primary-500 dark:text-primary-400 mb-2 flex-shrink-0">
+                    <div className="mb-2 flex-shrink-0 text-sky-600 dark:text-sky-400">
                       {section.icon}
                     </div>
-                    <div className="text-center">
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <div>
+                      <div className="font-headings text-sm font-medium text-slate-900 dark:text-slate-100">
                         {section.title}
+                      </div>
+                      <div className="font-body mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {section.description}
                       </div>
                     </div>
                   </Link>
@@ -144,7 +147,7 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
 
   if (variant === 'bar') {
     return (
-      <div className="w-full border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950">
+      <div className="w-full border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:px-0">
           <nav className="scrollbar-hide flex space-x-8 overflow-x-auto" aria-label="Secciones">
             {sections.map((section) => {
@@ -155,18 +158,18 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
                   href={section.href}
                   className={`group relative flex min-w-0 flex-col py-4 text-center transition-colors duration-200 ${
                     isActive
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                      ? 'text-sky-700 dark:text-sky-400'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
                 >
-                  <span className="text-sm font-semibold whitespace-nowrap lg:text-base">
+                  <span className="font-headings text-sm font-medium whitespace-nowrap lg:text-base">
                     {section.title}
                   </span>
                   <div
                     className={`absolute right-0 bottom-0 left-0 h-0.5 rounded-full transition-all duration-200 ${
                       isActive
-                        ? 'bg-primary-500 opacity-100'
-                        : 'bg-transparent opacity-0 group-hover:bg-gray-300 group-hover:opacity-50 dark:group-hover:bg-gray-600'
+                        ? 'bg-sky-500 opacity-100'
+                        : 'bg-transparent opacity-0 group-hover:bg-slate-300 group-hover:opacity-50 dark:group-hover:bg-slate-600'
                     }`}
                   />
                 </Link>
@@ -181,8 +184,10 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
   // variant === 'sidebar'
   return (
     <aside className="w-64 flex-shrink-0">
-      <div className="sticky top-24 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-gray-100">Secciones</h3>
+      <div className="sticky top-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h3 className="font-headings mb-6 text-lg font-semibold text-slate-900 dark:text-slate-100">
+          Secciones
+        </h3>
         <nav className="space-y-2">
           {sections.map((section) => {
             const isActive = pathname === section.href
@@ -192,18 +197,22 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
                 href={section.href}
                 className={`group flex items-start rounded-lg px-3 py-3 text-sm transition-colors ${
                   isActive
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300'
-                    : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50'
+                    ? 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300'
+                    : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <div
-                  className={`mt-0.5 mr-3 flex-shrink-0 ${isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'}`}
+                  className={`mt-0.5 mr-3 flex-shrink-0 ${
+                    isActive
+                      ? 'text-sky-600 dark:text-sky-400'
+                      : 'text-slate-400 group-hover:text-slate-500 dark:group-hover:text-slate-400'
+                  }`}
                 >
                   {section.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{section.title}</div>
-                  <div className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                  <div className="font-headings truncate font-medium">{section.title}</div>
+                  <div className="font-body mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                     {section.description}
                   </div>
                 </div>
@@ -211,6 +220,21 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
             )
           })}
         </nav>
+
+        {/* Información adicional */}
+        <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
+          <div className="font-body space-y-3 text-xs text-slate-500 dark:text-slate-400">
+            <div>
+              <div className="font-headings mb-1 font-medium text-slate-700 dark:text-slate-300">
+                Enfoque técnico
+              </div>
+              <p>
+                Análisis basado en datos, visualización táctica y métricas aplicadas al fútbol
+                profesional.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   )

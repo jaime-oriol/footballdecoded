@@ -30,7 +30,7 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
         {prevPage ? (
           <Link
             href={currentPage - 1 === 1 ? basePath : `${basePath}/page/${currentPage - 1}`}
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="font-body inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <svg className="mr-3 h-5 w-5 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -48,7 +48,8 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
 
       <div className="hidden md:flex">
         <span className="font-mono text-sm text-slate-600 dark:text-slate-400">
-          Página <span className="font-medium text-slate-900 dark:text-slate-100">{currentPage}</span> de{' '}
+          Página{' '}
+          <span className="font-medium text-slate-900 dark:text-slate-100">{currentPage}</span> de{' '}
           <span className="font-medium text-slate-900 dark:text-slate-100">{totalPages}</span>
         </span>
       </div>
@@ -57,7 +58,7 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
         {nextPage ? (
           <Link
             href={`${basePath}/page/${currentPage + 1}`}
-            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="font-body inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             Siguiente
             <svg className="ml-3 h-5 w-5 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
@@ -101,12 +102,12 @@ export default function ArticlesLayout({
   return (
     <div className="mx-auto max-w-7xl">
       {/* Header de la sección */}
-      <div className="max-w-prose mx-auto px-4 sm:px-6 xl:px-0 pt-8 pb-6">
+      <div className="mx-auto max-w-prose px-4 pt-8 pb-6 sm:px-6 xl:px-0">
         <div className="space-y-4">
-          <h1 className="font-headings text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="font-headings text-4xl font-bold tracking-tight text-slate-900 lg:text-5xl dark:text-slate-100">
             {title}
           </h1>
-          <p className="font-body text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="font-body text-xl leading-relaxed text-slate-600 dark:text-slate-400">
             {getSectionDescription(section)}
           </p>
         </div>
@@ -116,12 +117,11 @@ export default function ArticlesLayout({
       <SectionsNavigation variant="bar" />
 
       {/* CONTENIDO PRINCIPAL */}
-      <div className="max-w-prose mx-auto px-4 sm:px-6 xl:px-0">
+      <div className="mx-auto max-w-prose px-4 sm:px-6 xl:px-0">
         <main className="py-10">
-          
           {/* Empty State - cuando no hay artículos */}
           {!displayPosts.length && (
-            <div className="py-16 text-center space-y-6">
+            <div className="space-y-6 py-16 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                 <svg
                   className="h-8 w-8 text-slate-400"
@@ -172,17 +172,17 @@ export default function ArticlesLayout({
 
           {/* Newsletter CTA al final */}
           {displayPosts.length > 0 && (
-            <div className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700">
+            <div className="mt-16 border-t border-slate-200 pt-8 dark:border-slate-700">
               <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-sky-50 to-white p-6 text-center dark:border-slate-700 dark:from-sky-900/10 dark:to-slate-800">
-                <h3 className="font-headings text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                <h3 className="font-headings mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
                   ¿Te gustó este análisis?
                 </h3>
-                <p className="font-body text-slate-600 dark:text-slate-400 mb-4">
+                <p className="font-body mb-4 text-slate-600 dark:text-slate-400">
                   Recibe contenido similar cada lunes en tu bandeja de entrada
                 </p>
                 <Link
                   href="/newsletter"
-                  className="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 font-body font-medium text-white transition-colors hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                  className="font-body inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 font-medium text-white transition-colors hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                 >
                   Suscribirse a la newsletter
                   <svg className="ml-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">

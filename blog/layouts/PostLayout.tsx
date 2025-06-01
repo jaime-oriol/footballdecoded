@@ -69,7 +69,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
 
       {/* Breadcrumb profesional */}
       <div className="mb-6">
-        <nav className="flex items-center space-x-2 font-body text-sm text-slate-500 dark:text-slate-400">
+        <nav className="font-body flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
           <Link
             href="/"
             className="transition-colors hover:text-slate-700 dark:hover:text-slate-300"
@@ -104,18 +104,19 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
         <div>
           {/* Header del artículo - diseño profesional */}
           <header className="relative mb-10">
-            
             {/* Metadatos del artículo */}
             <div className="mb-6 space-y-4">
               {/* Badge de sección y fecha */}
               <div className="flex items-center justify-between">
                 {section && (
-                  <span className={`inline-flex items-center rounded-full px-3 py-1.5 font-mono text-sm font-medium ${getSectionColor(section)}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1.5 font-mono text-sm font-medium ${getSectionColor(section)}`}
+                  >
                     {getSectionLabel(section)}
                   </span>
                 )}
-                <time 
-                  dateTime={date} 
+                <time
+                  dateTime={date}
                   className="font-mono text-sm text-slate-500 dark:text-slate-400"
                 >
                   {new Date(date).toLocaleDateString(siteMetadata.locale, postDateTemplate)}
@@ -123,21 +124,15 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               </div>
 
               {/* Título principal */}
-              <h1 className="font-headings text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+              <h1 className="font-headings text-3xl leading-tight font-bold tracking-tight text-slate-900 lg:text-4xl xl:text-5xl dark:text-slate-100">
                 {title}
               </h1>
             </div>
 
             {/* Imagen destacada */}
             {displayImage && (
-              <div className="relative aspect-[16/9] overflow-hidden rounded-lg mb-8">
-                <Image 
-                  src={displayImage} 
-                  alt={title} 
-                  fill 
-                  className="object-cover" 
-                  priority 
-                />
+              <div className="relative mb-8 aspect-[16/9] overflow-hidden rounded-lg">
+                <Image src={displayImage} alt={title} fill className="object-cover" priority />
                 {/* Overlay sutil para mejor integración */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
               </div>
@@ -145,7 +140,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
           </header>
 
           {/* Contenido del artículo con prose optimizado */}
-          <div className="max-w-prose mx-auto">
+          <div className="mx-auto max-w-prose">
             <div className="prose prose-slate prose-lg dark:prose-invert max-w-none">
               {children}
             </div>
@@ -200,14 +195,14 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                 <div className="grid gap-6 md:grid-cols-2">
                   {prev && (
                     <div className="group">
-                      <p className="mb-2 font-mono text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">
+                      <p className="mb-2 font-mono text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
                         Artículo anterior
                       </p>
                       <Link
                         href={`/blog/${prev.slug}`}
                         className="block rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                       >
-                        <h3 className="font-headings text-lg font-medium text-slate-900 group-hover:text-sky-700 dark:text-slate-100 dark:group-hover:text-sky-400 transition-colors">
+                        <h3 className="font-headings text-lg font-medium text-slate-900 transition-colors group-hover:text-sky-700 dark:text-slate-100 dark:group-hover:text-sky-400">
                           {prev.title}
                         </h3>
                       </Link>
@@ -216,14 +211,14 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
 
                   {next && (
                     <div className="group">
-                      <p className="mb-2 font-mono text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">
+                      <p className="mb-2 font-mono text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
                         Siguiente artículo
                       </p>
                       <Link
                         href={`/blog/${next.slug}`}
                         className="block rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                       >
-                        <h3 className="font-headings text-lg font-medium text-slate-900 group-hover:text-sky-700 dark:text-slate-100 dark:group-hover:text-sky-400 transition-colors">
+                        <h3 className="font-headings text-lg font-medium text-slate-900 transition-colors group-hover:text-sky-700 dark:text-slate-100 dark:group-hover:text-sky-400">
                           {next.title}
                         </h3>
                       </Link>
@@ -237,7 +232,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
             <div className="mt-12 text-center">
               <Link
                 href="/blog"
-                className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="font-body inline-flex items-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                   <path
