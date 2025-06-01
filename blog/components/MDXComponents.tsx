@@ -181,6 +181,7 @@ export const components: MDXComponents = {
       return null
     }
     return (
+      // eslint-disable-next-line jsx-a11y/heading-has-content
       <h1
         className="font-headings mt-8 mb-4 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100"
         {...props}
@@ -194,6 +195,7 @@ export const components: MDXComponents = {
       return null
     }
     return (
+      // eslint-disable-next-line jsx-a11y/heading-has-content
       <h2
         className="font-headings mt-8 mb-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
         {...props}
@@ -207,6 +209,7 @@ export const components: MDXComponents = {
       return null
     }
     return (
+      // eslint-disable-next-line jsx-a11y/heading-has-content
       <h3
         className="font-headings mt-6 mb-3 text-xl font-semibold text-slate-900 dark:text-slate-100"
         {...props}
