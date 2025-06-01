@@ -69,14 +69,14 @@ export default function ArticleCard({ post }: ArticleCardProps) {
           {/* Header con título y etiqueta de sección en la misma línea */}
           <div className="flex items-start justify-between gap-4">
             {/* TÍTULO */}
-            <h3 className="font-headings text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400 flex-1">
+            <h3 className="font-headings flex-1 text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400">
               {title}
             </h3>
-            
+
             {/* ETIQUETA DE SECCIÓN */}
             {section && (
               <span
-                className={`inline-flex items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-sm flex-shrink-0 ${getSectionColor(section)}`}
+                className={`inline-flex flex-shrink-0 items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-sm ${getSectionColor(section)}`}
               >
                 {getSectionLabel(section)}
               </span>
