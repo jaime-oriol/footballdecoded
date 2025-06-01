@@ -94,7 +94,9 @@ export default function ArticlesLayout({
         return 'Identificación de perfiles por función táctica mediante datos.'
       case 'scouting': // Backward compatibility
         return 'Identificación de perfiles por función táctica mediante datos.'
-      case 'tactical-metrics-lab':
+      case 'advanced-metrics':
+        return 'Cuantificación avanzada del impacto táctico mediante datos y programación.'
+      case 'tactical-metrics-lab': // Backward compatibility
         return 'Cuantificación avanzada del impacto táctico mediante datos y programación.'
       default:
         return 'Análisis táctico avanzado, métricas cuantitativas y scouting funcional.'

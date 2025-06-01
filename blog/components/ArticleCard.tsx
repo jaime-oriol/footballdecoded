@@ -17,8 +17,10 @@ const getSectionLabel = (section: string) => {
       return 'Analytical Scouting'
     case 'scouting': // Backward compatibility
       return 'Analytical Scouting'
-    case 'tactical-metrics-lab':
-      return 'Tactical Metrics Lab'
+    case 'advanced-metrics':
+      return 'Advanced Metrics'
+    case 'tactical-metrics-lab': // Backward compatibility
+      return 'Advanced Metrics'
     default:
       return 'Análisis'
   }
@@ -32,7 +34,9 @@ const getSectionColor = (section: string) => {
       return 'bg-emerald-600 text-white'
     case 'scouting': // Backward compatibility
       return 'bg-emerald-600 text-white'
-    case 'tactical-metrics-lab':
+    case 'advanced-metrics':
+      return 'bg-indigo-600 text-white'
+    case 'tactical-metrics-lab': // Backward compatibility
       return 'bg-indigo-600 text-white'
     default:
       return 'bg-slate-600 text-white'

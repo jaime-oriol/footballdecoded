@@ -58,8 +58,8 @@ const sections: Section[] = [
     ),
   },
   {
-    href: '/blog/tactical-metrics-lab',
-    title: 'Tactical Metrics Lab',
+    href: '/blog/advanced-metrics',
+    title: 'Advanced Metrics',
     description: 'Métricas avanzadas',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

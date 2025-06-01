@@ -45,8 +45,10 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
         return 'Analytical Scouting'
       case 'scouting': // Backward compatibility
         return 'Analytical Scouting'
-      case 'tactical-metrics-lab':
-        return 'Tactical Metrics Lab'
+      case 'advanced-metrics':
+        return 'Advanced Metrics'
+      case 'tactical-metrics-lab': // Backward compatibility
+        return 'Advanced Metrics'
       default:
         return 'Análisis'
     }
@@ -60,7 +62,9 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
         return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
       case 'scouting': // Backward compatibility
         return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
-      case 'tactical-metrics-lab':
+      case 'advanced-metrics':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200'
+      case 'tactical-metrics-lab': // Backward compatibility
         return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200'
       default:
         return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
