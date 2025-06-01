@@ -5,15 +5,6 @@ const BioSection = () => {
       <div className="absolute top-0 left-1/2 h-px w-24 -translate-x-1/2 bg-gradient-to-r from-transparent via-sky-500/30 to-transparent"></div>
 
       <div className="mx-auto max-w-prose space-y-10 px-4 py-16 sm:px-6">
-        {/* Título principal */}
-        <div className="relative">
-          <h2 className="font-headings mb-3 text-3xl font-bold tracking-tight text-slate-900 lg:text-4xl dark:text-slate-100">
-            Sobre mí
-          </h2>
-          {/* Acento visual técnico */}
-          <div className="absolute -bottom-1 left-0 h-0.5 w-12 rounded-full bg-sky-500"></div>
-        </div>
-
         {/* Contenido biográfico - tipografía optimizada para lectura larga */}
         <div className="font-body space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
           <p className="text-lg">
@@ -97,7 +88,7 @@ const BioSection = () => {
             <div className="flex items-center justify-between">
               <span className="font-body text-slate-600 dark:text-slate-400">Formación</span>
               <span className="font-mono text-slate-900 dark:text-slate-100">
-                Business Analytics + Ing. Informática
+                Business Analytics + Ingeniería Informática
               </span>
             </div>
             <div className="flex items-center justify-between">
