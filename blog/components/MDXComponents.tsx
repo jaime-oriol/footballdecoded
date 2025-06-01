@@ -153,7 +153,7 @@ const hasValidContent = (children: React.ReactNode): boolean => {
     return true
   }
   if (Array.isArray(children)) {
-    return children.some(child => hasValidContent(child))
+    return children.some((child) => hasValidContent(child))
   }
   return true
 }
@@ -186,7 +186,7 @@ export const components: MDXComponents = {
       />
     )
   },
-  
+
   h2: (props) => {
     // Solo renderizar si hay contenido válido
     if (!hasValidContent(props.children)) {
@@ -199,7 +199,7 @@ export const components: MDXComponents = {
       />
     )
   },
-  
+
   h3: (props) => {
     // Solo renderizar si hay contenido válido
     if (!hasValidContent(props.children)) {
