@@ -143,6 +143,21 @@ const TechnicalQuote = ({ children, source }: { children: React.ReactNode; sourc
   </blockquote>
 )
 
+// Función helper para verificar si hay contenido válido
+const hasValidContent = (children: React.ReactNode): boolean => {
+  if (!children) return false
+  if (typeof children === 'string') {
+    return children.trim().length > 0
+  }
+  if (React.isValidElement(children)) {
+    return true
+  }
+  if (Array.isArray(children)) {
+    return children.some(child => hasValidContent(child))
+  }
+  return true
+}
+
 export const components: MDXComponents = {
   // Componentes base
   Image,
@@ -158,10 +173,10 @@ export const components: MDXComponents = {
   StatCard,
   TechnicalQuote,
 
-  // Headings con tipografía optimizada - CON CONTENT CHECK Y ACCESIBILIDAD
+  // Headings con verificación de contenido y accesibilidad
   h1: (props) => {
-    // Si no hay children o es empty, no renderizar nada
-    if (!props.children || (typeof props.children === 'string' && props.children.trim() === '')) {
+    // Solo renderizar si hay contenido válido
+    if (!hasValidContent(props.children)) {
       return null
     }
     return (
@@ -171,9 +186,10 @@ export const components: MDXComponents = {
       />
     )
   },
+  
   h2: (props) => {
-    // Si no hay children o es empty, no renderizar nada
-    if (!props.children || (typeof props.children === 'string' && props.children.trim() === '')) {
+    // Solo renderizar si hay contenido válido
+    if (!hasValidContent(props.children)) {
       return null
     }
     return (
@@ -183,9 +199,10 @@ export const components: MDXComponents = {
       />
     )
   },
+  
   h3: (props) => {
-    // Si no hay children o es empty, no renderizar nada
-    if (!props.children || (typeof props.children === 'string' && props.children.trim() === '')) {
+    // Solo renderizar si hay contenido válido
+    if (!hasValidContent(props.children)) {
       return null
     }
     return (
