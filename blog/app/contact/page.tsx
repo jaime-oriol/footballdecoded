@@ -157,18 +157,18 @@ export default function Contact() {
                 ¿Prefieres ver mi trabajo antes de contactar?
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                <a
+                <Link
                   href="/blog"
                   className="font-body inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   Explorar análisis
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/newsletter"
                   className="font-body inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   Leer newsletter
-                </a>
+                </Link>
               </div>
             </div>
           </div>
