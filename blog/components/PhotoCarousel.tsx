@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from '@/components/Image'
 
 const PhotoCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -41,7 +42,7 @@ const PhotoCarousel = () => {
     return () => clearInterval(interval)
   }, [isAutoPlay, photos.length])
 
-  const goToSlide = (index) => {
+  const goToSlide = (index: number) => {
     setCurrentIndex(index)
   }
 
