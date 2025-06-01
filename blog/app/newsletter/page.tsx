@@ -12,7 +12,7 @@ export default function Newsletter() {
     <>
       <div className="divide-y divide-slate-200 dark:divide-slate-700">
         {/* Header minimalista y directo */}
-        <div className="mx-auto max-w-prose space-y-3 px-4 pt-8 pb-6 sm:px-6">
+        <div className="w-full space-y-3 px-4 pt-8 pb-6 sm:px-6">
           <h1 className="font-headings text-4xl font-bold tracking-tight text-slate-900 lg:text-5xl dark:text-slate-100">
             Newsletter
           </h1>
@@ -23,7 +23,7 @@ export default function Newsletter() {
 
         {/* FORMULARIO PRINCIPAL - Hero section profesional */}
         <div className="pt-10">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="w-full px-4 sm:px-6">
             <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-gradient-to-br from-sky-50 via-white to-slate-50 dark:border-slate-700 dark:from-sky-900/10 dark:via-slate-800 dark:to-slate-900">
               {/* Patrón sutil de fondo */}
               <div className="absolute inset-0 opacity-5">
@@ -134,7 +134,7 @@ export default function Newsletter() {
 
         {/* CONTENIDO INFORMATIVO - Briefing profesional */}
         <div className="pt-12">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="w-full px-4 sm:px-6">
             <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
               <h3 className="font-headings mb-8 text-center text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 ¿Qué puede incluir cada edición?

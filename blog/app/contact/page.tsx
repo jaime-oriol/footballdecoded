@@ -7,7 +7,7 @@ export default function Contact() {
     <>
       <div className="divide-y divide-slate-200 dark:divide-slate-700">
         {/* Header profesional */}
-        <div className="mx-auto max-w-prose space-y-3 px-4 pt-8 pb-8 sm:px-6">
+        <div className="w-full space-y-3 px-4 pt-8 pb-8 sm:px-6">
           <h1 className="font-headings text-4xl font-bold tracking-tight text-slate-900 lg:text-5xl dark:text-slate-100">
             Contacto
           </h1>
@@ -17,7 +17,7 @@ export default function Contact() {
         </div>
 
         <div className="pt-8">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="w-full px-4 sm:px-6">
             {/* Card principal de contacto */}
             <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
               {/* Áreas de especialización */}

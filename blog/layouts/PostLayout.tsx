@@ -64,11 +64,11 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
   }
 
   return (
-    <>
+    <div className="w-full">
       <ScrollTopAndComment />
 
       {/* Breadcrumb profesional */}
-      <div className="mb-6">
+      <div className="mb-6 px-4 sm:px-6">
         <nav className="font-body flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
           <Link
             href="/"
@@ -100,7 +100,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
         </nav>
       </div>
 
-      <article className="max-w-none">
+      <article className="w-full px-4 sm:px-6">
         <div>
           {/* Header del artículo - diseño profesional */}
           <header className="relative mb-10">
@@ -139,8 +139,8 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
             )}
           </header>
 
-          {/* Contenido del artículo con prose optimizado */}
-          <div className="mx-auto max-w-prose">
+          {/* Contenido del artículo con prose optimizado - ANCHO COMPLETO */}
+          <div className="w-full">
             <div className="prose prose-slate prose-lg dark:prose-invert max-w-none">
               {children}
             </div>
@@ -247,6 +247,6 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
           </div>
         </div>
       </article>
-    </>
+    </div>
   )
 }

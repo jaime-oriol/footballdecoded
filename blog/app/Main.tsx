@@ -9,7 +9,7 @@ export default function Home({ posts }) {
     <>
       <div className="divide-y divide-slate-200 dark:divide-slate-700">
         {/* === SECCIÓN INTRODUCTORIA PROFESIONAL === */}
-        <div className="mx-auto max-w-prose space-y-6 px-4 pt-8 pb-10 sm:px-6">
+        <div className="mx-auto w-full space-y-6 px-4 pt-8 pb-10 sm:px-6">
           {/* Título principal con Inter */}
           <h1 className="font-headings text-4xl font-bold tracking-tight text-slate-900 lg:text-5xl dark:text-slate-100">
             FootballDecoded
@@ -56,14 +56,14 @@ export default function Home({ posts }) {
 
         {/* === SECCIÓN DE ARTÍCULOS RECIENTES === */}
         <div className="pt-10">
-          <div className="mx-auto max-w-prose px-4 sm:px-6">
+          <div className="w-full px-4 sm:px-6">
             <h2 className="font-headings mb-8 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Análisis Recientes
             </h2>
           </div>
 
           {!posts.length && (
-            <div className="mx-auto max-w-prose px-4 py-16 text-center sm:px-6">
+            <div className="w-full px-4 py-16 text-center sm:px-6">
               <svg
                 className="mx-auto mb-4 h-12 w-12 text-slate-400"
                 fill="none"
@@ -87,9 +87,9 @@ export default function Home({ posts }) {
             </div>
           )}
 
-          {/* Lista de artículos con ArticleCard unificado */}
+          {/* Lista de artículos con ArticleCard unificado - ANCHO COMPLETO */}
           {posts.length > 0 && (
-            <div className="space-y-6">
+            <div className="w-full space-y-6 px-4 sm:px-6">
               {posts.slice(0, MAX_DISPLAY).map((post) => (
                 <ArticleCard key={post.slug} post={post} />
               ))}
@@ -118,7 +118,7 @@ export default function Home({ posts }) {
 
         {/* === CALL TO ACTION NEWSLETTER === */}
         <div className="pt-10">
-          <div className="mx-auto max-w-prose px-4 sm:px-6">
+          <div className="w-full px-4 sm:px-6">
             <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-sky-50 to-white p-6 shadow-sm dark:border-slate-700 dark:from-sky-900/10 dark:to-slate-800">
               <div className="space-y-4 text-center">
                 <h2 className="font-headings text-xl font-semibold text-slate-900 dark:text-slate-100">

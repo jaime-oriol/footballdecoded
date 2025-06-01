@@ -100,9 +100,9 @@ export default function ArticlesLayout({
   }
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="w-full">
       {/* Header de la sección */}
-      <div className="mx-auto max-w-prose px-4 pt-8 pb-6 sm:px-6 xl:px-0">
+      <div className="w-full px-4 pt-8 pb-6 sm:px-6">
         <div className="space-y-4">
           <h1 className="font-headings text-4xl font-bold tracking-tight text-slate-900 lg:text-5xl dark:text-slate-100">
             {title}
@@ -117,7 +117,7 @@ export default function ArticlesLayout({
       <SectionsNavigation variant="bar" />
 
       {/* CONTENIDO PRINCIPAL */}
-      <div className="mx-auto max-w-prose px-4 sm:px-6 xl:px-0">
+      <div className="w-full px-4 sm:px-6">
         <main className="py-10">
           {/* Empty State - cuando no hay artículos */}
           {!displayPosts.length && (
