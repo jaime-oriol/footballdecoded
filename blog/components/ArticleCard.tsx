@@ -65,7 +65,7 @@ export default function ArticleCard({ post }: ArticleCardProps) {
         </div>
 
         {/* Contenido principal - tipografía FootballDecoded */}
-        <div className="min-w-0 flex-1 space-y-4 p-6 relative">
+        <div className="relative min-w-0 flex-1 space-y-4 p-6">
           {/* ETIQUETA DE SECCIÓN - Esquina superior derecha del contenedor */}
           {section && (
             <div className="absolute top-3 right-3 z-10">
