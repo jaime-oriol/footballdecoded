@@ -50,7 +50,7 @@ export default function ArticleCard({ post }: ArticleCardProps) {
   return (
     <article className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
       <Link href={`/blog/${slug}`} className="flex items-stretch">
-        {/* Imagen a la izquierda con etiqueta superpuesta */}
+        {/* Imagen a la izquierda */}
         <div className="relative w-64 flex-shrink-0 overflow-hidden">
           <div className="absolute inset-0">
             <Image
@@ -62,21 +62,21 @@ export default function ArticleCard({ post }: ArticleCardProps) {
             {/* Overlay sutil para mejor contraste */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
           </div>
+        </div>
 
-          {/* ETIQUETA DE SECCIÓN - Esquina superior derecha de la imagen */}
+        {/* Contenido principal - tipografía FootballDecoded */}
+        <div className="min-w-0 flex-1 space-y-4 p-6 relative">
+          {/* ETIQUETA DE SECCIÓN - Esquina superior derecha del contenedor */}
           {section && (
             <div className="absolute top-3 right-3 z-10">
               <span
-                className={`inline-flex items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-lg ${getSectionColor(section)}`}
+                className={`inline-flex items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-sm ${getSectionColor(section)}`}
               >
                 {getSectionLabel(section)}
               </span>
             </div>
           )}
-        </div>
 
-        {/* Contenido principal - tipografía FootballDecoded */}
-        <div className="min-w-0 flex-1 space-y-4 p-6">
           {/* TÍTULO - Ahora en la posición principal */}
           <h3 className="font-headings text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400">
             {title}
