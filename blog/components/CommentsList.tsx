@@ -61,14 +61,14 @@ export default function CommentsList({ postSlug, refreshTrigger }: CommentsListP
   // Cargar comentarios al montar el componente
   useEffect(() => {
     fetchComments()
-  }, [postSlug])
+  }, [postSlug]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Refrescar cuando se añade un nuevo comentario
   useEffect(() => {
     if (refreshTrigger && refreshTrigger > 0) {
       fetchComments()
     }
-  }, [refreshTrigger])
+  }, [refreshTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Manejar like
   const handleLike = async (commentId: string) => {

@@ -71,11 +71,12 @@ const PhotoCarousel = () => {
         >
           {photos.map((photo, index) => (
             <div key={index} className="relative h-full min-w-full">
-              <img
+              <Image
                 src={photo.src}
                 alt={photo.alt}
-                className="h-full w-full object-cover"
-                loading={index === 0 ? 'eager' : 'lazy'}
+                fill
+                className="object-cover"
+                priority={index === 0}
               />
               {/* Overlay sutil para mejorar legibilidad si hay texto */}
               <div className="absolute inset-0 bg-black/10"></div>
