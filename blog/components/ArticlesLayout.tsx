@@ -25,14 +25,14 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
   const nextPage = currentPage + 1 <= totalPages
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 pt-8 dark:border-gray-700">
+    <div className="flex items-center justify-between border-t border-slate-200 pt-8 dark:border-slate-700">
       <div className="flex w-0 flex-1 justify-start">
         {prevPage ? (
           <Link
             href={currentPage - 1 === 1 ? basePath : `${basePath}/page/${currentPage - 1}`}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
-            <svg className="mr-3 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="mr-3 h-5 w-5 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
@@ -47,9 +47,9 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
       </div>
 
       <div className="hidden md:flex">
-        <span className="text-sm text-gray-700 dark:text-gray-300">
-          Página <span className="font-medium">{currentPage}</span> de{' '}
-          <span className="font-medium">{totalPages}</span>
+        <span className="font-mono text-sm text-slate-600 dark:text-slate-400">
+          Página <span className="font-medium text-slate-900 dark:text-slate-100">{currentPage}</span> de{' '}
+          <span className="font-medium text-slate-900 dark:text-slate-100">{totalPages}</span>
         </span>
       </div>
 
@@ -57,10 +57,10 @@ function Pagination({ totalPages, currentPage, basePath = '/blog' }: PaginationP
         {nextPage ? (
           <Link
             href={`${basePath}/page/${currentPage + 1}`}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-body font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             Siguiente
-            <svg className="ml-3 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="ml-3 h-5 w-5 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
@@ -85,68 +85,81 @@ export default function ArticlesLayout({
 }: ArticlesLayoutProps) {
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
+  const getSectionDescription = (section?: string) => {
+    switch (section) {
+      case 'tactical-structures':
+        return 'Análisis de sistemas, fases y principios del juego moderno.'
+      case 'scouting':
+        return 'Identificación de perfiles por función táctica mediante datos.'
+      case 'tactical-metrics-lab':
+        return 'Cuantificación avanzada del impacto táctico mediante datos y programación.'
+      default:
+        return 'Análisis táctico avanzado, métricas cuantitativas y scouting funcional.'
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl">
-      {/* Header del título */}
-      <div className="px-4 pt-6 pb-8 sm:px-6 xl:px-0">
-        <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14 dark:text-gray-100">
-          {title}
-        </h1>
-        {section && (
-          <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
-            {section === 'tactical-structures' &&
-              'Análisis de sistemas, fases y principios del juego moderno.'}
-            {section === 'scouting' &&
-              'Identificación de perfiles por función táctica mediante datos.'}
-            {section === 'tactical-metrics-lab' &&
-              'Cuantificación avanzada del impacto táctico mediante datos y programación.'}
+      {/* Header de la sección */}
+      <div className="max-w-prose mx-auto px-4 sm:px-6 xl:px-0 pt-8 pb-6">
+        <div className="space-y-4">
+          <h1 className="font-headings text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            {title}
+          </h1>
+          <p className="font-body text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+            {getSectionDescription(section)}
           </p>
-        )}
+        </div>
       </div>
 
-      {/* BARRA HORIZONTAL DE SECCIONES - REEMPLAZA SectionsBar */}
+      {/* Navegación de secciones */}
       <SectionsNavigation variant="bar" />
 
       {/* CONTENIDO PRINCIPAL */}
-      <div className="px-4 sm:px-6 xl:px-0">
-        <main className="py-8">
-          {/* Empty State */}
+      <div className="max-w-prose mx-auto px-4 sm:px-6 xl:px-0">
+        <main className="py-10">
+          
+          {/* Empty State - cuando no hay artículos */}
           {!displayPosts.length && (
-            <div className="py-16 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
-                Próximamente
-              </h3>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                {section
-                  ? `Los análisis de ${section.replace('-', ' ')} estarán disponibles pronto.`
-                  : 'Los primeros análisis estarán disponibles pronto.'}
-              </p>
+            <div className="py-16 text-center space-y-6">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                <svg
+                  className="h-8 w-8 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-headings text-xl font-medium text-slate-900 dark:text-slate-100">
+                  Próximamente
+                </h3>
+                <p className="font-body text-slate-600 dark:text-slate-400">
+                  {section
+                    ? `Los análisis de ${section.replace('-', ' ')} estarán disponibles pronto.`
+                    : 'Los primeros análisis tácticos estarán disponibles pronto.'}
+                </p>
+              </div>
             </div>
           )}
 
-          {/* Articles - CAMBIADO A UNA SOLA COLUMNA para cards horizontales */}
+          {/* Lista de artículos */}
           {displayPosts.length > 0 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {displayPosts.map((post) => (
                 <ArticleCard key={post.slug} post={post} />
               ))}
             </div>
           )}
 
-          {/* Pagination */}
+          {/* Paginación */}
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-12">
               <Pagination
@@ -154,6 +167,33 @@ export default function ArticlesLayout({
                 totalPages={pagination.totalPages}
                 basePath={section ? `/blog/${section}` : '/blog'}
               />
+            </div>
+          )}
+
+          {/* Newsletter CTA al final */}
+          {displayPosts.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-700">
+              <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-sky-50 to-white p-6 text-center dark:border-slate-700 dark:from-sky-900/10 dark:to-slate-800">
+                <h3 className="font-headings text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  ¿Te gustó este análisis?
+                </h3>
+                <p className="font-body text-slate-600 dark:text-slate-400 mb-4">
+                  Recibe contenido similar cada lunes en tu bandeja de entrada
+                </p>
+                <Link
+                  href="/newsletter"
+                  className="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 font-body font-medium text-white transition-colors hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                >
+                  Suscribirse a la newsletter
+                  <svg className="ml-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Link>
+              </div>
             </div>
           )}
         </main>

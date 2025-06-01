@@ -82,9 +82,7 @@
   }
 }
 
-/*
-  Compatibilidad de bordes por defecto
-*/
+/* Compatibilidad de bordes por defecto */
 @layer base {
   *,
   ::after,
@@ -121,14 +119,40 @@
     font-family: var(--font-mono);
   }
 
-  /* Prose personalizado para artículos */
+  /* Prose personalizado optimizado para análisis técnicos */
   .prose {
-    /* Enlaces */
+    --tw-prose-body: var(--color-slate-700);
+    --tw-prose-headings: var(--color-slate-900);
+    --tw-prose-lead: var(--color-slate-600);
+    --tw-prose-links: var(--color-sky-700);
+    --tw-prose-bold: var(--color-slate-900);
+    --tw-prose-counters: var(--color-slate-500);
+    --tw-prose-bullets: var(--color-slate-300);
+    --tw-prose-hr: var(--color-slate-200);
+    --tw-prose-quotes: var(--color-slate-900);
+    --tw-prose-quote-borders: var(--color-slate-300);
+    --tw-prose-captions: var(--color-slate-500);
+    --tw-prose-code: var(--color-indigo-600);
+    --tw-prose-pre-code: var(--color-slate-200);
+    --tw-prose-pre-bg: var(--color-slate-800);
+    --tw-prose-th-borders: var(--color-slate-300);
+    --tw-prose-td-borders: var(--color-slate-200);
+
+    /* Espaciado optimizado para lectura técnica */
+    & p {
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+      font-family: var(--font-sans);
+      line-height: 1.75;
+    }
+
+    /* Enlaces con mejor contraste y hover */
     & a {
-      color: var(--color-sky-700);
+      color: var(--tw-prose-links);
       text-decoration: underline;
       text-decoration-thickness: 1px;
       text-underline-offset: 2px;
+      font-weight: 500;
       
       &:hover {
         color: var(--color-sky-800);
@@ -137,46 +161,161 @@
       
       & code {
         color: var(--color-sky-600);
+        background-color: var(--color-sky-50);
       }
     }
     
-    /* Títulos */
-    & :where(h1, h2) {
+    /* Títulos con Inter y espaciado optimizado */
+    & :where(h1, h2, h3, h4, h5, h6) {
       font-family: var(--font-headings);
-      font-weight: 700;
+      font-weight: 600;
       letter-spacing: var(--tracking-tight);
-      color: var(--color-slate-900);
+      scroll-margin-top: 2rem;
+    }
+    
+    & h1 {
+      font-size: 2.25em;
+      margin-top: 0;
+      margin-bottom: 0.8888889em;
+      line-height: 1.1111111;
+      font-weight: 700;
+    }
+    
+    & h2 {
+      font-size: 1.875em;
+      margin-top: 1.6em;
+      margin-bottom: 0.8em;
+      line-height: 1.3333333;
+      font-weight: 600;
     }
     
     & h3 {
-      font-family: var(--font-headings);
+      font-size: 1.5em;
+      margin-top: 1.6em;
+      margin-bottom: 0.6em;
+      line-height: 1.6;
       font-weight: 600;
-      color: var(--color-slate-800);
     }
     
-    /* Código inline */
+    /* Código inline con mejor legibilidad */
     & :where(code):not(pre code) {
       font-family: var(--font-mono);
-      color: var(--color-indigo-600);
+      color: var(--tw-prose-code);
       background-color: var(--color-slate-100);
-      padding: 0.125rem 0.25rem;
+      padding: 0.125rem 0.375rem;
       border-radius: 0.25rem;
       font-size: 0.875em;
+      font-weight: 500;
     }
     
-    /* Citas */
+    /* Bloques de código */
+    & pre {
+      background-color: var(--tw-prose-pre-bg);
+      border-radius: 0.5rem;
+      font-size: 0.875em;
+      line-height: 1.7142857;
+      margin-top: 1.7142857em;
+      margin-bottom: 1.7142857em;
+      overflow-x: auto;
+      padding: 1.1428571em 1.2857143em;
+    }
+    
+    & pre code {
+      color: var(--tw-prose-pre-code);
+      font-family: var(--font-mono);
+      font-size: inherit;
+      font-weight: 400;
+      line-height: inherit;
+    }
+    
+    /* Citas mejoradas para análisis */
     & blockquote {
-      border-left: 4px solid var(--color-slate-300);
-      padding-left: 1rem;
+      border-left: 4px solid var(--tw-prose-quote-borders);
+      padding-left: 1.5rem;
       font-style: italic;
-      color: var(--color-slate-600);
+      color: var(--tw-prose-quotes);
+      margin: 1.6em 0;
+      background-color: var(--color-slate-50);
+      padding: 1rem 1.5rem;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+    
+    /* Listas con mejor espaciado */
+    & ul, & ol {
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+      padding-left: 1.625em;
+    }
+    
+    & li {
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      font-family: var(--font-sans);
+    }
+    
+    /* Tablas para datos técnicos */
+    & table {
+      width: 100%;
+      table-layout: auto;
+      text-align: left;
+      margin-top: 2em;
+      margin-bottom: 2em;
+      font-family: var(--font-sans);
+      border-collapse: collapse;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      border: 1px solid var(--color-slate-200);
+    }
+    
+    & thead {
+      background-color: var(--color-slate-50);
+    }
+    
+    & thead th {
+      font-family: var(--font-headings);
+      font-weight: 600;
+      color: var(--color-slate-900);
+      vertical-align: bottom;
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--color-slate-200);
+    }
+    
+    & tbody td {
+      vertical-align: baseline;
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--color-slate-100);
+      font-family: var(--font-sans);
+    }
+    
+    /* Métricas y datos numéricos */
+    & .metric, & .stat {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--color-indigo-700);
     }
   }
 
-  /* Modo oscuro */
+  /* Modo oscuro para prose */
   .prose-invert {
+    --tw-prose-body: var(--color-slate-300);
+    --tw-prose-headings: var(--color-slate-100);
+    --tw-prose-lead: var(--color-slate-400);
+    --tw-prose-links: var(--color-sky-400);
+    --tw-prose-bold: var(--color-slate-100);
+    --tw-prose-counters: var(--color-slate-400);
+    --tw-prose-bullets: var(--color-slate-600);
+    --tw-prose-hr: var(--color-slate-700);
+    --tw-prose-quotes: var(--color-slate-100);
+    --tw-prose-quote-borders: var(--color-slate-600);
+    --tw-prose-captions: var(--color-slate-400);
+    --tw-prose-code: var(--color-indigo-400);
+    --tw-prose-pre-code: var(--color-slate-200);
+    --tw-prose-pre-bg: var(--color-slate-800);
+    --tw-prose-th-borders: var(--color-slate-600);
+    --tw-prose-td-borders: var(--color-slate-700);
+    
     & a {
-      color: var(--color-sky-400);
+      color: var(--tw-prose-links);
       
       &:hover {
         color: var(--color-sky-300);
@@ -184,21 +323,40 @@
       
       & code {
         color: var(--color-sky-400);
+        background-color: var(--color-sky-900);
       }
     }
     
-    & :where(h1, h2, h3, h4, h5, h6) {
-      color: var(--color-slate-100);
-    }
-    
     & :where(code):not(pre code) {
-      color: var(--color-indigo-400);
+      color: var(--tw-prose-code);
       background-color: var(--color-slate-800);
     }
     
     & blockquote {
-      border-left-color: var(--color-slate-600);
-      color: var(--color-slate-400);
+      border-left-color: var(--tw-prose-quote-borders);
+      color: var(--tw-prose-quotes);
+      background-color: var(--color-slate-800);
+    }
+    
+    & table {
+      border-color: var(--color-slate-700);
+    }
+    
+    & thead {
+      background-color: var(--color-slate-800);
+    }
+    
+    & thead th {
+      color: var(--color-slate-100);
+      border-bottom-color: var(--color-slate-600);
+    }
+    
+    & tbody td {
+      border-bottom-color: var(--color-slate-700);
+    }
+    
+    & .metric, & .stat {
+      color: var(--color-indigo-400);
     }
   }
   
