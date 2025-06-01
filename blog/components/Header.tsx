@@ -9,20 +9,21 @@ import SectionsNavigation from './SectionsNavigation'
 import AuthButton from './AuthButton'
 
 const Header = () => {
-  let headerClass = 'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10'
+  let headerClass = 'flex items-center w-full bg-white dark:bg-slate-900 justify-between py-8'
   if (siteMetadata.stickyNav) {
-    headerClass += ' sticky top-0 z-50'
+    headerClass += ' sticky top-0 z-50 border-b border-slate-200 dark:border-slate-700'
   }
 
   return (
     <header className={headerClass}>
+      {/* Logo y título - usando Inter para marca */}
       <Link href="/" aria-label={siteMetadata.headerTitle}>
         <div className="flex items-center justify-between">
           <div className="mr-3">
             <Logo />
           </div>
           {typeof siteMetadata.headerTitle === 'string' ? (
-            <div className="hidden h-6 text-2xl font-semibold sm:block">
+            <div className="hidden font-headings text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:block">
               {siteMetadata.headerTitle}
             </div>
           ) : (
@@ -30,8 +31,10 @@ const Header = () => {
           )}
         </div>
       </Link>
+
+      {/* Navegación principal - tipografía consistente */}
       <div className="flex items-center space-x-4 leading-5 sm:-mr-6 sm:space-x-6">
-        <div className="hidden items-center gap-x-4 sm:flex md:gap-x-6 lg:gap-x-8">
+        <div className="hidden items-center gap-x-6 sm:flex lg:gap-x-8">
           {headerNavLinks
             .filter((link) => link.href !== '/')
             .map((link) => {
@@ -40,22 +43,26 @@ const Header = () => {
                 return <SectionsNavigation key="articles" variant="dropdown" />
               }
 
-              // Para el resto de enlaces, usar el componente normal
+              // Para el resto de enlaces, tipografía profesional
               return (
                 <Link
                   key={link.title}
                   href={link.href}
-                  className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium whitespace-nowrap text-gray-900 dark:text-gray-100"
+                  className="font-body font-medium text-slate-700 transition-colors hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-400"
                 >
                   {link.title}
                 </Link>
               )
             })}
         </div>
-        <AuthButton />
-        <SearchButton />
-        <ThemeSwitch />
-        <MobileNav />
+
+        {/* Herramientas de interfaz */}
+        <div className="flex items-center space-x-3">
+          <AuthButton />
+          <SearchButton />
+          <ThemeSwitch />
+          <MobileNav />
+        </div>
       </div>
     </header>
   )
