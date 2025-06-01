@@ -4,7 +4,7 @@ const BioSection = () => {
       {/* Línea de separación sutil */}
       <div className="absolute top-0 left-1/2 h-px w-24 -translate-x-1/2 bg-gradient-to-r from-transparent via-sky-500/30 to-transparent"></div>
 
-      <div className="mx-auto max-w-prose space-y-10 px-4 py-16 sm:px-6">
+      <div className="w-full space-y-10 px-4 py-16 sm:px-6">
         {/* Contenido biográfico - tipografía optimizada para lectura larga */}
         <div className="font-body space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
           <p className="text-lg">
@@ -88,7 +88,7 @@ const BioSection = () => {
             <div className="flex items-center justify-between">
               <span className="font-body text-slate-600 dark:text-slate-400">Formación</span>
               <span className="font-mono text-slate-900 dark:text-slate-100">
-                Business Analytics + Ingeniería Informática
+                Business Analytics + Ing. Informática
               </span>
             </div>
             <div className="flex items-center justify-between">
