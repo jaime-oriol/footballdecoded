@@ -25,13 +25,13 @@ const getSectionLabel = (section: string) => {
 const getSectionColor = (section: string) => {
   switch (section) {
     case 'tactical-structures':
-      return 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200'
+      return 'bg-sky-600 text-white'
     case 'scouting':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
+      return 'bg-emerald-600 text-white'
     case 'tactical-metrics-lab':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200'
+      return 'bg-indigo-600 text-white'
     default:
-      return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
+      return 'bg-slate-600 text-white'
   }
 }
 
@@ -42,7 +42,7 @@ export default function ArticleCard({ post }: ArticleCardProps) {
   return (
     <article className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
       <Link href={`/blog/${slug}`} className="flex items-stretch">
-        {/* Imagen a la izquierda - optimizada para lectura técnica */}
+        {/* Imagen a la izquierda con etiqueta superpuesta */}
         <div className="relative w-64 flex-shrink-0 overflow-hidden">
           <div className="absolute inset-0">
             <Image
@@ -54,22 +54,22 @@ export default function ArticleCard({ post }: ArticleCardProps) {
             {/* Overlay sutil para mejor contraste */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
           </div>
-        </div>
 
-        {/* Contenido principal - tipografía FootballDecoded */}
-        <div className="min-w-0 flex-1 space-y-4 p-6">
-          {/* Badge de sección con colores semánticos */}
+          {/* ETIQUETA DE SECCIÓN - Esquina superior derecha de la imagen */}
           {section && (
-            <div>
+            <div className="absolute top-3 right-3 z-10">
               <span
-                className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-sm font-medium ${getSectionColor(section)}`}
+                className={`inline-flex items-center rounded-md px-2.5 py-1 font-mono text-xs font-semibold shadow-lg ${getSectionColor(section)}`}
               >
                 {getSectionLabel(section)}
               </span>
             </div>
           )}
+        </div>
 
-          {/* Título con Inter, optimizado para scan reading */}
+        {/* Contenido principal - tipografía FootballDecoded */}
+        <div className="min-w-0 flex-1 space-y-4 p-6">
+          {/* TÍTULO - Ahora en la posición principal */}
           <h3 className="font-headings text-xl leading-tight font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-sky-700 lg:text-2xl dark:text-slate-100 dark:group-hover:text-sky-400">
             {title}
           </h3>
