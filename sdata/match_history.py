@@ -7,7 +7,7 @@ from typing import IO, Callable, Optional, Union
 import pandas as pd
 
 from ._common import BaseRequestsReader, make_game_id
-from ..._config import DATA_DIR, NOCACHE, NOSTORE, TEAMNAME_REPLACEMENTS, logger
+from ._config import DATA_DIR, NOCACHE, NOSTORE, TEAMNAME_REPLACEMENTS, logger
 
 MATCH_HISTORY_DATA_DIR = DATA_DIR / "MatchHistory"
 MATCH_HISTORY_API = "https://www.football-data.co.uk"
