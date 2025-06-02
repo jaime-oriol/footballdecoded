@@ -11,7 +11,7 @@ const siteMetadata = {
 
   // === CONFIGURACIÓN TÉCNICA ===
   theme: 'system',
-  siteUrl: 'https://football-decoded-pi.vercel.app',
+  siteUrl: 'https://footballdecoded.com', // ← DOMINIO PERSONALIZADO
   siteRepo: 'https://github.com/jaime-oriol/FootballDecoded',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/football-decoded-banner.jpg`,
