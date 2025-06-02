@@ -7,7 +7,8 @@ const POSTS_PER_PAGE = 4
 
 export const metadata = genPageMetadata({
   title: 'Advanced Metrics',
-  description: 'Exploración profunda de métricas avanzadas, modelos predictivos y visualización de datos aplicada al fútbol profesional.',
+  description:
+    'Exploración profunda de métricas avanzadas, modelos predictivos y visualización de datos aplicada al fútbol profesional.',
 })
 
 export default async function AdvancedMetricsPage() {
@@ -15,8 +16,8 @@ export default async function AdvancedMetricsPage() {
   const publishedPosts = allPosts.filter((post) => !post.draft)
 
   // Filtrar posts de esta sección y también posts legacy de 'tactical-metrics-lab'
-  const sectionPosts = publishedPosts.filter((post) => 
-    post.section === 'advanced-metrics' || post.section === 'tactical-metrics-lab'
+  const sectionPosts = publishedPosts.filter(
+    (post) => post.section === 'advanced-metrics' || post.section === 'tactical-metrics-lab'
   )
 
   const pageNumber = 1

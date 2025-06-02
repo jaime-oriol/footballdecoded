@@ -8,8 +8,8 @@ const POSTS_PER_PAGE = 4
 export const generateStaticParams = async () => {
   const allPosts = allCoreContent(sortPosts(allBlogs))
   const publishedPosts = allPosts.filter((post) => !post.draft)
-  const sectionPosts = publishedPosts.filter((post) => 
-    post.section === 'analytical-scouting' || post.section === 'scouting'
+  const sectionPosts = publishedPosts.filter(
+    (post) => post.section === 'analytical-scouting' || post.section === 'scouting'
   )
   const totalPages = Math.ceil(sectionPosts.length / POSTS_PER_PAGE)
 
@@ -18,7 +18,9 @@ export const generateStaticParams = async () => {
   }))
 }
 
-export default async function AnalyticalScoutingPaginationPage(props: { params: Promise<{ page: string }> }) {
+export default async function AnalyticalScoutingPaginationPage(props: {
+  params: Promise<{ page: string }>
+}) {
   const params = await props.params
   const pageNumber = parseInt(params.page)
 
@@ -28,8 +30,8 @@ export default async function AnalyticalScoutingPaginationPage(props: { params: 
 
   const allPosts = allCoreContent(sortPosts(allBlogs))
   const publishedPosts = allPosts.filter((post) => !post.draft)
-  const sectionPosts = publishedPosts.filter((post) => 
-    post.section === 'analytical-scouting' || post.section === 'scouting'
+  const sectionPosts = publishedPosts.filter(
+    (post) => post.section === 'analytical-scouting' || post.section === 'scouting'
   )
   const totalPages = Math.ceil(sectionPosts.length / POSTS_PER_PAGE)
 

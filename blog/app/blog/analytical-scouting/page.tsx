@@ -7,7 +7,8 @@ const POSTS_PER_PAGE = 4
 
 export const metadata = genPageMetadata({
   title: 'Analytical Scouting',
-  description: 'Identificación de perfiles tácticos mediante segmentación avanzada, agrupación funcional y análisis comparativo.',
+  description:
+    'Identificación de perfiles tácticos mediante segmentación avanzada, agrupación funcional y análisis comparativo.',
 })
 
 export default async function AnalyticalScoutingPage() {
@@ -15,8 +16,8 @@ export default async function AnalyticalScoutingPage() {
   const publishedPosts = allPosts.filter((post) => !post.draft)
 
   // Filtrar posts de esta sección y también posts legacy de 'scouting'
-  const sectionPosts = publishedPosts.filter((post) => 
-    post.section === 'analytical-scouting' || post.section === 'scouting'
+  const sectionPosts = publishedPosts.filter(
+    (post) => post.section === 'analytical-scouting' || post.section === 'scouting'
   )
 
   const pageNumber = 1

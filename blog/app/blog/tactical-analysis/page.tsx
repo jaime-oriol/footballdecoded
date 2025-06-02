@@ -7,7 +7,8 @@ const POSTS_PER_PAGE = 4
 
 export const metadata = genPageMetadata({
   title: 'Tactical Analysis',
-  description: 'Estudio de estilos, partidos clave, entrenadores y dinámicas de juego a través de modelos, métricas y visualizaciones tácticas.',
+  description:
+    'Estudio de estilos, partidos clave, entrenadores y dinámicas de juego a través de modelos, métricas y visualizaciones tácticas.',
 })
 
 export default async function TacticalAnalysisPage() {
@@ -15,8 +16,8 @@ export default async function TacticalAnalysisPage() {
   const publishedPosts = allPosts.filter((post) => !post.draft)
 
   // Filtrar posts de esta sección y también posts legacy de 'tactical-structures'
-  const sectionPosts = publishedPosts.filter((post) => 
-    post.section === 'tactical-analysis' || post.section === 'tactical-structures'
+  const sectionPosts = publishedPosts.filter(
+    (post) => post.section === 'tactical-analysis' || post.section === 'tactical-structures'
   )
 
   const pageNumber = 1
