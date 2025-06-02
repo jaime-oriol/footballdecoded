@@ -1,3 +1,5 @@
+'use client'
+
 // layouts/PostLayout.tsx
 import { ReactNode, useState } from 'react'
 import { CoreContent } from 'pliny/utils/contentlayer'
