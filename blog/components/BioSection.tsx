@@ -8,38 +8,30 @@ const BioSection = () => {
         {/* Contenido biográfico - tipografía optimizada para lectura larga */}
         <div className="font-body space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
           <p className="text-lg">
-            La primera vez que vi fútbol de verdad fue viendo al Barça de Messi. Tenía unos 8 años y
-            aquello me voló la cabeza. No era solo que ganaran: era{' '}
-            <em className="text-concept">cómo</em> lo hacían. Esa precisión, esa sensación de que
-            cada pase tenía un propósito, de que todo estaba conectado.
+            Mi primera memoria futbolística real fue el Barça de Messi. Tenía unos 8 años y lo
+            recuerdo perfectamente: no era solo la victoria, era la precisión absoluta. Cada pase,
+            cada movimiento, cada gol parecía parte de un plan perfecto.
           </p>
 
           <p>
-            Desde entonces no he parado: he jugado toda mi vida, he visto miles de partidos y, con
-            el tiempo, he desarrollado una obsesión que va más allá del resultado. ¿Por qué un
-            equipo que domina pierde? ¿Por qué un jugador que apenas aparece en las estadísticas
-            puede ser la clave táctica de un sistema?
+            Desde entonces, esa admiración se convirtió en obsesión analítica. Dejé de centrarme
+            solo en resultados para preguntarme constantemente por qué: ¿por qué un equipo que
+            domina pierde?, ¿por qué un jugador sin goles o asistencias puede ser clave absoluta en
+            un sistema táctico?
           </p>
 
           <p>
-            Sí, soy del Barça. Pero si algo me ha enseñado analizar el juego en serio, es que los
-            colores no pueden nublarte la vista. Aquí no hay privilegios. Si el Madrid hace algo
-            brillante, se dice. Si el Barça se equivoca, se desmonta. El análisis riguroso no
-            entiende de escudos.
+            Sí, soy del Barça, pero aprender a analizar con rigor significa mirar el juego sin
+            privilegios ni prejuicios. Si algo brillante sucede en el Madrid, merece ser explicado
+            claramente; si el Barça falla, lo analizo con la misma precisión. La lealtad en
+            FootballDecoded es con la verdad y con los datos.
           </p>
 
           <p>
-            Lo que realmente me engancha no son los goles virales ni los highlights. Es lo
-            invisible. Esa presión coordinada que desactiva al rival en 30 segundos. El
-            centrocampista que no brilla en Instagram pero que mueve las piezas exactas. La
-            cobertura silenciosa que salva un gol sin que nadie se dé cuenta.
-          </p>
-
-          <p>
-            Cuando veo fútbol, no veo solo el balón: veo estructuras, decisiones, intenciones. Veo
-            patrones que se repiten... hasta que alguien los rompe. Y siempre me hago la misma
-            pregunta:{' '}
-            <strong className="text-concept">¿se puede medir esto? ¿Se puede explicar?</strong>
+            Lo que realmente me apasiona no son los highlights virales ni los highlights. Es lo casi
+            invisible: las estructuras tácticas profundas, los movimientos coordinados, la decisión
+            estratégica sutil. La gran pregunta siempre es la misma:{' '}
+            <strong className="text-concept">¿esto se puede medir? ¿Se puede explicar?</strong>
           </p>
 
           {/* Destacado principal */}

@@ -25,31 +25,30 @@ export default function Home({ posts }) {
           {/* Descripción principal con IBM Plex Sans */}
           <div className="font-body space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
             <p className="text-lg">
-              <strong className="text-concept font-medium">FootballDecoded</strong> parte de esa
-              idea: el fútbol está lleno de estructuras, decisiones y patrones… pero sigue siendo
-              impredecible. No se deja atrapar del todo por los números, ni por la intuición. Y ahí,
-              en ese espacio intermedio, es donde ocurre lo interesante.
+              FootballDecoded nace precisamente de esta aparente contradicción: el fútbol tiene
+              estructuras, patrones y decisiones estratégicas claras, pero siempre mantiene algo que
+              se escapa a los números. Justo ahí, en la tensión constante entre lo previsible y lo
+              inesperado, surge la verdadera esencia del análisis.
             </p>
 
             <p>
-              Este blog es mi forma de explorar el juego desde un lugar que conecta dos mundos: el
-              análisis táctico y el pensamiento cuantitativo. Desde la ingeniería hasta la pizarra.
-              Aquí no se trata de reducir el fútbol a datos, sino de usarlos para ver más claro.
-              Para entender mejor.
+              Este blog no es una colección de estadísticas frías ni un libro de jugadas tácticas.
+              Es un intento honesto de entender el juego a través de datos, visualizaciones claras y
+              modelos rigurosos. Aquí uso el análisis cuantitativo no para simplificar el fútbol,
+              sino para revelar lo que realmente importa: los patrones, los detalles estratégicos,
+              las claves ocultas que definen victorias y derrotas.
             </p>
 
             <p>
-              Trabajo con herramientas de análisis avanzadas, modelos de datos y visualizaciones
-              tácticas, pero siempre con el foco en lo que pasa en el campo. Analizo sistemas de
-              juego, identifico perfiles funcionales de jugadores, y desarrollo métricas que buscan
-              traducir comportamientos colectivos en conocimiento útil y aplicable.
+              Trabajo con herramientas avanzadas de ciencia de datos, modelos predictivos validados
+              y visualizaciones tácticas intuitivas, siempre orientado a transformar información
+              compleja en conocimiento práctico para entrenadores, analistas y responsables
+              deportivos.
             </p>
 
             <p className="text-slate-600 italic dark:text-slate-400">
-              <em>FootballDecoded</em> es mi proyecto académico y profesional. Una forma de
-              construir criterio, compartir ideas y aportar una visión rigurosa, visual y práctica
-              sobre el fútbol de élite. Porque si el juego es cada vez más complejo, merece también
-              una forma más profunda - y honesta - de contarlo.
+              <em>FootballDecoded</em> es mi laboratorio personal y profesional, diseñado para
+              explorar, medir y comprender el fútbol con rigor y curiosidad.
             </p>
           </div>
         </div>
