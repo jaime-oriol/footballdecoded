@@ -88,16 +88,18 @@ export default function ArticlesLayout({
 
   const getSectionDescription = (section?: string) => {
     switch (section) {
-      case 'tactical-structures':
-        return 'Análisis de sistemas, fases y principios del juego moderno.'
+      case 'tactical-analysis':
+        return 'Estudio de estilos, partidos clave, entrenadores y dinámicas de juego a través de modelos, métricas y visualizaciones tácticas.'
+      case 'tactical-structures': // Backward compatibility
+        return 'Estudio de estilos, partidos clave, entrenadores y dinámicas de juego a través de modelos, métricas y visualizaciones tácticas.'
       case 'analytical-scouting':
-        return 'Identificación de perfiles por función táctica mediante datos.'
+        return 'Identificación de perfiles tácticos mediante segmentación avanzada, agrupación funcional y análisis comparativo.'
       case 'scouting': // Backward compatibility
-        return 'Identificación de perfiles por función táctica mediante datos.'
+        return 'Identificación de perfiles tácticos mediante segmentación avanzada, agrupación funcional y análisis comparativo.'
       case 'advanced-metrics':
-        return 'Cuantificación avanzada del impacto táctico mediante datos y programación.'
+        return 'Exploración profunda de métricas avanzadas, modelos predictivos y visualización de datos aplicada al fútbol profesional.'
       case 'tactical-metrics-lab': // Backward compatibility
-        return 'Cuantificación avanzada del impacto táctico mediante datos y programación.'
+        return 'Exploración profunda de métricas avanzadas, modelos predictivos y visualización de datos aplicada al fútbol profesional.'
       default:
         return 'Análisis táctico avanzado, métricas cuantitativas y scouting funcional.'
     }

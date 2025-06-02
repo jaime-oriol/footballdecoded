@@ -11,8 +11,8 @@ interface ArticleCardProps {
 
 const getSectionLabel = (section: string) => {
   switch (section) {
-    case 'tactical-structures':
-      return 'Tactical Structures'
+    case 'tactical-analysis':
+      return 'Tactical Analysis'
     case 'analytical-scouting':
       return 'Analytical Scouting'
     case 'scouting': // Backward compatibility
@@ -21,6 +21,8 @@ const getSectionLabel = (section: string) => {
       return 'Advanced Metrics'
     case 'tactical-metrics-lab': // Backward compatibility
       return 'Advanced Metrics'
+    case 'tactical-structures': // Backward compatibility
+      return 'Tactical Analysis'
     default:
       return 'Análisis'
   }
@@ -28,7 +30,9 @@ const getSectionLabel = (section: string) => {
 
 const getSectionColor = (section: string) => {
   switch (section) {
-    case 'tactical-structures':
+    case 'tactical-analysis':
+      return 'bg-sky-600 text-white'
+    case 'tactical-structures': // Backward compatibility
       return 'bg-sky-600 text-white'
     case 'analytical-scouting':
       return 'bg-emerald-600 text-white'

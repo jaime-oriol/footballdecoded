@@ -28,9 +28,9 @@ const sections: Section[] = [
     ),
   },
   {
-    href: '/blog/tactical-structures',
-    title: 'Tactical Structures',
-    description: 'Sistemas y principios',
+    href: '/blog/tactical-analysis',
+    title: 'Tactical Analysis',
+    description: 'Estudio de estilos, partidos clave, entrenadores y dinámicas de juego',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -45,7 +45,7 @@ const sections: Section[] = [
   {
     href: '/blog/analytical-scouting',
     title: 'Analytical Scouting',
-    description: 'Perfiles funcionales',
+    description: 'Identificación de perfiles tácticos mediante segmentación avanzada',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -60,7 +60,7 @@ const sections: Section[] = [
   {
     href: '/blog/advanced-metrics',
     title: 'Advanced Metrics',
-    description: 'Métricas avanzadas',
+    description: 'Exploración profunda de métricas avanzadas y modelos predictivos',
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -132,7 +132,9 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
                         {section.title}
                       </div>
                       <div className="font-body mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        {section.description}
+                        {section.description.length > 20 
+                          ? `${section.description.substring(0, 20)}...` 
+                          : section.description}
                       </div>
                     </div>
                   </Link>
@@ -212,6 +214,9 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-headings truncate font-medium">{section.title}</div>
+                  <div className="font-body mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {section.description}
+                  </div>
                 </div>
               </Link>
             )
