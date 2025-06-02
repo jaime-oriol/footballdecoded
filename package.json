@@ -1,6 +1,23 @@
 {
-  "name": "tailwind-nextjs-starter-blog",
-  "version": "2.4.0",
+  "name": "footballdecoded",
+  "version": "1.0.0",
+  "description": "Análisis táctico avanzado, métricas cuantitativas y scouting funcional para el fútbol profesional",
+  "author": "Jaime Oriol Goicoechea <joriolgo@gmail.com>",
+  "homepage": "https://www.footballdecoded.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaime-oriol/FootballDecoded"
+  },
+  "keywords": [
+    "football",
+    "soccer",
+    "analytics",
+    "tactics",
+    "scouting",
+    "next.js",
+    "blog"
+  ],
+  "private": true,
   "private": true,
   "scripts": {
     "start": "next dev",
