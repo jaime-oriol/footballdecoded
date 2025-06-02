@@ -66,3 +66,5 @@ exports/**/*
 *.csv
 confirmed-emails*.txt
 comments-export*.json
+# Auto-generated files
+app/tag-data.json
