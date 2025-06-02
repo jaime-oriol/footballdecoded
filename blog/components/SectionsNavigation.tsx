@@ -104,7 +104,7 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
 
         {/* Dropdown Menu */}
         <div
-          className={`absolute top-full left-1/2 mt-2 w-auto -translate-x-1/2 transform transition-all duration-200 ${
+          className={`absolute top-full right-0 mt-2 w-auto transform transition-all duration-200 ${
             isOpen
               ? 'visible z-[9999] translate-y-0 opacity-100'
               : 'invisible z-[-1] -translate-y-2 opacity-0'
@@ -112,30 +112,24 @@ export default function SectionsNavigation({ variant }: SectionsNavigationProps)
           style={{ zIndex: isOpen ? 9999 : -1 }}
         >
           {/* Arrow pointer */}
-          <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-t border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"></div>
+          <div className="absolute -top-1 right-4 h-2 w-2 rotate-45 border-t border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"></div>
 
           {/* Menu content */}
           <div className="rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
             <div className="p-2">
-              <div className="flex space-x-1">
+              {/* Grid 2x2 layout */}
+              <div className="grid grid-cols-2 gap-1">
                 {sections.map((section) => (
                   <Link
                     key={section.href}
                     href={section.href}
-                    className="flex min-w-[140px] flex-col items-center rounded-lg p-3 text-center transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                    className="flex min-w-[120px] flex-col items-center rounded-lg p-3 text-center transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50"
                   >
                     <div className="mb-2 flex-shrink-0 text-sky-600 dark:text-sky-400">
                       {section.icon}
                     </div>
-                    <div>
-                      <div className="font-headings text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {section.title}
-                      </div>
-                      <div className="font-body mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        {section.description.length > 20 
-                          ? `${section.description.substring(0, 20)}...` 
-                          : section.description}
-                      </div>
+                    <div className="font-headings text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {section.title}
                     </div>
                   </Link>
                 ))}
