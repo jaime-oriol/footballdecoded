@@ -7,7 +7,7 @@ comparando temporadas 2023/24 vs 2024/25.
 
 Autor: FootballDecoded Analytics
 Fecha: 2025-06-03
-Estructura: analysis/tactical_analysis/PSG/psg_complete_data_extractor.py
+Estructura: analysis/tactical_analysis/PSG/data_psg.py
 ==============================================================================
 """
 
@@ -136,57 +136,25 @@ class PSGDataExtractor:
                 no_store=False   # Guardar datos localmente
             )
             
-            # Understat - Para xG y stats avanzadas (solo ligas principales)
+            # Understat - Para xG y stats avanzadas
             logger.info("Configurando Understat...")
             try:
-                # Understat usa diferentes códigos de liga
-                understat_leagues = []
-                for league in self.config.leagues:
-                    if "FRA-Ligue 1" in league:
-                        understat_leagues.append("Ligue 1")
-                    elif "ENG-Premier" in league:
-                        understat_leagues.append("EPL")
-                    # Agregar más mapeos según sea necesario
-                
-                if understat_leagues:
-                    self.understat = Understat(
-                        leagues=understat_leagues,
-                        seasons=self.config.seasons,
-                        no_cache=False,
-                        no_store=False
-                    )
-                else:
-                    logger.warning("No se encontraron ligas compatibles con Understat")
+                # Understat usa los mismos códigos que FBref
+                self.understat = Understat(
+                    leagues=self.config.leagues,  # Usar directamente los códigos de FBref
+                    seasons=self.config.seasons,
+                    no_cache=False,
+                    no_store=False
+                )
                     
             except Exception as e:
                 logger.warning(f"Error inicializando Understat: {e}")
                 self.understat = None
             
-            # Match History - Para datos básicos de partidos
+            # Match History - Saltamos por ahora debido a códigos incompatibles
             logger.info("Configurando Match History...")
-            try:
-                # Match History también usa códigos diferentes
-                mh_leagues = []
-                for league in self.config.leagues:
-                    if "FRA-Ligue 1" in league:
-                        mh_leagues.append("F1")
-                    elif "ENG-Premier" in league:
-                        mh_leagues.append("E0")
-                    # Agregar más mapeos según sea necesario
-                
-                if mh_leagues:
-                    self.match_history = MatchHistory(
-                        leagues=mh_leagues,
-                        seasons=self.config.seasons,
-                        no_cache=False,
-                        no_store=False
-                    )
-                else:
-                    logger.warning("No se encontraron ligas compatibles con Match History")
-                    
-            except Exception as e:
-                logger.warning(f"Error inicializando Match History: {e}")
-                self.match_history = None
+            logger.info("Match History: Saltando por incompatibilidad de códigos de liga")
+            self.match_history = None
             
             logger.info("✅ Fuentes de datos inicializadas correctamente")
             return True
@@ -228,23 +196,112 @@ class PSGDataExtractor:
             logger.error(f"Error validando Understat: {e}")
             status['understat'] = False
         
-        # Validar Match History
-        try:
-            if self.match_history:
-                leagues_available = self.match_history.available_leagues()
-                status['match_history'] = len(leagues_available) > 0
-                logger.info(f"Match History: {len(leagues_available)} ligas disponibles")
-            else:
-                status['match_history'] = False
-        except Exception as e:
-            logger.error(f"Error validando Match History: {e}")
-            status['match_history'] = False
+        # Match History está deshabilitado por ahora
+        status['match_history'] = False
         
         return status
+    
+    def extract_team_stats(self) -> pd.DataFrame:
+        """
+        Extrae estadísticas del PSG como equipo
+        
+        Returns:
+            pd.DataFrame: Estadísticas consolidadas del equipo
+        """
+        logger.info("🏟️ Iniciando extracción de estadísticas del equipo PSG...")
+        
+        team_data_list = []
+        
+        # Extraer desde FBref
+        if self.fbref:
+            logger.info("📊 Extrayendo datos de equipo desde FBref...")
+            try:
+                # Estadísticas estándar del equipo
+                team_stats = self.fbref.read_team_season_stats(stat_type='standard')
+                
+                if not team_stats.empty:
+                    # Filtrar solo PSG (diferentes variaciones del nombre)
+                    psg_mask = (
+                        team_stats.index.get_level_values('team').str.contains('Paris Saint-Germain|PSG|Paris SG', case=False, na=False)
+                    )
+                    psg_stats = team_stats[psg_mask]
+                    
+                    if not psg_stats.empty:
+                        # Convertir a formato largo para consolidación
+                        psg_reset = psg_stats.reset_index()
+                        psg_reset['source'] = 'FBref'
+                        psg_reset['stat_type'] = 'standard'
+                        team_data_list.append(psg_reset)
+                        logger.info(f"✅ Extraídas {len(psg_stats)} filas de estadísticas estándar FBref")
+                    else:
+                        logger.warning("❌ No se encontraron datos del PSG en FBref")
+                
+                # Intentar otras categorías de estadísticas
+                for stat_type in ['shooting', 'passing', 'defense', 'possession']:
+                    try:
+                        logger.info(f"📊 Extrayendo estadísticas de {stat_type}...")
+                        stats = self.fbref.read_team_season_stats(stat_type=stat_type)
+                        
+                        if not stats.empty:
+                            psg_mask = (
+                                stats.index.get_level_values('team').str.contains('Paris Saint-Germain|PSG|Paris SG', case=False, na=False)
+                            )
+                            psg_stats = stats[psg_mask]
+                            
+                            if not psg_stats.empty:
+                                psg_reset = psg_stats.reset_index()
+                                psg_reset['source'] = 'FBref'
+                                psg_reset['stat_type'] = stat_type
+                                team_data_list.append(psg_reset)
+                                logger.info(f"✅ Extraídas {len(psg_stats)} filas de estadísticas {stat_type}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Error extrayendo {stat_type}: {e}")
+                        
+            except Exception as e:
+                logger.error(f"❌ Error extrayendo datos de FBref: {e}")
+        
+        # Extraer desde Understat
+        if self.understat:
+            logger.info("📊 Extrayendo datos de equipo desde Understat...")
+            try:
+                # Intentar extraer datos de temporada
+                team_match_stats = self.understat.read_team_match_stats()
+                
+                if not team_match_stats.empty:
+                    # Filtrar PSG
+                    psg_mask = (
+                        team_match_stats.index.get_level_values('team').str.contains('Paris Saint-Germain|PSG|Paris SG', case=False, na=False)
+                    )
+                    psg_stats = team_match_stats[psg_mask]
+                    
+                    if not psg_stats.empty:
+                        psg_reset = psg_stats.reset_index()
+                        psg_reset['source'] = 'Understat'
+                        psg_reset['stat_type'] = 'match_stats'
+                        team_data_list.append(psg_reset)
+                        logger.info(f"✅ Extraídas {len(psg_stats)} filas de Understat")
+                
+            except Exception as e:
+                logger.error(f"❌ Error extrayendo datos de Understat: {e}")
+        
+        # Consolidar todos los datos
+        if team_data_list:
+            consolidated_data = pd.concat(team_data_list, ignore_index=True)
+            logger.info(f"✅ Consolidadas {len(consolidated_data)} filas de datos del equipo")
+            
+            # Guardar datos
+            output_file = self.config.output_dir / "psg_team_stats.csv"
+            consolidated_data.to_csv(output_file, index=False)
+            logger.info(f"💾 Datos guardados en: {output_file}")
+            
+            return consolidated_data
+        else:
+            logger.warning("❌ No se pudieron extraer datos del equipo")
+            return pd.DataFrame()
 
 def main():
-    """Función principal - Fase 1: Configuración y validación"""
-    print("🚀 PSG Data Extraction Script - Fase 1: Configuración")
+    """Función principal - Ahora incluye extracción de datos"""
+    print("🚀 PSG Data Extraction Script - Configuración y Extracción")
     print("=" * 60)
     
     # Crear configuración
@@ -274,16 +331,29 @@ def main():
         logger.error("❌ Ninguna fuente de datos está funcionando")
         return False
     
-    logger.info("✅ Fase 1 completada - Configuración exitosa")
-    print("\n🎯 Siguiente paso: Ejecutar extracción de datos del equipo")
+    logger.info("✅ Configuración completada - Iniciando extracción")
     
+    # NUEVA FUNCIONALIDAD: Extraer datos del equipo
+    print("\n🏟️ Extrayendo estadísticas del equipo PSG...")
+    print("-" * 50)
+    
+    team_data = extractor.extract_team_stats()
+    
+    if not team_data.empty:
+        print(f"\n✅ Extracción completada: {len(team_data)} registros")
+        print(f"📁 Datos guardados en: {config.output_dir}")
+        
+        # Mostrar resumen de datos extraídos
+        print("\n📊 Resumen de datos extraídos:")
+        print(team_data.groupby(['source', 'stat_type', 'season']).size().to_string())
+        
     return True
 
 if __name__ == "__main__":
     success = main()
     if success:
-        print("\n✅ Script configurado correctamente")
-        print("💡 Próximo paso: Implementar extracción de estadísticas de equipo")
+        print("\n✅ Extracción de datos del equipo completada")
+        print("💡 Próximo paso: Implementar extracción de estadísticas de jugadores")
     else:
-        print("\n❌ Error en la configuración")
+        print("\n❌ Error en la extracción")
         sys.exit(1)
