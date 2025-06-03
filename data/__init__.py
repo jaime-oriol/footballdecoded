@@ -6,7 +6,7 @@ __all__ = [
     "ClubElo",
     "FBref",
     "FotMob",
-    "MatchHistory",,
+    "MatchHistory",
     "Understat",
 ]
 
