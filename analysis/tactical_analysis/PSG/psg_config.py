@@ -314,7 +314,7 @@ def validate_season_format(season: str) -> bool:
         True si el formato es válido
     """
     import re
-    pattern = r'^\d{4}-\d{2}
+    pattern = r'^\d{4}-\d{2}$'
     return bool(re.match(pattern, season))
 
 def get_source_config(source: str) -> Dict:
