@@ -1,8 +1,5 @@
-data
 logs
 config
-notebooks/data
-notebooks_priv
 
 *.py[cod]
 
@@ -39,8 +36,6 @@ pip-log.txt
 .ipynb_checkpoints
 
 # Sphinx documentation
-docs/_build/
-docs/modules/generated/
 
 # Hidden files
 .*
