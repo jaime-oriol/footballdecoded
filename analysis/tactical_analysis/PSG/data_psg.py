@@ -23,8 +23,9 @@ from data.understat import Understat
 from data.fotmob import FotMob
 from data._config import DATA_DIR, logger
 
-# Configuration
-PSG_DATA_DIR = DATA_DIR / "PSG_Analysis"
+# Configuration - Use project structure instead of default soccerdata path
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+PSG_DATA_DIR = PROJECT_ROOT / "analysis" / "tactical_analysis" / "PSG" / "data"
 PSG_TEAM_VARIATIONS = [
     "Paris S-G",
     "Paris Saint-Germain", 
@@ -44,7 +45,7 @@ class PSGDataExtractor:
         self,
         seasons: List[str] = ["2023-24", "2024-25"],
         leagues: List[str] = ["FRA-Ligue 1"],
-        data_dir: Path = PSG_DATA_DIR
+        data_dir: Path = None
     ):
         """
         Initialize PSG data extractor.
@@ -60,7 +61,13 @@ class PSGDataExtractor:
         """
         self.seasons = seasons
         self.leagues = leagues
-        self.data_dir = data_dir
+        
+        # Use project structure if no custom path provided
+        if data_dir is None:
+            project_root = Path(__file__).parent.parent.parent.parent
+            self.data_dir = project_root / "analysis" / "tactical_analysis" / "PSG" / "data"
+        else:
+            self.data_dir = data_dir
         
         # Create directories
         self.data_dir.mkdir(parents=True, exist_ok=True)
