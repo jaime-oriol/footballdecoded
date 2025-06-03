@@ -4,22 +4,14 @@ __version__ = "1.8.7"
 
 __all__ = [
     "ClubElo",
-    "ESPN",
     "FBref",
     "FotMob",
-    "MatchHistory",
-    "Sofascore",
-    "SoFIFA",
+    "MatchHistory",,
     "Understat",
-    "WhoScored",
 ]
 
 from .clubelo import ClubElo
-from .espn import ESPN
 from .fbref import FBref
 from .fotmob import FotMob
 from .match_history import MatchHistory
-from .sofascore import Sofascore
-from .sofifa import SoFIFA
 from .understat import Understat
-from .whoscored import WhoScored
