@@ -1,11 +1,8 @@
 # ====================================================================
-# FootballDecoded - Professional Player Data Extractor
+# FootballDecoded - Professional Player Data Extractor FBref
 # ====================================================================
 # Modular and robust player statistics extraction from FBref
 # Supports both season-long and match-specific data extraction
-# 
-# Author: FootballDecoded
-# Version: 2.0
 # ====================================================================
 
 import sys
@@ -24,7 +21,7 @@ warnings.filterwarnings('ignore', category=FutureWarning,
 
 
 # ====================================================================
-# MAIN EXTRACTION FUNCTIONS - Your primary interface
+# MAIN EXTRACTION FUNCTIONS
 # ====================================================================
 
 def extract_season_stats(
