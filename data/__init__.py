@@ -3,15 +3,13 @@
 __version__ = "1.8.7"
 
 __all__ = [
-    "ClubElo",
     "FBref",
     "FotMob",
-    "MatchHistory",
     "Understat",
+    "WhoScored",
 ]
 
-from .clubelo import ClubElo
 from .fbref import FBref
 from .fotmob import FotMob
-from .match_history import MatchHistory
 from .understat import Understat
+from .whoscored import WhoScored
