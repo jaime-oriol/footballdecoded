@@ -1,3 +1,4 @@
+# ========================================================
 # FootballDecoded - FBref Data Extractor
 # ====================================================================
 # Clean, professional wrapper for extracting ALL FBref metrics

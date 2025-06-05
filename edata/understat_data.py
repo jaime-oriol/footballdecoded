@@ -1,3 +1,4 @@
+# ========================================================
 # FootballDecoded - Understat Advanced Metrics Extractor
 # ========================================================
 # Specialized wrapper for extracting ALL advanced metrics from Understat
