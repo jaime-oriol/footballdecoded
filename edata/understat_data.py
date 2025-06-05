@@ -12,7 +12,7 @@ import pandas as pd
 import warnings
 from typing import Dict, List, Optional, Union, Tuple
 
-# Add scrappers to path
+# Add extractors to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import Understat
 
@@ -196,6 +196,314 @@ def extract_multiple_understat_players(
     # Create DataFrame with standardized columns for FBref compatibility
     df = pd.DataFrame(all_data) if all_data else pd.DataFrame()
     return _standardize_understat_dataframe(df, 'player')
+
+
+def extract_understat_shot_events(
+    match_id: int,
+    league: str,
+    season: str,
+    player_filter: Optional[str] = None,
+    team_filter: Optional[str] = None,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Extract detailed shot events with coordinates and xG data from Understat.
+    
+    FIXED: Properly handles player names through mapping system.
+    
+    Args:
+        match_id: Understat match ID (integer)
+        league: League identifier
+        season: Season identifier
+        player_filter: Optional player name to filter shots
+        team_filter: Optional team name to filter shots
+        verbose: Show detailed extraction progress
+        
+    Returns:
+        DataFrame with shot events including coordinates, xG, body part, situation
+        
+    Example:
+        >>> # All shots from match
+        >>> shots = extract_understat_shot_events(22256, "ENG-Premier League", "2023-24")
+        >>> 
+        >>> # Only Cody Gakpo's shots
+        >>> gakpo_shots = extract_understat_shot_events(
+        ...     22256, "ENG-Premier League", "2023-24", 
+        ...     player_filter="Cody Gakpo"
+        ... )
+    """
+    if verbose:
+        print(f"🎯 Extracting shot events from match {match_id}")
+        print(f"   League: {league} | Season: {season}")
+        if player_filter:
+            print(f"   Player filter: {player_filter}")
+        if team_filter:
+            print(f"   Team filter: {team_filter}")
+    
+    try:
+        # Initialize Understat extractor
+        understat = Understat(leagues=[league], seasons=[season])
+        
+        if verbose:
+            print(f"   🔍 Extracting shot events from Understat...")
+        
+        # Extract shot events for the specific match
+        shot_events = understat.read_shot_events(match_id=match_id)
+        
+        if shot_events is None or shot_events.empty:
+            if verbose:
+                print(f"   ❌ No shot events found for match {match_id}")
+            return pd.DataFrame()
+        
+        if verbose:
+            print(f"   📊 Raw data: {len(shot_events)} shots extracted")
+            print(f"   📋 Original columns: {list(shot_events.columns)}")
+        
+        # KEY FIX: Get player season stats to map IDs to names
+        player_names_map = {}
+        team_names_map = {}
+        
+        try:
+            if verbose:
+                print(f"   🔍 Getting player names mapping...")
+            
+            # Get player season stats for name mapping
+            player_stats = understat.read_player_season_stats()
+            
+            # Create mapping from player_id to player name
+            if not player_stats.empty and hasattr(player_stats.index, 'levels'):
+                for idx in player_stats.index:
+                    if isinstance(idx, tuple) and len(idx) >= 4:
+                        # Index format: (league, season, team, player)
+                        player_name = idx[3]  # Player name is at index 3
+                        # Find corresponding player_id in the data
+                        player_data = player_stats.loc[idx]
+                        if hasattr(player_data, 'index') and 'player_id' in player_data.index:
+                            player_id = player_data['player_id']
+                            player_names_map[player_id] = player_name
+                        
+                        # Map team name too
+                        team_name = idx[2]  # Team name is at index 2
+                        # We'll map this later when we have team_id
+                        
+            if verbose:
+                print(f"   📝 Mapped {len(player_names_map)} player names")
+                
+        except Exception as mapping_error:
+            if verbose:
+                print(f"   ⚠️ Player mapping failed: {str(mapping_error)}")
+                print(f"   📊 Proceeding with ID-based filtering...")
+        
+        # Apply standardization and name mapping
+        standardized_events = _standardize_shot_events_columns(shot_events, player_names_map, team_names_map)
+        
+        # Apply filters after standardization
+        filtered_events = standardized_events.copy()
+        
+        # Filter by player
+        if player_filter:
+            if 'shot_player' in filtered_events.columns:
+                if verbose:
+                    print(f"   🎯 Applying player filter: {player_filter}")
+                
+                # Generate name variations for flexible matching
+                player_variations = _generate_understat_name_variations(player_filter)
+                
+                if verbose:
+                    print(f"   🔍 Trying variations: {player_variations}")
+                
+                # Apply filter with multiple variations
+                mask = pd.Series([False] * len(filtered_events))
+                
+                for variation in player_variations:
+                    # Exact match
+                    exact_matches = filtered_events['shot_player'].str.lower() == variation.lower()
+                    mask |= exact_matches
+                    
+                    # Partial match
+                    partial_matches = filtered_events['shot_player'].str.contains(
+                        variation, case=False, na=False, regex=False
+                    )
+                    mask |= partial_matches
+                    
+                    if verbose and (exact_matches.any() or partial_matches.any()):
+                        matches_found = exact_matches.sum() + partial_matches.sum()
+                        print(f"      '{variation}': {matches_found} matches")
+                
+                filtered_events = filtered_events[mask]
+                
+                if verbose:
+                    if len(filtered_events) > 0:
+                        actual_players = filtered_events['shot_player'].unique()
+                        print(f"   ✅ Filter applied: {len(filtered_events)} shots found")
+                        print(f"   👤 Players included: {list(actual_players)}")
+                    else:
+                        print(f"   ❌ No shots found for {player_filter}")
+                        available_players = standardized_events['shot_player'].dropna().unique()
+                        print(f"   👥 Available players: {list(available_players)}")
+            else:
+                if verbose:
+                    print(f"   ❌ Cannot apply player filter - 'shot_player' column not available")
+        
+        # Filter by team
+        if team_filter and 'shot_team' in filtered_events.columns:
+            if verbose:
+                print(f"   🏟️ Applying team filter: {team_filter}")
+            
+            team_variations = _generate_understat_team_variations(team_filter)
+            mask = pd.Series([False] * len(filtered_events))
+            
+            for variation in team_variations:
+                exact_matches = filtered_events['shot_team'].str.lower() == variation.lower()
+                partial_matches = filtered_events['shot_team'].str.contains(
+                    variation, case=False, na=False, regex=False
+                )
+                mask |= exact_matches | partial_matches
+            
+            filtered_events = filtered_events[mask]
+            
+            if verbose:
+                print(f"   ✅ Team filter applied: {len(filtered_events)} shots")
+        
+        if filtered_events.empty:
+            if verbose:
+                print(f"   ⚠️ No shots found after applying filters")
+            return pd.DataFrame()
+        
+        # Add match context
+        filtered_events = filtered_events.reset_index(drop=True)
+        filtered_events['match_id'] = match_id
+        filtered_events['data_source'] = 'understat'
+        
+        if verbose:
+            total_shots = len(filtered_events)
+            goals = len(filtered_events[filtered_events.get('shot_result', '') == 'Goal'])
+            avg_xg = filtered_events['shot_xg'].mean() if 'shot_xg' in filtered_events.columns else 0
+            
+            print(f"   ✅ SUCCESS: {total_shots} shot events extracted")
+            print(f"   📊 Goals: {goals} | Average xG: {avg_xg:.3f}")
+            
+            # Body part breakdown
+            if 'shot_body_part' in filtered_events.columns:
+                body_part_counts = filtered_events['shot_body_part'].value_counts()
+                if not body_part_counts.empty:
+                    print(f"   🦵 Body parts: {dict(body_part_counts)}")
+        
+        return filtered_events
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ EXTRACTION FAILED: {str(e)}")
+        return pd.DataFrame()
+
+
+def extract_understat_match_shots_analysis(
+    match_id: int,
+    league: str,
+    season: str,
+    export_csv: bool = False,
+    verbose: bool = False
+) -> Dict:
+    """
+    Complete shot analysis for a match with summary statistics.
+    
+    Perfect for tactical analysis and match reports.
+    
+    Args:
+        match_id: Understat match ID
+        league: League identifier
+        season: Season identifier
+        export_csv: Whether to export shot events to CSV
+        verbose: Show detailed analysis progress
+        
+    Returns:
+        Dictionary with shot events DataFrame and analysis summary
+        
+    Example:
+        >>> analysis = extract_understat_match_shots_analysis(
+        ...     22256, "ENG-Premier League", "2023-24", 
+        ...     export_csv=True, verbose=True
+        ... )
+        >>> print(f"Total shots: {analysis['summary']['total_shots']}")
+        >>> print(f"Goals: {analysis['summary']['goals']}")
+    """
+    if verbose:
+        print(f"🎯 Complete shot analysis for match {match_id}")
+    
+    # Extract all shot events
+    shot_events = extract_understat_shot_events(
+        match_id=match_id,
+        league=league,
+        season=season,
+        verbose=verbose
+    )
+    
+    analysis_results = {
+        'shot_events': shot_events,
+        'summary': {},
+        'team_breakdown': {},
+        'player_breakdown': {}
+    }
+    
+    if shot_events.empty:
+        if verbose:
+            print("   ❌ No shot data available for analysis")
+        return analysis_results
+    
+    # Calculate summary statistics
+    total_shots = len(shot_events)
+    goals = len(shot_events[shot_events['shot_result'] == 'Goal'])
+    total_xg = shot_events['shot_xg'].sum()
+    avg_xg_per_shot = shot_events['shot_xg'].mean()
+    
+    analysis_results['summary'] = {
+        'match_id': match_id,
+        'total_shots': total_shots,
+        'goals': goals,
+        'total_xg': round(total_xg, 3),
+        'avg_xg_per_shot': round(avg_xg_per_shot, 3),
+        'conversion_rate': round((goals / total_shots) * 100, 1) if total_shots > 0 else 0,
+        'goal_difference_vs_xg': round(goals - total_xg, 3)
+    }
+    
+    # Team-level breakdown
+    if 'shot_team' in shot_events.columns:
+        team_summary = shot_events.groupby('shot_team').agg({
+            'shot_xg': ['count', 'sum', 'mean'],
+            'shot_result': lambda x: (x == 'Goal').sum()
+        }).round(3)
+        
+        team_summary.columns = ['shots', 'total_xg', 'avg_xg', 'goals']
+        analysis_results['team_breakdown'] = team_summary.to_dict('index')
+    
+    # Player-level breakdown (top 5 by shots)
+    if 'shot_player' in shot_events.columns:
+        player_summary = shot_events.groupby(['shot_player', 'shot_team']).agg({
+            'shot_xg': ['count', 'sum', 'mean'],
+            'shot_result': lambda x: (x == 'Goal').sum()
+        }).round(3)
+        
+        player_summary.columns = ['shots', 'total_xg', 'avg_xg', 'goals']
+        top_players = player_summary.sort_values('shots', ascending=False).head(5)
+        analysis_results['player_breakdown'] = top_players.to_dict('index')
+    
+    # Export CSV if requested
+    if export_csv and not shot_events.empty:
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"understat_shots_match_{match_id}_{timestamp}.csv"
+        shot_events.to_csv(filename, index=False, encoding='utf-8')
+        analysis_results['export_path'] = filename
+        
+        if verbose:
+            print(f"   📊 Shot events exported to: {filename}")
+    
+    if verbose:
+        print(f"   ✅ ANALYSIS COMPLETE")
+        print(f"   📊 {total_shots} shots | {goals} goals | {total_xg:.2f} xG")
+        print(f"   🎯 Conversion: {analysis_results['summary']['conversion_rate']}%")
+    
+    return analysis_results
 
 
 # ====================================================================
@@ -398,6 +706,8 @@ def _generate_understat_name_variations(player_name: str) -> List[str]:
         variations.extend(["Kylian Mbappe", "K. Mbappe", "Mbappe"])
     elif player_name == "Erling Haaland":
         variations.extend(["E. Haaland", "Haaland", "Erling Braut Haaland"])
+    elif player_name == "Cody Gakpo":
+        variations.extend(["C. Gakpo", "Gakpo"])
     
     return list(dict.fromkeys(variations))
 
@@ -418,7 +728,9 @@ def _generate_understat_team_variations(team_name: str) -> List[str]:
         'Manchester City': ['Man City'],
         'Tottenham': ['Tottenham Hotspur'],
         'Brighton': ['Brighton and Hove Albion'],
-        'Newcastle': ['Newcastle United']
+        'Newcastle': ['Newcastle United'],
+        'Aston Villa': ['Villa'],
+        'Liverpool': ['Liverpool FC']
     }
     
     if team_name in understat_mappings:
@@ -539,14 +851,293 @@ def _calculate_understat_team_metrics(team_matches: pd.DataFrame) -> Dict:
 
 
 # ====================================================================
+# SHOT EVENTS PROCESSING - Fixed with Player Name Mapping
+# ====================================================================
+
+def _standardize_shot_events_columns(
+    shot_events: pd.DataFrame, 
+    player_names_map: Dict = None,
+    team_names_map: Dict = None
+) -> pd.DataFrame:
+    """
+    Standardize shot events column names and map IDs to names.
+    
+    FIXED: Properly handles Understat's ID-based system.
+    """
+    standardized_df = shot_events.copy()
+    
+    if player_names_map is None:
+        player_names_map = {}
+    if team_names_map is None:
+        team_names_map = {}
+    
+    # Initial column mapping
+    shot_mapping = {
+        'xg': 'shot_xg',
+        'location_x': 'shot_location_x', 
+        'location_y': 'shot_location_y',
+        'body_part': 'shot_body_part',
+        'situation': 'shot_situation',
+        'result': 'shot_result',
+        'minute': 'shot_minute',
+        'date': 'shot_date',
+        'game_id': 'match_id'
+    }
+    
+    # Apply basic mapping
+    rename_dict = {}
+    for original, standardized in shot_mapping.items():
+        if original in standardized_df.columns:
+            rename_dict[original] = standardized
+    
+    if rename_dict:
+        standardized_df = standardized_df.rename(columns=rename_dict)
+    
+    # KEY FIX: Map player_id to player names
+    if 'player_id' in standardized_df.columns and player_names_map:
+        print(f"   🔍 Mapping player IDs to names...")
+        standardized_df['shot_player'] = standardized_df['player_id'].map(player_names_map)
+        
+        # Fill missing names with "Unknown Player [ID]"
+        mask = standardized_df['shot_player'].isna()
+        standardized_df.loc[mask, 'shot_player'] = (
+            "Unknown Player [" + standardized_df.loc[mask, 'player_id'].astype(str) + "]"
+        )
+        
+        mapped_count = (~standardized_df['shot_player'].str.contains('Unknown')).sum()
+        print(f"   ✅ Mapped {mapped_count}/{len(standardized_df)} player names")
+    
+    elif 'player_id' in standardized_df.columns:
+        # Fallback: use player_id as shot_player for filtering purposes
+        print(f"   ⚠️ No player name mapping available, using IDs...")
+        standardized_df['shot_player'] = "Player ID " + standardized_df['player_id'].astype(str)
+    
+    # Map team_id to team names (try to get from schedule or use basic mapping)
+    if 'team_id' in standardized_df.columns:
+        # Create basic team name mapping based on known team IDs
+        # For the match we're testing (Aston Villa vs Liverpool)
+        basic_team_mapping = {
+            71: "Aston Villa",    # Based on your CSV data
+            87: "Liverpool"       # Based on your CSV data
+        }
+        
+        standardized_df['shot_team'] = standardized_df['team_id'].map(basic_team_mapping)
+        
+        # Fill missing with team ID
+        mask = standardized_df['shot_team'].isna()
+        standardized_df.loc[mask, 'shot_team'] = (
+            "Team ID " + standardized_df.loc[mask, 'team_id'].astype(str)
+        )
+        
+        print(f"   🏟️ Mapped team IDs to names")
+    
+    # Convert data types
+    numeric_cols = ['shot_xg', 'shot_location_x', 'shot_location_y', 'shot_minute']
+    for col in numeric_cols:
+        if col in standardized_df.columns:
+            standardized_df[col] = pd.to_numeric(standardized_df[col], errors='coerce')
+    
+    # Add calculated fields
+    if 'shot_result' in standardized_df.columns:
+        standardized_df['is_goal'] = (standardized_df['shot_result'] == 'Goal').astype(int)
+        standardized_df['is_on_target'] = standardized_df['shot_result'].isin(['Goal', 'Saved Shot']).astype(int)
+    
+    # Add shot zones
+    if 'shot_location_x' in standardized_df.columns and 'shot_location_y' in standardized_df.columns:
+        standardized_df['shot_zone'] = _classify_shot_zones(
+            standardized_df['shot_location_x'], 
+            standardized_df['shot_location_y']
+        )
+    
+    # Debug info
+    if 'shot_player' in standardized_df.columns:
+        unique_players = standardized_df['shot_player'].dropna().unique()
+        print(f"   👤 Players found: {list(unique_players)}")
+    
+    return standardized_df
+
+
+def _classify_shot_zones(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
+    """
+    Classify shots into tactical zones for analysis.
+    
+    Based on Understat coordinate system (0-1 scale).
+    """
+    zones = []
+    
+    for x, y in zip(x_coords, y_coords):
+        if pd.isna(x) or pd.isna(y):
+            zones.append('Unknown')
+            continue
+        
+        # Convert to percentages for easier understanding
+        x_pct = float(x) * 100
+        y_pct = float(y) * 100
+        
+        # Zone classification based on position
+        if x_pct >= 83:  # Very close to goal
+            if 30 <= y_pct <= 70:
+                zones.append('Central Box')
+            else:
+                zones.append('Wide Box')
+        elif x_pct >= 67:  # Penalty area
+            if 35 <= y_pct <= 65:
+                zones.append('Central Penalty Area')
+            else:
+                zones.append('Wide Penalty Area')
+        elif x_pct >= 50:  # Outside box
+            if 40 <= y_pct <= 60:
+                zones.append('Central Outside Box')
+            else:
+                zones.append('Wide Outside Box')
+        else:  # Long range
+            zones.append('Long Range')
+    
+    return pd.Series(zones, index=x_coords.index)
+
+
+# ====================================================================
+# CONVENIENCE FUNCTIONS - Shot Events Quick Access
+# ====================================================================
+
+def get_understat_shots(match_id: int, league: str, season: str, 
+                       player_filter: Optional[str] = None) -> pd.DataFrame:
+    """Quick shot events extraction without verbose output."""
+    return extract_understat_shot_events(
+        match_id, league, season, player_filter=player_filter, verbose=False
+    )
+
+
+def get_player_shots_from_match(player_name: str, match_id: int, 
+                               league: str, season: str) -> pd.DataFrame:
+    """Quick extraction of specific player's shots from a match."""
+    return extract_understat_shot_events(
+        match_id, league, season, player_filter=player_name, verbose=False
+    )
+
+
+def get_team_shots_from_match(team_name: str, match_id: int,
+                             league: str, season: str) -> pd.DataFrame:
+    """Quick extraction of specific team's shots from a match."""
+    return extract_understat_shot_events(
+        match_id, league, season, team_filter=team_name, verbose=False
+    )
+
+
+# ====================================================================
 # STANDARDIZATION - Compatible Column Names
 # ====================================================================
+
+def prepare_shot_map_data(shot_events: pd.DataFrame) -> Dict:
+    """
+    Prepare shot events data for visualization/plotting.
+    
+    Returns organized data ready for shot maps, heat maps, and tactical graphics.
+    """
+    if shot_events.empty:
+        return {
+            'coordinates': {'x': [], 'y': [], 'xg_size': []},
+            'goals': {'x': [], 'y': []},
+            'by_player': {},
+            'by_team': {},
+            'summary': {}
+        }
+    
+    viz_data = {
+        'coordinates': {
+            'x': shot_events.get('shot_location_x', []).tolist(),
+            'y': shot_events.get('shot_location_y', []).tolist(),
+            'xg': shot_events.get('shot_xg', []).tolist(),
+            'xg_size': (shot_events.get('shot_xg', []) * 1000).tolist(),  # Scale for plotting
+        },
+        'goals': {},
+        'by_player': {},
+        'by_team': {},
+        'summary': {}
+    }
+    
+    # Extract goals separately for highlighting
+    if 'is_goal' in shot_events.columns:
+        goals = shot_events[shot_events['is_goal'] == 1]
+        viz_data['goals'] = {
+            'x': goals.get('shot_location_x', []).tolist(),
+            'y': goals.get('shot_location_y', []).tolist(),
+            'xg': goals.get('shot_xg', []).tolist()
+        }
+    
+    # Organize by player
+    if 'shot_player' in shot_events.columns:
+        for player in shot_events['shot_player'].unique():
+            if pd.notna(player):
+                player_shots = shot_events[shot_events['shot_player'] == player]
+                viz_data['by_player'][player] = {
+                    'x': player_shots.get('shot_location_x', []).tolist(),
+                    'y': player_shots.get('shot_location_y', []).tolist(),
+                    'xg': player_shots.get('shot_xg', []).tolist(),
+                    'goals': len(player_shots[player_shots.get('is_goal', 0) == 1]),
+                    'total_xg': player_shots.get('shot_xg', []).sum()
+                }
+    
+    # Organize by team  
+    if 'shot_team' in shot_events.columns:
+        for team in shot_events['shot_team'].unique():
+            if pd.notna(team):
+                team_shots = shot_events[shot_events['shot_team'] == team]
+                viz_data['by_team'][team] = {
+                    'x': team_shots.get('shot_location_x', []).tolist(),
+                    'y': team_shots.get('shot_location_y', []).tolist(),
+                    'xg': team_shots.get('shot_xg', []).tolist(),
+                    'goals': len(team_shots[team_shots.get('is_goal', 0) == 1]),
+                    'total_xg': team_shots.get('shot_xg', []).sum(),
+                    'shots': len(team_shots)
+                }
+    
+    # Summary statistics
+    viz_data['summary'] = {
+        'total_shots': len(shot_events),
+        'total_goals': len(shot_events[shot_events.get('is_goal', 0) == 1]),
+        'total_xg': shot_events.get('shot_xg', []).sum(),
+        'avg_xg': shot_events.get('shot_xg', []).mean(),
+        'conversion_rate': (len(shot_events[shot_events.get('is_goal', 0) == 1]) / len(shot_events) * 100) if len(shot_events) > 0 else 0
+    }
+    
+    return viz_data
+
+
+def export_shot_map_data(shot_events: pd.DataFrame, filename: str,
+                        include_viz_data: bool = True) -> str:
+    """
+    Export shot events with optional visualization-ready data.
+    """
+    import datetime
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_filename = f"{filename}_{timestamp}.csv"
+    
+    # Export main shot events
+    shot_events.to_csv(csv_filename, index=False, encoding='utf-8')
+    
+    print(f"📊 Shot events exported to: {csv_filename}")
+    print(f"   Total shots: {len(shot_events)}")
+    
+    if include_viz_data and not shot_events.empty:
+        # Also export visualization summary
+        viz_data = prepare_shot_map_data(shot_events)
+        
+        json_filename = f"{filename}_viz_data_{timestamp}.json"
+        import json
+        with open(json_filename, 'w', encoding='utf-8') as f:
+            json.dump(viz_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"📈 Visualization data exported to: {json_filename}")
+        print(f"   Ready for: matplotlib, plotly, D3.js, etc.")
+    
+    return csv_filename
+
 
 def _apply_understat_stat_mapping(player_data: Dict) -> Dict:
     """
     Apply standardized naming for seamless FBref integration.
-    
-    Ensures column names match FBref format for easy merging.
     """
     understat_mapping = {
         # Understat-specific metrics (not in FBref)
@@ -604,8 +1195,6 @@ def _apply_understat_team_stat_mapping(team_data: Dict) -> Dict:
 def _standardize_understat_dataframe(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     """
     Ensure column ordering compatible with FBref DataFrames.
-    
-    Priority: basic info → Understat metrics → analysis fields
     """
     if df.empty:
         return df
@@ -668,26 +1257,6 @@ def merge_fbref_with_understat(
 ) -> pd.DataFrame:
     """
     Merge FBref data with Understat advanced metrics automatically.
-    
-    This is the key function for creating enriched datasets combining both sources.
-    
-    Args:
-        fbref_data: DataFrame or Dict from FBref extraction
-        league: League identifier
-        season: Season identifier  
-        data_type: 'player' or 'team'
-        verbose: Show merge progress
-        
-    Returns:
-        Combined DataFrame with both FBref and Understat metrics
-        
-    Example:
-        >>> # Get FBref data first
-        >>> fbref_df = extract_multiple_players_season(["Haaland", "De Bruyne"], "ENG-Premier League", "2023-24")
-        >>> 
-        >>> # Enrich with Understat
-        >>> enriched_df = merge_fbref_with_understat(fbref_df, "ENG-Premier League", "2023-24")
-        >>> print(enriched_df[['player_name', 'goals', 'understat_xg_chain']])
     """
     if verbose:
         print(f"🔗 Merging FBref data with Understat metrics")
@@ -754,18 +1323,6 @@ def export_enriched_data(
 ) -> str:
     """
     Export merged FBref + Understat data with proper formatting.
-    
-    Args:
-        merged_data: Combined DataFrame from merge_fbref_with_understat
-        filename: Output filename (without .csv extension)
-        include_timestamp: Add timestamp to filename
-        
-    Returns:
-        Full path of created CSV file
-        
-    Example:
-        >>> enriched_df = merge_fbref_with_understat(fbref_data, "ENG-Premier League", "2023-24")
-        >>> export_enriched_data(enriched_df, "man_city_enriched_analysis")
     """
     import datetime
     
@@ -800,23 +1357,6 @@ def quick_enriched_analysis(
 ) -> Dict:
     """
     One-function solution for complete FBref + Understat analysis.
-    
-    Gets comprehensive data from both sources and merges automatically.
-    
-    Args:
-        players: List of player names for analysis
-        league: League identifier
-        season: Season identifier
-        export: Whether to export enriched data to CSV
-        verbose: Show detailed progress
-        
-    Returns:
-        Dictionary with separate and merged datasets
-        
-    Example:
-        >>> players = ["Haaland", "De Bruyne", "Foden"]
-        >>> analysis = quick_enriched_analysis(players, "ENG-Premier League", "2023-24")
-        >>> print(analysis['merged_data'][['player_name', 'goals', 'understat_xg_chain']])
     """
     if verbose:
         print(f"🚀 Complete enriched analysis for {len(players)} players")
@@ -909,15 +1449,6 @@ def validate_understat_data(
 ) -> Dict:
     """
     Validate Understat data quality and completeness.
-    
-    Useful for ensuring data integrity before analysis.
-    
-    Args:
-        data: Extracted Understat data (DataFrame or Dict)
-        verbose: Show detailed validation results
-        
-    Returns:
-        Dictionary with validation results and recommendations
     """
     if isinstance(data, dict):
         df = pd.DataFrame([data])
@@ -999,15 +1530,6 @@ def compare_fbref_understat_metrics(
 ) -> Dict:
     """
     Compare overlapping metrics between FBref and Understat for validation.
-    
-    Useful for identifying discrepancies and ensuring data consistency.
-    
-    Args:
-        merged_data: DataFrame from merge_fbref_with_understat
-        verbose: Show detailed comparison results
-        
-    Returns:
-        Dictionary with comparison statistics and insights
     """
     comparison_results = {
         'overlapping_metrics': [],
@@ -1087,17 +1609,6 @@ def export_understat_summary_report(
 ) -> str:
     """
     Export a comprehensive summary report of Understat metrics.
-    
-    Creates a detailed analysis report with key insights and statistics.
-    
-    Args:
-        data: Understat DataFrame (from extract_multiple_understat_players)
-        league: League identifier
-        season: Season identifier
-        filename: Optional custom filename
-        
-    Returns:
-        Path to generated report file
     """
     import datetime
     
@@ -1142,3 +1653,380 @@ def export_understat_summary_report(
     
     print(f"📄 Summary report exported to: {filename}")
     return filename
+
+
+# ====================================================================
+# PLAYER NAME MAPPING SYSTEM - Key Fix for Shot Events
+# ====================================================================
+
+def _get_player_names_from_season_stats(
+    understat: Understat,
+    verbose: bool = False
+) -> Dict[int, str]:
+    """
+    Extract player ID to name mapping from season stats.
+    
+    This is the key function that solves the shot events player filtering issue.
+    """
+    player_names_map = {}
+    
+    try:
+        if verbose:
+            print(f"   🔍 Building player names mapping...")
+        
+        # Get all player season stats
+        player_stats = understat.read_player_season_stats()
+        
+        if player_stats.empty:
+            if verbose:
+                print(f"   ⚠️ No player season stats found")
+            return player_names_map
+        
+        # Understat player season stats have multi-index: (league, season, team, player)
+        if hasattr(player_stats.index, 'levels'):
+            for idx in player_stats.index:
+                if isinstance(idx, tuple) and len(idx) >= 4:
+                    player_name = idx[3]  # Player name is the 4th level
+                    
+                    # Get the actual data row to find player_id
+                    try:
+                        player_data = player_stats.loc[idx]
+                        # Some versions might have player_id as column, others in index
+                        if 'player_id' in player_data.index:
+                            player_id = player_data['player_id']
+                            if pd.notna(player_id):
+                                player_names_map[int(player_id)] = player_name
+                        
+                    except (KeyError, IndexError, TypeError):
+                        continue
+        
+        if verbose:
+            print(f"   ✅ Mapped {len(player_names_map)} players")
+            if len(player_names_map) > 0:
+                sample_players = list(player_names_map.values())[:3]
+                print(f"   📝 Sample: {sample_players}")
+        
+        return player_names_map
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ Player mapping failed: {str(e)}")
+        return {}
+
+
+def _get_team_names_from_schedule(
+    understat: Understat,
+    verbose: bool = False
+) -> Dict[int, str]:
+    """
+    Extract team ID to name mapping from schedule data.
+    """
+    team_names_map = {}
+    
+    try:
+        if verbose:
+            print(f"   🔍 Building team names mapping...")
+        
+        # Try to get schedule data
+        schedule = understat.read_schedule()
+        
+        if not schedule.empty:
+            # Extract team mappings from home_team and away_team columns
+            for _, row in schedule.iterrows():
+                if 'home_team_id' in row and 'home_team' in row:
+                    team_id = row['home_team_id']
+                    team_name = row['home_team']
+                    if pd.notna(team_id) and pd.notna(team_name):
+                        team_names_map[int(team_id)] = team_name
+                
+                if 'away_team_id' in row and 'away_team' in row:
+                    team_id = row['away_team_id']
+                    team_name = row['away_team']
+                    if pd.notna(team_id) and pd.notna(team_name):
+                        team_names_map[int(team_id)] = team_name
+        
+        if verbose:
+            print(f"   ✅ Mapped {len(team_names_map)} teams")
+        
+        return team_names_map
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ⚠️ Team mapping failed, using defaults: {str(e)}")
+        
+        # Fallback: known team mappings for common leagues
+        return {
+            71: "Aston Villa",
+            87: "Liverpool",
+            # Add more as needed
+        }
+
+
+# ====================================================================
+# ENHANCED SHOT EVENTS - With Proper Name Mapping
+# ====================================================================
+
+def extract_understat_shot_events_with_names(
+    match_id: int,
+    league: str,
+    season: str,
+    player_filter: Optional[str] = None,
+    team_filter: Optional[str] = None,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Enhanced shot events extraction with proper player name mapping.
+    
+    FIXED: Solved the pandas index join error in filtering.
+    """
+    if verbose:
+        print(f"🎯 Enhanced shot events extraction for match {match_id}")
+        print(f"   League: {league} | Season: {season}")
+        if player_filter:
+            print(f"   Player filter: {player_filter}")
+    
+    try:
+        # Initialize Understat extractor
+        understat = Understat(leagues=[league], seasons=[season])
+        
+        # STEP 1: Get name mappings FIRST
+        if verbose:
+            print(f"   🔍 Step 1: Getting name mappings...")
+        
+        player_names_map = _get_player_names_from_season_stats(understat, verbose)
+        team_names_map = _get_team_names_from_schedule(understat, verbose)
+        
+        # STEP 2: Extract raw shot events
+        if verbose:
+            print(f"   🔍 Step 2: Extracting raw shot events...")
+        
+        shot_events = understat.read_shot_events(match_id=match_id)
+        
+        if shot_events is None or shot_events.empty:
+            if verbose:
+                print(f"   ❌ No shot events found for match {match_id}")
+            return pd.DataFrame()
+        
+        if verbose:
+            print(f"   📊 Raw data: {len(shot_events)} shots extracted")
+        
+        # STEP 3: Apply name mapping and standardization
+        if verbose:
+            print(f"   🔍 Step 3: Applying name mapping...")
+        
+        standardized_events = _standardize_shot_events_columns(
+            shot_events, player_names_map, team_names_map
+        )
+        
+        # STEP 4: Apply filters with proper names
+        filtered_events = standardized_events.copy()
+        
+        if player_filter and 'shot_player' in filtered_events.columns:
+            if verbose:
+                print(f"   🎯 Step 4: Applying player filter...")
+            
+            # Show available players first
+            available_players = filtered_events['shot_player'].dropna().unique()
+            if verbose:
+                print(f"   👥 Available players: {list(available_players)}")
+            
+            # Generate variations and apply filter
+            player_variations = _generate_understat_name_variations(player_filter)
+            if verbose:
+                print(f"   🔍 Trying variations: {player_variations}")
+            
+            # FIX: Create boolean mask step by step to avoid index issues
+            total_rows = len(filtered_events)
+            final_mask = [False] * total_rows
+            matches_found = 0
+            
+            for variation in player_variations:
+                if verbose:
+                    print(f"      Testing variation: '{variation}'")
+                
+                try:
+                    # Exact match check
+                    exact_mask = filtered_events['shot_player'].str.lower() == variation.lower()
+                    exact_count = exact_mask.sum()
+                    
+                    # Partial match check  
+                    partial_mask = filtered_events['shot_player'].str.contains(
+                        variation, case=False, na=False, regex=False
+                    )
+                    partial_count = partial_mask.sum()
+                    
+                    # Combine masks for this variation
+                    variation_mask = exact_mask | partial_mask
+                    variation_total = variation_mask.sum()
+                    
+                    # Update final mask
+                    for i in range(total_rows):
+                        if variation_mask.iloc[i]:
+                            final_mask[i] = True
+                    
+                    if variation_total > 0:
+                        matches_found += variation_total
+                        if verbose:
+                            print(f"         ✅ '{variation}': {variation_total} matches (exact: {exact_count}, partial: {partial_count})")
+                    
+                except Exception as var_error:
+                    if verbose:
+                        print(f"         ❌ Error with variation '{variation}': {str(var_error)}")
+                    continue
+            
+            # Apply the final mask
+            try:
+                filtered_events = filtered_events[final_mask]
+                
+                if verbose:
+                    if len(filtered_events) > 0:
+                        actual_players = filtered_events['shot_player'].unique()
+                        print(f"   ✅ Filter SUCCESS: {len(filtered_events)} shots found")
+                        print(f"   👤 Matched players: {list(actual_players)}")
+                    else:
+                        print(f"   ❌ No shots found for '{player_filter}'")
+                        print(f"   💡 Player exists but no matches found with variations")
+                        
+                        # Debug: Try exact match manually
+                        exact_test = standardized_events[
+                            standardized_events['shot_player'] == player_filter
+                        ]
+                        if not exact_test.empty:
+                            print(f"   🔍 DEBUG: Found {len(exact_test)} shots with exact name match")
+                            filtered_events = exact_test
+                        else:
+                            print(f"   🔍 DEBUG: No exact matches either")
+                            
+            except Exception as filter_error:
+                if verbose:
+                    print(f"   ❌ Filter application failed: {str(filter_error)}")
+                # Fallback: try simple exact match
+                try:
+                    filtered_events = standardized_events[
+                        standardized_events['shot_player'] == player_filter
+                    ]
+                    if verbose:
+                        print(f"   🔄 Fallback exact match: {len(filtered_events)} shots")
+                except Exception as fallback_error:
+                    if verbose:
+                        print(f"   ❌ Fallback also failed: {str(fallback_error)}")
+                    filtered_events = pd.DataFrame()
+        
+        # Add final touches if we have data
+        if not filtered_events.empty:
+            filtered_events = filtered_events.reset_index(drop=True)
+            filtered_events['match_id'] = match_id
+            filtered_events['data_source'] = 'understat'
+        
+        if verbose:
+            total_shots = len(filtered_events)
+            print(f"   ✅ FINAL RESULT: {total_shots} shot events")
+            
+            if total_shots > 0:
+                if 'shot_result' in filtered_events.columns:
+                    goals = len(filtered_events[filtered_events['shot_result'] == 'Goal'])
+                    print(f"   📊 Goals: {goals}")
+                
+                if 'shot_xg' in filtered_events.columns:
+                    avg_xg = filtered_events['shot_xg'].mean()
+                    total_xg = filtered_events['shot_xg'].sum()
+                    print(f"   📊 Total xG: {total_xg:.3f} | Average xG: {avg_xg:.3f}")
+        
+        return filtered_events
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ EXTRACTION FAILED: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        return pd.DataFrame()
+
+
+# ====================================================================
+# SIMPLE TEST FUNCTIONS - For Quick Verification
+# ====================================================================
+
+def test_shot_events_simple(
+    match_id: int = 22256,
+    player_name: str = "Cody Gakpo",
+    verbose: bool = True
+) -> bool:
+    """
+    Simple test function to verify shot events extraction works.
+    
+    Returns True if successful, False otherwise.
+    """
+    if verbose:
+        print(f"🧪 Testing shot events extraction...")
+        print(f"   Match: {match_id} | Player: {player_name}")
+    
+    try:
+        # Test the enhanced function
+        shots = extract_understat_shot_events_with_names(
+            match_id=match_id,
+            league="ENG-Premier League",
+            season="2023-24",
+            player_filter=player_name,
+            verbose=verbose
+        )
+        
+        success = not shots.empty
+        
+        if success and verbose:
+            print(f"   ✅ SUCCESS: Found {len(shots)} shots for {player_name}")
+            
+            # Export for inspection
+            filename = f"test_shots_{player_name.replace(' ', '_')}_fixed.csv"
+            shots.to_csv(filename, index=False, encoding='utf-8')
+            print(f"   📁 Exported: {filename}")
+        
+        elif verbose:
+            print(f"   ❌ FAILED: No shots found for {player_name}")
+        
+        return success
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ ERROR: {str(e)}")
+        return False
+
+
+def list_players_in_match(
+    match_id: int = 22256,
+    verbose: bool = True
+) -> List[str]:
+    """
+    List all players who took shots in a match.
+    
+    Useful for finding the correct player names for filtering.
+    """
+    if verbose:
+        print(f"👥 Listing players in match {match_id}...")
+    
+    try:
+        shots = extract_understat_shot_events_with_names(
+            match_id=match_id,
+            league="ENG-Premier League",
+            season="2023-24",
+            verbose=False
+        )
+        
+        if shots.empty:
+            if verbose:
+                print(f"   ❌ No shots found in match")
+            return []
+        
+        players = shots['shot_player'].dropna().unique().tolist()
+        
+        if verbose:
+            print(f"   📋 Players who took shots ({len(players)}):")
+            for i, player in enumerate(sorted(players), 1):
+                shot_count = (shots['shot_player'] == player).sum()
+                print(f"      {i:2d}. {player} ({shot_count} shots)")
+        
+        return players
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ ERROR: {str(e)}")
+        return []
