@@ -1,3 +1,0 @@
-league_id,season_id,match_id,shot_date,shot_id,team_id,player_id,assist_player_id,assist_player,shot_xg,shot_location_x,shot_location_y,shot_minute,shot_body_part,shot_situation,shot_result,shot_player,shot_team,is_goal,is_on_target,shot_zone,data_source
-1,2023,22256,2024-05-13 19:00:00,580900,87,11296,661857,Alexis Mac Allister,0.05733807757496834,0.9080000305175782,0.4829999923706055,4,,From Corner,Missed Shot,Cody Gakpo,Liverpool,0,0,Central Box,understat
-1,2023,22256,2024-05-13 19:00:00,580906,87,11296,,,0.7448253035545349,0.965,0.49200000762939455,22,Right Foot,Open Play,Goal,Cody Gakpo,Liverpool,1,1,Central Box,understat
