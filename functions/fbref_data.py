@@ -940,3 +940,551 @@ def extract_full_squad_analysis(
         export_to_csv(squad_df, filename)
     
     return squad_df
+
+# ====================================================================
+# TEAM DATA PROCESSING
+# ====================================================================
+
+def extract_team_season_stats(
+    team_name: str, 
+    league: str, 
+    season: str,
+    include_keeper_stats: bool = True,
+    include_opponent_stats: bool = False,
+    verbose: bool = False
+) -> Optional[Dict]:
+    """
+    Extract complete season statistics for a single team.
+    
+    This is your go-to function for comprehensive team analysis.
+    
+    Args:
+        team_name: Team name (e.g., "Real Madrid", "Manchester City")
+        league: League ID (e.g., "ESP-La Liga", "ENG-Premier League")
+        season: Season ID (e.g., "2024-25", "2023-24")
+        include_keeper_stats: Include goalkeeper metrics if available
+        include_opponent_stats: Include opponent statistics
+        verbose: Show detailed extraction progress
+        
+    Returns:
+        Dictionary with standardized team statistics or None if not found
+        
+    Example:
+        >>> stats = extract_team_season_stats("Real Madrid", "ESP-La Liga", "2024-25")
+        >>> print(f"Goals scored: {stats['goals']} | Goals conceded: {stats['goals_against']}")
+    """
+    if verbose:
+        print(f"🔍 Extracting season data for {team_name}")
+        print(f"   League: {league} | Season: {season}")
+    
+    # Configure stat types for comprehensive team analysis
+    stat_types = [
+        'standard',          # Core stats: goals, wins, points, goal difference
+        'shooting',          # Shot metrics: attempts, accuracy, xG
+        'passing',           # Pass metrics: completion, distance, key passes
+        'passing_types',     # Pass types: live/dead, crosses, corners
+        'goal_shot_creation', # Creation metrics: SCA, GCA
+        'defense',           # Defensive actions: tackles, interceptions
+        'possession',        # Ball control: touches, carries, take-ons
+        'playing_time',      # Squad rotation and usage patterns
+        'misc'               # Additional: fouls, cards, offsides
+    ]
+    
+    if include_keeper_stats:
+        stat_types.extend(['keeper', 'keeper_adv'])
+    
+    return _extract_team_data(
+        team_name=team_name,
+        league=league,
+        season=season,
+        stat_types=stat_types,
+        include_opponent_stats=include_opponent_stats,
+        verbose=verbose
+    )
+    
+def extract_league_players(
+    league: str,
+    season: str,
+    team_filter: Optional[str] = None,
+    position_filter: Optional[str] = None,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Extract all player names from a league or specific team in a season.
+    
+    Perfect for building player databases and squad analysis preparation.
+    
+    Args:
+        league: League ID (e.g., "ESP-La Liga", "ENG-Premier League")
+        season: Season ID (e.g., "2024-25", "2023-24")
+        team_filter: Optional team name to filter players (e.g., "Real Madrid")
+        position_filter: Optional position filter (e.g., "FW", "MF", "DF", "GK")
+        verbose: Show detailed extraction progress
+        
+    Returns:
+        DataFrame with player names, teams, positions, and basic info
+        
+    Example:
+        >>> # Get all La Liga players
+        >>> all_players = extract_league_players("ESP-La Liga", "2024-25")
+        >>> 
+        >>> # Get only Real Madrid players
+        >>> rm_players = extract_league_players("ESP-La Liga", "2024-25", 
+        ...                                     team_filter="Real Madrid")
+        >>> 
+        >>> # Get all forwards in the league
+        >>> forwards = extract_league_players("ESP-La Liga", "2024-25", 
+        ...                                   position_filter="FW")
+    """
+    if verbose:
+        print(f"🔍 Extracting player list from {league} {season}")
+        if team_filter:
+            print(f"   Team filter: {team_filter}")
+        if position_filter:
+            print(f"   Position filter: {position_filter}")
+    
+    try:
+        # Initialize FBref extractor
+        fbref = FBref(leagues=[league], seasons=[season])
+        
+        if verbose:
+            print(f"   📊 Reading player database...")
+        
+        # Get basic player stats to extract names and info
+        player_stats = fbref.read_player_season_stats(stat_type='standard')
+        
+        if player_stats is None or player_stats.empty:
+            if verbose:
+                print(f"   ❌ No players found in {league} {season}")
+            return pd.DataFrame()
+        
+        # Extract player information
+        players_df = player_stats.reset_index()
+        
+        # Apply team filter if specified
+        if team_filter:
+            original_count = len(players_df)
+            players_df = players_df[
+                players_df['team'].str.contains(team_filter, case=False, na=False)
+            ]
+            if verbose:
+                print(f"   🔍 Team filter applied: {len(players_df)}/{original_count} players")
+        
+        # Apply position filter if specified
+        if position_filter:
+            original_count = len(players_df)
+            # Handle multi-position players (e.g., "FW,MF")
+            players_df = players_df[
+                players_df['pos'].str.contains(position_filter, case=False, na=False)
+            ]
+            if verbose:
+                print(f"   🔍 Position filter applied: {len(players_df)}/{original_count} players")
+        
+        # Select and standardize columns
+        result_df = players_df[['player', 'team', 'league', 'season']].copy()
+        
+        # Add additional info if available
+        if 'pos' in players_df.columns:
+            result_df['position'] = players_df['pos']
+        if 'age' in players_df.columns:
+            result_df['age'] = players_df['age']
+        if 'nation' in players_df.columns:
+            result_df['nationality'] = players_df['nation']
+        
+        # Sort by team and player name for easy reading
+        result_df = result_df.sort_values(['team', 'player'])
+        
+        if verbose:
+            print(f"   ✅ SUCCESS: Found {len(result_df)} players")
+            if len(result_df) > 0:
+                teams_count = result_df['team'].nunique()
+                print(f"   📊 Across {teams_count} teams")
+        
+        return result_df
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ EXTRACTION FAILED: {str(e)}")
+        return pd.DataFrame()
+    
+def _extract_team_data(
+    team_name: str,
+    league: str,
+    season: str,
+    stat_types: List[str],
+    include_opponent_stats: bool = False,
+    verbose: bool = False
+) -> Optional[Dict]:
+    """
+    Core team extraction engine that handles comprehensive team statistics.
+    
+    This unified approach ensures consistent data structure and processing
+    for team-level analysis across different stat categories.
+    """
+    try:
+        # Initialize FBref extractor
+        fbref = FBref(leagues=[league], seasons=[season])
+        
+        team_data = {}
+        basic_info = {}
+        stats_extracted = 0
+        
+        # Process each stat type systematically
+        for i, stat_type in enumerate(stat_types, 1):
+            if verbose:
+                print(f"   [{i}/{len(stat_types)}] Processing {stat_type}...")
+            
+            try:
+                # Extract team season stats
+                team_stats = fbref.read_team_season_stats(
+                    stat_type=stat_type, 
+                    opponent_stats=False
+                )
+                team_row = _find_team_in_stats(team_stats, team_name)
+                
+                if team_row is not None:
+                    # Capture basic info on first successful extraction
+                    if not basic_info:
+                        basic_info = _extract_team_basic_info(
+                            team_row, team_name, league, season
+                        )
+                    
+                    # Extract all statistics from this stat type
+                    cols_added = _process_team_columns(team_row, team_data, 'for')
+                    stats_extracted += 1
+                    
+                    if verbose:
+                        print(f"      ✅ Extracted {cols_added} fields from {stat_type}")
+                else:
+                    if verbose:
+                        print(f"      ⚠️  Team not found in {stat_type}")
+                
+                # Extract opponent stats if requested
+                if include_opponent_stats:
+                    try:
+                        opponent_stats = fbref.read_team_season_stats(
+                            stat_type=stat_type, 
+                            opponent_stats=True
+                        )
+                        opponent_row = _find_team_in_stats(opponent_stats, team_name)
+                        
+                        if opponent_row is not None:
+                            cols_added = _process_team_columns(opponent_row, team_data, 'against')
+                            if verbose:
+                                print(f"      ✅ Extracted {cols_added} opponent fields from {stat_type}")
+                    except Exception:
+                        if verbose:
+                            print(f"      ⚠️  Opponent stats not available for {stat_type}")
+                        
+            except Exception as e:
+                if verbose:
+                    print(f"      ❌ Error with {stat_type}: {str(e)[:50]}...")
+                continue
+        
+        # Validate extraction success
+        if not basic_info:
+            if verbose:
+                print(f"   ❌ Team '{team_name}' not found in {league} {season}")
+            return None
+        
+        # Combine and standardize data
+        final_data = {**basic_info, **team_data}
+        standardized_data = _apply_team_stat_mapping(final_data)
+        
+        if verbose:
+            print(f"   ✅ SUCCESS: Extracted {len(standardized_data)} total fields")
+            print(f"   📊 Stats types processed: {stats_extracted}/{len(stat_types)}")
+        
+        return standardized_data
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ EXTRACTION FAILED: {str(e)}")
+        return None
+    
+# ====================================================================
+# TEAM DATA PROCESSING UTILITIES - Team-specific helpers
+# ====================================================================
+
+def _find_team_in_stats(stats: pd.DataFrame, team_name: str) -> Optional[pd.DataFrame]:
+    """Search for team in statistics with flexible name matching."""
+    if stats is None or stats.empty:
+        return None
+    
+    # Generate comprehensive team name variations
+    variations = _generate_team_name_variations(team_name)
+    
+    # Try exact matches first (most reliable)
+    for variation in variations:
+        matches = stats[
+            stats.index.get_level_values('team').str.lower() == variation.lower()
+        ]
+        if not matches.empty:
+            return matches
+    
+    # Then try partial matches (broader search)
+    for variation in variations:
+        matches = stats[
+            stats.index.get_level_values('team').str.contains(
+                variation, case=False, na=False, regex=False
+            )
+        ]
+        if not matches.empty:
+            return matches
+    
+    return None
+
+
+def _generate_team_name_variations(team_name: str) -> List[str]:
+    """
+    Generate comprehensive team name variations for robust matching.
+    
+    Handles common team name formats, abbreviations, and international variations.
+    """
+    variations = [team_name]
+    
+    # Remove common suffixes
+    suffixes_to_remove = [' FC', ' CF', ' United', ' City', ' Real', ' Club']
+    for suffix in suffixes_to_remove:
+        if team_name.endswith(suffix):
+            variations.append(team_name[:-len(suffix)])
+    
+    # Add common abbreviations
+    if ' ' in team_name:
+        parts = team_name.split()
+        # First letters of each word
+        abbreviation = ''.join([part[0] for part in parts])
+        variations.append(abbreviation)
+        
+        # First and last word
+        if len(parts) > 1:
+            variations.append(f"{parts[0]} {parts[-1]}")
+    
+    # Handle specific common variations
+    common_variations = {
+        'Real Madrid': ['Madrid', 'Real Madrid CF'],
+        'Barcelona': ['Barça', 'FC Barcelona', 'Barca'],
+        'Manchester United': ['Man United', 'Man Utd', 'United'],
+        'Manchester City': ['Man City', 'City'],
+        'Tottenham': ['Spurs', 'Tottenham Hotspur'],
+        'Arsenal': ['Arsenal FC', 'Gunners']
+    }
+    
+    if team_name in common_variations:
+        variations.extend(common_variations[team_name])
+    
+    # Remove duplicates while preserving order
+    return list(dict.fromkeys(variations))
+
+
+def _extract_team_basic_info(
+    team_row: pd.DataFrame,
+    team_name: str,
+    league: str,
+    season: str
+) -> Dict:
+    """Extract and standardize basic team information."""
+    return {
+        'team_name': team_name,
+        'league': league,
+        'season': season,
+        'official_team_name': team_row.index.get_level_values('team')[0]
+    }
+
+
+def _process_team_columns(team_row: pd.DataFrame, team_data: Dict, prefix: str) -> int:
+    """Process all columns from a team row, adding prefix for opponent stats."""
+    cols_added = 0
+    
+    for col in team_row.columns:
+        clean_name = _clean_column_name(col)
+        
+        # Add prefix for opponent stats
+        if prefix == 'against':
+            clean_name = f"opponent_{clean_name}"
+        
+        value = team_row.iloc[0][col]
+        
+        # Avoid overwriting existing data (first occurrence wins)
+        if clean_name not in team_data:
+            team_data[clean_name] = value
+            cols_added += 1
+    
+    return cols_added
+
+
+def _apply_team_stat_mapping(team_data: Dict) -> Dict:
+    """
+    Apply standardized naming convention to all team statistics.
+    
+    Ensures consistent column names for team-level analysis.
+    """
+    team_stat_mapping = _get_team_stat_mapping()
+    standardized_data = {}
+    
+    for original_name, value in team_data.items():
+        standardized_name = team_stat_mapping.get(original_name, original_name)
+        standardized_data[standardized_name] = value
+    
+    return standardized_data
+
+
+def _get_team_stat_mapping() -> Dict[str, str]:
+    """
+    Comprehensive mapping for team-specific statistics.
+    
+    Extends the player mapping with team-specific metrics.
+    """
+    # Start with base player mapping
+    base_mapping = _get_stat_mapping()
+    
+    # Add team-specific mappings
+    team_specific = {
+        # ===== TEAM PERFORMANCE =====
+        'W': 'wins',
+        'D': 'draws',
+        'L': 'losses',
+        'Pts': 'points',
+        'Pts/MP': 'points_per_match',
+        'GF': 'goals_for',
+        'GA': 'goals_against',
+        'GD': 'goal_difference',
+        'xGF': 'expected_goals_for',
+        'xGA': 'expected_goals_against',
+        'xGD': 'expected_goal_difference',
+        'xGD/90': 'expected_goal_difference_per_90',
+        
+        # ===== SQUAD STATS =====
+        'Squad': 'squad_size',
+        'Age': 'average_age',
+        'Poss': 'possession_percentage',
+        '# Pl': 'players_used',
+        
+        # ===== OPPONENT PREFIXED STATS =====
+        'opponent_goals': 'goals_conceded',
+        'opponent_shots': 'shots_conceded',
+        'opponent_shots_on_target': 'shots_on_target_conceded',
+        'opponent_passes_completed': 'opponent_passes_completed',
+        'opponent_possession_percentage': 'opponent_possession_percentage'
+    }
+    
+    # Combine mappings
+    combined_mapping = {**base_mapping, **team_specific}
+    return combined_mapping
+
+
+# ====================================================================
+# CONVENIENCE FUNCTIONS - Team-specific quick access
+# ====================================================================
+
+def get_team_season(team_name: str, league: str, season: str) -> Optional[Dict]:
+    """Quick team season stats extraction without verbose output."""
+    return extract_team_season_stats(team_name, league, season, verbose=False)
+
+
+def get_all_players(league: str, season: str, team_filter: Optional[str] = None) -> pd.DataFrame:
+    """Quick player list extraction without verbose output."""
+    return extract_league_players(league, season, team_filter=team_filter, verbose=False)
+
+
+def get_team_squad(team_name: str, league: str, season: str) -> pd.DataFrame:
+    """Get all players from a specific team."""
+    return extract_league_players(league, season, team_filter=team_name, verbose=False)
+
+
+# ====================================================================
+# TEAM BATCH PROCESSING - Advanced team operations
+# ====================================================================
+
+def extract_multiple_teams_season(
+    teams: List[str],
+    league: str,
+    season: str,
+    include_opponent_stats: bool = False,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Extract season statistics for multiple teams efficiently.
+    
+    Ideal for league analysis and team comparisons.
+    
+    Args:
+        teams: List of team names
+        league: League identifier
+        season: Season identifier
+        include_opponent_stats: Include opponent statistics
+        verbose: Show extraction progress
+        
+    Returns:
+        DataFrame with all teams' statistics, standardized column order
+        
+    Example:
+        >>> teams = ["Real Madrid", "Barcelona", "Atletico Madrid"]
+        >>> df = extract_multiple_teams_season(teams, "ESP-La Liga", "2024-25")
+    """
+    if verbose:
+        print(f"🔍 Extracting season data for {len(teams)} teams from {league} {season}")
+    
+    all_data = []
+    successful_extractions = 0
+    
+    for i, team_name in enumerate(teams, 1):
+        if verbose:
+            print(f"\n[{i}/{len(teams)}] Processing {team_name}")
+        
+        team_data = extract_team_season_stats(
+            team_name, league, season, 
+            include_opponent_stats=include_opponent_stats, 
+            verbose=False
+        )
+        
+        if team_data:
+            all_data.append(team_data)
+            successful_extractions += 1
+        elif verbose:
+            print(f"   ❌ Failed to extract data for {team_name}")
+    
+    if verbose:
+        print(f"\n✅ SUMMARY: {successful_extractions}/{len(teams)} teams extracted successfully")
+    
+    # Create DataFrame with standardized column order
+    df = pd.DataFrame(all_data) if all_data else pd.DataFrame()
+    return _standardize_team_dataframe_columns(df)
+
+
+def _standardize_team_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Ensure consistent column ordering for team DataFrames.
+    
+    Priority order: basic info → performance → advanced metrics → opponent stats
+    """
+    if df.empty:
+        return df
+    
+    # Define standard column order for team DataFrames
+    priority_columns = [
+        # Basic identification
+        'team_name', 'official_team_name', 'league', 'season',
+        # Core performance metrics
+        'wins', 'draws', 'losses', 'points', 'points_per_match',
+        'goals_for', 'goals_against', 'goal_difference',
+        'matches_played', 'players_used', 'average_age',
+        # Advanced performance
+        'expected_goals_for', 'expected_goals_against', 'expected_goal_difference',
+        'possession_percentage', 'shots', 'shots_on_target',
+        # Passing and creation
+        'passes_completed', 'passes_attempted', 'pass_completion_pct',
+        'key_passes', 'shot_creating_actions',
+        # Defensive metrics
+        'tackles', 'interceptions', 'clearances',
+        # Disciplinary
+        'yellow_cards', 'red_cards', 'fouls_committed'
+    ]
+    
+    # Organize columns: priority first, then remaining alphabetically
+    available_priority = [col for col in priority_columns if col in df.columns]
+    remaining_columns = sorted([col for col in df.columns if col not in priority_columns])
+    
+    final_column_order = available_priority + remaining_columns
+    
+    return df[final_column_order]
