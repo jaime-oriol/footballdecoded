@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Union, Tuple
 
 # Add extractors to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from extractors import FBref
+from scrappers import FBref
 
 # Suppress pandas warnings for cleaner output
 warnings.filterwarnings('ignore', category=FutureWarning, 
