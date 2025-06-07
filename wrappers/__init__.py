@@ -8,139 +8,88 @@ Focus: FBref complete stats, Understat advanced metrics, WhoScored spatial data.
 
 __version__ = "1.0.0"
 
-# Import error handling
-try:
-    # FBref wrapper functions - ONLY EXISTING FUNCTIONS
-    from .fbref_data import (
-        extract_player_season as fbref_extract_player_season,
-        extract_player_match as fbref_extract_player_match,
-        extract_multiple_players as fbref_extract_multiple_players,
-        extract_league_players as fbref_extract_league_players,
-        extract_team_season as fbref_extract_team_season,
-        extract_multiple_teams as fbref_extract_multiple_teams,
-        extract_match_events as fbref_extract_match_events,
-        extract_league_schedule as fbref_extract_league_schedule,
-        analyze_full_squad as fbref_analyze_full_squad,
-        compare_teams as fbref_compare_teams,
-        analyze_league as fbref_analyze_league,
-        export_to_csv as fbref_export_to_csv,
-        get_player as fbref_get_player,
-        get_team as fbref_get_team,
-        get_players as fbref_get_players,
-        get_teams as fbref_get_teams,
-        get_league_players as fbref_get_league_players,
-        get_match_data as fbref_get_match_data,
-        get_schedule as fbref_get_schedule
-    )
-except ImportError as e:
-    print(f"⚠️  Warning: FBref wrapper import failed - {e}")
-    # Provide dummy functions to avoid breaking imports
-    def _dummy_function(*args, **kwargs):
-        raise ImportError("FBref wrapper not available. Install missing dependencies.")
-    
-    fbref_extract_player_season = _dummy_function
-    fbref_extract_player_match = _dummy_function
-    fbref_extract_multiple_players = _dummy_function
-    fbref_extract_league_players = _dummy_function
-    fbref_extract_team_season = _dummy_function
-    fbref_extract_multiple_teams = _dummy_function
-    fbref_extract_match_events = _dummy_function
-    fbref_extract_league_schedule = _dummy_function
-    fbref_analyze_full_squad = _dummy_function
-    fbref_compare_teams = _dummy_function
-    fbref_analyze_league = _dummy_function
-    fbref_export_to_csv = _dummy_function
-    fbref_get_player = _dummy_function
-    fbref_get_team = _dummy_function
-    fbref_get_players = _dummy_function
-    fbref_get_teams = _dummy_function
-    fbref_get_league_players = _dummy_function
-    fbref_get_match_data = _dummy_function
-    fbref_get_schedule = _dummy_function
+# ====================================================================
+# FBREF WRAPPER IMPORTS
+# ====================================================================
 
-try:
-    # Understat wrapper functions
-    from .understat_data import (
-        extract_player_season as understat_extract_player_season,
-        extract_multiple_players as understat_extract_multiple_players,
-        extract_team_season as understat_extract_team_season,
-        extract_multiple_teams as understat_extract_multiple_teams,
-        extract_shot_events as understat_extract_shot_events,
-        merge_with_fbref as understat_merge_with_fbref,
-        export_to_csv as understat_export_to_csv,
-        get_player as understat_get_player,
-        get_team as understat_get_team,
-        get_squad as understat_get_squad,
-        get_shots as understat_get_shots
-    )
-except ImportError as e:
-    print(f"⚠️  Warning: Understat wrapper import failed - {e}")
-    # Provide dummy functions
-    def _dummy_function(*args, **kwargs):
-        raise ImportError("Understat wrapper not available. Install missing dependencies.")
-    
-    understat_extract_player_season = _dummy_function
-    understat_extract_multiple_players = _dummy_function
-    understat_extract_team_season = _dummy_function
-    understat_extract_multiple_teams = _dummy_function
-    understat_extract_shot_events = _dummy_function
-    understat_merge_with_fbref = _dummy_function
-    understat_export_to_csv = _dummy_function
-    understat_get_player = _dummy_function
-    understat_get_team = _dummy_function
-    understat_get_squad = _dummy_function
-    understat_get_shots = _dummy_function
+from .fbref_data import (
+    extract_player_season as fbref_extract_player_season,
+    extract_player_match as fbref_extract_player_match,
+    extract_multiple_players as fbref_extract_multiple_players,
+    extract_league_players as fbref_extract_league_players,
+    extract_team_season as fbref_extract_team_season,
+    extract_multiple_teams as fbref_extract_multiple_teams,
+    extract_match_events as fbref_extract_match_events,
+    extract_league_schedule as fbref_extract_league_schedule,
+    analyze_full_squad as fbref_analyze_full_squad,
+    compare_teams as fbref_compare_teams,
+    analyze_league as fbref_analyze_league,
+    export_to_csv as fbref_export_to_csv,
+    get_player as fbref_get_player,
+    get_team as fbref_get_team,
+    get_players as fbref_get_players,
+    get_teams as fbref_get_teams,
+    get_league_players as fbref_get_league_players,
+    get_match_data as fbref_get_match_data,
+    get_schedule as fbref_get_schedule
+)
 
-try:
-    # WhoScored wrapper functions
-    from .whoscored_data import (
-        extract_match_events as whoscored_extract_match_events,
-        extract_player_heatmap as whoscored_extract_player_heatmap,
-        extract_defensive_events as whoscored_extract_defensive_events,
-        extract_pass_network as whoscored_extract_pass_network,
-        extract_shot_map as whoscored_extract_shot_map,
-        extract_team_match_analysis as whoscored_extract_team_match_analysis,
-        extract_match_momentum as whoscored_extract_match_momentum,
-        extract_league_schedule as whoscored_extract_league_schedule,
-        extract_match_missing_players as whoscored_extract_match_missing_players,
-        export_to_csv as whoscored_export_to_csv,
-        get_match_events as whoscored_get_match_events,
-        get_player_heatmap as whoscored_get_player_heatmap,
-        get_defensive_events as whoscored_get_defensive_events,
-        get_pass_network as whoscored_get_pass_network,
-        get_shot_map as whoscored_get_shot_map,
-        get_schedule as whoscored_get_schedule,
-        get_missing_players as whoscored_get_missing_players,
-        get_team_analysis as whoscored_get_team_analysis,
-        get_momentum as whoscored_get_momentum
-    )
-except ImportError as e:
-    print(f"⚠️  Warning: WhoScored wrapper import failed - {e}")
-    # Provide dummy functions
-    def _dummy_function(*args, **kwargs):
-        raise ImportError("WhoScored wrapper not available. Install missing dependencies.")
-    
-    whoscored_extract_match_events = _dummy_function
-    whoscored_extract_player_heatmap = _dummy_function
-    whoscored_extract_defensive_events = _dummy_function
-    whoscored_extract_pass_network = _dummy_function
-    whoscored_extract_shot_map = _dummy_function
-    whoscored_extract_team_match_analysis = _dummy_function
-    whoscored_extract_match_momentum = _dummy_function
-    whoscored_extract_league_schedule = _dummy_function
-    whoscored_extract_match_missing_players = _dummy_function
-    whoscored_export_to_csv = _dummy_function
-    whoscored_get_match_events = _dummy_function
-    whoscored_get_player_heatmap = _dummy_function
-    whoscored_get_defensive_events = _dummy_function
-    whoscored_get_pass_network = _dummy_function
-    whoscored_get_shot_map = _dummy_function
-    whoscored_get_schedule = _dummy_function
-    whoscored_get_missing_players = _dummy_function
-    whoscored_get_team_analysis = _dummy_function
-    whoscored_get_momentum = _dummy_function
+# ====================================================================
+# UNDERSTAT WRAPPER IMPORTS
+# ====================================================================
 
-# All available functions for star import - ONLY EXISTING FUNCTIONS
+from .understat_data import (
+    extract_player_season as understat_extract_player_season,
+    extract_multiple_players as understat_extract_multiple_players,
+    extract_team_season as understat_extract_team_season,
+    extract_multiple_teams as understat_extract_multiple_teams,
+    extract_shot_events as understat_extract_shot_events,
+    merge_with_fbref as understat_merge_with_fbref,
+    export_to_csv as understat_export_to_csv,
+    get_player as understat_get_player,
+    get_team as understat_get_team,
+    get_squad as understat_get_squad,
+    get_shots as understat_get_shots
+)
+
+# ====================================================================
+# WHOSCORED WRAPPER IMPORTS
+# ====================================================================
+
+from .whoscored_data import (
+    # Core spatial event extraction
+    extract_match_events as whoscored_extract_match_events,
+    extract_pass_network as whoscored_extract_pass_network,
+    extract_player_heatmap as whoscored_extract_player_heatmap,
+    extract_defensive_events as whoscored_extract_defensive_events,
+    extract_shot_map as whoscored_extract_shot_map,
+    extract_match_momentum as whoscored_extract_match_momentum,
+    extract_field_occupation as whoscored_extract_field_occupation,
+    
+    # Schedule and context
+    extract_league_schedule as whoscored_extract_league_schedule,
+    extract_match_missing_players as whoscored_extract_match_missing_players,
+    
+    # Export utilities
+    export_to_csv as whoscored_export_to_csv,
+    
+    # Quick access functions
+    get_match_events as whoscored_get_match_events,
+    get_match_events_viz as whoscored_get_match_events_viz,
+    get_pass_network as whoscored_get_pass_network,
+    get_player_heatmap as whoscored_get_player_heatmap,
+    get_defensive_events as whoscored_get_defensive_events,
+    get_shot_map as whoscored_get_shot_map,
+    get_field_occupation as whoscored_get_field_occupation,
+    get_match_momentum as whoscored_get_match_momentum,
+    get_schedule as whoscored_get_schedule,
+    get_missing_players as whoscored_get_missing_players
+)
+
+# ====================================================================
+# ALL AVAILABLE FUNCTIONS
+# ====================================================================
+
 __all__ = [
     # FBref wrapper functions
     "fbref_extract_player_season",
@@ -176,29 +125,33 @@ __all__ = [
     "understat_get_squad",
     "understat_get_shots",
     
-    # WhoScored wrapper functions
+    # WhoScored wrapper functions - UPDATED
     "whoscored_extract_match_events",
+    "whoscored_extract_pass_network",
     "whoscored_extract_player_heatmap",
     "whoscored_extract_defensive_events",
-    "whoscored_extract_pass_network",
     "whoscored_extract_shot_map",
-    "whoscored_extract_team_match_analysis",
     "whoscored_extract_match_momentum",
+    "whoscored_extract_field_occupation",
     "whoscored_extract_league_schedule",
     "whoscored_extract_match_missing_players",
     "whoscored_export_to_csv",
     "whoscored_get_match_events",
+    "whoscored_get_match_events_viz",
+    "whoscored_get_pass_network",
     "whoscored_get_player_heatmap",
     "whoscored_get_defensive_events",
-    "whoscored_get_pass_network",
     "whoscored_get_shot_map",
+    "whoscored_get_field_occupation",
+    "whoscored_get_match_momentum",
     "whoscored_get_schedule",
-    "whoscored_get_missing_players",
-    "whoscored_get_team_analysis",
-    "whoscored_get_momentum"
+    "whoscored_get_missing_players"
 ]
 
-# Helper function to check available modules
+# ====================================================================
+# HELPER FUNCTIONS
+# ====================================================================
+
 def check_available_modules():
     """Check which modules are available and working."""
     modules_status = {}
@@ -216,17 +169,9 @@ def check_available_modules():
         modules_status['understat'] = f"❌ Error: {e}"
     
     try:
-        from . import whoscored_data
+        from . import whoscored_data_optimized
         modules_status['whoscored'] = "✅ Available"
     except ImportError as e:
         modules_status['whoscored'] = f"❌ Error: {e}"
     
     return modules_status
-
-# Print module status on import (for debugging)
-if __name__ != "__main__":
-    import os
-    if os.environ.get('FOOTBALLDECODED_DEBUG'):
-        print("🔍 FootballDecoded Wrappers Status:")
-        for module, status in check_available_modules().items():
-            print(f"   {module}: {status}")
