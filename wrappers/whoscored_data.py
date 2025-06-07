@@ -1,8 +1,8 @@
 # ====================================================================
-# FootballDecoded - WhoScored Spatial Events Extractor
+# FootballDecoded - WhoScored Professional Spatial Events Extractor
 # ====================================================================
 # Specialized wrapper for extracting ALL spatial/coordinate data from WhoScored
-# Focus: x/y coordinates, heat maps, defensive events, dribbles, momentum analysis
+# Focus: x/y coordinates, heat maps, defensive events, pass networks, momentum
 # ====================================================================
 
 import sys
@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 
 # ====================================================================
-# MATCH EVENTS - Complete Spatial Analysis
+# MATCH EVENTS EXTRACTION
 # ====================================================================
 
 def extract_match_events(
@@ -61,7 +61,6 @@ def extract_match_events(
         if verbose:
             print(f"   📊 Reading event stream...")
         
-        # Extract raw events with all spatial data
         events_df = whoscored.read_events(match_id=match_id, output_fmt='events')
         
         if events_df is None or events_df.empty:
@@ -299,7 +298,7 @@ def extract_shot_map(
     verbose: bool = False
 ) -> pd.DataFrame:
     """
-    Extract detailed shot map with xG, coordinates, and outcome analysis.
+    Extract detailed shot map with coordinates and outcome analysis.
     
     Args:
         match_id: WhoScored match identifier
@@ -310,7 +309,7 @@ def extract_shot_map(
         verbose: Show extraction progress
         
     Returns:
-        DataFrame with shot locations, xG values, and tactical context
+        DataFrame with shot locations and tactical context
     """
     if verbose:
         print(f"⚽ Creating shot map for match {match_id}")
@@ -329,7 +328,7 @@ def extract_shot_map(
             print(f"   ❌ No shot events found")
         return pd.DataFrame()
     
-    # Enhance shots with xG and spatial analysis
+    # Enhance shots with spatial analysis
     enhanced_shots = _analyze_shot_events(shot_events)
     
     if verbose and not enhanced_shots.empty:
@@ -344,7 +343,7 @@ def extract_shot_map(
 
 
 # ====================================================================
-# TEAM ANALYSIS - Match-specific Performance
+# TEAM ANALYSIS FUNCTIONS
 # ====================================================================
 
 def extract_team_match_analysis(
@@ -404,6 +403,114 @@ def extract_team_match_analysis(
     return results
 
 
+def extract_match_momentum(
+    match_id: int,
+    league: str,
+    season: str,
+    time_intervals: int = 15,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Extract match momentum analysis based on event frequency and success.
+    
+    Args:
+        match_id: WhoScored match identifier
+        league: League identifier
+        season: Season identifier
+        time_intervals: Time interval in minutes for momentum analysis
+        verbose: Show progress
+        
+    Returns:
+        DataFrame with momentum analysis by time periods
+    """
+    if verbose:
+        print(f"📊 Extracting momentum analysis for match {match_id}")
+    
+    # Get all events
+    events = extract_match_events(match_id, league, season, verbose=False)
+    
+    if events.empty:
+        if verbose:
+            print(f"   ❌ No events found")
+        return pd.DataFrame()
+    
+    # Create time intervals
+    events['time_interval'] = (events['minute'] // time_intervals) * time_intervals
+    
+    # Calculate momentum by team and time interval
+    momentum_data = []
+    
+    for team in events['team'].unique():
+        team_events = events[events['team'] == team]
+        
+        for interval in range(0, 90, time_intervals):
+            interval_events = team_events[
+                (team_events['time_interval'] == interval)
+            ]
+            
+            if not interval_events.empty:
+                momentum_data.append({
+                    'team': team,
+                    'time_interval': f"{interval}-{interval + time_intervals}",
+                    'total_events': len(interval_events),
+                    'successful_events': len(interval_events[interval_events.get('is_successful', False)]),
+                    'success_rate': len(interval_events[interval_events.get('is_successful', False)]) / len(interval_events) * 100,
+                    'attacking_events': len(interval_events[interval_events['field_zone'].str.contains('Attacking', na=False)]),
+                    'defensive_events': len(interval_events[interval_events['field_zone'].str.contains('Defensive', na=False)]),
+                    'middle_events': len(interval_events[interval_events['field_zone'].str.contains('Middle', na=False)])
+                })
+    
+    momentum_df = pd.DataFrame(momentum_data)
+    
+    if verbose and not momentum_df.empty:
+        print(f"   ✅ Momentum analysis: {len(momentum_df)} time intervals analyzed")
+    
+    return momentum_df
+
+
+# ====================================================================
+# SCHEDULE AND CONTEXT DATA
+# ====================================================================
+
+def extract_league_schedule(
+    league: str,
+    season: str,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Extract complete league schedule for match ID discovery.
+    
+    Essential for finding match IDs for detailed analysis.
+    
+    Args:
+        league: League identifier
+        season: Season identifier
+        verbose: Show extraction progress
+        
+    Returns:
+        DataFrame with league schedule and match IDs
+    """
+    if verbose:
+        print(f"📅 Extracting schedule for {league} {season}")
+    
+    try:
+        whoscored = WhoScored(leagues=[league], seasons=[season])
+        schedule = whoscored.read_schedule()
+        
+        if verbose and not schedule.empty:
+            total_matches = len(schedule)
+            completed_matches = len(schedule[schedule['score'].notna()])
+            
+            print(f"   ✅ Schedule: {total_matches} matches ({completed_matches} completed)")
+        
+        return schedule
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ Schedule extraction failed: {str(e)}")
+        return pd.DataFrame()
+
+
 def extract_match_missing_players(
     match_id: int,
     league: str,
@@ -446,50 +553,7 @@ def extract_match_missing_players(
 
 
 # ====================================================================
-# LEAGUE SCHEDULE - Match Discovery
-# ====================================================================
-
-def extract_league_schedule(
-    league: str,
-    season: str,
-    verbose: bool = False
-) -> pd.DataFrame:
-    """
-    Extract complete league schedule for match ID discovery.
-    
-    Essential for finding match IDs for detailed analysis.
-    
-    Args:
-        league: League identifier
-        season: Season identifier
-        verbose: Show extraction progress
-        
-    Returns:
-        DataFrame with league schedule and match IDs
-    """
-    if verbose:
-        print(f"📅 Extracting schedule for {league} {season}")
-    
-    try:
-        whoscored = WhoScored(leagues=[league], seasons=[season])
-        schedule = whoscored.read_schedule()
-        
-        if verbose and not schedule.empty:
-            total_matches = len(schedule)
-            completed_matches = len(schedule[schedule['score'].notna()])
-            
-            print(f"   ✅ Schedule: {total_matches} matches ({completed_matches} completed)")
-        
-        return schedule
-        
-    except Exception as e:
-        if verbose:
-            print(f"   ❌ Schedule extraction failed: {str(e)}")
-        return pd.DataFrame()
-
-
-# ====================================================================
-# CORE PROCESSING ENGINE - Internal Functions
+# CORE PROCESSING ENGINE
 # ====================================================================
 
 def _process_spatial_events(events_df: pd.DataFrame) -> pd.DataFrame:
@@ -772,7 +836,17 @@ def export_to_csv(
     filename: str,
     include_timestamp: bool = True
 ) -> str:
-    """Export data to CSV with proper formatting."""
+    """
+    Export data to CSV with proper formatting.
+    
+    Args:
+        data: Data to export (Dict or DataFrame)
+        filename: Output filename (without .csv extension)
+        include_timestamp: Add timestamp to filename
+        
+    Returns:
+        Full path of created CSV file
+    """
     if isinstance(data, dict):
         # Handle dict of DataFrames
         if all(isinstance(v, pd.DataFrame) for v in data.values()):
@@ -847,428 +921,11 @@ def get_missing_players(match_id: int, league: str, season: str) -> pd.DataFrame
     return extract_match_missing_players(match_id, league, season, verbose=False)
 
 
-# ====================================================================
-# ADVANCED ANALYSIS - Multi-Match and Comparative
-# ====================================================================
-
-def analyze_player_across_matches(
-    player_name: str,
-    match_ids: List[int],
-    league: str,
-    season: str,
-    analysis_type: str = 'heatmap',
-    export: bool = True,
-    verbose: bool = False
-) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
-    """
-    Analyze player performance across multiple matches.
-    
-    Args:
-        player_name: Player name for analysis
-        match_ids: List of WhoScored match IDs
-        league: League identifier
-        season: Season identifier
-        analysis_type: 'heatmap', 'events', or 'all'
-        export: Whether to export results
-        verbose: Show progress
-        
-    Returns:
-        DataFrame or Dict with multi-match analysis
-    """
-    if verbose:
-        print(f"🔍 Multi-match analysis for {player_name}: {len(match_ids)} matches")
-    
-    all_data = []
-    results = {}
-    
-    for i, match_id in enumerate(match_ids, 1):
-        if verbose:
-            print(f"   [{i}/{len(match_ids)}] Processing match {match_id}")
-        
-        if analysis_type in ['heatmap', 'all']:
-            heatmap_data = extract_player_heatmap(match_id, player_name, league, season, verbose=False)
-            if not heatmap_data.empty:
-                heatmap_data['match_id'] = match_id
-                all_data.append(heatmap_data)
-        
-        if analysis_type in ['events', 'all']:
-            event_data = extract_match_events(match_id, league, season, player_filter=player_name, verbose=False)
-            if not event_data.empty:
-                event_data['analysis_match_id'] = match_id
-                if 'events' not in results:
-                    results['events'] = []
-                results['events'].append(event_data)
-    
-    # Combine and analyze data
-    if all_data:
-        combined_heatmap = pd.concat(all_data, ignore_index=True)
-        
-        # Calculate aggregate heatmap
-        aggregate_heatmap = combined_heatmap.groupby('field_zone').agg({
-            'action_count': 'sum',
-            'start_x': 'mean',
-            'start_y': 'mean'
-        }).reset_index()
-        
-        aggregate_heatmap['player'] = player_name
-        aggregate_heatmap['matches_analyzed'] = len(match_ids)
-        aggregate_heatmap['zone_percentage'] = (
-            aggregate_heatmap['action_count'] / aggregate_heatmap['action_count'].sum() * 100
-        ).round(2)
-        
-        results['aggregate_heatmap'] = aggregate_heatmap
-        results['individual_matches'] = combined_heatmap
-    
-    if 'events' in results:
-        results['all_events'] = pd.concat(results['events'], ignore_index=True)
-        del results['events']
-    
-    # Export if requested
-    if export and results:
-        filename = f"{player_name.replace(' ', '_')}_multi_match_analysis"
-        export_to_csv(results, filename)
-    
-    if verbose:
-        total_actions = results.get('aggregate_heatmap', pd.DataFrame()).get('action_count', pd.Series()).sum()
-        if total_actions > 0:
-            print(f"   ✅ Analysis complete: {total_actions} total actions across matches")
-    
-    return results if analysis_type == 'all' else results.get('aggregate_heatmap', pd.DataFrame())
+def get_team_analysis(match_id: int, team_name: str, league: str, season: str) -> Dict[str, Union[pd.DataFrame, Dict]]:
+    """Quick complete team analysis."""
+    return extract_team_match_analysis(match_id, team_name, league, season, verbose=False)
 
 
-def compare_teams_tactical_analysis(
-    match_id: int,
-    league: str,
-    season: str,
-    export: bool = True,
-    verbose: bool = False
-) -> Dict[str, Union[pd.DataFrame, Dict]]:
-    """
-    Complete tactical comparison between both teams in a match.
-    
-    Args:
-        match_id: WhoScored match identifier
-        league: League identifier
-        season: Season identifier
-        export: Whether to export results
-        verbose: Show progress
-        
-    Returns:
-        Dict with comprehensive tactical comparison
-    """
-    if verbose:
-        print(f"⚔️ Complete tactical analysis for match {match_id}")
-    
-    # Get all events to identify teams
-    all_events = extract_match_events(match_id, league, season, verbose=False)
-    
-    if all_events.empty:
-        if verbose:
-            print(f"   ❌ No events found for match {match_id}")
-        return {}
-    
-    teams = all_events['team'].unique()
-    if len(teams) != 2:
-        if verbose:
-            print(f"   ❌ Expected 2 teams, found {len(teams)}")
-        return {}
-    
-    team_a, team_b = teams[0], teams[1]
-    
-    if verbose:
-        print(f"   🆚 Analyzing: {team_a} vs {team_b}")
-    
-    results = {
-        'match_info': {
-            'match_id': match_id,
-            'team_a': team_a,
-            'team_b': team_b,
-            'league': league,
-            'season': season
-        }
-    }
-    
-    # Analyze both teams
-    for team_name in [team_a, team_b]:
-        team_key = f"team_{'a' if team_name == team_a else 'b'}_analysis"
-        
-        if verbose:
-            print(f"   📊 Analyzing {team_name}...")
-        
-        team_analysis = extract_team_match_analysis(match_id, team_name, league, season, verbose=False)
-        results[team_key] = team_analysis
-    
-    # Comparative analysis
-    if verbose:
-        print("   ⚖️ Creating comparative analysis...")
-    
-    comparative_stats = _create_comparative_analysis(results, team_a, team_b)
-    results['comparative_analysis'] = comparative_stats
-    
-    # Export if requested
-    if export:
-        filename = f"tactical_comparison_match_{match_id}"
-        export_to_csv(results, filename)
-    
-    if verbose:
-        print(f"✅ Tactical comparison complete for {team_a} vs {team_b}")
-    
-    return results
-
-
-def analyze_league_tactical_trends(
-    league: str,
-    season: str,
-    max_matches: int = 50,
-    analysis_focus: str = 'all',
-    export: bool = True,
-    verbose: bool = False
-) -> Dict[str, pd.DataFrame]:
-    """
-    Analyze tactical trends across multiple matches in a league.
-    
-    Args:
-        league: League identifier
-        season: Season identifier
-        max_matches: Maximum number of matches to analyze
-        analysis_focus: 'defensive', 'attacking', 'passing', or 'all'
-        export: Whether to export results
-        verbose: Show progress
-        
-    Returns:
-        Dict with league-wide tactical analysis
-    """
-    if verbose:
-        print(f"📈 League tactical trends analysis: {league} {season}")
-    
-    # Get league schedule
-    schedule = extract_league_schedule(league, season, verbose=False)
-    
-    if schedule.empty:
-        if verbose:
-            print(f"   ❌ No schedule found for {league} {season}")
-        return {}
-    
-    # Filter to completed matches with match IDs
-    completed_matches = schedule[
-        schedule['game_id'].notna() & 
-        schedule['score'].notna()
-    ].head(max_matches)
-    
-    if completed_matches.empty:
-        if verbose:
-            print(f"   ❌ No completed matches found")
-        return {}
-    
-    if verbose:
-        print(f"   📊 Analyzing {len(completed_matches)} matches...")
-    
-    results = {
-        'league_info': {
-            'league': league,
-            'season': season,
-            'matches_analyzed': len(completed_matches),
-            'analysis_focus': analysis_focus
-        }
-    }
-    
-    all_events = []
-    all_defensive = []
-    all_shots = []
-    
-    # Process each match
-    for i, (_, match) in enumerate(completed_matches.iterrows(), 1):
-        match_id = match['game_id']
-        
-        if verbose and i % 10 == 0:
-            print(f"   Progress: {i}/{len(completed_matches)} matches processed")
-        
-        try:
-            # Get events based on analysis focus
-            if analysis_focus in ['all', 'passing']:
-                events = extract_match_events(match_id, league, season, verbose=False)
-                if not events.empty:
-                    events['match_id'] = match_id
-                    all_events.append(events)
-            
-            if analysis_focus in ['all', 'defensive']:
-                defensive = extract_defensive_events(match_id, league, season, verbose=False)
-                if not defensive.empty:
-                    defensive['match_id'] = match_id
-                    all_defensive.append(defensive)
-            
-            if analysis_focus in ['all', 'attacking']:
-                shots = extract_shot_map(match_id, league, season, verbose=False)
-                if not shots.empty:
-                    shots['match_id'] = match_id
-                    all_shots.append(shots)
-        
-        except Exception:
-            continue  # Skip problematic matches
-    
-    # Combine and analyze data
-    if all_events:
-        combined_events = pd.concat(all_events, ignore_index=True)
-        results['passing_trends'] = _analyze_passing_trends(combined_events)
-    
-    if all_defensive:
-        combined_defensive = pd.concat(all_defensive, ignore_index=True)
-        results['defensive_trends'] = _analyze_defensive_trends(combined_defensive)
-    
-    if all_shots:
-        combined_shots = pd.concat(all_shots, ignore_index=True)
-        results['attacking_trends'] = _analyze_attacking_trends(combined_shots)
-    
-    # Export if requested
-    if export and len(results) > 1:  # More than just league_info
-        filename = f"{league}_{season}_tactical_trends"
-        export_to_csv(results, filename)
-    
-    if verbose:
-        trends_found = len(results) - 1
-        print(f"✅ League analysis complete: {trends_found} trend categories analyzed")
-    
-    return results
-
-
-# ====================================================================
-# ADVANCED ANALYSIS HELPERS
-# ====================================================================
-
-def _create_comparative_analysis(results: Dict, team_a: str, team_b: str) -> Dict:
-    """Create comparative statistics between two teams."""
-    comparison = {
-        'team_a': team_a,
-        'team_b': team_b
-    }
-    
-    # Compare team stats if available
-    team_a_stats = results.get('team_a_analysis', {}).get('team_stats', {})
-    team_b_stats = results.get('team_b_analysis', {}).get('team_stats', {})
-    
-    if team_a_stats and team_b_stats:
-        for stat in ['total_events', 'successful_events', 'event_success_rate']:
-            if stat in team_a_stats and stat in team_b_stats:
-                comparison[f'{stat}_a'] = team_a_stats[stat]
-                comparison[f'{stat}_b'] = team_b_stats[stat]
-                
-                if stat != 'event_success_rate':
-                    comparison[f'{stat}_difference'] = team_a_stats[stat] - team_b_stats[stat]
-    
-    return comparison
-
-
-def _analyze_passing_trends(events_df: pd.DataFrame) -> pd.DataFrame:
-    """Analyze passing trends across matches."""
-    pass_events = events_df[events_df['event_type'].str.contains('Pass', case=False, na=False)]
-    
-    if pass_events.empty:
-        return pd.DataFrame()
-    
-    # Trends by field zone
-    zone_trends = pass_events.groupby(['field_zone', 'match_id']).agg({
-        'is_successful': ['count', 'sum', 'mean']
-    }).round(3)
-    
-    zone_trends.columns = ['total_passes', 'successful_passes', 'success_rate']
-    return zone_trends.reset_index()
-
-
-def _analyze_defensive_trends(defensive_df: pd.DataFrame) -> pd.DataFrame:
-    """Analyze defensive trends across matches."""
-    if defensive_df.empty:
-        return pd.DataFrame()
-    
-    # Trends by event type and zone
-    defensive_trends = defensive_df.groupby(['event_type', 'field_zone', 'match_id']).agg({
-        'is_successful': ['count', 'sum', 'mean']
-    }).round(3)
-    
-    defensive_trends.columns = ['total_actions', 'successful_actions', 'success_rate']
-    return defensive_trends.reset_index()
-
-
-def _analyze_attacking_trends(shots_df: pd.DataFrame) -> pd.DataFrame:
-    """Analyze attacking/shooting trends across matches."""
-    if shots_df.empty:
-        return pd.DataFrame()
-    
-    # Trends by shot zone
-    shot_trends = shots_df.groupby(['shot_zone', 'match_id']).agg({
-        'is_goal': ['count', 'sum'],
-        'is_on_target': 'sum'
-    }).round(3)
-    
-    shot_trends.columns = ['total_shots', 'goals', 'shots_on_target']
-    shot_trends['conversion_rate'] = (shot_trends['goals'] / shot_trends['total_shots']).fillna(0).round(3)
-    
-    return shot_trends.reset_index()
-
-
-# ====================================================================
-# MOMENTUM ANALYSIS - Time-based Insights
-# ====================================================================
-
-def extract_match_momentum(
-    match_id: int,
-    league: str,
-    season: str,
-    time_intervals: int = 15,
-    verbose: bool = False
-) -> pd.DataFrame:
-    """
-    Extract match momentum analysis based on event frequency and success.
-    
-    Args:
-        match_id: WhoScored match identifier
-        league: League identifier
-        season: Season identifier
-        time_intervals: Time interval in minutes for momentum analysis
-        verbose: Show progress
-        
-    Returns:
-        DataFrame with momentum analysis by time periods
-    """
-    if verbose:
-        print(f"📊 Extracting momentum analysis for match {match_id}")
-    
-    # Get all events
-    events = extract_match_events(match_id, league, season, verbose=False)
-    
-    if events.empty:
-        if verbose:
-            print(f"   ❌ No events found")
-        return pd.DataFrame()
-    
-    # Create time intervals
-    events['time_interval'] = (events['minute'] // time_intervals) * time_intervals
-    
-    # Calculate momentum by team and time interval
-    momentum_data = []
-    
-    for team in events['team'].unique():
-        team_events = events[events['team'] == team]
-        
-        for interval in range(0, 90, time_intervals):
-            interval_events = team_events[
-                (team_events['time_interval'] == interval)
-            ]
-            
-            if not interval_events.empty:
-                momentum_data.append({
-                    'team': team,
-                    'time_interval': f"{interval}-{interval + time_intervals}",
-                    'total_events': len(interval_events),
-                    'successful_events': len(interval_events[interval_events.get('is_successful', False)]),
-                    'success_rate': len(interval_events[interval_events.get('is_successful', False)]) / len(interval_events) * 100,
-                    'attacking_events': len(interval_events[interval_events['field_zone'].str.contains('Attacking', na=False)]),
-                    'defensive_events': len(interval_events[interval_events['field_zone'].str.contains('Defensive', na=False)]),
-                    'middle_events': len(interval_events[interval_events['field_zone'].str.contains('Middle', na=False)])
-                })
-    
-    momentum_df = pd.DataFrame(momentum_data)
-    
-    if verbose and not momentum_df.empty:
-        print(f"   ✅ Momentum analysis: {len(momentum_df)} time intervals analyzed")
-    
-    return momentum_df
+def get_momentum(match_id: int, league: str, season: str, intervals: int = 15) -> pd.DataFrame:
+    """Quick momentum analysis."""
+    return extract_match_momentum(match_id, league, season, time_intervals=intervals, verbose=False)
