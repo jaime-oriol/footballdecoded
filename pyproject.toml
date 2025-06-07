@@ -28,20 +28,25 @@ Documentation = "https://footballdecoded.readthedocs.io"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-html5lib = "^1.1"
-pandas = "^2.0.0, !=2.1.0"
-lxml = "^4.9.3"
-socceraction = {version="^1.5.3", optional=true}
-wrapper-tls-requests = "^1.1.4"
+# VERSIONES COMPATIBLES - USANDO RANGOS FLEXIBLES
+numpy = "^1.24.0,<2.0.0"
+pandas = "^2.2.0,!=2.1.0,<3.0.0"
+lxml = "^4.9.3,<5.0.0"
+html5lib = "^1.1,<2.0"
+urllib3 = "^1.26.0,<2.0"
+wrapper-tls-requests = "^1.1.4,<2.0.0"
 tqdm = "^4.67.1"
-rich = "^14.0.0"
-seleniumbase = "^4.38.2"
+rich = "^13.6.0"
 unidecode = "^1.4.0"
-urllib3 = "<2"
-matplotlib = "^3.7.0"
-seaborn = "^0.12.0"
-plotly = "^5.0.0"
-numpy = "^1.24.0"
+# Selenium y SeleniumBase compatibles
+selenium = "^4.15.0"
+seleniumbase = "^4.21.0"
+# Visualization
+matplotlib = "3.7.4"
+seaborn = "0.12.2"
+plotly = "5.17.0"
+# Optional
+socceraction = {version = "1.5.3", optional = true}
 
 [tool.poetry.extras]
 socceraction = ["socceraction"]
