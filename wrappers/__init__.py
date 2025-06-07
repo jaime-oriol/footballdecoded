@@ -10,7 +10,7 @@ __version__ = "1.0.0"
 
 # Import error handling
 try:
-    # FBref wrapper functions (INCLUDING CHAMPIONS LEAGUE FUNCTIONS)
+    # FBref wrapper functions - ONLY EXISTING FUNCTIONS
     from .fbref_data import (
         extract_player_season as fbref_extract_player_season,
         extract_player_match as fbref_extract_player_match,
@@ -30,16 +30,7 @@ try:
         get_teams as fbref_get_teams,
         get_league_players as fbref_get_league_players,
         get_match_data as fbref_get_match_data,
-        get_schedule as fbref_get_schedule,
-        # NUEVAS FUNCIONES CHAMPIONS LEAGUE
-        extract_champions_league_schedule,
-        extract_champions_league_teams,
-        extract_champions_league_team_domestic_stats,
-        analyze_champions_league_participants,
-        extract_psg_champions_league_analysis,
-        get_champions_league_schedule,
-        get_champions_league_teams,
-        get_champions_league_team_stats
+        get_schedule as fbref_get_schedule
     )
 except ImportError as e:
     print(f"⚠️  Warning: FBref wrapper import failed - {e}")
@@ -66,15 +57,6 @@ except ImportError as e:
     fbref_get_league_players = _dummy_function
     fbref_get_match_data = _dummy_function
     fbref_get_schedule = _dummy_function
-    # Champions League dummy functions
-    extract_champions_league_schedule = _dummy_function
-    extract_champions_league_teams = _dummy_function
-    extract_champions_league_team_domestic_stats = _dummy_function
-    analyze_champions_league_participants = _dummy_function
-    extract_psg_champions_league_analysis = _dummy_function
-    get_champions_league_schedule = _dummy_function
-    get_champions_league_teams = _dummy_function
-    get_champions_league_team_stats = _dummy_function
 
 try:
     # Understat wrapper functions
@@ -158,7 +140,7 @@ except ImportError as e:
     whoscored_get_team_analysis = _dummy_function
     whoscored_get_momentum = _dummy_function
 
-# All available functions for star import
+# All available functions for star import - ONLY EXISTING FUNCTIONS
 __all__ = [
     # FBref wrapper functions
     "fbref_extract_player_season",
@@ -180,16 +162,6 @@ __all__ = [
     "fbref_get_league_players",
     "fbref_get_match_data",
     "fbref_get_schedule",
-    
-    # Champions League functions
-    "extract_champions_league_schedule",
-    "extract_champions_league_teams", 
-    "extract_champions_league_team_domestic_stats",
-    "analyze_champions_league_participants",
-    "extract_psg_champions_league_analysis",
-    "get_champions_league_schedule",
-    "get_champions_league_teams",
-    "get_champions_league_team_stats",
     
     # Understat wrapper functions
     "understat_extract_player_season",
