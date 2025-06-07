@@ -1,8 +1,8 @@
-# ========================================================
-# FootballDecoded - FBref Data Extractor
+# ====================================================================
+# FootballDecoded - FBref Professional Data Extractor
 # ====================================================================
 # Clean, professional wrapper for extracting ALL FBref metrics
-# Covers: players, teams, matches, events - complete tactical analysis ready
+# Focus: Complete player, team, match, and event extraction for tactical analysis
 # ====================================================================
 
 import sys
@@ -45,7 +45,6 @@ def extract_player_season(
     if verbose:
         print(f"🔍 Extracting {player_name} season data: {league} {season}")
     
-    # All available stat types for comprehensive analysis
     stat_types = [
         'standard', 'shooting', 'passing', 'passing_types', 
         'goal_shot_creation', 'defense', 'possession', 
@@ -85,7 +84,6 @@ def extract_player_match(
     if verbose:
         print(f"🔍 Extracting {player_name} match data: {match_id}")
     
-    # Match-specific stat types
     stat_types = [
         'summary', 'passing', 'passing_types', 'defense', 
         'possession', 'misc', 'keepers'
@@ -132,7 +130,6 @@ def extract_multiple_players(
         if verbose:
             print(f"[{i}/{len(players)}] {player_name}")
         
-        # Choose extraction method
         if match_id:
             player_data = extract_player_match(player_name, match_id, league, season, verbose=False)
         else:
@@ -148,7 +145,83 @@ def extract_multiple_players(
         print(f"✅ Extracted {successful}/{len(players)} players successfully")
     
     df = pd.DataFrame(all_data) if all_data else pd.DataFrame()
-    return _standardize_columns(df, 'player')
+    return _standardize_dataframe(df, 'player')
+
+
+def extract_league_players(
+    league: str,
+    season: str,
+    team_filter: Optional[str] = None,
+    position_filter: Optional[str] = None,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Extract all players from a league with optional filtering.
+    
+    Args:
+        league: League identifier
+        season: Season identifier
+        team_filter: Optional team name filter
+        position_filter: Optional position filter ("FW", "MF", "DF", "GK")
+        verbose: Show progress
+        
+    Returns:
+        DataFrame with player list and basic info
+    """
+    if verbose:
+        print(f"🔍 Extracting player list from {league} {season}")
+        if team_filter:
+            print(f"   Team filter: {team_filter}")
+        if position_filter:
+            print(f"   Position filter: {position_filter}")
+    
+    try:
+        fbref = FBref(leagues=[league], seasons=[season])
+        player_stats = fbref.read_player_season_stats(stat_type='standard')
+        
+        if player_stats is None or player_stats.empty:
+            if verbose:
+                print(f"   ❌ No players found")
+            return pd.DataFrame()
+        
+        players_df = player_stats.reset_index()
+        
+        # Apply filters
+        if team_filter:
+            original_count = len(players_df)
+            players_df = players_df[
+                players_df['team'].str.contains(team_filter, case=False, na=False)
+            ]
+            if verbose:
+                print(f"   🔍 Team filter: {len(players_df)}/{original_count} players")
+        
+        if position_filter:
+            original_count = len(players_df)
+            players_df = players_df[
+                players_df['pos'].str.contains(position_filter, case=False, na=False)
+            ]
+            if verbose:
+                print(f"   🔍 Position filter: {len(players_df)}/{original_count} players")
+        
+        # Select essential columns
+        result_columns = ['player', 'team', 'league', 'season']
+        optional_columns = ['pos', 'age', 'nation']
+        
+        for col in optional_columns:
+            if col in players_df.columns:
+                result_columns.append(col)
+        
+        result_df = players_df[result_columns].copy().sort_values(['team', 'player'])
+        
+        if verbose:
+            print(f"   ✅ Found {len(result_df)} players")
+        
+        return result_df
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ Extraction failed: {str(e)}")
+        return pd.DataFrame()
 
 
 # ====================================================================
@@ -178,7 +251,6 @@ def extract_team_season(
     if verbose:
         print(f"🔍 Extracting {team_name} season data: {league} {season}")
     
-    # All team stat types for complete analysis
     stat_types = [
         'standard', 'shooting', 'passing', 'passing_types',
         'goal_shot_creation', 'defense', 'possession', 
@@ -239,90 +311,11 @@ def extract_multiple_teams(
         print(f"✅ Extracted {successful}/{len(teams)} teams successfully")
     
     df = pd.DataFrame(all_data) if all_data else pd.DataFrame()
-    return _standardize_columns(df, 'team')
-
-
-def extract_league_players(
-    league: str,
-    season: str,
-    team_filter: Optional[str] = None,
-    position_filter: Optional[str] = None,
-    verbose: bool = False
-) -> pd.DataFrame:
-    """
-    Extract all players from a league with optional filtering.
-    
-    Args:
-        league: League identifier
-        season: Season identifier
-        team_filter: Optional team name filter
-        position_filter: Optional position filter ("FW", "MF", "DF", "GK")
-        verbose: Show progress
-        
-    Returns:
-        DataFrame with player list and basic info
-    """
-    if verbose:
-        print(f"🔍 Extracting player list from {league} {season}")
-        if team_filter:
-            print(f"   Team filter: {team_filter}")
-        if position_filter:
-            print(f"   Position filter: {position_filter}")
-    
-    try:
-        fbref = FBref(leagues=[league], seasons=[season])
-        player_stats = fbref.read_player_season_stats(stat_type='standard')
-        
-        if player_stats is None or player_stats.empty:
-            if verbose:
-                print(f"   ❌ No players found")
-            return pd.DataFrame()
-        
-        # Extract and filter player information
-        players_df = player_stats.reset_index()
-        
-        # Apply filters
-        if team_filter:
-            original_count = len(players_df)
-            players_df = players_df[
-                players_df['team'].str.contains(team_filter, case=False, na=False)
-            ]
-            if verbose:
-                print(f"   🔍 Team filter: {len(players_df)}/{original_count} players")
-        
-        if position_filter:
-            original_count = len(players_df)
-            players_df = players_df[
-                players_df['pos'].str.contains(position_filter, case=False, na=False)
-            ]
-            if verbose:
-                print(f"   🔍 Position filter: {len(players_df)}/{original_count} players")
-        
-        # Select and standardize columns
-        result_columns = ['player', 'team', 'league', 'season']
-        if 'pos' in players_df.columns:
-            result_columns.append('pos')
-        if 'age' in players_df.columns:
-            result_columns.append('age')
-        if 'nation' in players_df.columns:
-            result_columns.append('nation')
-        
-        result_df = players_df[result_columns].copy()
-        result_df = result_df.sort_values(['team', 'player'])
-        
-        if verbose:
-            print(f"   ✅ Found {len(result_df)} players")
-        
-        return result_df
-        
-    except Exception as e:
-        if verbose:
-            print(f"   ❌ Extraction failed: {str(e)}")
-        return pd.DataFrame()
+    return _standardize_dataframe(df, 'team')
 
 
 # ====================================================================
-# MATCH DATA EXTRACTION
+# MATCH AND EVENT DATA EXTRACTION
 # ====================================================================
 
 def extract_match_events(
@@ -331,7 +324,7 @@ def extract_match_events(
     season: str,
     event_type: str = 'all',
     verbose: bool = False
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, Dict]:
     """
     Extract match events (goals, cards, substitutions, shots).
     
@@ -343,45 +336,40 @@ def extract_match_events(
         verbose: Show progress
         
     Returns:
-        DataFrame with match events
+        DataFrame with match events or Dict with multiple event types
     """
     if verbose:
         print(f"🔍 Extracting {event_type} from match {match_id}")
     
     try:
         fbref = FBref(leagues=[league], seasons=[season])
+        result = {}
         
         if event_type in ['all', 'events']:
             events = fbref.read_events(match_id=match_id)
             if verbose and not events.empty:
                 print(f"   ✅ Events: {len(events)} records")
+            if event_type == 'events':
+                return events
+            result['events'] = events
         
         if event_type in ['all', 'shots']:
             shots = fbref.read_shot_events(match_id=match_id)
             if verbose and not shots.empty:
                 print(f"   ✅ Shots: {len(shots)} records")
+            if event_type == 'shots':
+                return shots
+            result['shots'] = shots
         
         if event_type in ['all', 'lineups']:
             lineups = fbref.read_lineup(match_id=match_id)
             if verbose and not lineups.empty:
                 print(f"   ✅ Lineups: {len(lineups)} records")
+            if event_type == 'lineups':
+                return lineups
+            result['lineups'] = lineups
         
-        # Return appropriate data based on event_type
-        if event_type == 'events':
-            return events if 'events' in locals() else pd.DataFrame()
-        elif event_type == 'shots':
-            return shots if 'shots' in locals() else pd.DataFrame()
-        elif event_type == 'lineups':
-            return lineups if 'lineups' in locals() else pd.DataFrame()
-        else:  # 'all'
-            result = {}
-            if 'events' in locals() and not events.empty:
-                result['events'] = events
-            if 'shots' in locals() and not shots.empty:
-                result['shots'] = shots
-            if 'lineups' in locals() and not lineups.empty:
-                result['lineups'] = lineups
-            return result
+        return result if event_type == 'all' else pd.DataFrame()
         
     except Exception as e:
         if verbose:
@@ -426,6 +414,206 @@ def extract_league_schedule(
 
 
 # ====================================================================
+# ADVANCED ANALYSIS FUNCTIONS
+# ====================================================================
+
+def analyze_full_squad(
+    team_name: str,
+    league: str,
+    season: str,
+    export: bool = True,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Complete squad analysis with automatic player detection.
+    
+    Args:
+        team_name: Team name for analysis
+        league: League identifier
+        season: Season identifier
+        export: Whether to export results to CSV
+        verbose: Show detailed progress
+        
+    Returns:
+        DataFrame with complete squad statistics
+    """
+    if verbose:
+        print(f"🔍 Full squad analysis for {team_name}")
+    
+    players_df = extract_league_players(league, season, team_filter=team_name, verbose=verbose)
+    
+    if players_df.empty:
+        if verbose:
+            print(f"   ❌ No players found for {team_name}")
+        return pd.DataFrame()
+    
+    player_list = players_df['player'].unique().tolist()
+    
+    if verbose:
+        print(f"   📊 Analyzing {len(player_list)} players")
+    
+    squad_df = extract_multiple_players(player_list, league, season, verbose=verbose)
+    
+    if export and not squad_df.empty:
+        filename = f"{team_name.replace(' ', '_')}_squad_{league}_{season}"
+        export_to_csv(squad_df, filename)
+    
+    return squad_df
+
+
+def compare_teams(
+    teams: List[str],
+    league: str,
+    season: str,
+    include_squad_analysis: bool = False,
+    export: bool = True,
+    verbose: bool = False
+) -> Dict[str, pd.DataFrame]:
+    """
+    Complete teams comparison with optional squad analysis.
+    
+    Args:
+        teams: List of team names to compare
+        league: League identifier
+        season: Season identifier
+        include_squad_analysis: Whether to include individual player analysis
+        export: Whether to export results
+        verbose: Show progress
+        
+    Returns:
+        Dict with team stats and optional squad data
+    """
+    if verbose:
+        print(f"🔍 Comparing {len(teams)} teams in {league} {season}")
+    
+    results = {}
+    
+    # Team-level comparison
+    teams_df = extract_multiple_teams(teams, league, season, verbose=verbose)
+    results['team_comparison'] = teams_df
+    
+    if export and not teams_df.empty:
+        export_to_csv(teams_df, f"team_comparison_{league}_{season}")
+    
+    # Squad-level analysis if requested
+    if include_squad_analysis:
+        if verbose:
+            print("   📊 Including squad analysis...")
+        
+        squad_data = {}
+        for team in teams:
+            if verbose:
+                print(f"   Analyzing {team} squad...")
+            squad_df = analyze_full_squad(team, league, season, export=False, verbose=False)
+            if not squad_df.empty:
+                squad_data[team] = squad_df
+        
+        results['squad_analysis'] = squad_data
+        
+        if export and squad_data:
+            all_squads = pd.concat(squad_data.values(), ignore_index=True)
+            export_to_csv(all_squads, f"squads_comparison_{league}_{season}")
+    
+    if verbose:
+        print(f"✅ Comparison complete")
+    
+    return results
+
+
+def analyze_league(
+    league: str,
+    season: str,
+    include_player_stats: bool = False,
+    top_teams_only: int = 0,
+    export: bool = True,
+    verbose: bool = False
+) -> Dict[str, pd.DataFrame]:
+    """
+    Complete league analysis with schedule, teams, and optional player data.
+    
+    Args:
+        league: League identifier
+        season: Season identifier
+        include_player_stats: Whether to include all player statistics
+        top_teams_only: If > 0, only analyze top N teams (by points)
+        export: Whether to export results
+        verbose: Show progress
+        
+    Returns:
+        Dict with comprehensive league data
+    """
+    if verbose:
+        print(f"🔍 Complete league analysis: {league} {season}")
+    
+    results = {}
+    
+    # League schedule and results
+    if verbose:
+        print("   📅 Extracting schedule...")
+    schedule_df = extract_league_schedule(league, season, verbose=False)
+    results['schedule'] = schedule_df
+    
+    # All teams basic stats
+    if verbose:
+        print("   🏟️ Extracting team statistics...")
+    
+    if not schedule_df.empty:
+        all_teams = list(set(schedule_df['home_team'].tolist() + schedule_df['away_team'].tolist()))
+    else:
+        players_df = extract_league_players(league, season, verbose=False)
+        all_teams = players_df['team'].unique().tolist() if not players_df.empty else []
+    
+    if all_teams:
+        teams_df = extract_multiple_teams(all_teams, league, season, verbose=False)
+        results['teams'] = teams_df
+        
+        # Filter to top teams if requested
+        if top_teams_only > 0 and not teams_df.empty and 'points' in teams_df.columns:
+            top_teams = teams_df.nlargest(top_teams_only, 'points')['team_name'].tolist()
+            if verbose:
+                print(f"   🏆 Focusing on top {top_teams_only} teams: {', '.join(top_teams)}")
+        else:
+            top_teams = all_teams
+    else:
+        top_teams = []
+        results['teams'] = pd.DataFrame()
+    
+    # Player statistics if requested
+    if include_player_stats and top_teams:
+        if verbose:
+            print("   👤 Extracting player statistics...")
+        
+        all_players_data = []
+        for team in top_teams[:min(len(top_teams), 10)]:  # Limit to avoid overload
+            if verbose:
+                print(f"      Analyzing {team}...")
+            team_players = extract_league_players(league, season, team_filter=team, verbose=False)
+            if not team_players.empty:
+                players_list = team_players['player'].unique().tolist()
+                players_stats = extract_multiple_players(players_list, league, season, verbose=False)
+                if not players_stats.empty:
+                    all_players_data.append(players_stats)
+        
+        if all_players_data:
+            results['players'] = pd.concat(all_players_data, ignore_index=True)
+        else:
+            results['players'] = pd.DataFrame()
+    
+    # Export results
+    if export:
+        for data_type, data in results.items():
+            if isinstance(data, pd.DataFrame) and not data.empty:
+                filename = f"{league}_{season}_{data_type}"
+                export_to_csv(data, filename)
+    
+    if verbose:
+        total_data_points = sum(len(df) for df in results.values() if isinstance(df, pd.DataFrame))
+        print(f"✅ League analysis complete: {total_data_points} total records")
+    
+    return results
+
+
+# ====================================================================
 # CORE PROCESSING ENGINE
 # ====================================================================
 
@@ -450,7 +638,6 @@ def _extract_player_data(
                 print(f"   [{i}/{len(stat_types)}] {stat_type}")
             
             try:
-                # Get stats based on extraction type
                 if match_id:
                     stats = fbref.read_player_match_stats(stat_type=stat_type, match_id=match_id)
                     player_row = _find_player_in_data(stats, player_name)
@@ -459,11 +646,9 @@ def _extract_player_data(
                     player_row = _find_player_in_data(stats, player_name)
                 
                 if player_row is not None:
-                    # Extract basic info on first success
                     if not basic_info:
                         basic_info = _extract_basic_info(player_row, player_name, match_id)
                     
-                    # Process all columns from this stat type
                     _process_columns(player_row, player_data)
                     stats_found += 1
                     
@@ -482,7 +667,6 @@ def _extract_player_data(
                 print(f"   ❌ Player not found: {player_name}")
             return None
         
-        # Combine and standardize
         final_data = {**basic_info, **player_data}
         standardized_data = _apply_stat_mapping(final_data)
         
@@ -518,7 +702,6 @@ def _extract_team_data(
                 print(f"   [{i}/{len(stat_types)}] {stat_type}")
             
             try:
-                # Extract team stats
                 stats = fbref.read_team_season_stats(stat_type=stat_type, opponent_stats=False)
                 team_row = _find_team_in_data(stats, team_name)
                 
@@ -555,7 +738,6 @@ def _extract_team_data(
                 print(f"   ❌ Team not found: {team_name}")
             return None
         
-        # Combine and standardize
         final_data = {**basic_info, **team_data}
         standardized_data = _apply_stat_mapping(final_data)
         
@@ -825,7 +1007,7 @@ def _get_stat_mapping() -> Dict[str, str]:
     }
 
 
-def _standardize_columns(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
+def _standardize_dataframe(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     """Ensure consistent column ordering."""
     if df.empty:
         return df
@@ -847,7 +1029,6 @@ def _standardize_columns(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
             'expected_goals_for', 'expected_goals_against', 'shots', 'passes_completed'
         ]
     
-    # Organize columns: priority first, then remaining alphabetically
     available_priority = [col for col in priority_columns if col in df.columns]
     remaining_columns = sorted([col for col in df.columns if col not in priority_columns])
     
@@ -895,7 +1076,7 @@ def export_to_csv(
 
 
 # ====================================================================
-# QUICK ACCESS FUNCTIONS - Simple Interface
+# QUICK ACCESS FUNCTIONS
 # ====================================================================
 
 def get_player(player_name: str, league: str, season: str) -> Optional[Dict]:
@@ -931,208 +1112,3 @@ def get_match_data(match_id: str, league: str, season: str, data_type: str = 'al
 def get_schedule(league: str, season: str) -> pd.DataFrame:
     """Quick league schedule extraction."""
     return extract_league_schedule(league, season, verbose=False)
-
-
-# ====================================================================
-# BATCH PROCESSING - Advanced Operations
-# ====================================================================
-
-def analyze_full_squad(
-    team_name: str,
-    league: str,
-    season: str,
-    export: bool = True,
-    verbose: bool = False
-) -> pd.DataFrame:
-    """
-    Complete squad analysis with automatic player detection.
-    
-    Args:
-        team_name: Team name for analysis
-        league: League identifier
-        season: Season identifier
-        export: Whether to export results to CSV
-        verbose: Show detailed progress
-        
-    Returns:
-        DataFrame with complete squad statistics
-    """
-    if verbose:
-        print(f"🔍 Full squad analysis for {team_name}")
-    
-    # Get team roster
-    players_df = extract_league_players(league, season, team_filter=team_name, verbose=verbose)
-    
-    if players_df.empty:
-        if verbose:
-            print(f"   ❌ No players found for {team_name}")
-        return pd.DataFrame()
-    
-    player_list = players_df['player'].unique().tolist()
-    
-    if verbose:
-        print(f"   📊 Analyzing {len(player_list)} players")
-    
-    # Extract stats for all players
-    squad_df = extract_multiple_players(player_list, league, season, verbose=verbose)
-    
-    # Export if requested
-    if export and not squad_df.empty:
-        filename = f"{team_name.replace(' ', '_')}_squad_{league}_{season}"
-        export_to_csv(squad_df, filename)
-    
-    return squad_df
-
-
-def compare_teams(
-    teams: List[str],
-    league: str,
-    season: str,
-    include_squad_analysis: bool = False,
-    export: bool = True,
-    verbose: bool = False
-) -> Dict[str, pd.DataFrame]:
-    """
-    Complete teams comparison with optional squad analysis.
-    
-    Args:
-        teams: List of team names to compare
-        league: League identifier
-        season: Season identifier
-        include_squad_analysis: Whether to include individual player analysis
-        export: Whether to export results
-        verbose: Show progress
-        
-    Returns:
-        Dict with team stats and optional squad data
-    """
-    if verbose:
-        print(f"🔍 Comparing {len(teams)} teams in {league} {season}")
-    
-    results = {}
-    
-    # Team-level comparison
-    teams_df = extract_multiple_teams(teams, league, season, verbose=verbose)
-    results['team_comparison'] = teams_df
-    
-    if export and not teams_df.empty:
-        export_to_csv(teams_df, f"team_comparison_{league}_{season}")
-    
-    # Squad-level analysis if requested
-    if include_squad_analysis:
-        if verbose:
-            print("   📊 Including squad analysis...")
-        
-        squad_data = {}
-        for team in teams:
-            if verbose:
-                print(f"   Analyzing {team} squad...")
-            squad_df = analyze_full_squad(team, league, season, export=False, verbose=False)
-            if not squad_df.empty:
-                squad_data[team] = squad_df
-        
-        results['squad_analysis'] = squad_data
-        
-        if export and squad_data:
-            # Export combined squad data
-            all_squads = pd.concat(squad_data.values(), ignore_index=True)
-            export_to_csv(all_squads, f"squads_comparison_{league}_{season}")
-    
-    if verbose:
-        print(f"✅ Comparison complete")
-    
-    return results
-
-
-def analyze_league(
-    league: str,
-    season: str,
-    include_player_stats: bool = False,
-    top_teams_only: int = 0,
-    export: bool = True,
-    verbose: bool = False
-) -> Dict[str, pd.DataFrame]:
-    """
-    Complete league analysis with schedule, teams, and optional player data.
-    
-    Args:
-        league: League identifier
-        season: Season identifier
-        include_player_stats: Whether to include all player statistics
-        top_teams_only: If > 0, only analyze top N teams (by points)
-        export: Whether to export results
-        verbose: Show progress
-        
-    Returns:
-        Dict with comprehensive league data
-    """
-    if verbose:
-        print(f"🔍 Complete league analysis: {league} {season}")
-    
-    results = {}
-    
-    # League schedule and results
-    if verbose:
-        print("   📅 Extracting schedule...")
-    schedule_df = extract_league_schedule(league, season, verbose=False)
-    results['schedule'] = schedule_df
-    
-    # All teams basic stats
-    if verbose:
-        print("   🏟️ Extracting team statistics...")
-    
-    # Get all teams from schedule or player data
-    if not schedule_df.empty:
-        all_teams = list(set(schedule_df['home_team'].tolist() + schedule_df['away_team'].tolist()))
-    else:
-        players_df = extract_league_players(league, season, verbose=False)
-        all_teams = players_df['team'].unique().tolist() if not players_df.empty else []
-    
-    if all_teams:
-        teams_df = extract_multiple_teams(all_teams, league, season, verbose=False)
-        results['teams'] = teams_df
-        
-        # Filter to top teams if requested
-        if top_teams_only > 0 and not teams_df.empty and 'points' in teams_df.columns:
-            top_teams = teams_df.nlargest(top_teams_only, 'points')['team_name'].tolist()
-            if verbose:
-                print(f"   🏆 Focusing on top {top_teams_only} teams: {', '.join(top_teams)}")
-        else:
-            top_teams = all_teams
-    else:
-        top_teams = []
-        results['teams'] = pd.DataFrame()
-    
-    # Player statistics if requested
-    if include_player_stats and top_teams:
-        if verbose:
-            print("   👤 Extracting player statistics...")
-        
-        all_players_data = []
-        for team in top_teams[:min(len(top_teams), 10)]:  # Limit to avoid overload
-            if verbose:
-                print(f"      Analyzing {team}...")
-            team_players = extract_league_players(league, season, team_filter=team, verbose=False)
-            if not team_players.empty:
-                players_list = team_players['player'].unique().tolist()
-                players_stats = extract_multiple_players(players_list, league, season, verbose=False)
-                if not players_stats.empty:
-                    all_players_data.append(players_stats)
-        
-        if all_players_data:
-            results['players'] = pd.concat(all_players_data, ignore_index=True)
-        else:
-            results['players'] = pd.DataFrame()
-    
-    # Export results
-    if export:
-        for data_type, data in results.items():
-            if not data.empty:
-                filename = f"{league}_{season}_{data_type}"
-                export_to_csv(data, filename)
-    
-    if verbose:
-        total_data_points = sum(len(df) for df in results.values() if isinstance(df, pd.DataFrame))
-        print(f"✅ League analysis complete: {total_data_points} total records")
-    
-    return results
