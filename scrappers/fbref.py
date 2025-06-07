@@ -29,6 +29,21 @@ BIG_FIVE_DICT = {
     "Bundesliga": "GER-Bundesliga",
 }
 
+INTERNATIONAL_COMPETITIONS = {
+    "Champions League": {
+        "comp_id": "8",
+        "url_pattern": "/en/comps/8/history/Champions-League-Seasons"
+    },
+    "FIFA World Cup": {
+        "comp_id": "1", 
+        "url_pattern": "/en/comps/1/history/World-Cup-Seasons"
+    },
+    "UEFA European Football Championship": {
+        "comp_id": "676",
+        "url_pattern": "/en/comps/676/history/European-Championship-Seasons"
+    }
+}
+
 
 class FBref(BaseRequestsReader):
     """Provides pd.DataFrames from data at http://fbref.com.
@@ -152,17 +167,47 @@ class FBref(BaseRequestsReader):
             df_table["url"] = html_table.xpath(".//th[@data-stat='league_name']/a/@href")
             dfs.append(df_table)
 
+        # Domestic leagues
+        if dfs:
+            df = pd.concat(dfs)
+        else:
+            df = pd.DataFrame()
+        
+        # ADD INTERNATIONAL COMPETITIONS manually
+        international_rows = []
+        for league_name, selected_name in self._selected_leagues.items():
+            if selected_name in INTERNATIONAL_COMPETITIONS:
+                comp_info = INTERNATIONAL_COMPETITIONS[selected_name]
+                international_rows.append({
+                    'Competition Name': selected_name,
+                    'Country': 'International',
+                    'First Season': '9999',  # Will be parsed later
+                    'Last Season': '2425',   # Current season
+                    'url': comp_info["url_pattern"]
+                })
+        
+        if international_rows:
+            df_international = pd.DataFrame(international_rows)
+            df = pd.concat([df, df_international], ignore_index=True) if not df.empty else df_international
+
+        if df.empty:
+            return pd.DataFrame(columns=['league', 'url']).set_index('league')
+
         df = (
-            pd.concat(dfs)
-            .pipe(standardize_colnames)
+            df.pipe(standardize_colnames)
             .rename(columns={"competition_name": "league"})
             .pipe(self._translate_league)
             .drop_duplicates(subset="league")
             .set_index("league")
             .sort_index()
         )
-        df["first_season"] = df["first_season"].apply(self._season_code.parse)
-        df["last_season"] = df["last_season"].apply(self._season_code.parse)
+        
+        if 'first_season' in df.columns:
+            df["first_season"] = df["first_season"].apply(
+                lambda x: self._season_code.parse(x) if pd.notna(x) and x != '9999' else '2003'
+            )
+        if 'last_season' in df.columns:
+            df["last_season"] = df["last_season"].apply(self._season_code.parse)
 
         leagues = self.leagues
         if "Big 5 European Leagues Combined" in self.leagues and split_up_big5:
