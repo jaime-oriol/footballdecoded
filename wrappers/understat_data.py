@@ -1,10 +1,10 @@
-# ========================================================
-# FootballDecoded - Understat Advanced Metrics Extractor
-# ========================================================
+# ====================================================================
+# FootballDecoded - Understat Professional Advanced Metrics Extractor
+# ====================================================================
 # Specialized wrapper for extracting ALL advanced metrics from Understat
 # that FBref doesn't provide. Maintains FBref-compatible format for easy merging.
-# Focus: xGChain, xGBuildup, PPDA, OPPDA, Deep completions, Shot events, Key passes
-# ========================================================
+# Focus: xGChain, xGBuildup, PPDA, OPPDA, Deep completions, Shot coordinates
+# ====================================================================
 
 import sys
 import os
@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import warnings
 from typing import Dict, List, Optional, Union
+from datetime import datetime
 
 # Add extractors to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,7 +23,7 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 
 # ====================================================================
-# PLAYER METRICS - Complete Season Analytics
+# PLAYER METRICS EXTRACTION
 # ====================================================================
 
 def extract_player_season(
@@ -58,7 +59,6 @@ def extract_player_season(
         if verbose:
             print(f"   🔍 Searching Understat database...")
         
-        # Get player season stats
         stats = understat.read_player_season_stats()
         player_row = _find_player(stats, player_name)
         
@@ -138,7 +138,7 @@ def extract_multiple_players(
 
 
 # ====================================================================
-# TEAM METRICS - Complete Team Performance Analytics
+# TEAM METRICS EXTRACTION
 # ====================================================================
 
 def extract_team_season(
@@ -176,7 +176,6 @@ def extract_team_season(
         if verbose:
             print(f"   🔍 Searching team database...")
         
-        # Get team match stats for aggregated calculations
         team_stats = understat.read_team_match_stats()
         team_matches = _find_team(team_stats, team_name)
         
@@ -253,7 +252,7 @@ def extract_multiple_teams(
 
 
 # ====================================================================
-# SHOT EVENTS - Complete Shot Analytics with Coordinates
+# SHOT EVENTS EXTRACTION
 # ====================================================================
 
 def extract_shot_events(
@@ -291,7 +290,6 @@ def extract_shot_events(
     try:
         understat = Understat(leagues=[league], seasons=[season])
         
-        # Extract shot events
         shot_events = understat.read_shot_events(match_id=match_id)
         
         if shot_events is None or shot_events.empty:
@@ -332,7 +330,80 @@ def extract_shot_events(
 
 
 # ====================================================================
-# CORE PROCESSING ENGINE - Internal Functions
+# INTEGRATION UTILITIES
+# ====================================================================
+
+def merge_with_fbref(
+    fbref_data: Union[pd.DataFrame, Dict],
+    league: str,
+    season: str,
+    data_type: str = 'player',
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Merge FBref data with Understat metrics automatically.
+    
+    Args:
+        fbref_data: FBref DataFrame or Dict
+        league: League identifier  
+        season: Season identifier
+        data_type: 'player' or 'team'
+        verbose: Show merge progress
+        
+    Returns:
+        DataFrame with combined FBref + Understat metrics
+    """
+    if verbose:
+        print("🔗 Merging FBref data with Understat metrics")
+    
+    # Convert to DataFrame if needed
+    if isinstance(fbref_data, dict):
+        fbref_df = pd.DataFrame([fbref_data])
+    else:
+        fbref_df = fbref_data.copy()
+    
+    if fbref_df.empty:
+        if verbose:
+            print("   ❌ No FBref data provided")
+        return fbref_df
+    
+    # Extract entities and get Understat data
+    if data_type == 'player':
+        entities = fbref_df['player_name'].unique().tolist()
+        understat_df = extract_multiple_players(entities, league, season, verbose=False)
+        merge_key = 'player_name'
+    else:  # team
+        entities = fbref_df['team_name'].unique().tolist()
+        understat_df = extract_multiple_teams(entities, league, season, verbose=False)
+        merge_key = 'team_name'
+    
+    if understat_df.empty:
+        if verbose:
+            print("   ⚠️ No Understat data found")
+        return fbref_df
+    
+    # Merge datasets
+    merged_df = pd.merge(
+        fbref_df,
+        understat_df,
+        on=[merge_key, 'league', 'season', 'team'],
+        how='left',
+        suffixes=('', '_understat_dup')
+    )
+    
+    # Remove duplicate columns
+    dup_cols = [col for col in merged_df.columns if col.endswith('_understat_dup')]
+    merged_df = merged_df.drop(columns=dup_cols)
+    
+    if verbose:
+        understat_cols = [col for col in merged_df.columns if col.startswith('understat_')]
+        print(f"   ✅ SUCCESS: Added {len(understat_cols)} Understat metrics")
+    
+    return merged_df
+
+
+# ====================================================================
+# CORE PROCESSING ENGINE
 # ====================================================================
 
 def _find_player(stats: pd.DataFrame, player_name: str) -> Optional[pd.DataFrame]:
@@ -457,13 +528,12 @@ def _extract_all_player_metrics(player_row: pd.DataFrame) -> Dict:
         'xa': 'understat_xa',                          # Expected assists
         'xg': 'understat_xg',                          # Total xG
         'np_goals': 'understat_np_goals',              # Non-penalty goals
-        'own_goals': 'understat_own_goals',            # Own goals (FBref doesn't track)
         'position_id': 'understat_position_id',        # Numerical position
         'player_id': 'understat_player_id',            # Player ID for cross-ref
         'team_id': 'understat_team_id'                 # Team ID for cross-ref
     }
     
-    # Cross-validation metrics (compare with FBref)
+    # Validation metrics (compare with FBref)
     validation_metrics = {
         'matches': 'understat_matches',
         'minutes': 'understat_minutes',
@@ -532,16 +602,9 @@ def _calculate_all_team_metrics(team_matches: pd.DataFrame) -> Dict:
     ppda_values = _extract_column_values(team_matches, ['home_ppda', 'away_ppda'])
     if ppda_values:
         team_metrics['understat_ppda_avg'] = np.mean(ppda_values)
-        team_metrics['understat_ppda_min'] = np.min(ppda_values)  # Best defensive performance
-        team_metrics['understat_ppda_max'] = np.max(ppda_values)  # Worst defensive performance
-        team_metrics['understat_ppda_std'] = np.std(ppda_values)  # Consistency metric
-    
-    # OPPDA Metrics - Opponent PPDA (defensive pressure allowed)
-    oppda_values = _extract_column_values(team_matches, ['home_oppda', 'away_oppda'])
-    if oppda_values:
-        team_metrics['understat_oppda_avg'] = np.mean(oppda_values)
-        team_metrics['understat_oppda_min'] = np.min(oppda_values)
-        team_metrics['understat_oppda_max'] = np.max(oppda_values)
+        team_metrics['understat_ppda_min'] = np.min(ppda_values)
+        team_metrics['understat_ppda_max'] = np.max(ppda_values)
+        team_metrics['understat_ppda_std'] = np.std(ppda_values)
     
     # Deep Completions - Final third entries
     deep_values = _extract_column_values(team_matches, ['home_deep_completions', 'away_deep_completions'])
@@ -563,24 +626,11 @@ def _calculate_all_team_metrics(team_matches: pd.DataFrame) -> Dict:
         team_metrics['understat_xg_for_avg'] = np.mean(xgf_values)
         team_metrics['understat_xg_for_max'] = np.max(xgf_values)
     
-    # Expected Goals Against
-    xga_values = _extract_column_values(team_matches, ['away_xg', 'home_xg'])  # Opponent's xG
-    if xga_values:
-        team_metrics['understat_xg_against_total'] = np.sum(xga_values)
-        team_metrics['understat_xg_against_avg'] = np.mean(xga_values)
-        team_metrics['understat_xg_against_min'] = np.min(xga_values)  # Best defensive game
-    
     # Non-penalty xG metrics
     np_xg_values = _extract_column_values(team_matches, ['home_np_xg', 'away_np_xg'])
     if np_xg_values:
         team_metrics['understat_np_xg_total'] = np.sum(np_xg_values)
         team_metrics['understat_np_xg_avg'] = np.mean(np_xg_values)
-    
-    # xG Difference per match
-    xg_diff_values = _extract_column_values(team_matches, ['home_xg_difference', 'away_xg_difference'])
-    if xg_diff_values:
-        team_metrics['understat_xg_difference_avg'] = np.mean(xg_diff_values)
-        team_metrics['understat_xg_difference_total'] = np.sum(xg_diff_values)
     
     # Goals scored (for validation)
     goals_values = _extract_column_values(team_matches, ['home_goals', 'away_goals'])
@@ -621,13 +671,6 @@ def _add_derived_team_metrics(metrics: Dict) -> None:
     if 'understat_goals_scored_total' in metrics and 'understat_xg_for_total' in metrics:
         goals_diff = metrics['understat_goals_scored_total'] - metrics['understat_xg_for_total']
         metrics['understat_goals_vs_xg_difference'] = goals_diff
-    
-    # Defensive efficiency (PPDA vs OPPDA ratio)
-    if 'understat_ppda_avg' in metrics and 'understat_oppda_avg' in metrics:
-        ppda = metrics['understat_ppda_avg']
-        oppda = metrics['understat_oppda_avg']
-        if oppda > 0:
-            metrics['understat_defensive_pressure_ratio'] = ppda / oppda
 
 
 def _process_complete_shot_events(shot_events: pd.DataFrame) -> pd.DataFrame:
@@ -851,8 +894,8 @@ def _standardize_dataframe(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     else:  # team
         priority_columns = [
             'team_name', 'league', 'season', 'official_team_name',
-            'understat_ppda_avg', 'understat_oppda_avg', 'understat_deep_completions_total',
-            'understat_expected_points_total', 'understat_xg_for_total', 'understat_xg_against_total'
+            'understat_ppda_avg', 'understat_deep_completions_total',
+            'understat_expected_points_total', 'understat_xg_for_total'
         ]
     
     available_priority = [col for col in priority_columns if col in df.columns]
@@ -863,7 +906,7 @@ def _standardize_dataframe(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 
 
 # ====================================================================
-# EXPORT AND INTEGRATION UTILITIES
+# EXPORT UTILITIES
 # ====================================================================
 
 def export_to_csv(
@@ -871,16 +914,24 @@ def export_to_csv(
     filename: str,
     include_timestamp: bool = True
 ) -> str:
-    """Export data to CSV with proper formatting."""
-    import datetime
+    """
+    Export data to CSV with proper formatting.
     
+    Args:
+        data: Data to export (Dict or DataFrame)
+        filename: Output filename (without .csv extension)
+        include_timestamp: Add timestamp to filename
+        
+    Returns:
+        Full path of created CSV file
+    """
     if isinstance(data, dict):
         df = pd.DataFrame([data])
     else:
         df = data
     
     if include_timestamp:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         full_filename = f"{filename}_{timestamp}.csv"
     else:
         full_filename = f"{filename}.csv"
@@ -893,77 +944,8 @@ def export_to_csv(
     return full_filename
 
 
-def merge_with_fbref(
-    fbref_data: Union[pd.DataFrame, Dict],
-    league: str,
-    season: str,
-    data_type: str = 'player',
-    verbose: bool = False
-) -> pd.DataFrame:
-    """
-    Merge FBref data with Understat metrics automatically.
-    
-    Args:
-        fbref_data: FBref DataFrame or Dict
-        league: League identifier  
-        season: Season identifier
-        data_type: 'player' or 'team'
-        verbose: Show merge progress
-        
-    Returns:
-        DataFrame with combined FBref + Understat metrics
-    """
-    if verbose:
-        print("🔗 Merging FBref data with Understat metrics")
-    
-    # Convert to DataFrame if needed
-    if isinstance(fbref_data, dict):
-        fbref_df = pd.DataFrame([fbref_data])
-    else:
-        fbref_df = fbref_data.copy()
-    
-    if fbref_df.empty:
-        if verbose:
-            print("   ❌ No FBref data provided")
-        return fbref_df
-    
-    # Extract entities and get Understat data
-    if data_type == 'player':
-        entities = fbref_df['player_name'].unique().tolist()
-        understat_df = extract_multiple_players(entities, league, season, verbose=False)
-        merge_key = 'player_name'
-    else:  # team
-        entities = fbref_df['team_name'].unique().tolist()
-        understat_df = extract_multiple_teams(entities, league, season, verbose=False)
-        merge_key = 'team_name'
-    
-    if understat_df.empty:
-        if verbose:
-            print("   ⚠️ No Understat data found")
-        return fbref_df
-    
-    # Merge datasets
-    merged_df = pd.merge(
-        fbref_df,
-        understat_df,
-        on=[merge_key, 'league', 'season', 'team'],
-        how='left',
-        suffixes=('', '_understat_dup')
-    )
-    
-    # Remove duplicate columns
-    dup_cols = [col for col in merged_df.columns if col.endswith('_understat_dup')]
-    merged_df = merged_df.drop(columns=dup_cols)
-    
-    if verbose:
-        understat_cols = [col for col in merged_df.columns if col.startswith('understat_')]
-        print(f"   ✅ SUCCESS: Added {len(understat_cols)} Understat metrics")
-    
-    return merged_df
-
-
 # ====================================================================
-# QUICK ACCESS FUNCTIONS - No Verbose Output
+# QUICK ACCESS FUNCTIONS
 # ====================================================================
 
 def get_player(player_name: str, league: str, season: str) -> Optional[Dict]:
