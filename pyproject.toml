@@ -1,22 +1,30 @@
 [tool.poetry]
-name = "soccerdata"
-version = "1.8.7"
-description = "A collection of wrappers over soccer data from various websites / APIs."
-authors = ["Pieter Robberechts <pieter.robberechts@kuleuven.be>"]
-license = "Apache-2.0"
+name = "footballdecoded"
+version = "1.0.0"
+description = "Professional football data extraction and analysis toolkit for tactical analysis"
+authors = ["Jaime Oriol <jaime@footballdecoded.com>"]
+license = "MIT"
 readme = 'README.rst'
-homepage = "https://github.com/probberechts/soccerdata"
-repository = "https://github.com/probberechts/soccerdata"
-documentation = "https://soccerdata.readthedocs.io"
-keywords = ["soccer", "football", "soccer data", "web scraping", "soccer analytics"]
+homepage = "https://github.com/jaimeoriol/footballdecoded"
+repository = "https://github.com/jaimeoriol/footballdecoded"
+documentation = "https://footballdecoded.readthedocs.io"
+keywords = ["soccer", "football", "soccer data", "web scraping", "soccer analytics", "tactical analysis", "fbref", "understat", "whoscored"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+packages = [
+    {include = "scrappers"},
+    {include = "wrappers"}
 ]
 
 [tool.poetry.urls]
-Changelog = "https://github.com/probberechts/soccerdata/releases"
+Changelog = "https://github.com/jaimeoriol/footballdecoded/releases"
+Documentation = "https://footballdecoded.readthedocs.io"
+"Bug Tracker" = "https://github.com/jaimeoriol/footballdecoded/issues"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
@@ -30,9 +38,15 @@ rich = "^14.0.0"
 seleniumbase = "^4.38.2"
 unidecode = "^1.4.0"
 urllib3 = "<2"
+matplotlib = "^3.7.0"
+seaborn = "^0.12.0"
+plotly = "^5.0.0"
+numpy = "^1.24.0"
 
 [tool.poetry.extras]
 socceraction = ["socceraction"]
+visualization = ["matplotlib", "seaborn", "plotly"]
+analysis = ["matplotlib", "seaborn", "plotly", "socceraction"]
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
@@ -50,6 +64,8 @@ mypy = "*"
 pep8-naming = "^0.15.0"
 pre-commit = "^4.0.0"
 pre-commit-hooks = "^5.0.0"
+jupyter = "^1.0.0"
+ipykernel = "^6.0.0"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^7.0.0"
@@ -58,12 +74,12 @@ nbsphinx = "^0.9.0"
 sphinx-autobuild = "^2024.0.0"
 
 [tool.coverage.paths]
-source = ["soccerdata", "*/site-packages"]
+source = ["scrappers", "wrappers", "*/site-packages"]
 tests = ["tests", "*/tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["soccerdata", "tests"]
+source = ["scrappers", "wrappers", "tests"]
 
 [tool.coverage.report]
 show_missing = true
@@ -83,7 +99,7 @@ module = ["tests.*"]
 disallow_untyped_defs = false
 
 [tool.ruff]
-src = ['soccerdata', 'tests']
+src = ['scrappers', 'wrappers', 'tests']
 line-length = 99
 target-version = 'py39'
 
@@ -136,7 +152,7 @@ max-complexity = 10
 convention = 'numpy'
 
 [tool.ruff.lint.isort]
-known-first-party = ["soccerdata", "tests"]
+known-first-party = ["scrappers", "wrappers", "tests"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
