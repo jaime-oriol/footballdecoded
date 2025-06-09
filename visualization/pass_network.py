@@ -1,450 +1,503 @@
 # ====================================================================
-# FootballDecoded - Pass Network Visualization (StatsBomb Style)
+# FootballDecoded - Pass Network Visualization Engine
 # ====================================================================
-# Red de pases con datos de WhoScored: nodos por participación, 
-# color por OBV, grosor por frecuencia de pases
+# Visualización modular de redes de pases estilo StatsBomb/The Athletic
 # ====================================================================
 
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.patches as patches
 import pandas as pd
-from matplotlib.patches import Circle
-from matplotlib.lines import Line2D
-import matplotlib.cm as cm
-from matplotlib.colors import Normalize
-from typing import Optional, Tuple, Dict
-import sys
-import os
+import numpy as np
+from typing import Dict, Tuple, Optional
+import seaborn as sns
 
-# Importar wrapper de WhoScored
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from wrappers.whoscored_data import extract_match_events
+# ====================================================================
+# CONFIGURACIÓN VISUAL - ESTILO STATSBOMB
+# ====================================================================
 
-def create_pass_network_statsbomb(
-    match_id: int,
-    team_name: str,
-    league: str,
-    season: str,
-    min_passes: int = 5,
-    period: str = 'full',  # 'full', 'first_half', 'second_half'
-    theme: str = 'light',
-    figsize: Tuple[int, int] = (14, 10),
-    save_path: Optional[str] = None,
-    verbose: bool = False
-) -> plt.Figure:
+FIELD_CONFIG = {
+    'length': 105,  # meters
+    'width': 68,    # meters
+    'color': 'white',  # Campo blanco como StatsBomb
+    'line_color': '#000000',  # Líneas del campo negras
+    'line_width': 2.0,
+    'goal_color': '#888888',  # Color gris más oscuro para porterías
+    'goal_width': 5.0  # Portería más gruesa
+}
+
+# Configuración específica de conexiones estilo StatsBomb
+CONNECTION_CONFIG = {
+    'min_passes': 5,  # Mínimo 5 pases para mostrar conexión
+    'thickness_tiers': [5, 10, 15, 20, 25],  # Escalones de grosor cada 5 pases
+    'line_widths': [2.0, 3.5, 5.0, 6.5, 8.0],  # Grosores correspondientes
+    'max_width': 8.0,
+    'direction_offset': 0.8,  # Separación entre líneas direccionales
+    'alpha': 0.7
+}
+
+# Colores por defecto para equipos
+TEAM_COLORS = {
+    'default': {'primary': '#3B82F6', 'secondary': '#1E40AF'},
+    'Barcelona': {'primary': '#A50044', 'secondary': '#004D98'},
+    'Real Madrid': {'primary': '#FEBE10', 'secondary': '#00529F'},
+    'Athletic': {'primary': '#EE2E24', 'secondary': '#000000'},
+    'Manchester City': {'primary': '#6CABDD', 'secondary': '#1C2C5B'},
+    'Liverpool': {'primary': '#C8102E', 'secondary': '#00B2A9'}
+}
+
+# ====================================================================
+# PROCESAMIENTO DE DATOS
+# ====================================================================
+
+def process_pass_network_data(network_data: Dict) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Crear red de pases estilo StatsBomb con datos de WhoScored.
+    Procesa datos crudos del extractor y calcula métricas para visualización.
     
     Args:
-        match_id: ID del partido en WhoScored
-        team_name: Nombre del equipo para filtrar
-        league: Liga (ej: "ENG-Premier League")
-        season: Temporada (ej: "2023-24")
-        min_passes: Mínimo de pases entre jugadores para mostrar conexión
-        period: Período del partido a analizar
-        theme: Tema visual ('light', 'dark')
-        figsize: Tamaño de la figura
-        save_path: Ruta para guardar
-        verbose: Mostrar progreso
+        network_data: Dict con 'passes', 'players', 'connections'
         
     Returns:
-        Figura de matplotlib con la red de pases
+        (positions_processed, connections_processed)
     """
+    # Verificar si tenemos datos de jugadores (puede venir como 'players' o 'positions')
+    players_key = 'players' if 'players' in network_data else 'positions'
     
-    if verbose:
-        print(f"🔍 Extrayendo eventos de pases para {team_name}")
+    if not network_data or players_key not in network_data or network_data[players_key].empty:
+        return pd.DataFrame(), pd.DataFrame()
     
-    # 1. EXTRAER DATOS DE WHOSCORED
-    try:
-        # Obtener todos los eventos del partido
-        events_df = extract_match_events(
-            match_id=match_id,
-            league=league,
-            season=season,
-            team_filter=team_name,
-            verbose=verbose
-        )
-        
-        if events_df.empty:
-            # Intentar con variaciones del nombre del equipo
-            team_variations = {
-                "Spain": ["España", "Spain", "ESP"],
-                "England": ["Inglaterra", "England", "ENG"],
-                "Barcelona": ["Barcelona", "FC Barcelona", "Barça"],
-                "Real Madrid": ["Real Madrid", "Madrid", "Real Madrid CF"]
-            }
-            
-            if team_name in team_variations:
-                for variation in team_variations[team_name]:
-                    if verbose:
-                        print(f"   🔄 Intentando con '{variation}'...")
-                    events_df = extract_match_events(
-                        match_id=match_id,
-                        league=league,
-                        season=season,
-                        team_filter=variation,
-                        verbose=False
-                    )
-                    if not events_df.empty:
-                        if verbose:
-                            print(f"   ✅ Datos encontrados con '{variation}'")
-                        break
-            
-            if events_df.empty:
-                raise ValueError(f"No se encontraron datos para {team_name} en match {match_id}")
-            
-    except Exception as e:
-        print(f"❌ Error extrayendo datos: {e}")
-        print(f"   💡 Verifica que el match_id {match_id} sea correcto")
-        print(f"   💡 Verifica que el nombre del equipo '{team_name}' sea correcto")
-        return plt.figure()
+    # Usar datos ya procesados del extractor
+    positions_df = network_data[players_key].copy()
+    connections_df = network_data['connections'].copy() if 'connections' in network_data and not network_data['connections'].empty else pd.DataFrame()
     
-    # 2. FILTRAR SOLO EVENTOS DE PASES
-    pass_events = events_df[
-        events_df['event_type'].str.contains('Pass', case=False, na=False)
-    ].copy()
+    # Convertir coordenadas y centrar correctamente en el campo
+    positions_df['field_x'] = positions_df['avg_x']  # Ya están en metros
+    positions_df['field_y'] = positions_df['avg_y']  # Ya están en metros
     
-    if len(pass_events) == 0:
-        print(f"❌ No se encontraron eventos de pase para {team_name}")
-        return plt.figure()
+    # Calcular tamaño de nodo basado en pases totales (más grande)
+    positions_df['node_size'] = _calculate_node_sizes_enhanced(positions_df['total_passes'])
     
-    # Filtrar por período si es necesario
-    if period == 'first_half':
-        pass_events = pass_events[pass_events['minute'] <= 45]
-    elif period == 'second_half':
-        pass_events = pass_events[pass_events['minute'] > 45]
-    
-    if verbose:
-        print(f"   📊 {len(pass_events)} eventos de pase encontrados")
-    
-    # 3. PROCESAR DATOS PARA LA RED
-    network_data = _process_pass_network_data(pass_events, min_passes, verbose)
-    
-    if not network_data['connections']:
-        print(f"❌ No hay conexiones con ≥{min_passes} pases")
-        return plt.figure()
-    
-    # 4. CREAR VISUALIZACIÓN
-    fig = _create_network_visualization(
-        network_data, team_name, match_id, period, theme, figsize, verbose
-    )
-    
-    # 5. GUARDAR SI SE ESPECIFICA
-    if save_path:
-        # Usar configuración segura para evitar imágenes demasiado grandes
-        fig.savefig(save_path, dpi=100, facecolor='white', bbox_inches=None)
-        if verbose:
-            print(f"💾 Gráfico guardado en: {save_path}")
-    
-    return fig
-
-
-def _process_pass_network_data(
-    pass_events: pd.DataFrame, 
-    min_passes: int,
-    verbose: bool = False
-) -> Dict:
-    """
-    Procesar eventos de pase para crear datos de red.
-    
-    Args:
-        pass_events: DataFrame con eventos de pase de WhoScored
-        min_passes: Mínimo de pases para conexión
-        verbose: Mostrar progreso
-        
-    Returns:
-        Dict con datos procesados para la red
-    """
-    
-    # Verificar columnas necesarias
-    required_cols = ['player', 'start_x', 'start_y', 'is_successful']
-    missing_cols = [col for col in required_cols if col not in pass_events.columns]
-    
-    if missing_cols:
-        print(f"⚠️ Columnas faltantes: {missing_cols}")
-        # Usar nombres alternativos si están disponibles
-        if 'start_x' not in pass_events.columns and 'x' in pass_events.columns:
-            pass_events['start_x'] = pass_events['x']
-            pass_events['start_y'] = pass_events['y']
-    
-    # 1. CALCULAR POSICIONES PROMEDIO DE JUGADORES
-    player_positions = pass_events.groupby('player').agg({
-        'start_x': 'mean',
-        'start_y': 'mean'
-    }).round(3)
-    
-    # 2. CALCULAR PARTICIPACIÓN (número total de pases)
-    player_participation = pass_events['player'].value_counts().to_dict()
-    
-    # 3. CALCULAR OBV (simulado si no está disponible)
-    if 'obv' in pass_events.columns:
-        player_obv = pass_events.groupby('player')['obv'].mean().to_dict()
+    # Procesar conexiones direccionales si existen
+    if not connections_df.empty:
+        connections_df['line_width'] = _calculate_line_widths_enhanced(connections_df['pass_count'])
+        # Crear conexiones direccionales (A->B y B->A por separado)
+        connections_processed = _create_directional_connections(connections_df, network_data['passes'])
     else:
-        # Simular OBV basado en éxito de pases y posición
-        player_obv = {}
-        for player in player_participation.keys():
-            player_passes = pass_events[pass_events['player'] == player]
-            success_rate = player_passes['is_successful'].mean() if 'is_successful' in player_passes.columns else 0.8
-            # OBV simulado: combina tasa de éxito con participación
-            simulated_obv = (success_rate - 0.5) * (player_participation[player] / 100)
-            player_obv[player] = simulated_obv
+        connections_processed = pd.DataFrame()
     
-    # 4. CALCULAR CONEXIONES ENTRE JUGADORES
-    # Para esto necesitamos identificar pases entre jugadores específicos
-    # Simplificado: usar secuencias temporales de pases
-    connections = {}
-    
-    # Ordenar pases por tiempo
-    pass_events_sorted = pass_events.sort_values(['minute', 'second'] if 'second' in pass_events.columns else ['minute'])
-    
-    # Identificar pases consecutivos como conexiones potenciales
-    for i in range(len(pass_events_sorted) - 1):
-        current_pass = pass_events_sorted.iloc[i]
-        next_pass = pass_events_sorted.iloc[i + 1]
-        
-        # Si el siguiente pase es del mismo equipo y está cerca en tiempo (≤30 segundos)
-        time_diff = (next_pass['minute'] - current_pass['minute']) * 60
-        if 'second' in pass_events_sorted.columns:
-            time_diff += (next_pass.get('second', 0) - current_pass.get('second', 0))
-        
-        if (time_diff <= 30 and 
-            current_pass.get('is_successful', False) and
-            current_pass['player'] != next_pass['player']):
-            
-            passer = current_pass['player']
-            receiver = next_pass['player']
-            
-            # Crear clave única para la conexión
-            connection_key = tuple(sorted([passer, receiver]))
-            
-            if connection_key not in connections:
-                connections[connection_key] = 0
-            connections[connection_key] += 1
-    
-    # Filtrar conexiones por mínimo de pases
-    filtered_connections = {
-        conn: count for conn, count in connections.items() 
-        if count >= min_passes
-    }
-    
-    if verbose:
-        print(f"   🔗 {len(filtered_connections)} conexiones con ≥{min_passes} pases")
-        total_connections = sum(filtered_connections.values())
-        print(f"   📊 Total pases en conexiones: {total_connections}")
-    
-    return {
-        'positions': player_positions,
-        'participation': player_participation,
-        'obv': player_obv,
-        'connections': filtered_connections
-    }
+    return positions_df, connections_processed
 
 
-def _create_network_visualization(
-    network_data: Dict,
-    team_name: str,
-    match_id: int,
-    period: str,
-    theme: str,
-    figsize: Tuple[int, int],
-    verbose: bool = False
-) -> plt.Figure:
-    """
-    Crear la visualización de la red de pases.
+def _calculate_node_sizes_enhanced(pass_counts: pd.Series, min_size: int = 800, max_size: int = 2000) -> pd.Series:
+    """Calcula tamaños de nodos más grandes y proporcionales."""
+    if pass_counts.empty:
+        return pd.Series()
     
-    Args:
-        network_data: Datos procesados de la red
-        team_name: Nombre del equipo
-        match_id: ID del partido
-        period: Período analizado
-        theme: Tema visual
-        figsize: Tamaño de figura
-        verbose: Mostrar progreso
+    min_passes = pass_counts.min()
+    max_passes = pass_counts.max()
+    
+    if max_passes == min_passes:
+        return pd.Series([min_size] * len(pass_counts), index=pass_counts.index)
+    
+    # Normalización con raíz cuadrada para mejor escalado visual
+    normalized = np.sqrt((pass_counts - min_passes) / (max_passes - min_passes))
+    sizes = min_size + (normalized * (max_size - min_size))
+    
+    return sizes
+
+
+def _calculate_line_widths_enhanced(pass_counts: pd.Series) -> pd.Series:
+    """Calcula grosor de líneas estilo StatsBomb mejorado."""
+    if pass_counts.empty:
+        return pd.Series()
+    
+    def get_enhanced_width(count):
+        """Obtiene grosor con mejor diferenciación."""
+        if count < CONNECTION_CONFIG['min_passes']:
+            return 0  # No mostrar
+        elif count < 10:
+            return 2.5
+        elif count < 15:
+            return 4.0
+        elif count < 20:
+            return 5.5
+        elif count < 25:
+            return 7.0
+        else:
+            return 8.5  # Máximo grosor
+    
+    return pass_counts.apply(get_enhanced_width)
+
+
+def _create_directional_connections(connections_df: pd.DataFrame, passes_df: pd.DataFrame) -> pd.DataFrame:
+    """Crea conexiones simplificadas desde los datos existentes."""
+    if connections_df.empty:
+        return pd.DataFrame()
+    
+    directional_connections = []
+    processed_pairs = set()  # Para evitar duplicados
+    
+    for _, conn in connections_df.iterrows():
+        source = conn['source']
+        target = conn['target']
+        pass_count = conn['pass_count']
         
-    Returns:
-        Figura de matplotlib
-    """
-    
-    # Configurar tema
-    if theme == 'dark':
-        bg_color = '#1a1a1a'
-        pitch_color = '#2d4a3a'
-        line_color = '#ffffff'
-        text_color = '#ffffff'
-    else:  # light
-        bg_color = '#f8f8f8'
-        pitch_color = '#2d5a3d'
-        line_color = '#ffffff'
-        text_color = '#000000'
-    
-    # Crear figura
-    fig, ax = plt.subplots(figsize=figsize, facecolor=bg_color)
-    ax.set_facecolor(pitch_color)
-    
-    # Dibujar campo de fútbol básico
-    _draw_football_pitch(ax, line_color)
-    
-    # Obtener datos
-    positions = network_data['positions']
-    participation = network_data['participation']
-    obv_values = network_data['obv']
-    connections = network_data['connections']
-    
-    # 1. DIBUJAR CONEXIONES (LÍNEAS DE PASE)
-    max_passes = max(connections.values()) if connections else 1
-    min_passes = min(connections.values()) if connections else 1
-    
-    for (player1, player2), pass_count in connections.items():
-        if player1 in positions.index and player2 in positions.index:
-            # Coordenadas de los jugadores
-            x1, y1 = positions.loc[player1, 'start_x'], positions.loc[player1, 'start_y']
-            x2, y2 = positions.loc[player2, 'start_x'], positions.loc[player2, 'start_y']
+        # Crear identificador único para el par (ordenado)
+        pair_id = tuple(sorted([source, target]))
+        
+        # Solo procesar si no hemos visto este par antes
+        if pair_id not in processed_pairs and pass_count >= CONNECTION_CONFIG['min_passes']:
+            processed_pairs.add(pair_id)
             
-            # Grosor de línea proporcional al número de pases
-            line_width = 0.5 + (pass_count - min_passes) / (max_passes - min_passes) * 4
-            
-            # Color de línea (gris con transparencia)
-            line_alpha = 0.3 + (pass_count - min_passes) / (max_passes - min_passes) * 0.4
-            
-            ax.plot([x1, x2], [y1, y2], 
-                   color='gray', linewidth=line_width, alpha=line_alpha, zorder=1)
+            directional_connections.append({
+                'source': source,
+                'target': target,
+                'pass_count': pass_count,
+                'line_width': _calculate_line_widths_enhanced(pd.Series([pass_count])).iloc[0],
+                'direction': 'main'
+            })
     
-    # 2. DIBUJAR NODOS (JUGADORES)
-    # Normalizar valores para tamaños y colores
-    participation_values = list(participation.values())
-    obv_list = list(obv_values.values())
+    return pd.DataFrame(directional_connections)
+
+
+# ====================================================================
+# VISUALIZACIÓN DEL CAMPO
+# ====================================================================
+
+def draw_football_pitch(ax, half_pitch: bool = False):
+    """Dibuja un campo de fútbol profesional con líneas negras y porterías grises."""
+    length = FIELD_CONFIG['length']
+    width = FIELD_CONFIG['width']
     
-    if verbose:
-        print(f"   📊 Rango de participación: {min(participation_values)} - {max(participation_values)}")
-        print(f"   📊 Rango de OBV: {min(obv_list):.3f} - {max(obv_list):.3f}")
-        print(f"   📊 Primeros 3 jugadores:")
-        for i, player in enumerate(list(positions.index)[:3]):
-            x, y = positions.loc[player, 'start_x'], positions.loc[player, 'start_y']
-            print(f"      {player}: pos=({x:.3f}, {y:.3f}), pases={participation.get(player, 0)}")
+    if half_pitch:
+        length = length / 2
     
-    # Tamaños de nodos (basados en participación)
-    min_participation = min(participation_values)
-    max_participation = max(participation_values)
+    # Campo base blanco
+    pitch = patches.Rectangle((0, 0), length, width, 
+                            linewidth=0,
+                            edgecolor='none',
+                            facecolor=FIELD_CONFIG['color'])
+    ax.add_patch(pitch)
     
-    # Colores de nodos (basados en OBV)
-    norm = Normalize(vmin=min(obv_list), vmax=max(obv_list))
-    colormap = cm.get_cmap('RdYlBu_r')  # Rojo=bajo OBV, Azul=alto OBV
+    # Línea central (negra)
+    if not half_pitch:
+        ax.plot([length/2, length/2], [0, width], 
+               color=FIELD_CONFIG['line_color'], 
+               linewidth=FIELD_CONFIG['line_width'])
     
-    for player in positions.index:
-        if player in participation and player in obv_values:
-            x, y = positions.loc[player, 'start_x'], positions.loc[player, 'start_y']
-            
-            # Verificar si las coordenadas están en rango válido
-            if not (0 <= x <= 1 and 0 <= y <= 1):
-                if verbose:
-                    print(f"   ⚠️ Coordenadas fuera de rango para {player}: ({x:.3f}, {y:.3f})")
-                # Normalizar coordenadas si están fuera del rango
-                x = max(0, min(1, x / 100 if x > 1 else x))
-                y = max(0, min(1, y / 100 if y > 1 else y))
-                if verbose:
-                    print(f"      Corregidas a: ({x:.3f}, {y:.3f})")
-            
-            # Tamaño del nodo
-            participation_normalized = (participation[player] - min_participation) / (max_participation - min_participation)
-            node_size = 200 + participation_normalized * 800  # 200-1000 pixels
-            
-            # Color del nodo
-            obv_color = colormap(norm(obv_values[player]))
-            
-            # Dibujar nodo
-            circle = Circle((x, y), radius=0.02, 
-                          facecolor=obv_color, edgecolor='white', 
-                          linewidth=2, zorder=3)
-            ax.add_patch(circle)
-            
-            # Añadir nombre del jugador
-            ax.text(x, y-0.08, player, ha='center', va='top', 
-                   fontsize=8, fontweight='bold', color=text_color, zorder=4)
+    # Círculo central (negro)
+    if not half_pitch:
+        circle = patches.Circle((length/2, width/2), 9.15, 
+                              linewidth=FIELD_CONFIG['line_width'],
+                              edgecolor=FIELD_CONFIG['line_color'],
+                              facecolor='none')
+        ax.add_patch(circle)
     
-    # 3. CONFIGURAR EJES Y TÍTULO
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
+    # Áreas y porterías
+    _draw_penalty_areas(ax, length, width)
+    _draw_goals(ax, length, width)
+    
+    # Bordes del campo (negro)
+    border = patches.Rectangle((0, 0), length, width,
+                             linewidth=FIELD_CONFIG['line_width'],
+                             edgecolor=FIELD_CONFIG['line_color'],
+                             facecolor='none')
+    ax.add_patch(border)
+    
+    ax.set_xlim(-2, length + 2)
+    ax.set_ylim(-2, width + 2)
     ax.set_aspect('equal')
     ax.axis('off')
+
+
+def _draw_penalty_areas(ax, length: float, width: float):
+    """Dibuja áreas de penalti con líneas negras."""
+    # Área grande (16.5m)
+    penalty_length = 16.5
+    penalty_width = 40.32
+    penalty_y_start = (width - penalty_width) / 2
     
-    # Título
-    period_text = {'full': 'Partido Completo', 'first_half': 'Primera Parte', 'second_half': 'Segunda Parte'}
-    title = f"Red de Pases - {team_name}\n{period_text.get(period, period)} | Match ID: {match_id}"
-    fig.suptitle(title, fontsize=14, fontweight='bold', color=text_color, y=0.95)
+    # Área izquierda
+    penalty_left = patches.Rectangle((0, penalty_y_start), penalty_length, penalty_width,
+                                   linewidth=FIELD_CONFIG['line_width'],
+                                   edgecolor=FIELD_CONFIG['line_color'],
+                                   facecolor='none')
+    ax.add_patch(penalty_left)
     
-    # 4. LEYENDA
-    _add_legend(fig, ax, colormap, norm, text_color)
+    # Área derecha
+    penalty_right = patches.Rectangle((length - penalty_length, penalty_y_start), 
+                                    penalty_length, penalty_width,
+                                    linewidth=FIELD_CONFIG['line_width'],
+                                    edgecolor=FIELD_CONFIG['line_color'],
+                                    facecolor='none')
+    ax.add_patch(penalty_right)
     
-    # 5. ESTADÍSTICAS
-    total_players = len(positions)
-    total_connections = len(connections)
-    total_passes = sum(connections.values())
+    # Área pequeña (5.5m)
+    small_area_length = 5.5
+    small_area_width = 18.32
+    small_y_start = (width - small_area_width) / 2
     
-    stats_text = f"Jugadores: {total_players} | Conexiones: {total_connections} | Pases: {total_passes}"
-    ax.text(0.5, -0.05, stats_text, transform=ax.transAxes, 
-           ha='center', va='top', fontsize=10, color=text_color)
+    # Área pequeña izquierda
+    small_left = patches.Rectangle((0, small_y_start), small_area_length, small_area_width,
+                                 linewidth=FIELD_CONFIG['line_width'],
+                                 edgecolor=FIELD_CONFIG['line_color'],
+                                 facecolor='none')
+    ax.add_patch(small_left)
     
-    if verbose:
-        print(f"   ✅ Red creada: {total_players} jugadores, {total_connections} conexiones")
+    # Área pequeña derecha
+    small_right = patches.Rectangle((length - small_area_length, small_y_start), 
+                                  small_area_length, small_area_width,
+                                  linewidth=FIELD_CONFIG['line_width'],
+                                  edgecolor=FIELD_CONFIG['line_color'],
+                                  facecolor='none')
+    ax.add_patch(small_right)
+
+
+def _draw_goals(ax, length: float, width: float):
+    """Dibuja las porterías con líneas grises más gruesas."""
+    goal_width = 7.32
+    goal_y_start = (width - goal_width) / 2
     
-    # Ajustar layout sin tight_layout para evitar warnings
-    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+    # Portería izquierda (línea gruesa gris)
+    ax.plot([0, 0], [goal_y_start, goal_y_start + goal_width],
+           color=FIELD_CONFIG['goal_color'],
+           linewidth=FIELD_CONFIG['goal_width'],
+           solid_capstyle='round')
+    
+    # Portería derecha (línea gruesa gris)  
+    ax.plot([length, length], [goal_y_start, goal_y_start + goal_width],
+           color=FIELD_CONFIG['goal_color'], 
+           linewidth=FIELD_CONFIG['goal_width'],
+           solid_capstyle='round')
+
+
+# ====================================================================
+# VISUALIZACIÓN PRINCIPAL
+# ====================================================================
+
+def plot_pass_network(network_data: Dict, team_name: str, 
+                     show_player_names: bool = True,
+                     title: Optional[str] = None,
+                     figsize: Tuple[int, int] = (16, 11)) -> plt.Figure:
+    """
+    Genera visualización completa de red de pases estilo StatsBomb mejorado.
+    
+    Args:
+        network_data: Datos del wrapper de WhoScored
+        team_name: Nombre del equipo
+        show_player_names: Mostrar nombres de jugadores
+        title: Título personalizado
+        figsize: Tamaño de la figura
+        
+    Returns:
+        Figure de matplotlib
+    """
+    # Procesar datos
+    positions_df, connections_df = process_pass_network_data(network_data)
+    
+    if positions_df.empty:
+        raise ValueError(f"No se encontraron datos para {team_name}")
+    
+    # Configurar figura con fondo blanco
+    fig, ax = plt.subplots(figsize=figsize)
+    fig.patch.set_facecolor('white')
+    
+    # Dibujar campo
+    draw_football_pitch(ax)
+    
+    # Obtener colores del equipo o usar por defecto
+    team_colors = TEAM_COLORS.get(team_name, TEAM_COLORS['default'])
+    
+    # SIEMPRE dibujar nodos de jugadores (incluso sin conexiones)
+    _draw_player_nodes_enhanced(ax, positions_df, team_colors['primary'])
+    
+    # Dibujar conexiones solo si existen
+    if not connections_df.empty:
+        _draw_connections_statsbomb_enhanced(ax, connections_df, positions_df, team_colors['secondary'])
+        connections_count = len(connections_df)
+    else:
+        connections_count = 0
+        print(f"⚠️ No hay conexiones para {team_name} (mostrar solo posiciones medias)")
+    
+    # Añadir nombres de jugadores más cerca
+    if show_player_names:
+        _add_player_labels_enhanced(ax, positions_df)
+    
+    # Configurar título
+    if title is None:
+        total_passes = len(network_data['passes']) if 'passes' in network_data else 0
+        if connections_count > 0:
+            title = f"{team_name} - Red de Pases\nPases completados: {total_passes} | Conexiones: {connections_count}"
+        else:
+            title = f"{team_name} - Posiciones Medias\nPases completados: {total_passes} | Sin conexiones suficientes"
+    
+    ax.set_title(title, color='black', fontsize=18, fontweight='bold', pad=25)
+    
+    plt.tight_layout()
     return fig
 
 
-def _draw_football_pitch(ax: plt.Axes, line_color: str) -> None:
-    """Dibujar campo de fútbol básico."""
-    # Límites del campo
-    ax.plot([0, 1, 1, 0, 0], [0, 0, 1, 1, 0], color=line_color, linewidth=2)
-    
-    # Línea central
-    ax.plot([0.5, 0.5], [0, 1], color=line_color, linewidth=2)
-    
-    # Círculo central
-    circle = plt.Circle((0.5, 0.5), 0.1, fill=False, color=line_color, linewidth=2)
-    ax.add_patch(circle)
-    
-    # Áreas de penalti (simplificadas)
-    # Izquierda
-    ax.plot([0, 0.17, 0.17, 0], [0.21, 0.21, 0.79, 0.79], color=line_color, linewidth=2)
-    # Derecha  
-    ax.plot([1, 0.83, 0.83, 1], [0.21, 0.21, 0.79, 0.79], color=line_color, linewidth=2)
-    
-    print(f"   ⚽ Campo dibujado con color: {line_color}")
+def _draw_connections_statsbomb_enhanced(ax, connections_df: pd.DataFrame, positions_df: pd.DataFrame, color: str):
+    """Dibuja conexiones simplificadas."""
+    if connections_df.empty:
+        return
+        
+    for _, connection in connections_df.iterrows():
+        source_player = connection['source']
+        target_player = connection['target']
+        
+        # Buscar posiciones de los jugadores
+        source_pos = positions_df[positions_df['player'] == source_player]
+        target_pos = positions_df[positions_df['player'] == target_player]
+        
+        if source_pos.empty or target_pos.empty:
+            continue
+        
+        x1, y1 = source_pos.iloc[0]['field_x'], source_pos.iloc[0]['field_y']
+        x2, y2 = target_pos.iloc[0]['field_x'], target_pos.iloc[0]['field_y']
+        
+        # Usar grosor calculado
+        line_width = connection['line_width']
+        
+        # Solo dibujar si el grosor es > 0 (≥5 pases)
+        if line_width > 0:
+            ax.plot([x1, x2], [y1, y2], 
+                   color=color, 
+                   linewidth=line_width,
+                   alpha=CONNECTION_CONFIG['alpha'],
+                   solid_capstyle='round',
+                   zorder=1)
 
 
-def _add_legend(fig: plt.Figure, ax: plt.Axes, colormap, norm, text_color: str) -> None:
-    """Añadir leyenda explicativa."""
-    # Colorbar para OBV
-    from matplotlib.colorbar import ColorbarBase
-    
-    # Crear subplot para colorbar
-    cbar_ax = fig.add_axes([0.02, 0.15, 0.02, 0.3])
-    cbar = ColorbarBase(cbar_ax, cmap=colormap, norm=norm, orientation='vertical')
-    cbar.set_label('OBV Value', color=text_color, fontsize=10)
-    cbar.ax.tick_params(colors=text_color, labelsize=8)
-    
-    # Leyenda de tamaños
-    legend_elements = [
-        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', 
-                   markersize=6, label='Pocos pases'),
-        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', 
-                   markersize=12, label='Muchos pases'),
-        plt.Line2D([0], [0], color='gray', linewidth=1, label='Pocas conexiones'),
-        plt.Line2D([0], [0], color='gray', linewidth=4, label='Muchas conexiones')
-    ]
-    
-    ax.legend(handles=legend_elements, loc='upper right', frameon=True, 
-             fancybox=True, shadow=True, fontsize=8)
+def _draw_player_nodes_enhanced(ax, positions_df: pd.DataFrame, color: str):
+    """Dibuja nodos de jugadores más grandes con mejor contraste."""
+    for _, player in positions_df.iterrows():
+        ax.scatter(player['field_x'], player['field_y'],
+                  s=player['node_size'],
+                  c=color,
+                  edgecolors='white',
+                  linewidth=4,  # Borde aún más grueso
+                  alpha=0.95,
+                  zorder=3)
 
 
-# Función de conveniencia para uso rápido
-def quick_pass_network(match_id: int, team_name: str, league: str, season: str):
-    """Función rápida para generar red de pases."""
-    return create_pass_network_statsbomb(
-        match_id=match_id,
-        team_name=team_name, 
-        league=league,
-        season=season,
-        verbose=True
-    )
+def _add_player_labels_enhanced(ax, positions_df: pd.DataFrame):
+    """Añade etiquetas de jugadores más grandes y más cerca del círculo."""
+    for _, player in positions_df.iterrows():
+        # Usar apellido si el nombre es muy largo
+        player_name = player['player']
+        if len(player_name) > 12:
+            player_name = player_name.split()[-1]
+        
+        # Calcular offset basado en tamaño del nodo (más cerca)
+        node_radius = np.sqrt(player['node_size'] / np.pi) / 12  # Radio más pequeño
+        offset = node_radius + 0.8  # Mucho más cerca del círculo
+        
+        ax.text(player['field_x'], player['field_y'] - offset,
+               player_name,
+               ha='center', va='top',
+               color='black',
+               fontsize=12,  # Texto más grande
+               fontweight='bold',
+               zorder=4)
+
+
+# ====================================================================
+# FUNCIÓN PRINCIPAL DE USO
+# ====================================================================
+
+def create_pass_network_from_data(processed_data: Dict[str, pd.DataFrame], 
+                                team_name: str,
+                                save_path: Optional[str] = None) -> plt.Figure:
+    """
+    Función optimizada para crear visualización desde datos ya procesados.
+    
+    Args:
+        processed_data: Dict con DataFrames ya procesados ('passes', 'players', 'connections')
+        team_name: Nombre del equipo
+        save_path: Ruta para guardar la imagen (opcional)
+        
+    Returns:
+        Figure de matplotlib
+    """
+    print(f"🎨 Creando visualización para {team_name}...")
+    
+    # Debug: Verificar estructura de datos
+    print(f"🔍 Claves disponibles: {list(processed_data.keys())}")
+    players_key = 'players' if 'players' in processed_data else 'positions'
+    print(f"🔍 Usando clave: {players_key}")
+    
+    # Debug: Verificar columnas en los datos
+    if 'passes' in processed_data:
+        print(f"🔍 Columnas en passes: {list(processed_data['passes'].columns)}")
+    if 'connections' in processed_data:
+        print(f"🔍 Columnas en connections: {list(processed_data['connections'].columns)}")
+    
+    # Filtrar datos del equipo específico
+    team_data = _filter_team_data(processed_data, team_name)
+    
+    if team_data['players'].empty:
+        raise ValueError(f"No se encontraron datos para {team_name}")
+    
+    # Crear visualización
+    fig = plot_pass_network(team_data, team_name)
+    
+    # Guardar si se especifica ruta
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches='tight', 
+                   facecolor='white', edgecolor='none')
+        print(f"📊 Visualización guardada: {save_path}")
+    
+    return fig
+
+
+def _filter_team_data(processed_data: Dict[str, pd.DataFrame], team_name: str) -> Dict[str, pd.DataFrame]:
+    """Filtra datos para un equipo específico."""
+    
+    # Determinar clave correcta para datos de jugadores
+    players_key = 'players' if 'players' in processed_data else 'positions'
+    
+    # Filtrar cada DataFrame por equipo
+    team_players = processed_data[players_key][processed_data[players_key]['team'] == team_name]
+    team_connections = processed_data['connections'][processed_data['connections']['team'] == team_name] if 'connections' in processed_data else pd.DataFrame()
+    team_passes = processed_data['passes'][processed_data['passes']['team'] == team_name]
+    
+    # Crear estructura compatible con la función plot_pass_network usando 'players' como clave estándar
+    return {
+        'passes': team_passes,
+        'players': team_players,  # Usar 'players' como clave estándar
+        'connections': team_connections
+    }
+
+
+# ====================================================================
+# EJEMPLO DE USO CON DATOS PROCESADOS
+# ====================================================================
+
+if __name__ == "__main__":
+    # Ejemplo usando datos ya extraídos
+    try:
+        # Opción 1: Cargar datos previamente guardados
+        print("📂 Cargando datos previamente procesados...")
+        from match_data import load_processed_data
+        
+        processed_data = load_processed_data("./match_data", 1821769)
+        
+        # Crear visualización para Barcelona
+        fig_barca = create_pass_network_from_data(
+            processed_data=processed_data,
+            team_name="Barcelona",
+            save_path="barcelona_pass_network_statsbomb.png"
+        )
+        
+        # Crear visualización para Athletic
+        fig_athletic = create_pass_network_from_data(
+            processed_data=processed_data,
+            team_name="Athletic",
+            save_path="athletic_pass_network_statsbomb.png"
+        )
+        
+        plt.show()
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        print("💡 Primero ejecuta: quick_data_extractor.py para extraer los datos")
