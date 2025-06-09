@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 from typing import Optional, Dict, Any
 import json
+import numpy as np
 
 # Load environment variables
 load_dotenv()
@@ -116,6 +117,23 @@ class DatabaseManager:
             print(f"❌ Failed to execute SQL file: {e}")
             return False
     
+    def _serialize_for_json(self, obj):
+        """Convert numpy/pandas types to JSON-serializable types."""
+        if isinstance(obj, dict):
+            return {k: self._serialize_for_json(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [self._serialize_for_json(item) for item in obj]
+        elif isinstance(obj, (np.integer, pd.Int64Dtype)):
+            return int(obj)
+        elif isinstance(obj, (np.floating, pd.Float64Dtype)):
+            return float(obj)
+        elif isinstance(obj, (np.bool_, pd.BooleanDtype)):
+            return bool(obj)
+        elif pd.isna(obj):
+            return None
+        else:
+            return obj
+    
     def insert_player_data(self, player_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
         """
         Insert player data into appropriate table.
@@ -148,9 +166,9 @@ class DatabaseManager:
             
             if table_type == 'domestic':
                 understat_metrics = {k: v for k, v in player_data.items() if k.startswith('understat_')}
-                basic_data['understat_metrics'] = json.dumps(understat_metrics)
+                basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
-            basic_data['fbref_metrics'] = json.dumps(fbref_metrics)
+            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
             # Create DataFrame and insert
             df = pd.DataFrame([basic_data])
@@ -193,9 +211,9 @@ class DatabaseManager:
             
             if table_type == 'domestic':
                 understat_metrics = {k: v for k, v in team_data.items() if k.startswith('understat_')}
-                basic_data['understat_metrics'] = json.dumps(understat_metrics)
+                basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
-            basic_data['fbref_metrics'] = json.dumps(fbref_metrics)
+            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
             # Create DataFrame and insert
             df = pd.DataFrame([basic_data])
