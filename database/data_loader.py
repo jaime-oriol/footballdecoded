@@ -928,3 +928,6 @@ def main():
     # ================================================================
     else:
         print("❌ Invalid option. Please select 1-8.")
+        
+if __name__ == "__main__":
+    main()
