@@ -257,7 +257,7 @@ def _should_update_european_team(team_name: str, season: str,
 def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load all players from specific domestic league and season.
-    FIXED: Now correctly handles pandas Series extraction.
+    FINAL FIX: Correctly handles pandas Series without ambiguity errors.
     """
     if verbose:
         print(f"🔍 Loading players from {league} - {season}")
@@ -283,26 +283,32 @@ def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dic
             print(f"📊 Found {len(players_data)} players to process")
             print("🎯 Extracting FBref + Understat data...\n")
         
-        # Process each player - FIX: Extract scalar values correctly
+        # Process each player - FINAL FIX: Avoid pandas Series ambiguity
         for i, (idx, row) in enumerate(players_data.iterrows(), 1):
-            # ✅ FIX: Extract scalar values from pandas Series
-            player_name = str(row['player']) if pd.notna(row['player']) else 'Unknown'
-            team = str(row['team']) if pd.notna(row['team']) else 'Unknown'
-            
-            # Skip if invalid data
-            if player_name == 'Unknown' or team == 'Unknown':
-                if verbose:
-                    print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
-                stats['failed'] += 1
-                continue
-            
-            if verbose:
-                print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
-            
             try:
+                # ✅ FINAL FIX: Extract values safely without pandas boolean ambiguity
+                player_value = row['player']
+                team_value = row['team']
+                
+                # Convert to string safely
+                player_name = str(player_value) if player_value is not None and str(player_value) != 'nan' else 'Unknown'
+                team = str(team_value) if team_value is not None and str(team_value) != 'nan' else 'Unknown'
+                
+                # Skip if invalid data
+                if player_name in ['Unknown', 'nan', ''] or team in ['Unknown', 'nan', '']:
+                    if verbose:
+                        print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
+                    stats['failed'] += 1
+                    continue
+                
+                if verbose:
+                    print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
+                
                 # Get FBref data first to check matches played
                 fbref_data = fbref_get_player(player_name, league, season)
-                if not fbref_data:
+                
+                # ✅ SAFE CHECK: Handle both None and empty dict cases
+                if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
                         print("❌ No FBref data")
                     stats['failed'] += 1
@@ -323,7 +329,7 @@ def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dic
                 understat_data = understat_get_player(player_name, league, season)
                 
                 # Merge ALL data
-                if understat_data:
+                if understat_data and isinstance(understat_data, dict) and understat_data:
                     combined_data = {**fbref_data, **understat_data}
                 else:
                     combined_data = fbref_data
@@ -355,7 +361,7 @@ def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dic
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:30]}...")
+                    print(f"❌ Error: {str(e)[:50]}...")
                 continue
                 
     except Exception as e:
@@ -375,7 +381,7 @@ def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dic
 def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load all teams from specific domestic league and season.
-    FIXED: Correctly handles team names extraction.
+    FINAL FIX: Correctly handles team names extraction without Series ambiguity.
     """
     if verbose:
         print(f"🔍 Loading teams from {league} - {season}")
@@ -393,10 +399,14 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 print(f"❌ No data found for {league} {season}")
             return stats
         
-        # Get unique teams - FIX: Extract scalar values correctly
-        unique_teams = teams_list_df['team'].unique()
-        # Filter out NaN and convert to strings
-        unique_teams = [str(team) for team in unique_teams if pd.notna(team)]
+        # Get unique teams - FINAL FIX: Safe extraction
+        unique_teams_raw = teams_list_df['team'].unique()
+        # Filter out NaN and convert to strings safely
+        unique_teams = []
+        for team in unique_teams_raw:
+            if team is not None and str(team) not in ['nan', 'NaN', '', 'None']:
+                unique_teams.append(str(team))
+        
         stats['total_teams'] = len(unique_teams)
         
         if verbose:
@@ -411,7 +421,9 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
             try:
                 # Get FBref data first
                 fbref_data = fbref_get_team(team_name, league, season)
-                if not fbref_data:
+                
+                # Safe check for data
+                if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
                         print("❌ No FBref data")
                     stats['failed'] += 1
@@ -432,7 +444,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 understat_data = understat_get_team(team_name, league, season)
                 
                 # Merge ALL data
-                if understat_data:
+                if understat_data and isinstance(understat_data, dict) and understat_data:
                     combined_data = {**fbref_data, **understat_data}
                 else:
                     combined_data = fbref_data
@@ -464,7 +476,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:30]}...")
+                    print(f"❌ Error: {str(e)[:50]}...")
                 continue
                 
     except Exception as e:
@@ -485,7 +497,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
 def load_european_players(competition: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load Champions League players (FBref only).
-    FIXED: Correctly handles player/team names extraction.
+    FINAL FIX: Correctly handles player/team names extraction without ambiguity.
     """
     if verbose:
         print(f"🔍 Loading European players from {competition} - {season}")
@@ -511,26 +523,31 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
             print(f"📊 Found {len(players_data)} players to process")
             print("🎯 Extracting FBref data only (no Understat for European competitions)...\n")
         
-        # Process each player - FIX: Extract scalar values correctly
+        # Process each player - FINAL FIX: Avoid pandas Series ambiguity
         for i, (idx, row) in enumerate(players_data.iterrows(), 1):
-            # ✅ FIX: Extract scalar values from pandas Series
-            player_name = str(row['player']) if pd.notna(row['player']) else 'Unknown'
-            team = str(row['team']) if pd.notna(row['team']) else 'Unknown'
-            
-            # Skip if invalid data
-            if player_name == 'Unknown' or team == 'Unknown':
-                if verbose:
-                    print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
-                stats['failed'] += 1
-                continue
-            
-            if verbose:
-                print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
-            
             try:
+                # ✅ FINAL FIX: Extract values safely
+                player_value = row['player']
+                team_value = row['team']
+                
+                # Convert to string safely
+                player_name = str(player_value) if player_value is not None and str(player_value) != 'nan' else 'Unknown'
+                team = str(team_value) if team_value is not None and str(team_value) != 'nan' else 'Unknown'
+                
+                # Skip if invalid data
+                if player_name in ['Unknown', 'nan', ''] or team in ['Unknown', 'nan', '']:
+                    if verbose:
+                        print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
+                    stats['failed'] += 1
+                    continue
+                
+                if verbose:
+                    print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
+                
                 # Get FBref data only (no Understat for European competitions)
                 fbref_data = fbref_get_player(player_name, competition, season)
-                if not fbref_data:
+                
+                if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
                         print("❌ No FBref data")
                     stats['failed'] += 1
@@ -574,7 +591,7 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:30]}...")
+                    print(f"❌ Error: {str(e)[:50]}...")
                 continue
                 
     except Exception as e:
@@ -595,7 +612,7 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
 def load_european_teams(competition: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load Champions League teams (FBref only).
-    FIXED: Correctly handles team names extraction.
+    FINAL FIX: Correctly handles team names extraction without ambiguity.
     """
     if verbose:
         print(f"🔍 Loading European teams from {competition} - {season}")
@@ -613,10 +630,14 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
                 print(f"❌ No data found for {competition} {season}")
             return stats
         
-        # Get unique teams - FIX: Extract scalar values correctly
-        unique_teams = players_list_df['team'].unique()
-        # Filter out NaN and convert to strings
-        unique_teams = [str(team) for team in unique_teams if pd.notna(team)]
+        # Get unique teams - FINAL FIX: Safe extraction
+        unique_teams_raw = players_list_df['team'].unique()
+        # Filter out NaN and convert to strings safely
+        unique_teams = []
+        for team in unique_teams_raw:
+            if team is not None and str(team) not in ['nan', 'NaN', '', 'None']:
+                unique_teams.append(str(team))
+        
         stats['total_teams'] = len(unique_teams)
         
         if verbose:
@@ -631,7 +652,8 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
             try:
                 # Get FBref data only
                 fbref_data = fbref_get_team(team_name, competition, season)
-                if not fbref_data:
+                
+                if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
                         print("❌ No FBref data")
                     stats['failed'] += 1
@@ -675,7 +697,7 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:30]}...")
+                    print(f"❌ Error: {str(e)[:50]}...")
                 continue
                 
     except Exception as e:
