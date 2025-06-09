@@ -251,13 +251,13 @@ def _should_update_european_team(team_name: str, season: str,
         return True, f"error_check ({e})"
 
 # ====================================================================
-# DOMESTIC DATA LOADING FUNCTIONS - FIXED
+# DOMESTIC DATA LOADING FUNCTIONS
 # ====================================================================
 
 def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load all players from specific domestic league and season.
-    FIXED: Now saves ALL metrics from wrappers.
+    FIXED: Now correctly handles pandas Series extraction.
     """
     if verbose:
         print(f"🔍 Loading players from {league} - {season}")
@@ -283,10 +283,18 @@ def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dic
             print(f"📊 Found {len(players_data)} players to process")
             print("🎯 Extracting FBref + Understat data...\n")
         
-        # Process each player
-        for i, (_, row) in enumerate(players_data.iterrows(), 1):
-            player_name = row['player']
-            team = row['team']
+        # Process each player - FIX: Extract scalar values correctly
+        for i, (idx, row) in enumerate(players_data.iterrows(), 1):
+            # ✅ FIX: Extract scalar values from pandas Series
+            player_name = str(row['player']) if pd.notna(row['player']) else 'Unknown'
+            team = str(row['team']) if pd.notna(row['team']) else 'Unknown'
+            
+            # Skip if invalid data
+            if player_name == 'Unknown' or team == 'Unknown':
+                if verbose:
+                    print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
+                stats['failed'] += 1
+                continue
             
             if verbose:
                 print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
@@ -367,14 +375,7 @@ def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dic
 def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load all teams from specific domestic league and season.
-    
-    Args:
-        league: League identifier (e.g., 'ESP-La Liga')
-        season: Season identifier (e.g., '2024-25')
-        verbose: Show detailed progress
-        
-    Returns:
-        Dict with loading statistics
+    FIXED: Correctly handles team names extraction.
     """
     if verbose:
         print(f"🔍 Loading teams from {league} - {season}")
@@ -392,8 +393,10 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 print(f"❌ No data found for {league} {season}")
             return stats
         
-        # Get unique teams
+        # Get unique teams - FIX: Extract scalar values correctly
         unique_teams = teams_list_df['team'].unique()
+        # Filter out NaN and convert to strings
+        unique_teams = [str(team) for team in unique_teams if pd.notna(team)]
         stats['total_teams'] = len(unique_teams)
         
         if verbose:
@@ -482,14 +485,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
 def load_european_players(competition: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load Champions League players (FBref only).
-    
-    Args:
-        competition: Competition identifier ('INT-Champions League')
-        season: Season identifier (e.g., '2024-25')
-        verbose: Show detailed progress
-        
-    Returns:
-        Dict with loading statistics
+    FIXED: Correctly handles player/team names extraction.
     """
     if verbose:
         print(f"🔍 Loading European players from {competition} - {season}")
@@ -515,10 +511,18 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
             print(f"📊 Found {len(players_data)} players to process")
             print("🎯 Extracting FBref data only (no Understat for European competitions)...\n")
         
-        # Process each player
-        for i, (_, row) in enumerate(players_data.iterrows(), 1):
-            player_name = row['player']
-            team = row['team']
+        # Process each player - FIX: Extract scalar values correctly
+        for i, (idx, row) in enumerate(players_data.iterrows(), 1):
+            # ✅ FIX: Extract scalar values from pandas Series
+            player_name = str(row['player']) if pd.notna(row['player']) else 'Unknown'
+            team = str(row['team']) if pd.notna(row['team']) else 'Unknown'
+            
+            # Skip if invalid data
+            if player_name == 'Unknown' or team == 'Unknown':
+                if verbose:
+                    print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
+                stats['failed'] += 1
+                continue
             
             if verbose:
                 print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
@@ -591,14 +595,7 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
 def load_european_teams(competition: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load Champions League teams (FBref only).
-    
-    Args:
-        competition: Competition identifier ('INT-Champions League')
-        season: Season identifier (e.g., '2024-25')
-        verbose: Show detailed progress
-        
-    Returns:
-        Dict with loading statistics
+    FIXED: Correctly handles team names extraction.
     """
     if verbose:
         print(f"🔍 Loading European teams from {competition} - {season}")
@@ -616,8 +613,10 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
                 print(f"❌ No data found for {competition} {season}")
             return stats
         
-        # Get unique teams
+        # Get unique teams - FIX: Extract scalar values correctly
         unique_teams = players_list_df['team'].unique()
+        # Filter out NaN and convert to strings
+        unique_teams = [str(team) for team in unique_teams if pd.notna(team)]
         stats['total_teams'] = len(unique_teams)
         
         if verbose:
