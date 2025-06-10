@@ -31,10 +31,10 @@ FIELD_CONFIG = {
 CONNECTION_CONFIG = {
     'min_passes': 5,
     'alpha': 0.8,
-    'base_offset': 0.5,
+    'base_offset': 0.4,
     'arrow_length': 1.0,      # MÁS PEQUEÑA
     'arrow_width': 0.6,       # MÁS PEQUEÑA
-    'name_margin': 4.0        # Margen para nombres
+    'name_margin': 2.0       # Margen para nombres
 }
 
 # Colores por equipo
@@ -256,7 +256,7 @@ def _get_actual_node_radius(total_passes: int) -> float:
     """
     node_size = _calculate_node_size(total_passes)
     # Conversión EXACTA - aumentado para que la línea salga del BORDE EXTREMO
-    return np.sqrt(node_size / np.pi) * 0.095  # Factor aumentado más para el extremo exacto
+    return np.sqrt(node_size / np.pi) * 0.105  # Factor aumentado más para el extremo exacto
 
 def _calculate_corrected_points(x1: float, y1: float, x2: float, y2: float,
                               r1: float, r2: float, pass_count: int) -> Tuple[float, float, float, float]:
@@ -313,9 +313,10 @@ def _draw_small_superposed_arrow(ax, start_x: float, start_y: float, end_x: floa
     arrow_length = CONNECTION_CONFIG['arrow_length'] * 1.3 * max(1.0, line_width / 5)
     arrow_width = CONNECTION_CONFIG['arrow_width'] * 1.3 * max(1.0, line_width / 6)
     
-    # La punta de la flecha está EXACTAMENTE donde termina la línea
-    arrow_tip_x = end_x
-    arrow_tip_y = end_y
+
+    push_forward = 1.5  # Ajusta este valor
+    arrow_tip_x = end_x + push_forward * ux
+    arrow_tip_y = end_y + push_forward * uy
     
     # Base de la flecha - retrocede EXACTAMENTE la longitud de la flecha
     back_x = arrow_tip_x - arrow_length * ux
@@ -396,74 +397,76 @@ def _draw_labels(ax, players_df: pd.DataFrame):
 # ====================================================================
 
 def _draw_legend_corrected(ax, team_data: Dict[str, pd.DataFrame], team_name: str):
-    """Dibuja leyenda PEGADA al borde del campo."""
+    """Leyenda FINAL: título centrado y círculos completos."""
     colors = TEAM_COLORS.get(team_name, TEAM_COLORS['default'])
     legend_color = colors['primary']
     
-    # Posición PEGADA al borde inferior del campo (y=0 es el borde)
-    legend_y = -4  # Justo debajo del borde del campo
+    # POSICIÓN con espacio suficiente
+    legend_y = -10
     
     # Estadísticas centrales
     total_passes = len(team_data['passes'])
-    ax.text(52.5, legend_y, f"Pases: {total_passes}", 
+    ax.text(52.5, legend_y + 6, f"Pases: {total_passes}", 
            ha='center', va='center', fontsize=18, fontweight='bold', 
            color=legend_color, family='Arial')
     
-    # Escalas pegadas
-    _draw_improved_node_scale(ax, 20, legend_y - 2, legend_color)
-    _draw_improved_connection_scale(ax, 85, legend_y - 2, legend_color)
+    # TÍTULO ÚNICO CENTRADO debajo de "Pases"
+    ax.text(52.5, legend_y + 1, "Nº Pases", 
+           ha='center', va='center', fontsize=14, fontweight='bold', 
+           color=legend_color, family='Arial')
+    
+    # Escalas SIN títulos individuales
+    _draw_nodes_no_title(ax, 20, legend_y, legend_color)
+    _draw_lines_no_title(ax, 85, legend_y, legend_color)
 
-def _draw_improved_node_scale(ax, x: float, y: float, color: str):
-    """Dibuja escala de nodos MEJORADA y bien visible."""
-    # Ejemplos que representen las 4 categorías REALES
-    pass_examples = [8, 20, 40, 70]  # Representativos de cada categoría
+def _draw_nodes_no_title(ax, x: float, y: float, color: str):
+    """Nodos SIN título individual y que NO se corten."""
+    pass_examples = [8, 20, 40, 70]
     node_sizes = [_calculate_node_size(p) for p in pass_examples]
     positions = [x - 15, x - 5, x + 5, x + 15]
     
-    # Dibujar nodos de ejemplo con mejor visibilidad
+    # CÍRCULOS BIEN ARRIBA para que NO se corten
+    circle_y = y + 5.3
+    
     for passes, size, pos in zip(pass_examples, node_sizes, positions):
-        # Tamaño apropiado para la leyenda
-        display_size = size * 0.8  # Reducido para que se vean mejor proporciones
-        ax.scatter(pos, y, s=display_size, c=color, alpha=0.8, 
+        display_size = size * 0.6  # Tamaño apropiado
+        ax.scatter(pos, circle_y, s=display_size, c=color, alpha=0.8, 
                   edgecolors=color, linewidth=2, zorder=10)
         
-        # Etiquetas más claras y MÁS VISIBLES
+        # NÚMEROS BIEN ABAJO separados de los círculos
         if passes <= 10:
             label = "≤10"
         elif passes <= 25:
-            label = "≤25"
+            label = "≤25" 
         elif passes <= 50:
             label = "≤50"
         else:
             label = "50+"
             
-        ax.text(pos, y - 1.8, label, ha='center', va='top', 
+        ax.text(pos, y + 0.5, label, ha='center', va='center',
                fontsize=11, fontweight='bold', color=color, family='Arial')
-    
-    # Título más visible
-    ax.text(x, y + 1.2, "pases", ha='center', va='bottom',
-           fontsize=13, fontweight='bold', color=color, family='Arial')
 
-def _draw_improved_connection_scale(ax, x: float, y: float, color: str):
-    """Dibuja escala de conexiones MEJORADA."""
-    # Ejemplos de grosor
+def _draw_lines_no_title(ax, x: float, y: float, color: str):
+    """Líneas SIN título individual."""
     pass_counts = [5, 10, 15, 25]
     line_widths = [_calculate_line_width(p) for p in pass_counts]
     positions = [x - 15, x - 5, x + 5, x + 15]
     
-    # Dibujar líneas de ejemplo MÁS LARGAS
+    # LÍNEAS BIEN ARRIBA
+    line_y = y + 2.5
+    
     for passes, width, pos in zip(pass_counts, line_widths, positions):
-        ax.plot([pos - 3, pos + 3], [y, y], color=color, 
+        ax.plot([pos - 2.5, pos + 2.5], [line_y, line_y], color=color, 
                linewidth=width, alpha=0.8, solid_capstyle='round')
         
-        # Etiquetas
+        # NÚMEROS BIEN ABAJO separados
         label = f"{passes}" if passes < 25 else f"{passes}+"
-        ax.text(pos, y - 2, label, ha='center', va='top',
+        ax.text(pos, y + 0.5, label, ha='center', va='center',
                fontsize=10, fontweight='bold', color=color, family='Arial')
-    
-    # Título
-    ax.text(x, y + 1.5, "pases", ha='center', va='bottom',
-           fontsize=12, fontweight='bold', color=color, family='Arial')
+
+# Y CAMBIAR EN create_pass_network():
+# ax.set_ylim(-18, 68)  POR:
+# ax.set_ylim(-16, 68)
 
 # ====================================================================
 # FUNCIONES DE CONVENIENCIA
