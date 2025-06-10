@@ -32,8 +32,8 @@ CONNECTION_CONFIG = {
     'min_passes': 4,  # Aumentado para mostrar solo conexiones significativas
     'alpha': 0.8,
     'offset': 1.5,  # Separación entre líneas bidireccionales
-    'arrow_length': 3,  # Longitud de la punta de flecha (REDUCIDA)
-    'arrow_width': 2   # Ancho de la punta de flecha (REDUCIDA)
+    'arrow_length': 1.5,  # Longitud de la punta de flecha (MUCHO MÁS PEQUEÑA)
+    'arrow_width': 1.0   # Ancho de la punta de flecha (MUCHO MÁS PEQUEÑA)
 }
 
 # Colores por equipo
@@ -102,7 +102,7 @@ def create_pass_network(match_data: Dict[str, pd.DataFrame],
     
     # Configurar ejes
     ax.set_xlim(-5, 110)
-    ax.set_ylim(-10, 73)  # Más espacio abajo para la leyenda
+    ax.set_ylim(-12, 73)  # MÁS espacio abajo para la leyenda VISIBLE
     ax.set_aspect('equal')
     ax.axis('off')
     
@@ -251,7 +251,7 @@ def _draw_goals(ax, length: float, width: float):
 # ====================================================================
 
 def _draw_bidirectional_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame, color: str):
-    """Dibuja conexiones bidireccionales con flechas desde y hacia los bordes de los nodos."""
+    """Dibuja conexiones bidireccionales con flechas desde y hacia los bordes EXACTOS de los nodos."""
     if connections_df.empty:
         return
     
@@ -273,12 +273,12 @@ def _draw_bidirectional_connections(ax, connections_df: pd.DataFrame, players_df
         x1, y1 = source_pos.iloc[0]['avg_x'], source_pos.iloc[0]['avg_y']
         x2, y2 = target_pos.iloc[0]['avg_x'], target_pos.iloc[0]['avg_y']
         
-        # Calcular radios de los nodos
-        source_radius = np.sqrt(source_pos.iloc[0]['node_size'] / np.pi) / 15  # Ajuste visual
-        target_radius = np.sqrt(target_pos.iloc[0]['node_size'] / np.pi) / 15
+        # Calcular radios EXACTOS de los nodos (del tamaño visual real)
+        source_radius = np.sqrt(source_pos.iloc[0]['node_size'] / np.pi) / 20  # Ajuste más preciso
+        target_radius = np.sqrt(target_pos.iloc[0]['node_size'] / np.pi) / 20
         
-        # Calcular línea desde borde a borde con offset
-        arrow_data = _calculate_arrow_from_edge_to_edge(x1, y1, x2, y2, source_radius, target_radius, conn['pass_count'])
+        # Calcular línea desde borde EXACTO a borde EXACTO con offset
+        arrow_data = _calculate_arrow_from_exact_edge_to_exact_edge(x1, y1, x2, y2, source_radius, target_radius, conn['pass_count'])
         
         # Determinar grosor y opacidad basado en número de pases
         line_width = _calculate_enhanced_line_width(conn['pass_count'])
@@ -293,13 +293,13 @@ def _draw_bidirectional_connections(ax, connections_df: pd.DataFrame, players_df
                solid_capstyle='round',
                zorder=1)
         
-        # Dibujar punta de flecha
+        # Dibujar punta de flecha MINÚSCULA
         _draw_arrow_head(ax, arrow_data, color, line_width, alpha)
 
 
-def _calculate_arrow_from_edge_to_edge(x1: float, y1: float, x2: float, y2: float, 
-                                     r1: float, r2: float, pass_count: int) -> Dict:
-    """Calcula coordenadas de flecha desde borde SÓLIDO de un nodo hasta cerca del borde del otro."""
+def _calculate_arrow_from_exact_edge_to_exact_edge(x1: float, y1: float, x2: float, y2: float, 
+                                                 r1: float, r2: float, pass_count: int) -> Dict:
+    """Calcula coordenadas de flecha desde borde EXACTO de un nodo hasta borde EXACTO del otro."""
     # Vector dirección
     dx = x2 - x1
     dy = y2 - y1
@@ -319,18 +319,13 @@ def _calculate_arrow_from_edge_to_edge(x1: float, y1: float, x2: float, y2: floa
     # Offset basado en número de pases
     offset = CONNECTION_CONFIG['offset'] * (1 + pass_count / 40)
     
-    # Radio REAL del borde sólido (no visual, sino del círculo sólido)
-    real_r1 = r1 * 0.8  # El borde sólido está un poco dentro del círculo visual
-    real_r2 = r2 * 0.8
+    # Punto de inicio: EXACTAMENTE en el borde del nodo origen + offset
+    start_x = x1 + r1 * ux + perp_x * offset
+    start_y = y1 + r1 * uy + perp_y * offset
     
-    # Punto de inicio: desde el borde SÓLIDO del nodo origen + offset
-    start_x = x1 + real_r1 * ux + perp_x * offset
-    start_y = y1 + real_r1 * uy + perp_y * offset
-    
-    # Punto final: cerca del borde SÓLIDO del nodo destino + offset  
-    gap = 2.0  # Gap más pequeño antes del nodo destino
-    end_x = x2 - (real_r2 + gap) * ux + perp_x * offset
-    end_y = y2 - (real_r2 + gap) * uy + perp_y * offset
+    # Punto final: EXACTAMENTE en el borde del nodo destino + offset  
+    end_x = x2 - r2 * ux + perp_x * offset
+    end_y = y2 - r2 * uy + perp_y * offset
     
     return {
         'start_x': start_x, 'start_y': start_y,
@@ -340,7 +335,7 @@ def _calculate_arrow_from_edge_to_edge(x1: float, y1: float, x2: float, y2: floa
 
 
 def _draw_arrow_head(ax, arrow_data: Dict, color: str, line_width: float, alpha: float):
-    """Dibuja la punta de flecha MÁS PEQUEÑA al final de la línea."""
+    """Dibuja la punta de flecha MINÚSCULA al final de la línea."""
     # Coordenadas de la punta
     tip_x = arrow_data['end_x']
     tip_y = arrow_data['end_y']
@@ -349,9 +344,9 @@ def _draw_arrow_head(ax, arrow_data: Dict, color: str, line_width: float, alpha:
     dx = arrow_data['dx']
     dy = arrow_data['dy']
     
-    # Tamaño de la flecha REDUCIDO y basado en grosor de línea
-    arrow_length = CONNECTION_CONFIG['arrow_length'] + line_width * 0.3  # Factor reducido
-    arrow_width = CONNECTION_CONFIG['arrow_width'] + line_width * 0.2   # Factor reducido
+    # Tamaño de la flecha MÍNIMO
+    arrow_length = CONNECTION_CONFIG['arrow_length']  # Sin multiplicar por line_width
+    arrow_width = CONNECTION_CONFIG['arrow_width']    # Sin multiplicar por line_width
     
     # Puntos de la flecha
     back_x = tip_x - arrow_length * dx
@@ -363,7 +358,7 @@ def _draw_arrow_head(ax, arrow_data: Dict, color: str, line_width: float, alpha:
     right_x = back_x + arrow_width * (-dy)
     right_y = back_y + arrow_width * dx
     
-    # Dibujar triángulo de flecha MÁS PEQUEÑO
+    # Dibujar triángulo de flecha MINÚSCULO
     triangle = patches.Polygon([(tip_x, tip_y), (left_x, left_y), (right_x, right_y)],
                               closed=True, facecolor=color, edgecolor=color,
                               alpha=alpha, linewidth=0, zorder=2)
@@ -397,21 +392,16 @@ def _draw_players_enhanced(ax, players_df: pd.DataFrame, color: str):
 
 
 def _calculate_enhanced_node_size(total_passes: int) -> float:
-    """Calcula tamaño de nodo con MAYOR diferenciación para el campo."""
-    # Rango MÁS AMPLIO para mayor diferencia visual
-    min_size = 600    # Tamaño para 1 pase (más pequeño)
-    max_size = 5000   # Tamaño para 50+ pases (más grande)
-    
-    if total_passes <= 1:
-        return min_size
-    elif total_passes >= 50:
-        return max_size
+    """Calcula tamaño de nodo con 4 TAMAÑOS MUY DIFERENCIADOS."""
+    # 4 categorías muy diferenciadas
+    if total_passes <= 5:
+        return 800    # Categoría 1: Muy pocos pases
+    elif total_passes <= 15:
+        return 1800   # Categoría 2: Pocos pases  
+    elif total_passes <= 35:
+        return 3200   # Categoría 3: Bastantes pases
     else:
-        # Escalado exponencial para mayor diferenciación
-        ratio = (total_passes - 1) / (50 - 1)
-        # Aplicar escalado exponencial para amplificar diferencias
-        exponential_ratio = ratio ** 1.5
-        return min_size + (exponential_ratio * (max_size - min_size))
+        return 5500   # Categoría 4: Muchos pases
 
 
 def _draw_labels_enhanced(ax, players_df: pd.DataFrame):
@@ -441,70 +431,74 @@ def _draw_labels_enhanced(ax, players_df: pd.DataFrame):
 
 
 def _draw_legend(ax, team_data: Dict[str, pd.DataFrame], team_name: str):
-    """Dibuja leyenda MEJORADA en la parte inferior con estadísticas y escalas."""
-    # Posición de la leyenda MÁS VISIBLE
-    legend_y = -7
+    """Dibuja leyenda VISIBLE con el mismo color que los nodos."""
+    # Obtener colores del equipo
+    colors = TEAM_COLORS.get(team_name, TEAM_COLORS['default'])
+    legend_color = colors['primary']  # Mismo color que los nodos
+    
+    # Posición de la leyenda MÁS BAJA para ser VISIBLE
+    legend_y = -9
     
     # Estadísticas básicas
     total_passes = len(team_data['passes'])
     connections_count = len(team_data['connections']) if not team_data['connections'].empty else 0
     
-    # Texto principal con estadísticas MÁS GRANDE
+    # Texto principal con estadísticas VISIBLE y del color de los nodos
     stats_text = f"Pases: {total_passes} | Conexiones: {connections_count}"
     ax.text(52.5, legend_y, stats_text, ha='center', va='center',
-           fontsize=18, fontweight='bold', color='#000000', family='Arial')
+           fontsize=20, fontweight='bold', color=legend_color, family='Arial')
     
     # Escala de nodos (lado izquierdo) 
     node_legend_x = 15
-    _draw_node_scale_legend(ax, node_legend_x, legend_y - 3)
+    _draw_node_scale_legend(ax, node_legend_x, legend_y - 4, legend_color)
     
     # Escala de conexiones (lado derecho)  
     connection_legend_x = 85
-    _draw_connection_scale_legend(ax, connection_legend_x, legend_y - 3)
+    _draw_connection_scale_legend(ax, connection_legend_x, legend_y - 4, legend_color)
 
 
-def _draw_node_scale_legend(ax, x: float, y: float):
-    """Dibuja escala de tamaños de nodos MÁS VISIBLE."""
-    # Círculos de ejemplo CON TAMAÑOS DE LA LEYENDA (no del campo)
-    sizes = [1, 15, 30, 50]  # Ejemplos de pases
-    # Tamaños FIJOS para la leyenda (no los del campo)
-    circle_sizes = [400, 800, 1200, 1600]  # Progresión visible para leyenda
-    positions = [x - 15, x - 5, x + 5, x + 15]
+def _draw_node_scale_legend(ax, x: float, y: float, color: str):
+    """Dibuja escala de tamaños de nodos con 4 tamaños diferenciados."""
+    # 4 tamaños MUY DIFERENCIADOS
+    sizes = [5, 15, 35, 50]  # Ejemplos de pases
+    # Tamaños de leyenda proporcionales a los del campo
+    circle_sizes = [400, 900, 1600, 2500]  # 4 tamaños muy diferenciados
+    positions = [x - 18, x - 6, x + 6, x + 18]
     
     for i, (size, circle_size, pos) in enumerate(zip(sizes, circle_sizes, positions)):
-        ax.scatter(pos, y, s=circle_size, c='#666666', alpha=0.6, 
-                  edgecolors='#666666', linewidth=2, zorder=10)
+        ax.scatter(pos, y, s=circle_size, c=color, alpha=0.6, 
+                  edgecolors=color, linewidth=3, zorder=10)
         
-        # Etiquetas MÁS GRANDES
-        label = f"{size}" if size < 50 else "50+"
-        ax.text(pos, y - 2, label, ha='center', va='top', 
-               fontsize=12, fontweight='bold', color='#000000', family='Arial')
+        # Etiquetas con el mismo color
+        label = f"≤{size}" if i < 3 else f"{size}+"
+        ax.text(pos, y - 2.5, label, ha='center', va='top', 
+               fontsize=12, fontweight='bold', color=color, family='Arial')
     
-    # Etiqueta de la escala MÁS GRANDE
-    ax.text(x, y + 2, "pases", ha='center', va='bottom',
-           fontsize=14, fontweight='bold', color='#000000', family='Arial')
+    # Etiqueta de la escala con el mismo color
+    ax.text(x, y + 2.5, "pases", ha='center', va='bottom',
+           fontsize=14, fontweight='bold', color=color, family='Arial')
 
 
-def _draw_connection_scale_legend(ax, x: float, y: float):
-    """Dibuja escala de grosores de conexiones MÁS VISIBLE."""
+def _draw_connection_scale_legend(ax, x: float, y: float, color: str):
+    """Dibuja escala de grosores de conexiones con el color de los nodos."""
     # Líneas de ejemplo
     pass_counts = [4, 8, 15, 25]
     line_widths = [_calculate_enhanced_line_width(p) for p in pass_counts]
-    positions = [x - 15, x - 5, x + 5, x + 15]
+    positions = [x - 18, x - 6, x + 6, x + 18]
     
     for i, (passes, width, pos) in enumerate(zip(pass_counts, line_widths, positions)):
-        # Línea MÁS LARGA para mejor visibilidad
-        ax.plot([pos - 1.5, pos + 1.5], [y, y], color='#666666', 
-               linewidth=width, alpha=0.9, solid_capstyle='round')
+        # Línea con el color de los nodos
+        ax.plot([pos - 2, pos + 2], [y, y], color=color, 
+               linewidth=width, alpha=0.8, solid_capstyle='round')
         
-        # Etiquetas MÁS GRANDES
-        label = f"{passes}" if passes < 25 else "25+"
-        ax.text(pos, y - 2, label, ha='center', va='top',
-               fontsize=12, fontweight='bold', color='#000000', family='Arial')
+        # Etiquetas con el mismo color
+        label = f"{passes}" if passes < 25 else f"{passes}+"
+        ax.text(pos, y - 2.5, label, ha='center', va='top',
+               fontsize=12, fontweight='bold', color=color, family='Arial')
     
-    # Etiqueta de la escala MÁS GRANDE
-    ax.text(x, y + 2, "pases", ha='center', va='bottom',
-           fontsize=14, fontweight='bold', color='#000000', family='Arial')
+    # Etiqueta de la escala con el mismo color
+    ax.text(x, y + 2.5, "pases", ha='center', va='bottom',
+           fontsize=14, fontweight='bold', color=color, family='Arial')
 
 
 # ====================================================================
@@ -732,6 +726,7 @@ def _draw_connection_scale_legend(ax, x: float, y: float):
     # Etiqueta de la escala
     ax.text(x, y + 1.5, "pases", ha='center', va='bottom',
            fontsize=12, fontweight='bold', color='#333333', family='Arial')
+    else: return 10.0
 
 
 def _draw_players_enhanced(ax, players_df: pd.DataFrame, color: str):
