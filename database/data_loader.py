@@ -814,7 +814,7 @@ def load_sample_data(verbose: bool = True):
 
 def main():
     """Main execution function with complete menu implementation."""
-    print("FootballDecoded Data Loader - FIXED VERSION")
+    print("FootballDecoded Data Loader")
     print("=" * 40)
     print("\n1. Load domestic players (specify league + season)")
     print("2. Load domestic teams (specify league + season)")
@@ -842,7 +842,6 @@ def main():
                 season = input("Enter season (e.g., 2024-25): ").strip()
                 
                 if season:
-                    print(f"\n🔍 Loading players from {selected_league} - {season}")
                     stats = load_domestic_players(selected_league, season, verbose=True)
                 else:
                     print("❌ Invalid season format")
@@ -866,7 +865,6 @@ def main():
                 season = input("Enter season (e.g., 2024-25): ").strip()
                 
                 if season:
-                    print(f"\n🔍 Loading teams from {selected_league} - {season}")
                     stats = load_domestic_teams(selected_league, season, verbose=True)
                 else:
                     print("❌ Invalid season format")
@@ -882,7 +880,6 @@ def main():
         season = input("Enter Champions League season (e.g., 2024-25): ").strip()
         
         if season:
-            print(f"\n🔍 Loading Champions League players - {season}")
             stats = load_european_players(CHAMPIONS_LEAGUE, season, verbose=True)
         else:
             print("❌ Invalid season format")
@@ -894,7 +891,6 @@ def main():
         season = input("Enter Champions League season (e.g., 2024-25): ").strip()
         
         if season:
-            print(f"\n🔍 Loading Champions League teams - {season}")
             stats = load_european_teams(CHAMPIONS_LEAGUE, season, verbose=True)
         else:
             print("❌ Invalid season format")

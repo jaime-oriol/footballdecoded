@@ -244,10 +244,10 @@ class BaseReader(ABC):
         self.rate_limit = 0
         self.max_delay = 0
         if self.no_store:
-            logger.info("🚫 Caching disabled")
+            logger.debug("🚫 Caching disabled")
         else:
-            # IMPROVED: More compact and clear cache info
-            logger.info("💾 Cache: %s", str(self.data_dir).replace(str(Path.home()), "~"))
+            # IMPROVED: Only log once on first initialization
+            logger.debug("💾 Cache: %s", str(self.data_dir).replace(str(Path.home()), "~"))
             self.data_dir.mkdir(parents=True, exist_ok=True)
 
     def get(
@@ -459,7 +459,7 @@ class BaseReader(ABC):
     @seasons.setter
     def seasons(self, seasons: Optional[Union[str, int, Iterable[Union[str, int]]]]) -> None:
         if seasons is None:
-            logger.info("ℹ️  No seasons specified - using last 5 seasons")
+            logger.debug("ℹ️  No seasons specified - using last 5 seasons")
             year = datetime.now(tz=timezone.utc).year
             seasons = [f"{y - 1}-{y}" for y in range(year, year - 6, -1)]
         if isinstance(seasons, (str, int)):
@@ -521,9 +521,7 @@ class BaseRequestsReader(BaseReader):
                 if not self.no_store and filepath is not None:
                     with filepath.open(mode="wb") as fh:
                         fh.write(payload)
-                    # IMPROVED: Clean cache log message
-                    source_name = filepath.parent.name
-                    logger.info("✅ Data cached: %s", source_name)
+                    # REMOVED: No logging for each cache operation to reduce noise
                 return io.BytesIO(payload)
             except Exception:
                 logger.exception(
@@ -621,9 +619,7 @@ class BaseSeleniumReader(BaseReader):
                     filepath.parent.mkdir(parents=True, exist_ok=True)
                     with filepath.open(mode="wb") as fh:
                         fh.write(response)
-                    # IMPROVED: Clean cache log message
-                    source_name = filepath.parent.name
-                    logger.info("✅ Data cached: %s", source_name)
+                    # REMOVED: No logging for each cache operation to reduce noise
                 return io.BytesIO(response)
             except Exception:
                 logger.exception(
@@ -747,9 +743,9 @@ def get_proxy() -> dict[str, str]:
         full_proxy_list.extend(proxy_json)
 
         if not full_proxy_list:
-            logger.info("ℹ️  No proxies available")
+            logger.debug("ℹ️  No proxies available")
             return {}
-        logger.info(f"🔍 Found {len(full_proxy_list)} proxy servers, checking...")
+        logger.debug(f"🔍 Found {len(full_proxy_list)} proxy servers, checking...")
 
     # creating proxy dict
     final_proxy_list = []
@@ -770,7 +766,7 @@ def get_proxy() -> dict[str, str]:
         if check_proxy(proxy):
             return proxy
 
-    logger.info("ℹ️  No working proxies found")
+    logger.debug("ℹ️  No working proxies found")
     return {}
 
 

@@ -90,13 +90,13 @@ if _f_custom_teamnname_replacements.is_file():
         for team, to_replace_list in json.load(json_file).items():
             for to_replace in to_replace_list:
                 TEAMNAME_REPLACEMENTS[to_replace] = team
-    logger.info(
+    logger.debug(
         "✅ Team name replacements loaded from %s",
         _f_custom_teamnname_replacements.name,
     )
 else:
-    logger.info(
-        "ℹ️  Team name replacements config not found at %s",
+    logger.debug(
+        "ℹ️ Team name replacements config not found at %s",
         _f_custom_teamnname_replacements.name,
     )
 
@@ -176,9 +176,9 @@ _f_custom_league_dict = CONFIG_DIR / "league_dict.json"
 if _f_custom_league_dict.is_file():
     with _f_custom_league_dict.open(encoding="utf8") as json_file:
         LEAGUE_DICT = {**LEAGUE_DICT, **json.load(json_file)}
-    logger.info("✅ Custom league dict loaded from %s", _f_custom_league_dict.name)
+    logger.debug("✅ Custom league dict loaded from %s", _f_custom_league_dict.name)
 else:
-    logger.info(
-        "ℹ️  Custom league dict config not found at %s",
+    logger.debug(
+        "ℹ️ Custom league dict config not found at %s",
         _f_custom_league_dict.name,
     )
