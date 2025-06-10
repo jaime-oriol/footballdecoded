@@ -1,69 +1,132 @@
 # ====================================================================
-# FootballDecoded - Optimized Match Data Extractor
+# FootballDecoded - Extractor de Datos de Partidos
+# ====================================================================
+# Módulo genérico para extraer y procesar datos de cualquier partido
 # ====================================================================
 
 import pandas as pd
 import numpy as np
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from datetime import datetime
 
 # ====================================================================
-# CORE EXTRACTOR
+# CONFIGURACIÓN
+# ====================================================================
+
+# Directorio de datos relativo al archivo actual
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+# ====================================================================
+# EXTRACCIÓN DE DATOS
 # ====================================================================
 
 def extract_match_data(match_id: int, league: str, season: str, 
-                      save_to_data_folder: bool = True, verbose: bool = True) -> Dict[str, pd.DataFrame]:
+                      force_reload: bool = False, verbose: bool = True) -> Dict[str, pd.DataFrame]:
     """
-    Extract and process complete match data optimized for pass network visualization.
+    Extrae y procesa datos completos de un partido.
     
+    Args:
+        match_id: ID del partido
+        league: Liga (ej: "ESP-La Liga")
+        season: Temporada (ej: "2024-25")
+        force_reload: Si True, re-extrae aunque existan los datos
+        verbose: Mostrar progreso
+        
     Returns:
-        Dict with 'passes', 'players', 'connections' DataFrames
+        Dict con 'passes', 'players', 'connections'
     """
-    from wrappers import whoscored_extract_match_events
-    
     if verbose:
-        print(f"🎯 Extracting match {match_id} ({league} {season})")
+        print(f"🎯 Procesando partido {match_id} ({league} {season})")
     
-    events_df = whoscored_extract_match_events(match_id, league, season, verbose=False)
+    # Verificar si los datos ya existen
+    if not force_reload and _data_exists(match_id):
+        if verbose:
+            print("   📂 Datos encontrados, cargando desde archivos...")
+        return load_match_data(match_id)
     
-    if events_df.empty:
-        raise ValueError(f"No events found for match {match_id}")
+    # Extraer datos nuevos
+    if verbose:
+        print("   🔍 Extrayendo datos desde WhoScored...")
     
-    # Process data
-    passes_df = _process_passes(events_df, verbose)
-    players_df = _calculate_players(passes_df, verbose)
-    connections_df = _calculate_connections(passes_df, verbose)
+    try:
+        from wrappers import whoscored_extract_match_events
+        events_df = whoscored_extract_match_events(match_id, league, season, verbose=False)
+        
+        if events_df.empty:
+            raise ValueError(f"No se encontraron eventos para el partido {match_id}")
+        
+        # Procesar datos
+        passes_df = _process_passes(events_df, verbose)
+        players_df = _calculate_players(passes_df, verbose)
+        connections_df = _calculate_connections(passes_df, verbose)
+        
+        result = {
+            'passes': passes_df,
+            'players': players_df, 
+            'connections': connections_df
+        }
+        
+        # Guardar automáticamente
+        save_match_data(result, match_id, verbose)
+        
+        return result
+        
+    except Exception as e:
+        if verbose:
+            print(f"   ❌ Error en extracción: {e}")
+        raise
+
+
+def load_match_data(match_id: int) -> Dict[str, pd.DataFrame]:
+    """Carga datos previamente procesados."""
+    result = {}
     
-    result = {'passes': passes_df, 'players': players_df, 'connections': connections_df}
-    
-    if save_to_data_folder:
-        _save_data(result, match_id, verbose)
+    for data_type in ['passes', 'players', 'connections']:
+        filepath = _get_filepath(match_id, data_type)
+        
+        if os.path.exists(filepath):
+            result[data_type] = pd.read_csv(filepath)
+        else:
+            result[data_type] = pd.DataFrame()
     
     return result
 
 
+def save_match_data(data_dict: Dict[str, pd.DataFrame], match_id: int, verbose: bool = True):
+    """Guarda datos procesados en CSV."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
+    for data_type, df in data_dict.items():
+        if not df.empty:
+            filepath = _get_filepath(match_id, data_type)
+            df.to_csv(filepath, index=False, encoding='utf-8')
+            
+            if verbose:
+                print(f"   💾 Guardado: {data_type} ({len(df)} filas)")
+
+
 # ====================================================================
-# DATA PROCESSING
+# PROCESAMIENTO DE DATOS
 # ====================================================================
 
 def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
-    """Extract and clean successful passes."""
+    """Extrae y limpia pases exitosos."""
     
-    # Filter passes only
+    # Filtrar solo pases exitosos
     passes = events_df[
         events_df['event_type'].str.contains('Pass', case=False, na=False) & 
         (events_df['is_successful'] == True)
     ].copy()
     
     if passes.empty:
-        raise ValueError("No successful passes found")
+        raise ValueError("No se encontraron pases exitosos")
     
-    # Convert coordinates to field meters
+    # Convertir coordenadas a metros de campo
     passes['field_x'] = (passes['x'] / 100) * 105
     passes['field_y'] = (passes['y'] / 100) * 68
     
-    # Calculate pass distance
+    # Calcular distancia del pase si hay coordenadas de destino
     if 'end_x' in passes.columns and 'end_y' in passes.columns:
         passes['field_end_x'] = (passes['end_x'] / 100) * 105
         passes['field_end_y'] = (passes['end_y'] / 100) * 68
@@ -72,7 +135,7 @@ def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
             (passes['field_end_y'] - passes['field_y'])**2
         )
     
-    # Select essential columns
+    # Seleccionar columnas esenciales
     essential_cols = ['player', 'team', 'field_x', 'field_y', 'minute', 'second']
     if 'pass_distance' in passes.columns:
         essential_cols.append('pass_distance')
@@ -81,13 +144,13 @@ def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     
     if verbose:
         teams = passes_clean['team'].unique()
-        print(f"   ✅ {len(passes_clean)} passes | Teams: {', '.join(teams)}")
+        print(f"   ✅ {len(passes_clean)} pases | Equipos: {', '.join(teams)}")
     
     return passes_clean
 
 
 def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
-    """Calculate player average positions and stats."""
+    """Calcula posiciones medias y estadísticas de jugadores."""
     
     player_stats = passes_df.groupby(['player', 'team']).agg({
         'field_x': 'mean',
@@ -97,7 +160,7 @@ def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     
     player_stats.columns = ['avg_x', 'avg_y', 'total_passes']
     
-    # Calculate node sizes (300-1200 range)
+    # Calcular tamaños de nodo (300-1200 rango)
     min_passes = player_stats['total_passes'].min()
     max_passes = player_stats['total_passes'].max()
     
@@ -110,26 +173,28 @@ def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     result = player_stats.reset_index()
     
     if verbose:
-        print(f"   👥 {len(result)} players processed")
+        print(f"   👥 {len(result)} jugadores procesados")
     
     return result
 
 
 def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
-    """Calculate pass connections between players."""
+    """Calcula conexiones de pases entre jugadores."""
     
     passes_sorted = passes_df.sort_values(['minute', 'second']).reset_index(drop=True)
     connections = []
     
-    # 10-second window for connected passes
+    # Ventana de 10 segundos para pases conectados
     for i in range(len(passes_sorted) - 1):
         current = passes_sorted.iloc[i]
         next_pass = passes_sorted.iloc[i + 1]
         
+        # Solo pases del mismo equipo
         if current['team'] != next_pass['team']:
             continue
         
-        time_diff = (next_pass['minute'] * 60 + next_pass['second']) - (current['minute'] * 60 + current['second'])
+        time_diff = (next_pass['minute'] * 60 + next_pass['second']) - \
+                   (current['minute'] * 60 + current['second'])
         
         if 0 < time_diff <= 10:
             connections.append({
@@ -143,9 +208,11 @@ def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFra
             })
     
     if not connections:
+        if verbose:
+            print("   ⚠️ No se encontraron conexiones")
         return pd.DataFrame()
     
-    # Group and count connections
+    # Agrupar y contar conexiones
     connections_df = pd.DataFrame(connections)
     connection_counts = connections_df.groupby(['team', 'source', 'target']).agg({
         'source_x': 'mean',
@@ -158,21 +225,21 @@ def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFra
     connection_counts.columns = ['avg_source_x', 'avg_source_y', 'avg_target_x', 'avg_target_y', 'pass_count']
     result = connection_counts.reset_index()
     
-    # Add line width
+    # Añadir ancho de línea
     result['line_width'] = result['pass_count'].apply(_get_line_width)
     
-    # Count significant connections for verbose output
+    # Contar conexiones significativas
     significant_count = len(result[result['pass_count'] >= 5])
     
     if verbose:
-        print(f"   🔗 {len(result)} total connections ({significant_count} significant ≥5 passes)")
+        print(f"   🔗 {len(result)} conexiones totales ({significant_count} significativas ≥5 pases)")
     
     return result
 
 
 def _get_line_width(count: int) -> float:
-    """Calculate line width based on pass count."""
-    if count < 5: return 0
+    """Calcula ancho de línea basado en número de pases."""
+    if count < 5: return 0.0
     elif count < 10: return 2.0
     elif count < 15: return 4.0
     elif count < 20: return 6.0
@@ -180,55 +247,32 @@ def _get_line_width(count: int) -> float:
 
 
 # ====================================================================
-# DATA MANAGEMENT
+# UTILIDADES
 # ====================================================================
 
-def _save_data(data_dict: Dict[str, pd.DataFrame], match_id: int, verbose: bool):
-    """Save processed data to visualization/data folder."""
-    
-    data_dir = os.path.join("data")
-    os.makedirs(data_dir, exist_ok=True)
-    
-    for data_type, df in data_dict.items():
-        if df.empty:
-            continue
-        
-        filename = f"match_{match_id}_{data_type}.csv"
-        filepath = os.path.join(data_dir, filename)
-        df.to_csv(filepath, index=False, encoding='utf-8')
-        
-        if verbose:
-            print(f"   💾 Saved: {filename} ({len(df)} rows)")
-
-
-def load_match_data(match_id: int) -> Dict[str, pd.DataFrame]:
-    """Load previously processed match data."""
-    
-    data_dir = "visualization/data"
-    result = {}
-    
+def _data_exists(match_id: int) -> bool:
+    """Verifica si existen todos los archivos de datos."""
     for data_type in ['passes', 'players', 'connections']:
-        filename = f"match_{match_id}_{data_type}.csv"
-        filepath = os.path.join(data_dir, filename)
-        
-        if os.path.exists(filepath):
-            result[data_type] = pd.read_csv(filepath)
-        else:
-            result[data_type] = pd.DataFrame()
-    
-    return result
+        if not os.path.exists(_get_filepath(match_id, data_type)):
+            return False
+    return True
+
+
+def _get_filepath(match_id: int, data_type: str) -> str:
+    """Genera ruta de archivo para un tipo de datos."""
+    filename = f"match_{match_id}_{data_type}.csv"
+    return os.path.join(DATA_DIR, filename)
 
 
 def get_team_summary(match_data: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
-    """Get quick summary by team."""
-    
+    """Obtiene resumen rápido por equipo."""
     summary = {}
     players_df = match_data['players']
     connections_df = match_data['connections']
     
     for team in players_df['team'].unique():
         team_players = players_df[players_df['team'] == team]
-        team_connections = connections_df[connections_df['team'] == team]
+        team_connections = connections_df[connections_df['team'] == team] if not connections_df.empty else pd.DataFrame()
         
         summary[team] = {
             'players': len(team_players),
@@ -239,38 +283,14 @@ def get_team_summary(match_data: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
     return summary
 
 
-# ====================================================================
-# QUICK EXTRACTION SCRIPTS
-# ====================================================================
-
-def extract_athletic_barcelona():
-    """Quick extraction for Athletic vs Barcelona match."""
+def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dict[str, pd.DataFrame]:
+    """Filtra datos para un equipo específico."""
+    team_players = match_data['players'][match_data['players']['team'] == team_name]
+    team_connections = match_data['connections'][match_data['connections']['team'] == team_name] if not match_data['connections'].empty else pd.DataFrame()
+    team_passes = match_data['passes'][match_data['passes']['team'] == team_name]
     
-    print("🔍 Athletic Club vs Barcelona - Data Extraction")
-    print("=" * 50)
-    
-    match_data = extract_match_data(
-        match_id=1821769,
-        league="ESP-La Liga", 
-        season="2024-25"
-    )
-    
-    summary = get_team_summary(match_data)
-    
-    print("\n📊 MATCH SUMMARY:")
-    for team, stats in summary.items():
-        print(f"   🏟️ {team}: {stats['players']} players, {stats['total_passes']} passes, {stats['connections']} connections")
-    
-    print("\n✅ Data ready for visualization!")
-    return match_data
-
-
-# ====================================================================
-# MAIN EXECUTION
-# ====================================================================
-
-if __name__ == "__main__":
-    try:
-        match_data = extract_athletic_barcelona()
-    except Exception as e:
-        print(f"❌ Error: {e}")
+    return {
+        'passes': team_passes,
+        'players': team_players,
+        'connections': team_connections
+    }
