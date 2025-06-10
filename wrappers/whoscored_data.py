@@ -620,7 +620,6 @@ def _optimize_for_visualization(df: pd.DataFrame) -> pd.DataFrame:
     
     return viz_df
 
-
 def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passes: int) -> Dict[str, pd.DataFrame]:
     """Calculate pass network components."""
     
@@ -652,37 +651,93 @@ def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passe
         positions['team'] = team_name
         results['positions'] = positions.reset_index()
     
-    # Pass connections between players
+    # Pass connections between players (BIDIRECCIONAL)
     connections = []
     
     for _, event in successful_passes.iterrows():
         if pd.notna(event['next_player']) and event['next_player'] != event['player']:
             connections.append({
+                'team': event['team'],
                 'source': event['player'],
                 'target': event['next_player'],
-                'pass_count': 1,
-                'avg_x': event['x'],
-                'avg_y': event['y'],
+                'source_x': event['x'],
+                'source_y': event['y'],
                 'target_x': event['end_x'] if pd.notna(event['end_x']) else None,
                 'target_y': event['end_y'] if pd.notna(event['end_y']) else None
             })
     
     if connections:
         connections_df = pd.DataFrame(connections)
-        connections_df = connections_df.groupby(['source', 'target']).agg({
-            'pass_count': 'sum',
-            'avg_x': 'mean',
-            'avg_y': 'mean',
-            'target_x': 'mean',
-            'target_y': 'mean'
-        }).round(2).reset_index()
         
-        # Filter by minimum passes
-        connections_df = connections_df[connections_df['pass_count'] >= min_passes]
-        results['connections'] = connections_df
+        # Agrupar por DIRECCIÓN (A→B separado de B→A)
+        directional_counts = connections_df.groupby(['team', 'source', 'target']).agg({
+            'source_x': 'mean',
+            'source_y': 'mean', 
+            'target_x': 'mean',
+            'target_y': 'mean',
+            'team': 'count'  # Contar conexiones
+        }).round(2)
+        
+        directional_counts.columns = ['avg_source_x', 'avg_source_y', 'avg_target_x', 'avg_target_y', 'pass_count']
+        directional_counts = directional_counts.reset_index()
+        
+        # CREAR CONEXIONES BIDIRECCIONALES
+        bidirectional_connections = []
+        processed_pairs = set()
+        
+        for _, conn in directional_counts.iterrows():
+            source = conn['source']
+            target = conn['target']
+            pass_count_a_to_b = conn['pass_count']
+            
+            # Buscar la conexión inversa (B→A)
+            reverse_conn = directional_counts[
+                (directional_counts['source'] == target) & 
+                (directional_counts['target'] == source)
+            ]
+            
+            pass_count_b_to_a = reverse_conn['pass_count'].iloc[0] if not reverse_conn.empty else 0
+            
+            # Crear identificador único para el par
+            pair_id = tuple(sorted([source, target]))
+            
+            if pair_id not in processed_pairs:
+                processed_pairs.add(pair_id)
+                
+                # Solo incluir si alguna dirección tiene suficientes pases
+                if pass_count_a_to_b >= min_passes or pass_count_b_to_a >= min_passes:
+                    
+                    # Conexión A→B (si tiene suficientes pases)
+                    if pass_count_a_to_b >= min_passes:
+                        bidirectional_connections.append({
+                            'team': conn['team'],
+                            'source': source,
+                            'target': target,
+                            'pass_count': pass_count_a_to_b,
+                            'direction': 'A_to_B',
+                            'avg_source_x': conn['avg_source_x'],
+                            'avg_source_y': conn['avg_source_y'],
+                            'avg_target_x': conn['avg_target_x'],
+                            'avg_target_y': conn['avg_target_y']
+                        })
+                    
+                    # Conexión B→A (si existe y tiene suficientes pases)
+                    if pass_count_b_to_a >= min_passes and not reverse_conn.empty:
+                        bidirectional_connections.append({
+                            'team': conn['team'],
+                            'source': target,
+                            'target': source,
+                            'pass_count': pass_count_b_to_a,
+                            'direction': 'B_to_A',
+                            'avg_source_x': reverse_conn.iloc[0]['avg_source_x'],
+                            'avg_source_y': reverse_conn.iloc[0]['avg_source_y'],
+                            'avg_target_x': reverse_conn.iloc[0]['avg_target_x'],
+                            'avg_target_y': reverse_conn.iloc[0]['avg_target_y']
+                        })
+        
+        results['connections'] = pd.DataFrame(bidirectional_connections)
     
     return results
-
 
 def _calculate_player_heatmap(events_df: pd.DataFrame, player_name: str) -> pd.DataFrame:
     """Calculate spatial heatmap for player."""
