@@ -160,15 +160,20 @@ def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     
     player_stats.columns = ['avg_x', 'avg_y', 'total_passes']
     
-    # Calcular tamaños de nodo (300-1200 rango)
+    # Calcular tamaños de nodo más diferenciados (rango ampliado)
     min_passes = player_stats['total_passes'].min()
     max_passes = player_stats['total_passes'].max()
     
     if max_passes > min_passes:
-        normalized = (player_stats['total_passes'] - min_passes) / (max_passes - min_passes)
-        player_stats['node_size'] = 300 + (normalized * 900)
+        # Escalado logarítmico para mayor diferenciación
+        log_passes = np.log(player_stats['total_passes'] + 1)
+        log_min = np.log(min_passes + 1)
+        log_max = np.log(max_passes + 1)
+        
+        normalized = (log_passes - log_min) / (log_max - log_min)
+        player_stats['node_size'] = 800 + (normalized * 2400)  # Rango 800-3200
     else:
-        player_stats['node_size'] = 600
+        player_stats['node_size'] = 1600
     
     result = player_stats.reset_index()
     
@@ -225,25 +230,26 @@ def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFra
     connection_counts.columns = ['avg_source_x', 'avg_source_y', 'avg_target_x', 'avg_target_y', 'pass_count']
     result = connection_counts.reset_index()
     
-    # Añadir ancho de línea
-    result['line_width'] = result['pass_count'].apply(_get_line_width)
+    # Añadir ancho de línea mejorado
+    result['line_width'] = result['pass_count'].apply(_get_line_width_enhanced)
     
     # Contar conexiones significativas
-    significant_count = len(result[result['pass_count'] >= 5])
+    significant_count = len(result[result['pass_count'] >= 3])
     
     if verbose:
-        print(f"   🔗 {len(result)} conexiones totales ({significant_count} significativas ≥5 pases)")
+        print(f"   🔗 {len(result)} conexiones totales ({significant_count} significativas ≥3 pases)")
     
     return result
 
 
-def _get_line_width(count: int) -> float:
-    """Calcula ancho de línea basado en número de pases."""
-    if count < 5: return 0.0
-    elif count < 10: return 2.0
-    elif count < 15: return 4.0
-    elif count < 20: return 6.0
-    else: return 8.0
+def _get_line_width_enhanced(count: int) -> float:
+    """Calcula ancho de línea más diferenciado basado en número de pases."""
+    if count < 3: return 0.0
+    elif count < 5: return 1.5
+    elif count < 8: return 3.0
+    elif count < 12: return 5.0
+    elif count < 18: return 7.0
+    else: return 10.0
 
 
 # ====================================================================
@@ -294,3 +300,44 @@ def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dic
         'players': team_players,
         'connections': team_connections
     }
+
+
+# ====================================================================
+# FUNCIONES DE CONVENIENCIA PARA TESTING
+# ====================================================================
+
+def quick_extract_athletic_barcelona(match_id: int = 1821769, 
+                                   league: str = "ESP-La Liga", 
+                                   season: str = "2024-25") -> Dict[str, pd.DataFrame]:
+    """Función de conveniencia para extraer el partido Athletic vs Barcelona."""
+    return extract_match_data(match_id, league, season, verbose=True)
+
+
+def quick_visualize_barcelona(match_id: int = 1821769) -> None:
+    """Visualización rápida de Barcelona."""
+    from pass_network import create_pass_network
+    
+    # Cargar datos
+    match_data = load_match_data(match_id)
+    if not match_data or match_data['players'].empty:
+        print("❌ No hay datos guardados. Ejecuta extract_match_data() primero.")
+        return
+    
+    # Crear visualización
+    fig = create_pass_network(match_data, "Barcelona")
+    return fig
+
+
+def quick_visualize_athletic(match_id: int = 1821769) -> None:
+    """Visualización rápida de Athletic Club."""
+    from pass_network import create_pass_network
+    
+    # Cargar datos
+    match_data = load_match_data(match_id)
+    if not match_data or match_data['players'].empty:
+        print("❌ No hay datos guardados. Ejecuta extract_match_data() primero.")
+        return
+    
+    # Crear visualización
+    fig = create_pass_network(match_data, "Athletic Club")
+    return fig
