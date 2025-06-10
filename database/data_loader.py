@@ -1,7 +1,5 @@
 # ====================================================================
-# FootballDecoded Data Loading Pipeline - FIXED VERSION
-# ====================================================================
-# FIX: Ahora guarda TODAS las métricas extraídas por los wrappers
+# FootballDecoded Data Loading Pipeline
 # ====================================================================
 
 import sys
@@ -33,6 +31,30 @@ AVAILABLE_LEAGUES = [
 
 # Champions League identifier
 CHAMPIONS_LEAGUE = 'INT-Champions League'
+
+# ====================================================================
+# LOGGING HELPERS
+# ====================================================================
+
+def _format_status_log(index: int, total: int, name: str, team: str, status: str, metrics_count: int = 0) -> str:
+    """Format consistent status log for player/team processing."""
+    # Status symbols
+    status_symbols = {
+        'new': '✅ NEW',
+        'update': '↻ UPDATE', 
+        'skip': '⏭ SKIP',
+        'failed': '❌ FAILED'
+    }
+    
+    # Base format
+    base = f"[{index:3d}/{total}] {name} ({team})"
+    
+    if status in ['new', 'update']:
+        return f"{base} {status_symbols[status]} - {metrics_count} metrics extracted"
+    elif status.startswith('skip'):
+        return f"{base} {status_symbols['skip']} - {status.replace('skip', '').strip()}"
+    else:
+        return f"{base} {status_symbols.get('failed', '❌')} - {status}"
 
 # ====================================================================
 # DATA NORMALIZATION FUNCTIONS
@@ -146,12 +168,139 @@ def _should_update_domestic_player(player_name: str, league: str, season: str, t
         if new_matches > current_matches:
             return True, f"update ({current_matches}→{new_matches} matches)"
         else:
-            return False, f"skip ({current_matches} matches, no change)"
+            return False, f"skip - No changes ({current_matches} matches)"
             
     except Exception as e:
-        return True, f"error_check ({e})"
+        return True, f"error - {str(e)[:30]}"
 
-# Similar functions for other entity types...
+# [Rest of similar functions unchanged...]
+
+# ====================================================================
+# IMPROVED DOMESTIC DATA LOADING FUNCTIONS
+# ====================================================================
+
+def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
+    """
+    Load all players from specific domestic league and season.
+    IMPROVED: Clean, professional logging with clear status indicators.
+    """
+    if verbose:
+        print(f"⚡ Loading players from {league} - {season}")
+        print("=" * 70)
+    
+    db = get_db_manager()
+    stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'skipped': 0, 'updated': 0}
+    
+    try:
+        # Get all players from league
+        players_list_df = fbref_get_league_players(league, season)
+        
+        if players_list_df.empty:
+            if verbose:
+                print(f"❌ No players found for {league} {season}")
+            return stats
+        
+        # Get unique players with their teams
+        players_data = players_list_df[['player', 'team']].drop_duplicates()
+        stats['total_players'] = len(players_data)
+        
+        if verbose:
+            print(f"📊 Found {len(players_data)} players to process")
+            print("🎯 Extracting FBref + Understat data...\n")
+        
+        # Process each player - IMPROVED LOGGING
+        for i, (idx, row) in enumerate(players_data.iterrows(), 1):
+            try:
+                # ✅ SAFE: Extract values without pandas boolean ambiguity
+                player_value = row['player']
+                team_value = row['team']
+                
+                # Convert to string safely
+                player_name = str(player_value) if player_value is not None and str(player_value) != 'nan' else 'Unknown'
+                team = str(team_value) if team_value is not None and str(team_value) != 'nan' else 'Unknown'
+                
+                # Skip if invalid data
+                if player_name in ['Unknown', 'nan', ''] or team in ['Unknown', 'nan', '']:
+                    if verbose:
+                        print(_format_status_log(i, len(players_data), player_name, team, "failed - Invalid data"))
+                    stats['failed'] += 1
+                    continue
+                
+                # Get FBref data first to check matches played
+                fbref_data = fbref_get_player(player_name, league, season)
+                
+                # ✅ SAFE CHECK: Handle both None and empty dict cases
+                if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
+                    if verbose:
+                        print(_format_status_log(i, len(players_data), player_name, team, "failed - No FBref data"))
+                    stats['failed'] += 1
+                    continue
+                
+                new_matches = fbref_data.get('matches_played', 0)
+                should_update, reason = _should_update_domestic_player(
+                    player_name, league, season, team, new_matches, db
+                )
+                
+                if not should_update:
+                    if verbose:
+                        print(_format_status_log(i, len(players_data), player_name, team, reason))
+                    stats['skipped'] += 1
+                    continue
+                
+                # Get Understat data
+                understat_data = understat_get_player(player_name, league, season)
+                
+                # Merge ALL data
+                if understat_data and isinstance(understat_data, dict) and understat_data:
+                    combined_data = {**fbref_data, **understat_data}
+                else:
+                    combined_data = fbref_data
+                
+                # Normalize season format
+                combined_data['season'] = _normalize_season_format(combined_data.get('season', ''))
+                
+                # Count metrics
+                fbref_count = len([k for k in combined_data.keys() if not k.startswith('understat_')])
+                understat_count = len([k for k in combined_data.keys() if k.startswith('understat_')])
+                total_metrics = fbref_count + understat_count
+                
+                # Insert COMPLETE data in database
+                success = db.insert_player_data(combined_data, 'domestic')
+                
+                if success:
+                    if reason.startswith('update'):
+                        stats['updated'] += 1
+                        if verbose:
+                            print(_format_status_log(i, len(players_data), player_name, team, 'update', total_metrics))
+                    else:
+                        stats['successful'] += 1
+                        if verbose:
+                            print(_format_status_log(i, len(players_data), player_name, team, 'new', total_metrics))
+                else:
+                    stats['failed'] += 1
+                    if verbose:
+                        print(_format_status_log(i, len(players_data), player_name, team, "failed - DB insert error"))
+                        
+            except Exception as e:
+                stats['failed'] += 1
+                if verbose:
+                    print(_format_status_log(i, len(players_data), player_name or 'Unknown', team or 'Unknown', f"failed - {str(e)[:30]}..."))
+                continue
+                
+    except Exception as e:
+        if verbose:
+            print(f"❌ Failed to load {league}: {e}")
+    
+    if verbose:
+        print(f"\n✅ Domestic players loading complete:")
+        print(f"   Total: {stats['total_players']}")
+        print(f"   New: {stats['successful']}")
+        print(f"   Updated: {stats['updated']}")
+        print(f"   Skipped: {stats['skipped']}")
+        print(f"   Failed: {stats['failed']}")
+        
+    return stats
+
 def _should_update_european_player(player_name: str, season: str, team: str,
                                  new_matches_played: int, db: DatabaseManager) -> tuple[bool, str]:
     """Check if European player should be updated based on matches played."""
@@ -181,10 +330,10 @@ def _should_update_european_player(player_name: str, season: str, team: str,
         if new_matches > current_matches:
             return True, f"update ({current_matches}→{new_matches} matches)"
         else:
-            return False, f"skip ({current_matches} matches, no change)"
+            return False, f"skip - No changes ({current_matches} matches)"
             
     except Exception as e:
-        return True, f"error_check ({e})"
+        return True, f"error - {str(e)[:30]}"
 
 def _should_update_domestic_team(team_name: str, league: str, season: str,
                                new_matches_played: int, db: DatabaseManager) -> tuple[bool, str]:
@@ -213,10 +362,10 @@ def _should_update_domestic_team(team_name: str, league: str, season: str,
         if new_matches > current_matches:
             return True, f"update ({current_matches}→{new_matches} matches)"
         else:
-            return False, f"skip ({current_matches} matches, no change)"
+            return False, f"skip - No changes ({current_matches} matches)"
             
     except Exception as e:
-        return True, f"error_check ({e})"
+        return True, f"error - {str(e)[:30]}"
 
 def _should_update_european_team(team_name: str, season: str,
                                new_matches_played: int, db: DatabaseManager) -> tuple[bool, str]:
@@ -245,147 +394,19 @@ def _should_update_european_team(team_name: str, season: str,
         if new_matches > current_matches:
             return True, f"update ({current_matches}→{new_matches} matches)"
         else:
-            return False, f"skip ({current_matches} matches, no change)"
+            return False, f"skip - No changes ({current_matches} matches)"
             
     except Exception as e:
-        return True, f"error_check ({e})"
-
-# ====================================================================
-# DOMESTIC DATA LOADING FUNCTIONS
-# ====================================================================
-
-def load_domestic_players(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
-    """
-    Load all players from specific domestic league and season.
-    FINAL FIX: Correctly handles pandas Series without ambiguity errors.
-    """
-    if verbose:
-        print(f"🔍 Loading players from {league} - {season}")
-        print("=" * 60)
-    
-    db = get_db_manager()
-    stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'skipped': 0, 'updated': 0}
-    
-    try:
-        # Get all players from league
-        players_list_df = fbref_get_league_players(league, season)
-        
-        if players_list_df.empty:
-            if verbose:
-                print(f"❌ No players found for {league} {season}")
-            return stats
-        
-        # Get unique players with their teams
-        players_data = players_list_df[['player', 'team']].drop_duplicates()
-        stats['total_players'] = len(players_data)
-        
-        if verbose:
-            print(f"📊 Found {len(players_data)} players to process")
-            print("🎯 Extracting FBref + Understat data...\n")
-        
-        # Process each player - FINAL FIX: Avoid pandas Series ambiguity
-        for i, (idx, row) in enumerate(players_data.iterrows(), 1):
-            try:
-                # ✅ FINAL FIX: Extract values safely without pandas boolean ambiguity
-                player_value = row['player']
-                team_value = row['team']
-                
-                # Convert to string safely
-                player_name = str(player_value) if player_value is not None and str(player_value) != 'nan' else 'Unknown'
-                team = str(team_value) if team_value is not None and str(team_value) != 'nan' else 'Unknown'
-                
-                # Skip if invalid data
-                if player_name in ['Unknown', 'nan', ''] or team in ['Unknown', 'nan', '']:
-                    if verbose:
-                        print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
-                    stats['failed'] += 1
-                    continue
-                
-                if verbose:
-                    print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
-                
-                # Get FBref data first to check matches played
-                fbref_data = fbref_get_player(player_name, league, season)
-                
-                # ✅ SAFE CHECK: Handle both None and empty dict cases
-                if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
-                    if verbose:
-                        print("❌ No FBref data")
-                    stats['failed'] += 1
-                    continue
-                
-                new_matches = fbref_data.get('matches_played', 0)
-                should_update, reason = _should_update_domestic_player(
-                    player_name, league, season, team, new_matches, db
-                )
-                
-                if not should_update:
-                    if verbose:
-                        print(f"⏭️  {reason}")
-                    stats['skipped'] += 1
-                    continue
-                
-                # Get Understat data
-                understat_data = understat_get_player(player_name, league, season)
-                
-                # Merge ALL data
-                if understat_data and isinstance(understat_data, dict) and understat_data:
-                    combined_data = {**fbref_data, **understat_data}
-                else:
-                    combined_data = fbref_data
-                
-                # Normalize season format
-                combined_data['season'] = _normalize_season_format(combined_data.get('season', ''))
-                
-                # Insert COMPLETE data in database
-                success = db.insert_player_data(combined_data, 'domestic')
-                
-                if success:
-                    if reason.startswith('update'):
-                        stats['updated'] += 1
-                        if verbose:
-                            fbref_count = len([k for k in combined_data.keys() if not k.startswith('understat_')])
-                            understat_count = len([k for k in combined_data.keys() if k.startswith('understat_')])
-                            print(f"🔄 {reason} | {fbref_count}+{understat_count} metrics")
-                    else:
-                        stats['successful'] += 1
-                        if verbose:
-                            fbref_count = len([k for k in combined_data.keys() if not k.startswith('understat_')])
-                            understat_count = len([k for k in combined_data.keys() if k.startswith('understat_')])
-                            print(f"✅ {reason} | {fbref_count}+{understat_count} metrics")
-                else:
-                    stats['failed'] += 1
-                    if verbose:
-                        print("❌ DB insert failed")
-                        
-            except Exception as e:
-                stats['failed'] += 1
-                if verbose:
-                    print(f"❌ Error: {str(e)[:50]}...")
-                continue
-                
-    except Exception as e:
-        if verbose:
-            print(f"❌ Failed to load {league}: {e}")
-    
-    if verbose:
-        print(f"\n✅ Domestic players loading complete:")
-        print(f"   Total: {stats['total_players']}")
-        print(f"   New: {stats['successful']}")
-        print(f"   Updated: {stats['updated']}")
-        print(f"   Skipped: {stats['skipped']}")
-        print(f"   Failed: {stats['failed']}")
-        
-    return stats
+        return True, f"error - {str(e)[:30]}"
 
 def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load all teams from specific domestic league and season.
-    FINAL FIX: Correctly handles team names extraction without Series ambiguity.
+    IMPROVED: Clean, professional logging with clear status indicators.
     """
     if verbose:
-        print(f"🔍 Loading teams from {league} - {season}")
-        print("=" * 60)
+        print(f"⚡ Loading teams from {league} - {season}")
+        print("=" * 70)
     
     db = get_db_manager()
     stats = {'total_teams': 0, 'successful': 0, 'failed': 0, 'skipped': 0, 'updated': 0}
@@ -399,7 +420,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 print(f"❌ No data found for {league} {season}")
             return stats
         
-        # Get unique teams - FINAL FIX: Safe extraction
+        # Get unique teams - SAFE extraction
         unique_teams_raw = teams_list_df['team'].unique()
         # Filter out NaN and convert to strings safely
         unique_teams = []
@@ -413,11 +434,8 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
             print(f"📊 Found {len(unique_teams)} teams to process")
             print("🎯 Extracting FBref + Understat data...\n")
         
-        # Process each team
+        # Process each team - IMPROVED LOGGING
         for i, team_name in enumerate(unique_teams, 1):
-            if verbose:
-                print(f"[{i:3d}/{len(unique_teams)}] {team_name}", end=" ")
-            
             try:
                 # Get FBref data first
                 fbref_data = fbref_get_team(team_name, league, season)
@@ -425,7 +443,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 # Safe check for data
                 if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
-                        print("❌ No FBref data")
+                        print(_format_status_log(i, len(unique_teams), team_name, "League", "failed - No FBref data"))
                     stats['failed'] += 1
                     continue
                 
@@ -436,7 +454,7 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 
                 if not should_update:
                     if verbose:
-                        print(f"⏭️  {reason}")
+                        print(_format_status_log(i, len(unique_teams), team_name, "League", reason))
                     stats['skipped'] += 1
                     continue
                 
@@ -452,6 +470,11 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                 # Normalize season format
                 combined_data['season'] = _normalize_season_format(combined_data.get('season', ''))
                 
+                # Count metrics
+                fbref_count = len([k for k in combined_data.keys() if not k.startswith('understat_')])
+                understat_count = len([k for k in combined_data.keys() if k.startswith('understat_')])
+                total_metrics = fbref_count + understat_count
+                
                 # Insert COMPLETE data in database
                 success = db.insert_team_data(combined_data, 'domestic')
                 
@@ -459,24 +482,20 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
                     if reason.startswith('update'):
                         stats['updated'] += 1
                         if verbose:
-                            fbref_count = len([k for k in combined_data.keys() if not k.startswith('understat_')])
-                            understat_count = len([k for k in combined_data.keys() if k.startswith('understat_')])
-                            print(f"🔄 {reason} | {fbref_count}+{understat_count} metrics")
+                            print(_format_status_log(i, len(unique_teams), team_name, "League", 'update', total_metrics))
                     else:
                         stats['successful'] += 1
                         if verbose:
-                            fbref_count = len([k for k in combined_data.keys() if not k.startswith('understat_')])
-                            understat_count = len([k for k in combined_data.keys() if k.startswith('understat_')])
-                            print(f"✅ {reason} | {fbref_count}+{understat_count} metrics")
+                            print(_format_status_log(i, len(unique_teams), team_name, "League", 'new', total_metrics))
                 else:
                     stats['failed'] += 1
                     if verbose:
-                        print("❌ DB insert failed")
+                        print(_format_status_log(i, len(unique_teams), team_name, "League", "failed - DB insert error"))
                         
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:50]}...")
+                    print(_format_status_log(i, len(unique_teams), team_name, "League", f"failed - {str(e)[:30]}..."))
                 continue
                 
     except Exception as e:
@@ -497,11 +516,11 @@ def load_domestic_teams(league: str, season: str, verbose: bool = True) -> Dict[
 def load_european_players(competition: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load Champions League players (FBref only).
-    FINAL FIX: Correctly handles player/team names extraction without ambiguity.
+    IMPROVED: Clean, professional logging with clear status indicators.
     """
     if verbose:
-        print(f"🔍 Loading European players from {competition} - {season}")
-        print("=" * 60)
+        print(f"⚡ Loading European players from {competition} - {season}")
+        print("=" * 70)
     
     db = get_db_manager()
     stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'skipped': 0, 'updated': 0}
@@ -523,10 +542,10 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
             print(f"📊 Found {len(players_data)} players to process")
             print("🎯 Extracting FBref data only (no Understat for European competitions)...\n")
         
-        # Process each player - FINAL FIX: Avoid pandas Series ambiguity
+        # Process each player - IMPROVED LOGGING
         for i, (idx, row) in enumerate(players_data.iterrows(), 1):
             try:
-                # ✅ FINAL FIX: Extract values safely
+                # ✅ SAFE: Extract values
                 player_value = row['player']
                 team_value = row['team']
                 
@@ -537,19 +556,16 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
                 # Skip if invalid data
                 if player_name in ['Unknown', 'nan', ''] or team in ['Unknown', 'nan', '']:
                     if verbose:
-                        print(f"[{i:3d}/{len(players_data)}] ❌ Invalid data: {player_name} ({team})")
+                        print(_format_status_log(i, len(players_data), player_name, team, "failed - Invalid data"))
                     stats['failed'] += 1
                     continue
-                
-                if verbose:
-                    print(f"[{i:3d}/{len(players_data)}] {player_name} ({team})", end=" ")
                 
                 # Get FBref data only (no Understat for European competitions)
                 fbref_data = fbref_get_player(player_name, competition, season)
                 
                 if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
-                        print("❌ No FBref data")
+                        print(_format_status_log(i, len(players_data), player_name, team, "failed - No FBref data"))
                     stats['failed'] += 1
                     continue
                 
@@ -560,7 +576,7 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
                 
                 if not should_update:
                     if verbose:
-                        print(f"⏭️  {reason}")
+                        print(_format_status_log(i, len(players_data), player_name, team, reason))
                     stats['skipped'] += 1
                     continue
                 
@@ -569,6 +585,9 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
                 combined_data['competition'] = combined_data.pop('league', competition)
                 combined_data['season'] = _normalize_season_format(combined_data.get('season', ''))
                 
+                # Count metrics
+                metrics_count = len(combined_data)
+                
                 # Insert data in European table
                 success = db.insert_player_data(combined_data, 'european')
                 
@@ -576,22 +595,20 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
                     if reason.startswith('update'):
                         stats['updated'] += 1
                         if verbose:
-                            metrics_count = len(combined_data)
-                            print(f"🔄 {reason} | {metrics_count} metrics")
+                            print(_format_status_log(i, len(players_data), player_name, team, 'update', metrics_count))
                     else:
                         stats['successful'] += 1
                         if verbose:
-                            metrics_count = len(combined_data)
-                            print(f"✅ {reason} | {metrics_count} metrics")
+                            print(_format_status_log(i, len(players_data), player_name, team, 'new', metrics_count))
                 else:
                     stats['failed'] += 1
                     if verbose:
-                        print("❌ DB insert failed")
+                        print(_format_status_log(i, len(players_data), player_name, team, "failed - DB insert error"))
                         
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:50]}...")
+                    print(_format_status_log(i, len(players_data), player_name or 'Unknown', team or 'Unknown', f"failed - {str(e)[:30]}..."))
                 continue
                 
     except Exception as e:
@@ -612,11 +629,11 @@ def load_european_players(competition: str, season: str, verbose: bool = True) -
 def load_european_teams(competition: str, season: str, verbose: bool = True) -> Dict[str, int]:
     """
     Load Champions League teams (FBref only).
-    FINAL FIX: Correctly handles team names extraction without ambiguity.
+    IMPROVED: Clean, professional logging with clear status indicators.
     """
     if verbose:
-        print(f"🔍 Loading European teams from {competition} - {season}")
-        print("=" * 60)
+        print(f"⚡ Loading European teams from {competition} - {season}")
+        print("=" * 70)
     
     db = get_db_manager()
     stats = {'total_teams': 0, 'successful': 0, 'failed': 0, 'skipped': 0, 'updated': 0}
@@ -630,7 +647,7 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
                 print(f"❌ No data found for {competition} {season}")
             return stats
         
-        # Get unique teams - FINAL FIX: Safe extraction
+        # Get unique teams - SAFE extraction
         unique_teams_raw = players_list_df['team'].unique()
         # Filter out NaN and convert to strings safely
         unique_teams = []
@@ -644,18 +661,15 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
             print(f"📊 Found {len(unique_teams)} teams to process")
             print("🎯 Extracting FBref data only (no Understat for European competitions)...\n")
         
-        # Process each team
+        # Process each team - IMPROVED LOGGING
         for i, team_name in enumerate(unique_teams, 1):
-            if verbose:
-                print(f"[{i:3d}/{len(unique_teams)}] {team_name}", end=" ")
-            
             try:
                 # Get FBref data only
                 fbref_data = fbref_get_team(team_name, competition, season)
                 
                 if fbref_data is None or (isinstance(fbref_data, dict) and not fbref_data):
                     if verbose:
-                        print("❌ No FBref data")
+                        print(_format_status_log(i, len(unique_teams), team_name, "European", "failed - No FBref data"))
                     stats['failed'] += 1
                     continue
                 
@@ -666,7 +680,7 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
                 
                 if not should_update:
                     if verbose:
-                        print(f"⏭️  {reason}")
+                        print(_format_status_log(i, len(unique_teams), team_name, "European", reason))
                     stats['skipped'] += 1
                     continue
                 
@@ -675,6 +689,9 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
                 combined_data['competition'] = combined_data.pop('league', competition)
                 combined_data['season'] = _normalize_season_format(combined_data.get('season', ''))
                 
+                # Count metrics
+                metrics_count = len(combined_data)
+                
                 # Insert data in European table
                 success = db.insert_team_data(combined_data, 'european')
                 
@@ -682,22 +699,20 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
                     if reason.startswith('update'):
                         stats['updated'] += 1
                         if verbose:
-                            metrics_count = len(combined_data)
-                            print(f"🔄 {reason} | {metrics_count} metrics")
+                            print(_format_status_log(i, len(unique_teams), team_name, "European", 'update', metrics_count))
                     else:
                         stats['successful'] += 1
                         if verbose:
-                            metrics_count = len(combined_data)
-                            print(f"✅ {reason} | {metrics_count} metrics")
+                            print(_format_status_log(i, len(unique_teams), team_name, "European", 'new', metrics_count))
                 else:
                     stats['failed'] += 1
                     if verbose:
-                        print("❌ DB insert failed")
+                        print(_format_status_log(i, len(unique_teams), team_name, "European", "failed - DB insert error"))
                         
             except Exception as e:
                 stats['failed'] += 1
                 if verbose:
-                    print(f"❌ Error: {str(e)[:50]}...")
+                    print(_format_status_log(i, len(unique_teams), team_name, "European", f"failed - {str(e)[:30]}..."))
                 continue
                 
     except Exception as e:
@@ -715,17 +730,17 @@ def load_european_teams(competition: str, season: str, verbose: bool = True) -> 
     return stats
 
 def load_sample_data(verbose: bool = True):
-    """Load sample data for testing - FIXED VERSION."""
+    """Load sample data for testing - IMPROVED LOGGING."""
     if verbose:
         print("🧪 Loading sample data for testing...")
-        print("=" * 60)
+        print("=" * 70)
     
     # Load a few players from Real Madrid
     sample_players = ["Kylian Mbappé", "Vinicius Jr", "Jude Bellingham"]
     
     db = get_db_manager()
     
-    for player in sample_players:
+    for i, player in enumerate(sample_players, 1):
         try:
             fbref_data = fbref_get_player(player, "ESP-La Liga", "2024-25")
             understat_data = understat_get_player(player, "ESP-La Liga", "2024-25")
@@ -748,14 +763,16 @@ def load_sample_data(verbose: bool = True):
                 success = db.insert_player_data(combined_data, 'domestic')
                 
                 if verbose:
-                    status = "✅" if success else "❌"
-                    print(f"   {status} {player} | {total_metrics} metrics ({fbref_count}+{understat_count})")
+                    if success:
+                        print(_format_status_log(i, len(sample_players), player, "Real Madrid", 'new', total_metrics))
+                    else:
+                        print(_format_status_log(i, len(sample_players), player, "Real Madrid", "failed - DB insert error"))
             else:
                 if verbose:
-                    print(f"   ❌ {player} (no data)")
+                    print(_format_status_log(i, len(sample_players), player, "Real Madrid", "failed - No data"))
         except Exception as e:
             if verbose:
-                print(f"   ❌ {player} (error: {e})")
+                print(_format_status_log(i, len(sample_players), player, "Real Madrid", f"failed - {str(e)[:30]}..."))
     
     # Load Real Madrid team data
     try:
@@ -780,14 +797,16 @@ def load_sample_data(verbose: bool = True):
             success = db.insert_team_data(combined_data, 'domestic')
             
             if verbose:
-                status = "✅" if success else "❌"
-                print(f"   {status} Real Madrid | {total_metrics} metrics ({fbref_count}+{understat_count})")
+                if success:
+                    print(_format_status_log(4, 4, "Real Madrid", "Team", 'new', total_metrics))
+                else:
+                    print(_format_status_log(4, 4, "Real Madrid", "Team", "failed - DB insert error"))
         else:
             if verbose:
-                print("   ❌ Real Madrid (no data)")
+                print(_format_status_log(4, 4, "Real Madrid", "Team", "failed - No data"))
     except Exception as e:
         if verbose:
-            print(f"   ❌ Real Madrid (error: {e})")
+            print(_format_status_log(4, 4, "Real Madrid", "Team", f"failed - {str(e)[:30]}..."))
 
 # ====================================================================
 # MAIN EXECUTION WITH INTERACTIVE MENU

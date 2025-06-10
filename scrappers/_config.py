@@ -28,21 +28,28 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Logger
+# Logger - IMPROVED: Clean and professional formatting
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "minimal": {"format": "%(message)s"},
-        "detailed": {
-            "format": "%(levelname)s %(asctime)s [%(filename)s:%(funcName)s:%(lineno)d]\n%(message)s\n"  # noqa: E501
+        "minimal_clean": {
+            "format": "%(message)s"
+        },
+        "info_clean": {
+            "format": "[%(asctime)s] %(levelname)s %(message)s",
+            "datefmt": "%d/%m/%y %H:%M:%S"
+        },
+        "detailed_clean": {
+            "format": "[%(asctime)s] %(levelname)s [%(filename)s:%(lineno)d] %(message)s",
+            "datefmt": "%d/%m/%y %H:%M:%S"
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "stream": sys.stdout,
-            "formatter": "minimal",
+            "formatter": "minimal_clean",
             "level": logging.DEBUG,
         },
         "info": {
@@ -50,7 +57,7 @@ logging_config = {
             "filename": Path(LOGS_DIR, "info.log"),
             "maxBytes": 10485760,  # 1 MB
             "backupCount": 10,
-            "formatter": "detailed",
+            "formatter": "info_clean",
             "level": logging.INFO,
         },
         "error": {
@@ -58,7 +65,7 @@ logging_config = {
             "filename": Path(LOGS_DIR, "error.log"),
             "maxBytes": 10485760,  # 1 MB
             "backupCount": 10,
-            "formatter": "detailed",
+            "formatter": "detailed_clean",
             "level": logging.ERROR,
         },
     },
@@ -73,7 +80,7 @@ logging_config = {
 logging.config.dictConfig(logging_config)
 logging.captureWarnings(True)
 logger = logging.getLogger("root")
-logger.handlers[0] = RichHandler(markup=True)
+logger.handlers[0] = RichHandler(markup=True, show_time=False, show_path=False)
 
 # Team name replacements
 TEAMNAME_REPLACEMENTS = {}
@@ -84,13 +91,13 @@ if _f_custom_teamnname_replacements.is_file():
             for to_replace in to_replace_list:
                 TEAMNAME_REPLACEMENTS[to_replace] = team
     logger.info(
-        "Custom team name replacements loaded from %s.",
-        _f_custom_teamnname_replacements,
+        "✅ Team name replacements loaded from %s",
+        _f_custom_teamnname_replacements.name,
     )
 else:
     logger.info(
-        "No custom team name replacements found. You can configure these in %s.",
-        _f_custom_teamnname_replacements,
+        "ℹ️  Team name replacements config not found at %s",
+        _f_custom_teamnname_replacements.name,
     )
 
 
@@ -169,9 +176,9 @@ _f_custom_league_dict = CONFIG_DIR / "league_dict.json"
 if _f_custom_league_dict.is_file():
     with _f_custom_league_dict.open(encoding="utf8") as json_file:
         LEAGUE_DICT = {**LEAGUE_DICT, **json.load(json_file)}
-    logger.info("Custom league dict loaded from %s.", _f_custom_league_dict)
+    logger.info("✅ Custom league dict loaded from %s", _f_custom_league_dict.name)
 else:
     logger.info(
-        "No custom league dict found. You can configure additional leagues in %s.",
-        _f_custom_league_dict,
+        "ℹ️  Custom league dict config not found at %s",
+        _f_custom_league_dict.name,
     )
