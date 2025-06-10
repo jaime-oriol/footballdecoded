@@ -726,8 +726,6 @@ def _draw_connection_scale_legend(ax, x: float, y: float):
     # Etiqueta de la escala
     ax.text(x, y + 1.5, "pases", ha='center', va='bottom',
            fontsize=12, fontweight='bold', color='#333333', family='Arial')
-    else: return 10.0
-
 
 def _draw_players_enhanced(ax, players_df: pd.DataFrame, color: str):
     """Dibuja nodos de jugadores con diseño mejorado."""
