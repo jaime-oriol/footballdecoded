@@ -605,6 +605,10 @@ def _save_individual_halves_unified(first_half_data: Dict[str, pd.DataFrame],
 # LEYENDA MEJORADA (ACTUALIZADA PARA ESCALADO GRADUAL)
 # ====================================================================
 
+# ====================================================================
+# CAMBIO 1: Función _draw_enhanced_legend_unified
+# ====================================================================
+
 def _draw_enhanced_legend_unified(ax, players_df: pd.DataFrame, connections_df: pd.DataFrame, team_name: str):
     """Leyenda con estilo de referencia adaptada a FootballDecoded."""
     colors = TEAM_COLORS.get(team_name, TEAM_COLORS['default'])
@@ -613,20 +617,22 @@ def _draw_enhanced_legend_unified(ax, players_df: pd.DataFrame, connections_df: 
     # Posición base
     legend_y = -9
     
-    # Estadísticas centrales "Pases: 694"
+    # Estadísticas centrales "Pases: 694" (SIN cambios aquí)
     total_passes = players_df['total_passes'].sum() if not players_df.empty else 0
-    ax.text(52.5, legend_y + 6, f"Pases: {total_passes}", 
+    ax.text(52.5, legend_y + 0.0, f"Pases: {total_passes}", 
            ha='center', va='center', fontsize=18, fontweight='bold', 
            color=legend_color, family=FONT_CONFIG['family'])
     
-    # Título "Nº Pases" DEBAJO del total de pases
-    ax.text(52.5, legend_y + 0.0, "Nº Pases", 
-           ha='center', va='center', fontsize=16, fontweight='bold', 
-           color='black', family=FONT_CONFIG['family'])
+    # ELIMINAR COMPLETAMENTE EL TÍTULO "Nº Pases"
+    # (Se borra esta línea completamente)
     
     # Dibujar escalas con estilo de referencia
     _draw_reference_style_nodes_legend(ax, 20, legend_y, legend_color, players_df)
     _draw_reference_style_lines_legend(ax, 80, legend_y, legend_color, connections_df)
+
+# ====================================================================
+# CAMBIO 2: Función _draw_reference_style_nodes_legend - TAMAÑOS AUMENTADOS
+# ====================================================================
 
 def _draw_reference_style_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFrame):
     """Leyenda de nodos con estilo exacto de la referencia - SOLO 2 CÍRCULOS."""
@@ -645,8 +651,9 @@ def _draw_reference_style_nodes_legend(ax, x: float, y: float, color: str, playe
         node_size = players_df['node_size'].iloc[0] * 0.4
         ax.scatter(x, y + 2, s=node_size, c=color, alpha=0.6, 
                   edgecolors=color, linewidth=2, zorder=10)
+        # TAMAÑO AUMENTADO de 10 a 14
         ax.text(x, y - 1.5, f"{int(min_passes)}", ha='center', va='center',
-               fontsize=10, fontweight='normal', color='black', 
+               fontsize=14, fontweight='normal', color='black', 
                family=FONT_CONFIG['family'])
         return
     
@@ -671,27 +678,31 @@ def _draw_reference_style_nodes_legend(ax, x: float, y: float, color: str, playe
                   edgecolors=color, linewidth=2, zorder=10)
     
     # =============================================
-    # ETIQUETAS SOLO EN EXTREMOS
+    # ETIQUETAS SOLO EN EXTREMOS - TAMAÑOS AUMENTADOS
     # =============================================
     
-    # Izquierda: ≤threshold
+    # Izquierda: ≤threshold - TAMAÑO AUMENTADO de 10 a 14
     ax.text(positions[0], y - 1.5, f"≤5", ha='center', va='center',
-           fontsize=10, fontweight='normal', color='black', 
+           fontsize=14, fontweight='normal', color='black', 
            family=FONT_CONFIG['family'])
     
-    # Derecha: máximo valor  
+    # Derecha: máximo valor - TAMAÑO AUMENTADO de 10 a 14
     ax.text(positions[1], y - 1.5, f"{int(max_passes)}", ha='center', va='center',
-           fontsize=10, fontweight='normal', color='black', 
+           fontsize=14, fontweight='normal', color='black', 
            family=FONT_CONFIG['family'])
     
     # =============================================
-    # FLECHA PROGRESIVA EN NEGRO
+    # FLECHA PROGRESIVA EN NEGRO - GROSOR AUMENTADO
     # =============================================
     
-    # Flecha debajo de los círculos EN NEGRO
+    # Flecha debajo de los círculos EN NEGRO - GROSOR AUMENTADO de 2 a 3
     arrow_y = y - 0.5
     ax.annotate('', xy=(positions[1] - 2, arrow_y), xytext=(positions[0] + 2, arrow_y),
-                arrowprops=dict(arrowstyle='->', color='black', lw=2, alpha=1))
+                arrowprops=dict(arrowstyle='->', color='black', lw=3, alpha=1))
+
+# ====================================================================
+# CAMBIO 3: Función _draw_reference_style_lines_legend - TAMAÑOS AUMENTADOS
+# ====================================================================
 
 def _draw_reference_style_lines_legend(ax, x: float, y: float, color: str, connections_df: pd.DataFrame):
     """Leyenda de líneas con estilo exacto de la referencia - MÁS CENTRADA."""
@@ -713,15 +724,17 @@ def _draw_reference_style_lines_legend(ax, x: float, y: float, color: str, conne
     if min_conn == max_conn:
         # Si todas las conexiones tienen el mismo valor, mostrar solo una línea
         line_width = valid_connections['line_width'].iloc[0]
+        # GROSOR AUMENTADO - multiplicar por 1.5
         ax.plot([x - 2, x + 2], [y + 2, y + 2], color=color, 
-               linewidth=line_width, alpha=0.8, solid_capstyle='round')
+               linewidth=line_width * 1.5, alpha=0.8, solid_capstyle='round')
+        # TAMAÑO AUMENTADO de 10 a 14
         ax.text(x, y - 1.5, f"{int(min_conn)}", ha='center', va='center',
-               fontsize=10, fontweight='normal', color='black',
+               fontsize=14, fontweight='normal', color='black',
                family=FONT_CONFIG['family'])
         return
     
     # =============================================
-    # LÍNEAS MÁS CENTRADAS Y ORGANIZADAS
+    # LÍNEAS MÁS CENTRADAS Y ORGANIZADAS - GROSORES AUMENTADOS
     # =============================================
     
     positions = [x - 9, x - 3, x + 3, x + 9]  # 4 líneas equidistantes y centradas
@@ -741,32 +754,32 @@ def _draw_reference_style_lines_legend(ax, x: float, y: float, color: str, conne
         # Calcular grosor usando tu sistema unificado
         line_width = _calculate_single_line_width_gradual(int(connections), min_conn, max_conn, min_required)
         
-        # Líneas centradas (sin desplazamiento adicional)
+        # Líneas centradas (sin desplazamiento adicional) - GROSOR AUMENTADO
         ax.plot([pos - 1.5 - 3, pos + 1.5 - 3], [line_y, line_y], color=color, 
-           linewidth=max(line_width, 1.0), alpha=0.8, solid_capstyle='round')
+           linewidth=max(line_width * 1.5, 1.5), alpha=0.8, solid_capstyle='round')
     
     # =============================================
-    # ETIQUETAS SOLO EN EXTREMOS
+    # ETIQUETAS SOLO EN EXTREMOS - TAMAÑOS AUMENTADOS
     # =============================================
     
-    # Izquierda: ≥mínimo requerido
+    # Izquierda: ≥mínimo requerido - TAMAÑO AUMENTADO de 10 a 14
     ax.text(positions[0], y - 1.5, f"≥{min_required}", ha='center', va='center',
-           fontsize=10, fontweight='normal', color='black',
+           fontsize=14, fontweight='normal', color='black',
            family=FONT_CONFIG['family'])
     
-    # Derecha: máximo valor
+    # Derecha: máximo valor - TAMAÑO AUMENTADO de 10 a 14
     ax.text(positions[-1], y - 1.5, f"{int(max_conn)}", ha='center', va='center',
-           fontsize=10, fontweight='normal', color='black',
+           fontsize=14, fontweight='normal', color='black',
            family=FONT_CONFIG['family'])
     
     # =============================================
-    # FLECHA PROGRESIVA EN NEGRO
+    # FLECHA PROGRESIVA EN NEGRO - GROSOR AUMENTADO
     # =============================================
     
-    # Flecha debajo de las líneas EN NEGRO
+    # Flecha debajo de las líneas EN NEGRO - GROSOR AUMENTADO de 2 a 3
     arrow_y = y - 0.5
     ax.annotate('', xy=(positions[-1] - 1, arrow_y), xytext=(positions[0] + 1, arrow_y),
-                arrowprops=dict(arrowstyle='->', color='black', lw=2, alpha=1))
+                arrowprops=dict(arrowstyle='->', color='black', lw=3, alpha=1))
 
 # ====================================================================
 # FUNCIONES DE UTILIDAD (SIN CAMBIOS)
@@ -774,7 +787,7 @@ def _draw_reference_style_lines_legend(ax, x: float, y: float, color: str, conne
 
 def _draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end_y: float,
                           color: str, line_width: float, alpha: float):
-    """Dibuja marca direccional pequeña y perfectamente posicionada."""
+    """Dibuja marca direccional pequeña y perfectamente posicionada que sobrepasa la línea."""
     dx, dy = end_x - start_x, end_y - start_y
     length = np.sqrt(dx**2 + dy**2)
     
@@ -788,10 +801,12 @@ def _draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end
     # Tamaño muy pequeño y proporcional
     size = max(0.6, line_width * 0.25)
     
-    # Punto final (exactamente donde debe terminar)
-    tip_x, tip_y = end_x, end_y
+    # Punto final EXTENDIDO para que sobrepase ligeramente la línea
+    extension = size * 0.125  # Extensión pequeña más allá del final
+    tip_x = end_x + extension * ux
+    tip_y = end_y + extension * uy
     
-    # Punto de origen de la marca (hacia atrás y hacia la izquierda)
+    # Punto de origen de la marca (hacia atrás y hacia la izquierda desde el punto extendido)
     origin_x = tip_x - size * 1.0 * ux + size * 0.7 * px
     origin_y = tip_y - size * 1.0 * uy + size * 0.7 * py
     
