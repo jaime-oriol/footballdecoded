@@ -59,7 +59,7 @@ FONT_CONFIG = {
 # Configuración de división por partes
 HALVES_CONFIG = {
     'first_half_end': 44,
-    'second_half_start': 48,
+    'second_half_start': 45,
     'match_end': 120
 }
 
