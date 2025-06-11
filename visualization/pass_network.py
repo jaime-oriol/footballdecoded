@@ -29,7 +29,7 @@ FIELD_CONFIG = {
 
 # Configuración de conexiones
 CONNECTION_CONFIG = {
-    'min_passes': 5,
+    'min_passes': 4,
     'alpha': 0.8,
     'base_offset': 0.4,
     'arrow_length': 1.0,
@@ -39,8 +39,8 @@ CONNECTION_CONFIG = {
 
 # Configuración de escalas graduales
 SCALE_CONFIG = {
-    'node_size_min': 600,      # Tamaño mínimo de nodo (más pequeño)
-    'node_size_max': 8000,     # Tamaño máximo de nodo (más grande)
+    'node_size_min': 500,      # Tamaño mínimo de nodo (más pequeño)
+    'node_size_max': 10000,     # Tamaño máximo de nodo (más grande)
     'line_width_min': 1.0,     # Grosor mínimo de línea
     'line_width_max': 8.0,     # Grosor máximo de línea (menos agresivo)
     'name_length_threshold': 12 # Longitud máxima antes de usar solo apellido
