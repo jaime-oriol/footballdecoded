@@ -1,8 +1,8 @@
 # ====================================================================
-# FootballDecoded - Visualizador de Redes de Pase Mejorado
+# FootballDecoded - Visualizador de Redes de Pase
 # ====================================================================
-# Módulo mejorado con escalas graduales, nombres optimizados y división por partes
-# ACTUALIZADO: Sistema unificado de cálculo de tamaños de nodos
+# Módulo con escalas graduales, nombres optimizados y división por partes
+# Sistema unificado de cálculo de tamaños de nodos y grosores de línea
 # ====================================================================
 
 import matplotlib.pyplot as plt
@@ -58,8 +58,8 @@ FONT_CONFIG = {
 
 # Configuración de división por partes
 HALVES_CONFIG = {
-    'first_half_end': 45,
-    'second_half_start': 46,
+    'first_half_end': 44,
+    'second_half_start': 48,
     'match_end': 120
 }
 
@@ -96,7 +96,6 @@ def calculate_dynamic_node_sizes(players_df: pd.DataFrame, is_full_match: bool =
     df_with_sizes = players_df.copy()
     
     # Obtener rango de pases SOLO de estos jugadores
-    min_passes = df_with_sizes['total_passes'].min()
     max_passes = df_with_sizes['total_passes'].max()
     
     # Seleccionar umbral según el contexto
@@ -130,9 +129,7 @@ def calculate_dynamic_line_widths(connections_df: pd.DataFrame, is_full_match: b
     min_passes_required = CONNECTION_CONFIG['min_passes_full_match'] if is_full_match else CONNECTION_CONFIG['min_passes_halves']
     
     # Filtrar conexiones válidas
-    valid_connections = df_with_widths[
-        df_with_widths['pass_count'] >= min_passes_required
-    ]
+    valid_connections = df_with_widths[df_with_widths['pass_count'] >= min_passes_required]
     
     if valid_connections.empty:
         df_with_widths['line_width'] = 0.0
@@ -157,14 +154,6 @@ def _calculate_single_node_size_with_threshold(total_passes: int, max_passes: in
     - Jugadores con ≤ threshold pases → Tamaño mínimo
     - Jugador con máximo pases → Tamaño máximo  
     - Resto → Escala proporcional entre threshold y máximo
-    
-    Args:
-        total_passes: Número de pases del jugador
-        max_passes: Máximo de pases en el conjunto actual
-        threshold: Umbral base (10 para partes, 20 para completo)
-        
-    Returns:
-        Tamaño de nodo escalado
     """
     # Si tiene ≤ threshold pases, usar tamaño mínimo
     if total_passes <= threshold:
@@ -192,15 +181,6 @@ def _calculate_single_node_size_with_threshold(total_passes: int, max_passes: in
 def _calculate_single_line_width(pass_count: int, min_connections: int, max_connections: int, min_required: int) -> float:
     """
     Calcula grosor de línea individual con mínimo configurable.
-    
-    Args:
-        pass_count: Número de pases en la conexión
-        min_connections: Mínimo de pases en conexiones válidas
-        max_connections: Máximo de pases en conexiones válidas
-        min_required: Mínimo requerido según contexto (4 para partes, 8 para completo)
-        
-    Returns:
-        Grosor de línea escalado (0.0 si no cumple mínimo)
     """
     # Si no cumple el mínimo, grosor 0
     if pass_count < min_required:
@@ -224,17 +204,11 @@ def _calculate_single_line_width(pass_count: int, min_connections: int, max_conn
 def get_node_radius_from_size(node_size: float) -> float:
     """
     Convierte tamaño de nodo (área) a radio para cálculos de posicionamiento.
-    
-    Args:
-        node_size: Tamaño del nodo (área en puntos de matplotlib)
-        
-    Returns:
-        Radio equivalente en unidades de campo
     """
     return np.sqrt(node_size / np.pi) * 0.105
 
 # ====================================================================
-# FUNCIÓN PRINCIPAL - PARTIDO COMPLETO CON SISTEMA UNIFICADO
+# FUNCIÓN PRINCIPAL - PARTIDO COMPLETO
 # ====================================================================
 
 def create_pass_network(match_data: Dict[str, pd.DataFrame], 
@@ -255,7 +229,7 @@ def create_pass_network(match_data: Dict[str, pd.DataFrame],
     if team_data['players'].empty:
         raise ValueError(f"No se encontraron datos para {team_name}")
     
-    # NUEVO: Calcular tamaños dinámicamente PARA PARTIDO COMPLETO
+    # Calcular tamaños dinámicamente PARA PARTIDO COMPLETO
     team_players_with_sizes = calculate_dynamic_node_sizes(team_data['players'], is_full_match=True)
     team_connections_with_widths = calculate_dynamic_line_widths(team_data['connections'], is_full_match=True)
     
@@ -294,7 +268,7 @@ def create_pass_network(match_data: Dict[str, pd.DataFrame],
     return fig
 
 # ====================================================================
-# FUNCIONES DE DIVISIÓN POR PARTES CON SISTEMA UNIFICADO
+# FUNCIONES DE DIVISIÓN POR PARTES
 # ====================================================================
 
 def create_pass_network_by_halves(match_data: Dict[str, pd.DataFrame], 
@@ -314,7 +288,7 @@ def create_pass_network_by_halves(match_data: Dict[str, pd.DataFrame],
     if first_half_data['players'].empty and second_half_data['players'].empty:
         raise ValueError(f"No se encontraron datos para {team_name} en ninguna parte")
     
-    # NUEVO: Calcular tamaños dinámicamente para cada parte POR SEPARADO
+    # Calcular tamaños dinámicamente para cada parte POR SEPARADO
     if not first_half_data['players'].empty:
         first_half_data['players'] = calculate_dynamic_node_sizes(first_half_data['players'], is_full_match=False)
         first_half_data['connections'] = calculate_dynamic_line_widths(first_half_data['connections'], is_full_match=False)
@@ -372,7 +346,7 @@ def create_pass_network_single_half(match_data: Dict[str, pd.DataFrame],
     if half_data['players'].empty:
         raise ValueError(f"No se encontraron datos para {team_name} en la {half} parte")
     
-    # NUEVO: Calcular tamaños dinámicamente SOLO para esta parte
+    # Calcular tamaños dinámicamente SOLO para esta parte
     half_data['players'] = calculate_dynamic_node_sizes(half_data['players'], is_full_match=False)
     half_data['connections'] = calculate_dynamic_line_widths(half_data['connections'], is_full_match=False)
     
@@ -397,24 +371,10 @@ def create_pass_network_single_half(match_data: Dict[str, pd.DataFrame],
                    facecolor='white', edgecolor='none')
         print(f"📊 Guardado {half} parte: {half_path}")
     
-    return figSegunda'} Parte"
-    
-    # Dibujar visualización
-    _draw_half_visualization_unified(ax, half_data, colors, part_title, show_labels)
-    
-    plt.tight_layout()
-    
-    if save_path:
-        half_suffix = f"_{half}_half"
-        half_path = save_path.replace('.png', f'{half_suffix}.png')
-        fig.savefig(half_path, dpi=300, bbox_inches='tight', 
-                   facecolor='white', edgecolor='none')
-        print(f"📊 Guardado {half} parte: {half_path}")
-    
     return fig
 
 # ====================================================================
-# FUNCIONES DE PROCESAMIENTO POR PARTES (SIN CAMBIOS MAYORES)
+# FUNCIONES DE PROCESAMIENTO POR PARTES
 # ====================================================================
 
 def _process_half_data(match_data: Dict[str, pd.DataFrame], team_name: str, half: str) -> Dict[str, pd.DataFrame]:
@@ -437,7 +397,7 @@ def _process_half_data(match_data: Dict[str, pd.DataFrame], team_name: str, half
     if team_passes.empty:
         return {'passes': pd.DataFrame(), 'players': pd.DataFrame(), 'connections': pd.DataFrame()}
     
-    # CRÍTICO: Filtrar pases por tiempo específico de esta parte
+    # Filtrar pases por tiempo específico de esta parte
     half_passes = team_passes[
         (team_passes['minute'] >= min_minute) & 
         (team_passes['minute'] <= max_minute)
@@ -457,7 +417,7 @@ def _process_half_data(match_data: Dict[str, pd.DataFrame], team_name: str, half
     }
 
 def _recalculate_players_from_passes(passes_df: pd.DataFrame) -> pd.DataFrame:
-    """Recalcula estadísticas de jugadores basado en pases filtrados de ESTA PARTE específica."""
+    """Recalcula estadísticas de jugadores basado en pases filtrados."""
     if passes_df.empty:
         return pd.DataFrame()
     
@@ -469,7 +429,6 @@ def _recalculate_players_from_passes(passes_df: pd.DataFrame) -> pd.DataFrame:
     
     player_stats.columns = ['avg_x', 'avg_y', 'total_passes']
     
-    # CAMBIO: NO calcular node_size aquí - se calculará dinámicamente más tarde
     return player_stats.reset_index()
 
 def _recalculate_connections_from_passes(passes_df: pd.DataFrame) -> pd.DataFrame:
@@ -518,7 +477,6 @@ def _recalculate_connections_from_passes(passes_df: pd.DataFrame) -> pd.DataFram
     
     connection_counts.columns = ['avg_source_x', 'avg_source_y', 'avg_target_x', 'avg_target_y', 'pass_count']
     
-    # CAMBIO: NO calcular line_width aquí - se calculará dinámicamente más tarde
     return connection_counts.reset_index()
 
 # ====================================================================
@@ -527,7 +485,7 @@ def _recalculate_connections_from_passes(passes_df: pd.DataFrame) -> pd.DataFram
 
 def _draw_half_visualization_unified(ax, half_data: Dict[str, pd.DataFrame], colors: Dict, 
                                    title: str, show_labels: bool):
-    """Dibuja visualización completa para una parte del partido con sistema unificado."""
+    """Dibuja visualización completa para una parte del partido."""
     # Dibujar campo
     _draw_pitch(ax)
     
@@ -623,7 +581,7 @@ def _save_individual_halves_unified(first_half_data: Dict[str, pd.DataFrame],
                                   second_half_data: Dict[str, pd.DataFrame],
                                   team_name: str, colors: Dict, show_labels: bool, 
                                   base_path: Optional[str]):
-    """Guarda gráficos individuales de cada parte con sistema unificado."""
+    """Guarda gráficos individuales de cada parte."""
     if not base_path:
         return
     
@@ -680,7 +638,7 @@ def _draw_enhanced_legend_unified(ax, players_df: pd.DataFrame, connections_df: 
     _draw_gradual_lines_legend_unified(ax, 85, legend_y, legend_color, connections_df)
 
 def _draw_gradual_nodes_legend_unified(ax, x: float, y: float, color: str, players_df: pd.DataFrame):
-    """Leyenda de nodos usando valores reales de los jugadores procesados con umbral."""
+    """Leyenda de nodos usando valores reales de los jugadores procesados."""
     if players_df.empty:
         return
     
@@ -741,7 +699,7 @@ def _draw_gradual_nodes_legend_unified(ax, x: float, y: float, color: str, playe
                 arrowprops=dict(arrowstyle='->', color=color, lw=2, alpha=0.7))
 
 def _draw_gradual_lines_legend_unified(ax, x: float, y: float, color: str, connections_df: pd.DataFrame):
-    """Leyenda de líneas usando valores reales de las conexiones procesadas con mínimo configurable."""
+    """Leyenda de líneas usando valores reales de las conexiones procesadas."""
     if connections_df.empty:
         return
     
@@ -807,8 +765,46 @@ def _draw_gradual_lines_legend_unified(ax, x: float, y: float, color: str, conne
                 arrowprops=dict(arrowstyle='->', color=color, lw=2, alpha=0.7))
 
 # ====================================================================
-# FUNCIONES DE UTILIDADES (SIN CAMBIOS)
+# FUNCIONES DE UTILIDADES
 # ====================================================================
+
+def _draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end_y: float,
+                          color: str, line_width: float, alpha: float):
+    """Dibuja flecha al final de la conexión."""
+    # Vector dirección
+    dx, dy = end_x - start_x, end_y - start_y
+    length = np.sqrt(dx**2 + dy**2)
+    
+    if length == 0:
+        return
+    
+    # Vector unitario
+    ux, uy = dx / length, dy / length
+    
+    # Dimensiones de flecha
+    arrow_length = CONNECTION_CONFIG['arrow_length'] * 1.3 * max(1.0, line_width / 5)
+    arrow_width = CONNECTION_CONFIG['arrow_width'] * 1.3 * max(1.0, line_width / 6)
+    
+    # Posición de punta
+    push_forward = 1.5
+    arrow_tip_x = end_x + push_forward * ux
+    arrow_tip_y = end_y + push_forward * uy
+    
+    # Base de la flecha
+    back_x = arrow_tip_x - arrow_length * ux
+    back_y = arrow_tip_y - arrow_length * uy
+    
+    # Puntos laterales
+    left_x = back_x - arrow_width * (-uy)
+    left_y = back_y - arrow_width * ux
+    right_x = back_x + arrow_width * (-uy)
+    right_y = back_y + arrow_width * ux
+    
+    # Dibujar triángulo
+    triangle = patches.Polygon([(arrow_tip_x, arrow_tip_y), (left_x, left_y), (right_x, right_y)],
+                              closed=True, facecolor=color, edgecolor=color,
+                              alpha=1.0, linewidth=0, zorder=25)
+    ax.add_patch(triangle)
 
 def optimize_player_name(full_name: str) -> str:
     """
@@ -878,7 +874,7 @@ def _calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
     return start_x, start_y, end_x, end_y
 
 # ====================================================================
-# DIBUJO DEL CAMPO (SIN CAMBIOS)
+# DIBUJO DEL CAMPO
 # ====================================================================
 
 def _draw_pitch(ax):
@@ -979,7 +975,7 @@ def _draw_goals(ax, length: float, width: float):
     ax.plot([length, length], [goal_y, goal_y + goal_width], color=color, linewidth=lw, solid_capstyle='round')
 
 # ====================================================================
-# FUNCIONES DE CONVENIENCIA (ACTUALIZADAS)
+# FUNCIONES DE CONVENIENCIA
 # ====================================================================
 
 def save_high_quality(fig: plt.Figure, team_name: str, suffix: str = "") -> str:
