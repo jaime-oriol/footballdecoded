@@ -611,34 +611,35 @@ def _save_individual_halves_unified(first_half_data: Dict[str, pd.DataFrame],
 # LEYENDA MEJORADA CON SISTEMA UNIFICADO
 # ====================================================================
 
+# ====================================================================
+# LEYENDA ESTILO REFERENCIA - ADAPTADA A FOOTBALLDECODED
+# ====================================================================
+
 def _draw_enhanced_legend_unified(ax, players_df: pd.DataFrame, connections_df: pd.DataFrame, team_name: str):
-    """Leyenda con escalas graduales basadas en los DataFrames YA procesados."""
+    """Leyenda con estilo de referencia adaptada a FootballDecoded."""
     colors = TEAM_COLORS.get(team_name, TEAM_COLORS['default'])
     legend_color = colors['primary']
     
-    # Posición
-    legend_y = -10
+    # Posición base
+    legend_y = -9
     
-    # Estadísticas centrales
+    # Estadísticas centrales "Pases: 694"
     total_passes = players_df['total_passes'].sum() if not players_df.empty else 0
     ax.text(52.5, legend_y + 6, f"Pases: {total_passes}", 
            ha='center', va='center', fontsize=18, fontweight='bold', 
            color=legend_color, family=FONT_CONFIG['family'])
     
-    # Título
-    ax.text(52.5, legend_y + 1, "Nº Pases", 
-           ha='center', va='center', fontsize=14, fontweight='bold', 
-           color=legend_color, family=FONT_CONFIG['family'])
+    # Título "Nº Pases" DEBAJO del total de pases
+    ax.text(52.5, legend_y + 0.0, "Nº Pases", 
+           ha='center', va='center', fontsize=16, fontweight='bold', 
+           color='black', family=FONT_CONFIG['family'])
     
-    # Línea debajo del título
-    ax.plot([42, 63], [legend_y - 0.5, legend_y - 0.5], color=legend_color, linewidth=2)
-    
-    # Escalas graduales usando datos YA procesados
-    _draw_gradual_nodes_legend_unified(ax, 20, legend_y, legend_color, players_df)
-    _draw_gradual_lines_legend_unified(ax, 85, legend_y, legend_color, connections_df)
+    # Dibujar escalas con estilo de referencia
+    _draw_reference_style_nodes_legend(ax, 20, legend_y, legend_color, players_df)
+    _draw_reference_style_lines_legend(ax, 80, legend_y, legend_color, connections_df)
 
-def _draw_gradual_nodes_legend_unified(ax, x: float, y: float, color: str, players_df: pd.DataFrame):
-    """Leyenda de nodos usando valores reales de los jugadores procesados."""
+def _draw_reference_style_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFrame):
+    """Leyenda de nodos con estilo exacto de la referencia - SOLO 2 CÍRCULOS."""
     if players_df.empty:
         return
     
@@ -646,60 +647,64 @@ def _draw_gradual_nodes_legend_unified(ax, x: float, y: float, color: str, playe
     min_passes = players_df['total_passes'].min()
     max_passes = players_df['total_passes'].max()
     
+    # Determinar umbral (adaptado a FootballDecoded: ≤20 para partido completo)
+    threshold = 20 if max_passes > 50 else 10
+    
     if min_passes == max_passes:
         # Si todos tienen los mismos pases, mostrar solo un círculo
-        node_size = players_df['node_size'].iloc[0] * 0.6
-        ax.scatter(x, y + 5.3, s=node_size, c=color, alpha=0.8, 
+        node_size = players_df['node_size'].iloc[0] * 0.4
+        ax.scatter(x, y + 2, s=node_size, c=color, alpha=0.6, 
                   edgecolors=color, linewidth=2, zorder=10)
-        ax.text(x, y + 0.5, f"{int(min_passes)}", ha='center', va='center',
-               fontsize=11, fontweight='bold', color=color, 
+        ax.text(x, y - 1.5, f"{int(min_passes)}", ha='center', va='center',
+               fontsize=10, fontweight='normal', color='black', 
                family=FONT_CONFIG['family'])
         return
     
-    # Determinar umbral basado en el rango de datos (heurística)
-    # Si el máximo es alto (>50), probablemente es partido completo
-    threshold = SCALE_CONFIG['node_threshold_full_match'] if max_passes > 50 else SCALE_CONFIG['node_threshold_halves']
+    # =============================================
+    # SOLO 2 CÍRCULOS: PEQUEÑO Y GRANDE
+    # =============================================
     
-    # Mostrar umbral y máximo
+    # Posiciones horizontales - solo 2
+    positions = [x - 8, x + 8]  # Más separados
+    circle_y = y + 4  # Más arriba
+    
+    # Solo mostrar threshold y máximo
     display_values = [threshold, max_passes]
-    display_labels = [f"≤{threshold}", f"{int(max_passes)}"]
-    positions = [x - 8, x + 8]
-    circle_y = y + 5.3
     
-    for passes, label, pos in zip(display_values, display_labels, positions):
-        # Encontrar un jugador representativo para cada valor
-        if passes == threshold:
-            # Buscar jugador con pases <= threshold
-            representative = players_df[players_df['total_passes'] <= threshold]
-            if not representative.empty:
-                node_size = representative['node_size'].iloc[0] * 0.6
-            else:
-                # Calcular tamaño mínimo
-                node_size = SCALE_CONFIG['node_size_min'] * 0.6
-        else:
-            # Buscar jugador con máximo pases
-            representative = players_df[players_df['total_passes'] == max_passes]
-            if not representative.empty:
-                node_size = representative['node_size'].iloc[0] * 0.6
-            else:
-                # Calcular tamaño máximo
-                node_size = SCALE_CONFIG['node_size_max'] * 0.6
+    # Crear solo 2 círculos
+    for i, (pos, passes) in enumerate(zip(positions, display_values)):
+        # Calcular tamaño usando tu sistema unificado
+        node_size = _calculate_single_node_size_with_threshold(int(passes), max_passes, threshold) * 0.4
         
-        ax.scatter(pos, circle_y, s=node_size, c=color, alpha=0.8, 
+        # Círculo con borde
+        ax.scatter(pos, circle_y, s=node_size, c=color, alpha=0.6, 
                   edgecolors=color, linewidth=2, zorder=10)
-        
-        # Etiquetas con línea debajo
-        ax.text(pos, y + 0.5, label, ha='center', va='center',
-               fontsize=11, fontweight='bold', color=color, 
-               family=FONT_CONFIG['family'])
-        ax.plot([pos - 2, pos + 2], [y - 0.5, y - 0.5], color=color, linewidth=1)
     
-    # Flecha gradual entre extremos
-    ax.annotate('', xy=(x + 6, circle_y), xytext=(x - 6, circle_y),
-                arrowprops=dict(arrowstyle='->', color=color, lw=2, alpha=0.7))
+    # =============================================
+    # ETIQUETAS SOLO EN EXTREMOS
+    # =============================================
+    
+    # Izquierda: ≤threshold
+    ax.text(positions[0], y - 1.5, f"≤{threshold}", ha='center', va='center',
+           fontsize=10, fontweight='normal', color='black', 
+           family=FONT_CONFIG['family'])
+    
+    # Derecha: máximo valor  
+    ax.text(positions[1], y - 1.5, f"{int(max_passes)}", ha='center', va='center',
+           fontsize=10, fontweight='normal', color='black', 
+           family=FONT_CONFIG['family'])
+    
+    # =============================================
+    # FLECHA PROGRESIVA EN NEGRO
+    # =============================================
+    
+    # Flecha debajo de los círculos EN NEGRO
+    arrow_y = y - 0.5
+    ax.annotate('', xy=(positions[1] - 2, arrow_y), xytext=(positions[0] + 2, arrow_y),
+                arrowprops=dict(arrowstyle='->', color='black', lw=1.5, alpha=0.7))
 
-def _draw_gradual_lines_legend_unified(ax, x: float, y: float, color: str, connections_df: pd.DataFrame):
-    """Leyenda de líneas usando valores reales de las conexiones procesadas."""
+def _draw_reference_style_lines_legend(ax, x: float, y: float, color: str, connections_df: pd.DataFrame):
+    """Leyenda de líneas con estilo exacto de la referencia - MÁS CENTRADA."""
     if connections_df.empty:
         return
     
@@ -712,57 +717,67 @@ def _draw_gradual_lines_legend_unified(ax, x: float, y: float, color: str, conne
     min_conn = valid_connections['pass_count'].min()
     max_conn = valid_connections['pass_count'].max()
     
+    # Determinar mínimo requerido (adaptado a FootballDecoded: mín 8 para partido completo)
+    min_required = 8 if max_conn > 15 else 4
+    
     if min_conn == max_conn:
         # Si todas las conexiones tienen el mismo valor, mostrar solo una línea
         line_width = valid_connections['line_width'].iloc[0]
-        ax.plot([x - 2.5, x + 2.5], [y + 2.5, y + 2.5], color=color, 
+        ax.plot([x - 2, x + 2], [y + 2], [y + 2], color=color, 
                linewidth=line_width, alpha=0.8, solid_capstyle='round')
-        ax.text(x, y + 0.5, f"{int(min_conn)}", ha='center', va='center',
-               fontsize=10, fontweight='bold', color=color,
+        ax.text(x, y - 1.5, f"{int(min_conn)}", ha='center', va='center',
+               fontsize=10, fontweight='normal', color='black',
                family=FONT_CONFIG['family'])
         return
     
-    # Determinar mínimo basado en el rango de datos (heurística)
-    # Si el máximo es alto, probablemente es partido completo
-    min_required = CONNECTION_CONFIG['min_passes_full_match'] if max_conn > 15 else CONNECTION_CONFIG['min_passes_halves']
+    # =============================================
+    # LÍNEAS MÁS CENTRADAS Y ORGANIZADAS
+    # =============================================
     
-    # Mostrar mínimo requerido y máximo
-    display_values = [min_required, max_conn]
-    display_labels = [f"≥{min_required}", f"{int(max_conn)}"]
-    positions = [x - 8, x + 8]
-    line_y = y + 2.5
+    # Posiciones más centradas - solo 4 líneas
+    positions = [x - 8, x - 3, x + 3, x + 8]
+    line_y = y + 2  # Misma altura que círculos
     
-    for connections, label, pos in zip(display_values, display_labels, positions):
-        # Encontrar una conexión representativa para cada valor
-        if connections == min_required:
-            # Buscar conexión con el mínimo requerido
-            representative = valid_connections[valid_connections['pass_count'] == min_conn]
-            if not representative.empty:
-                line_width = representative['line_width'].iloc[0]
-            else:
-                # Calcular grosor mínimo
-                line_width = SCALE_CONFIG['line_width_min']
-        else:
-            # Buscar conexión con máximo
-            representative = valid_connections[valid_connections['pass_count'] == max_conn]
-            if not representative.empty:
-                line_width = representative['line_width'].iloc[0]
-            else:
-                # Calcular grosor máximo
-                line_width = SCALE_CONFIG['line_width_max']
+    # Valores progresivos más equilibrados
+    step = (max_conn - min_required) / 3 if max_conn > min_required else 1
+    display_values = [
+        min_required,
+        min_required + step,
+        min_required + 2*step,
+        max_conn
+    ]
+    
+    # Crear líneas graduales centradas
+    for i, (pos, connections) in enumerate(zip(positions, display_values)):
+        # Calcular grosor usando tu sistema unificado
+        line_width = _calculate_single_line_width(int(connections), min_conn, max_conn, min_required)
         
-        ax.plot([pos - 2.5, pos + 2.5], [line_y, line_y], color=color, 
-               linewidth=line_width, alpha=0.8, solid_capstyle='round')
-        
-        # Etiquetas con línea debajo
-        ax.text(pos, y + 0.5, label, ha='center', va='center',
-               fontsize=10, fontweight='bold', color=color,
-               family=FONT_CONFIG['family'])
-        ax.plot([pos - 2, pos + 2], [y - 0.5, y - 0.5], color=color, linewidth=1)
+        # Mover SOLO las líneas rojas 5 unidades a la izquierda:
+        ax.plot([pos - 1.5 - 2, pos + 1.5 - 3], [line_y, line_y], color=color, 
+           linewidth=max(line_width, 1.0), alpha=0.8, solid_capstyle='round')
     
-    # Flecha gradual entre extremos
-    ax.annotate('', xy=(x + 6, line_y), xytext=(x - 6, line_y),
-                arrowprops=dict(arrowstyle='->', color=color, lw=2, alpha=0.7))
+    # =============================================
+    # ETIQUETAS SOLO EN EXTREMOS
+    # =============================================
+    
+    # Izquierda: ≥mínimo requerido
+    ax.text(positions[0], y - 1.5, f"≥{min_required}", ha='center', va='center',
+           fontsize=10, fontweight='normal', color='black',
+           family=FONT_CONFIG['family'])
+    
+    # Derecha: máximo valor
+    ax.text(positions[-1], y - 1.5, f"{int(max_conn)}", ha='center', va='center',
+           fontsize=10, fontweight='normal', color='black',
+           family=FONT_CONFIG['family'])
+    
+    # =============================================
+    # FLECHA PROGRESIVA EN NEGRO
+    # =============================================
+    
+    # Flecha debajo de las líneas EN NEGRO
+    arrow_y = y - 0.5
+    ax.annotate('', xy=(positions[-1] - 1, arrow_y), xytext=(positions[0] + 1, arrow_y),
+                arrowprops=dict(arrowstyle='->', color='black', lw=1.5, alpha=0.7))
 
 # ====================================================================
 # FUNCIONES DE UTILIDADES
