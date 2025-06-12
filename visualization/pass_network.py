@@ -850,24 +850,61 @@ def _draw_optimized_labels(ax, players_df: pd.DataFrame):
 
 def _calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
                                r1: float, r2: float, pass_count: int) -> Tuple[float, float, float, float]:
-    """Calcula puntos de inicio y fin de conexiones."""
+    """Calcula puntos de inicio y fin de conexiones con manejo de nodos superpuestos."""
     dx, dy = x2 - x1, y2 - y1
     length = np.sqrt(dx**2 + dy**2)
     
     if length == 0:
         return x1, y1, x2, y2
     
+    # Vector unitario de dirección
     ux, uy = dx / length, dy / length
-    perp_x, perp_y = -uy, ux
     
-    offset = CONNECTION_CONFIG['base_offset'] * (1 + pass_count / 50)
+    # Detectar si los nodos se superponen o están muy cerca
+    combined_radius = r1 + r2
+    min_safe_distance = combined_radius * 1.2  # 20% extra de margen
     
-    start_x = x1 + r1 * ux + perp_x * offset
-    start_y = y1 + r1 * uy + perp_y * offset
+    if length < min_safe_distance:
+        # CASO ESPECIAL: Nodos superpuestos o muy cercanos
+        
+        # Vector perpendicular para offset lateral (MANTENER EN CASOS SUPERPUESTOS)
+        perp_x, perp_y = -uy, ux
+        offset = CONNECTION_CONFIG['base_offset'] * (1 + pass_count / 50)
+        
+        # Punto de inicio: borde del primer nodo + offset lateral
+        start_x = x1 + r1 * ux * 1.1 + perp_x * offset
+        start_y = y1 + r1 * uy * 1.1 + perp_y * offset
+        
+        # Punto final: borde del segundo nodo + offset lateral + margen REDUCIDO
+        reduced_margin = r2 + 0.5  # Margen reducido para casos superpuestos
+        end_x = x2 - reduced_margin * ux + perp_x * offset
+        end_y = y2 - reduced_margin * uy + perp_y * offset
+        
+        # Si aún están demasiado cerca, crear línea mínima visible
+        if np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2) < 1.0:
+            # Crear línea mínima de 2 unidades con offset
+            start_x = x1 + ux * 1.0 + perp_x * offset
+            start_y = y1 + uy * 1.0 + perp_y * offset
+            end_x = x1 + ux * 3.0 + perp_x * offset
+            end_y = y1 + uy * 3.0 + perp_y * offset
     
-    name_margin = r2 + CONNECTION_CONFIG['name_margin']
-    end_x = x2 - name_margin * ux + perp_x * offset
-    end_y = y2 - name_margin * uy + perp_y * offset
+    else:
+        # CASO NORMAL: Nodos separados correctamente
+        
+        # Vector perpendicular para offset lateral
+        perp_x, perp_y = -uy, ux
+        
+        # Offset lateral basado en número de pases (para evitar superposición de líneas)
+        offset = CONNECTION_CONFIG['base_offset'] * (1 + pass_count / 50)
+        
+        # Punto de inicio: borde del primer nodo + offset lateral
+        start_x = x1 + r1 * ux + perp_x * offset
+        start_y = y1 + r1 * uy + perp_y * offset
+        
+        # Punto final: cerca del segundo nodo dejando espacio REDUCIDO para el texto
+        name_margin = r2 + 1  # REDUCIDO de 2.0 a 0.5
+        end_x = x2 - name_margin * ux + perp_x * offset
+        end_y = y2 - name_margin * uy + perp_y * offset
     
     return start_x, start_y, end_x, end_y
 
