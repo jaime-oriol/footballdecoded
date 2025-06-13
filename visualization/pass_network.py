@@ -27,15 +27,6 @@ FIELD_CONFIG = {
     'goal_width': 8.0
 }
 
-# Configuración de conexiones
-CONNECTION_CONFIG = {
-    'alpha': 0.8,
-    'base_offset': 0.4,
-    'arrow_length': 1.0,
-    'arrow_width': 0.6,
-    'name_margin': 2.0
-}
-
 # Configuración de escalas graduales MEJORADAS
 SCALE_CONFIG = {
     'node_size_min': 500,           # Tamaño mínimo de nodo
@@ -44,7 +35,7 @@ SCALE_CONFIG = {
     'node_threshold_full_match': 20, # Umbral para partido completo (≤20 = tamaño mínimo)
     'line_width_min': 1.0,          # Grosor mínimo de línea
     'line_width_max': 8.0,          # Grosor máximo de línea
-    'name_length_threshold': 10     # Longitud máxima antes de usar solo apellido
+    'name_length_threshold': 12     # Longitud máxima antes de usar solo apellido
 }
 
 # Configuración de conexiones ORIGINAL
