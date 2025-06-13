@@ -270,25 +270,6 @@ def _get_filepath(match_id: int, data_type: str) -> str:
     return os.path.join(DATA_DIR, filename)
 
 
-def get_team_summary(match_data: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
-    """Obtiene resumen rápido por equipo."""
-    summary = {}
-    players_df = match_data['players']
-    connections_df = match_data['connections']
-    
-    for team in players_df['team'].unique():
-        team_players = players_df[players_df['team'] == team]
-        team_connections = connections_df[connections_df['team'] == team] if not connections_df.empty else pd.DataFrame()
-        
-        summary[team] = {
-            'players': len(team_players),
-            'total_passes': team_players['total_passes'].sum(),
-            'connections': len(team_connections)
-        }
-    
-    return summary
-
-
 def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dict[str, pd.DataFrame]:
     """Filtra datos para un equipo específico."""
     team_players = match_data['players'][match_data['players']['team'] == team_name]
@@ -300,44 +281,3 @@ def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dic
         'players': team_players,
         'connections': team_connections
     }
-
-
-# ====================================================================
-# FUNCIONES DE CONVENIENCIA PARA TESTING
-# ====================================================================
-
-def quick_extract_athletic_barcelona(match_id: int = 1821769, 
-                                   league: str = "ESP-La Liga", 
-                                   season: str = "2024-25") -> Dict[str, pd.DataFrame]:
-    """Función de conveniencia para extraer el partido Athletic vs Barcelona."""
-    return extract_match_data(match_id, league, season, verbose=True)
-
-
-def quick_visualize_barcelona(match_id: int = 1821769) -> None:
-    """Visualización rápida de Barcelona."""
-    from pass_network import create_pass_network
-    
-    # Cargar datos
-    match_data = load_match_data(match_id)
-    if not match_data or match_data['players'].empty:
-        print("❌ No hay datos guardados. Ejecuta extract_match_data() primero.")
-        return
-    
-    # Crear visualización
-    fig = create_pass_network(match_data, "Barcelona")
-    return fig
-
-
-def quick_visualize_athletic(match_id: int = 1821769) -> None:
-    """Visualización rápida de Athletic Club."""
-    from pass_network import create_pass_network
-    
-    # Cargar datos
-    match_data = load_match_data(match_id)
-    if not match_data or match_data['players'].empty:
-        print("❌ No hay datos guardados. Ejecuta extract_match_data() primero.")
-        return
-    
-    # Crear visualización
-    fig = create_pass_network(match_data, "Athletic Club")
-    return fig
