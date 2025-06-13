@@ -824,8 +824,10 @@ def main():
     print("6. Test database connection")
     print("7. Setup database schema")
     print("8. Clear all existing data")
+    print("9. Database status (detailed)")
+    print("10. Quick database status")
     
-    choice = input("\nSelect option (1-8): ").strip()
+    choice = input("\nSelect option (1-10): ").strip()
     
     # ================================================================
     # OPCIÓN 1: LOAD DOMESTIC PLAYERS
