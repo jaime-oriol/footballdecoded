@@ -400,7 +400,7 @@ def _draw_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame
         line_width = conn['line_width']
         
         # Create gradient line
-        num_points = 50
+        num_points = 75
         x_points = np.linspace(start_x, end_x, num_points)
         y_points = np.linspace(start_y, end_y, num_points)
         
@@ -414,6 +414,8 @@ def _draw_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame
         lc = LineCollection(segments, colors=colors_with_alpha, linewidths=line_width,
                            capstyle='round', zorder=1)
         ax.add_collection(lc)
+        
+        _draw_connection_arrow(ax, start_x, start_y, end_x, end_y, color, line_width, 1.0)
         
         _draw_connection_arrow(ax, start_x, start_y, end_x, end_y, color, line_width, 1.0)
 
