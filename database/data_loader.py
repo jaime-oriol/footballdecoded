@@ -960,10 +960,36 @@ def main():
             print("❌ Clear operation cancelled")
     
     # ================================================================
+    # OPCIÓN 9: DATABASE STATUS (DETAILED)
+    # ================================================================
+    elif choice == "9":
+        print("\n🔍 Checking detailed database status...")
+        try:
+            from database_checker import check_database_status
+            check_database_status(verbose=True)
+        except ImportError:
+            print("❌ database_checker.py not found")
+        except Exception as e:
+            print(f"❌ Error checking database: {e}")
+    
+    # ================================================================
+    # OPCIÓN 10: QUICK DATABASE STATUS
+    # ================================================================
+    elif choice == "10":
+        print("\n⚡ Quick database status...")
+        try:
+            from database_checker import quick_status
+            quick_status()
+        except ImportError:
+            print("❌ database_checker.py not found")
+        except Exception as e:
+            print(f"❌ Error checking database: {e}")
+    
+    # ================================================================
     # INVALID OPTION
     # ================================================================
     else:
-        print("❌ Invalid option. Please select 1-8.")
+        print("❌ Invalid option. Please select 1-10.")
         
 if __name__ == "__main__":
     main()
