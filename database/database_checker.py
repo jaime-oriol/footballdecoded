@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded - Database Status Checker
+# FootballDecoded Database Status Checker
 # ====================================================================
 
 import sys
@@ -7,28 +7,24 @@ import os
 import pandas as pd
 from typing import Dict
 
-# Add database to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database.connection import get_db_manager
 
+# ====================================================================
+# DATABASE STATUS FUNCTIONS
+# ====================================================================
+
 def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
-    """
-    Verificar qué datos están disponibles en la base de datos.
-    
-    Returns:
-        Dict con resumen de datos por tabla
-    """
+    """Check available data in database with comprehensive reporting."""
     if verbose:
-        print("🔍 Verificando datos en FootballDecoded Database")
+        print("Checking FootballDecoded Database Status")
         print("=" * 60)
     
     db = get_db_manager()
     results = {}
     
     try:
-        # ================================================================
-        # JUGADORES DOMÉSTICOS (FBref + Understat)
-        # ================================================================
+        # Domestic players query
         query_players_domestic = """
         SELECT 
             league,
@@ -47,16 +43,14 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['players_domestic'] = players_domestic
         
         if verbose and not players_domestic.empty:
-            print("⚽ JUGADORES DOMÉSTICOS (FBref + Understat)")
+            print("DOMESTIC PLAYERS (FBref + Understat)")
             print("-" * 50)
             for _, row in players_domestic.iterrows():
                 understat_pct = (row['with_understat'] / row['total_players'] * 100) if row['total_players'] > 0 else 0
-                print(f"   {row['league']} {row['season']}: {row['total_players']} jugadores | {row['total_teams']} equipos | Understat: {understat_pct:.1f}%")
+                print(f"   {row['league']} {row['season']}: {row['total_players']} players | {row['total_teams']} teams | Understat: {understat_pct:.1f}%")
             print()
         
-        # ================================================================
-        # JUGADORES EUROPEOS (Solo FBref)
-        # ================================================================
+        # European players query
         query_players_european = """
         SELECT 
             competition,
@@ -74,15 +68,13 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['players_european'] = players_european
         
         if verbose and not players_european.empty:
-            print("🏆 JUGADORES EUROPEOS (Solo FBref)")
+            print("EUROPEAN PLAYERS (FBref only)")
             print("-" * 50)
             for _, row in players_european.iterrows():
-                print(f"   {row['competition']} {row['season']}: {row['total_players']} jugadores | {row['total_teams']} equipos")
+                print(f"   {row['competition']} {row['season']}: {row['total_players']} players | {row['total_teams']} teams")
             print()
         
-        # ================================================================
-        # EQUIPOS DOMÉSTICOS (FBref + Understat)
-        # ================================================================
+        # Domestic teams query
         query_teams_domestic = """
         SELECT 
             league,
@@ -100,16 +92,14 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['teams_domestic'] = teams_domestic
         
         if verbose and not teams_domestic.empty:
-            print("🏟️  EQUIPOS DOMÉSTICOS (FBref + Understat)")
+            print("DOMESTIC TEAMS (FBref + Understat)")
             print("-" * 50)
             for _, row in teams_domestic.iterrows():
                 understat_pct = (row['with_understat'] / row['total_teams'] * 100) if row['total_teams'] > 0 else 0
-                print(f"   {row['league']} {row['season']}: {row['total_teams']} equipos | Understat: {understat_pct:.1f}%")
+                print(f"   {row['league']} {row['season']}: {row['total_teams']} teams | Understat: {understat_pct:.1f}%")
             print()
         
-        # ================================================================
-        # EQUIPOS EUROPEOS (Solo FBref)
-        # ================================================================
+        # European teams query
         query_teams_european = """
         SELECT 
             competition,
@@ -126,50 +116,47 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['teams_european'] = teams_european
         
         if verbose and not teams_european.empty:
-            print("⭐ EQUIPOS EUROPEOS (Solo FBref)")
+            print("EUROPEAN TEAMS (FBref only)")
             print("-" * 50)
             for _, row in teams_european.iterrows():
-                print(f"   {row['competition']} {row['season']}: {row['total_teams']} equipos")
+                print(f"   {row['competition']} {row['season']}: {row['total_teams']} teams")
             print()
         
-        # ================================================================
-        # RESUMEN TOTAL
-        # ================================================================
+        # Summary totals
         if verbose:
             total_domestic_players = players_domestic['total_players'].sum() if not players_domestic.empty else 0
             total_european_players = players_european['total_players'].sum() if not players_european.empty else 0
             total_domestic_teams = teams_domestic['total_teams'].sum() if not teams_domestic.empty else 0
             total_european_teams = teams_european['total_teams'].sum() if not teams_european.empty else 0
             
-            print("📊 RESUMEN TOTAL")
+            print("SUMMARY")
             print("-" * 50)
-            print(f"   Jugadores domésticos: {total_domestic_players}")
-            print(f"   Jugadores europeos: {total_european_players}")
-            print(f"   Equipos domésticos: {total_domestic_teams}")
-            print(f"   Equipos europeos: {total_european_teams}")
-            print(f"   TOTAL: {total_domestic_players + total_european_players + total_domestic_teams + total_european_teams} registros")
+            print(f"   Domestic players: {total_domestic_players}")
+            print(f"   European players: {total_european_players}")
+            print(f"   Domestic teams: {total_domestic_teams}")
+            print(f"   European teams: {total_european_teams}")
+            print(f"   TOTAL: {total_domestic_players + total_european_players + total_domestic_teams + total_european_teams} records")
         
         db.close()
         return results
         
     except Exception as e:
         if verbose:
-            print(f"❌ Error verificando base de datos: {e}")
+            print(f"Error checking database: {e}")
         db.close()
         return {}
 
 def quick_status():
-    """Verificación rápida sin detalles."""
-    print("🔍 Estado rápido de la base de datos:")
+    """Quick database status check without details."""
+    print("Quick database status:")
     
     db = get_db_manager()
     
-    # Contar registros por tabla
     tables = [
-        ('players_domestic', 'Jugadores domésticos'),
-        ('players_european', 'Jugadores europeos'),
-        ('teams_domestic', 'Equipos domésticos'),
-        ('teams_european', 'Equipos europeos')
+        ('players_domestic', 'Domestic players'),
+        ('players_european', 'European players'),
+        ('teams_domestic', 'Domestic teams'),
+        ('teams_european', 'European teams')
     ]
     
     total_records = 0
@@ -181,21 +168,14 @@ def quick_status():
             total_records += records
             print(f"   {display_name}: {records}")
         except Exception:
-            print(f"   {display_name}: 0 (tabla no existe)")
+            print(f"   {display_name}: 0 (table does not exist)")
     
-    print(f"   TOTAL: {total_records} registros")
+    print(f"   TOTAL: {total_records} records")
     db.close()
 
 # ====================================================================
-# INTEGRACIÓN CON DATA_LOADER
+# MAIN EXECUTION
 # ====================================================================
-
-def add_database_status_to_menu():
-    """Función para integrar en el menú principal de data_loader.py"""
-    return {
-        'option_9': ('9. Check database status (detailed)', lambda: check_database_status(verbose=True)),
-        'option_10': ('10. Quick database status', lambda: quick_status())
-    }
 
 if __name__ == "__main__":
     import sys

@@ -1,20 +1,15 @@
 # ====================================================================
 # FootballDecoded Database Connection Manager
 # ====================================================================
-# Handles PostgreSQL connections using SQLAlchemy and psycopg2
-# ====================================================================
 
 import os
-import psycopg2
 import pandas as pd
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
-from typing import Optional, Dict, Any
-import json
 import numpy as np
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+from typing import Dict, Any, Optional
+import json
 
-# Load environment variables
 load_dotenv()
 
 # ====================================================================
@@ -36,17 +31,6 @@ class DatabaseConfig:
     def connection_string(self) -> str:
         """SQLAlchemy connection string."""
         return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
-    
-    @property
-    def psycopg2_params(self) -> Dict[str, str]:
-        """psycopg2 connection parameters."""
-        return {
-            'host': self.host,
-            'port': self.port,
-            'database': self.database,
-            'user': self.username,
-            'password': self.password
-        }
 
 # ====================================================================
 # DATABASE CONNECTION MANAGER
@@ -58,15 +42,9 @@ class DatabaseManager:
     def __init__(self):
         self.config = DatabaseConfig()
         self.engine = None
-        self.session = None
         
     def connect(self) -> bool:
-        """
-        Establish database connection.
-        
-        Returns:
-            True if connection successful, False otherwise
-        """
+        """Establish database connection."""
         try:
             self.engine = create_engine(
                 self.config.connection_string,
@@ -79,29 +57,20 @@ class DatabaseManager:
             with self.engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             
-            print("✅ Database connection established")
+            print("Database connection established")
             return True
             
         except Exception as e:
-            print(f"❌ Database connection failed: {e}")
+            print(f"Database connection failed: {e}")
             return False
     
     def execute_sql_file(self, filepath: str) -> bool:
-        """
-        Execute SQL file (e.g., setup.sql).
-        
-        Args:
-            filepath: Path to SQL file
-            
-        Returns:
-            True if successful, False otherwise
-        """
+        """Execute SQL file."""
         try:
             with open(filepath, 'r') as file:
                 sql_content = file.read()
             
             with self.engine.connect() as conn:
-                # Split by semicolon and execute each statement
                 statements = [stmt.strip() for stmt in sql_content.split(';') if stmt.strip()]
                 
                 for statement in statements:
@@ -110,11 +79,11 @@ class DatabaseManager:
                         
                 conn.commit()
             
-            print(f"✅ SQL file executed successfully: {filepath}")
+            print(f"SQL file executed successfully: {filepath}")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to execute SQL file: {e}")
+            print(f"Failed to execute SQL file: {e}")
             return False
     
     def _serialize_for_json(self, obj):
@@ -135,20 +104,11 @@ class DatabaseManager:
             return obj
     
     def insert_player_data(self, player_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-        """
-        Insert player data into appropriate table.
-        
-        Args:
-            player_data: Dictionary with player data
-            table_type: 'domestic' or 'european'
-            
-        Returns:
-            True if successful, False otherwise
-        """
+        """Insert player data into appropriate table."""
         try:
             table_name = f"footballdecoded.players_{table_type}"
             
-            # Separate JSON metrics from basic fields
+            # Basic fields definition
             basic_fields = ['player_name', 'league', 'season', 'team', 'nationality', 
                           'position', 'age', 'birth_year', 'fbref_official_name', 
                           'understat_official_name']
@@ -157,20 +117,18 @@ class DatabaseManager:
                 basic_fields = [f.replace('league', 'competition') for f in basic_fields]
                 basic_fields = [f for f in basic_fields if 'understat' not in f]
             
-            # Extract basic data
+            # Separate data
             basic_data = {k: v for k, v in player_data.items() if k in basic_fields}
-            
-            # Extract metrics
             fbref_metrics = {k: v for k, v in player_data.items() 
                            if k not in basic_fields and not k.startswith('understat_')}
+            
+            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
             if table_type == 'domestic':
                 understat_metrics = {k: v for k, v in player_data.items() if k.startswith('understat_')}
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
-            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
-            
-            # Create DataFrame and insert
+            # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
                      if_exists='append', index=False, method='multi')
@@ -178,44 +136,33 @@ class DatabaseManager:
             return True
             
         except Exception as e:
-            print(f"❌ Failed to insert player data: {e}")
+            print(f"Failed to insert player data: {e}")
             return False
     
     def insert_team_data(self, team_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-        """
-        Insert team data into appropriate table.
-        
-        Args:
-            team_data: Dictionary with team data
-            table_type: 'domestic' or 'european'
-            
-        Returns:
-            True if successful, False otherwise
-        """
+        """Insert team data into appropriate table."""
         try:
             table_name = f"footballdecoded.teams_{table_type}"
             
-            # Separate JSON metrics from basic fields
+            # Basic fields definition
             basic_fields = ['team_name', 'league', 'season', 'fbref_official_name', 'understat_official_name']
             
             if table_type == 'european':
                 basic_fields = [f.replace('league', 'competition') for f in basic_fields]
                 basic_fields = [f for f in basic_fields if 'understat' not in f]
             
-            # Extract basic data
+            # Separate data
             basic_data = {k: v for k, v in team_data.items() if k in basic_fields}
-            
-            # Extract metrics
             fbref_metrics = {k: v for k, v in team_data.items() 
                            if k not in basic_fields and not k.startswith('understat_')}
+            
+            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
             if table_type == 'domestic':
                 understat_metrics = {k: v for k, v in team_data.items() if k.startswith('understat_')}
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
-            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
-            
-            # Create DataFrame and insert
+            # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
                      if_exists='append', index=False, method='multi')
@@ -223,21 +170,11 @@ class DatabaseManager:
             return True
             
         except Exception as e:
-            print(f"❌ Failed to insert team data: {e}")
+            print(f"Failed to insert team data: {e}")
             return False
     
     def query_players(self, league: str = None, season: str = None, team: str = None) -> pd.DataFrame:
-        """
-        Query players with optional filters.
-        
-        Args:
-            league: Filter by league
-            season: Filter by season  
-            team: Filter by team
-            
-        Returns:
-            DataFrame with player data
-        """
+        """Query players with optional filters."""
         try:
             query = "SELECT * FROM footballdecoded.players_domestic WHERE 1=1"
             params = {}
@@ -255,14 +192,14 @@ class DatabaseManager:
             return pd.read_sql(query, self.engine, params=params)
             
         except Exception as e:
-            print(f"❌ Query failed: {e}")
+            print(f"Query failed: {e}")
             return pd.DataFrame()
     
     def close(self):
         """Close database connections."""
         if self.engine:
             self.engine.dispose()
-            print("✅ Database connection closed")
+            print("Database connection closed")
 
 # ====================================================================
 # CONVENIENCE FUNCTIONS
@@ -283,27 +220,21 @@ def setup_database() -> bool:
         return db.execute_sql_file('setup.sql')
     return False
 
-# ====================================================================
-# TESTING FUNCTIONS
-# ====================================================================
-
 def test_connection():
     """Test database connection."""
     try:
         db = get_db_manager()
-        print("✅ Database connection test successful")
+        print("Database connection test successful")
         
-        # Test basic query
         result = db.query_players()
-        print(f"📊 Found {len(result)} players in database")
+        print(f"Found {len(result)} players in database")
         
         db.close()
         return True
         
     except Exception as e:
-        print(f"❌ Connection test failed: {e}")
+        print(f"Connection test failed: {e}")
         return False
 
 if __name__ == "__main__":
-    # Test connection when run directly
     test_connection()
