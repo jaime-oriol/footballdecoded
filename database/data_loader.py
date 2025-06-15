@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded Data Loader - FIXED Understat prefixes
+# FootballDecoded Data Loader - COMPLETELY FIXED
 # ====================================================================
 
 import sys
@@ -12,9 +12,9 @@ from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 from collections import defaultdict
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
-                     understat_get_player, understat_get_team)
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from wrappers import (fbref_extract_data, fbref_extract_league_players,
+                     understat_extract_data)
 from database.connection import DatabaseManager, get_db_manager
 from sqlalchemy import text
 
@@ -33,50 +33,31 @@ AVAILABLE_COMPETITIONS = [
 
 # Validation ranges
 METRIC_RANGES = {
-    # Basic info - ultra safe ranges
-    'age': (15, 50),                    # Covers youngest debuts to oldest goalkeepers
-    'birth_year': (1950, 2020),         # 50 years old to 15 years old players
-    
-    # Playing time - realistic maximums
-    'minutes_played': (0, 6000),        # ~66 full games (covers all competitions)
-    'matches_played': (0, 80),          # Domestic + cups + international competitions
+    'age': (15, 50),
+    'birth_year': (1950, 2020),
+    'minutes_played': (0, 6000),
+    'matches_played': (0, 80),
     'matches_started': (0, 80),
-    
-    # Scoring - based on historical records
-    'goals': (0, 120),                  # Covers Messi's 91-goal record + margin
-    'assists': (0, 60),                 # Covers highest assist records + margin
+    'goals': (0, 120),
+    'assists': (0, 60),
     'goals_plus_assists': (0, 150),
-    
-    # Shooting - realistic volumes
-    'shots': (0, 600),                  # Covers highest shooters like Ronaldo/Messi
+    'shots': (0, 600),
     'shots_on_target': (0, 300),
     'shots_on_target_pct': (0, 100),
-    
-    # Expected metrics - reasonable bounds
     'expected_goals': (0, 80),
     'expected_assists': (0, 40),
     'non_penalty_expected_goals': (0, 70),
-    
-    # Passing - realistic ranges
-    'passes_completed': (0, 4000),      # High-volume passers like Busquets
+    'passes_completed': (0, 4000),
     'passes_attempted': (0, 4500),
-    'pass_completion_pct': (30, 100),   # Minimum 30% to avoid invalid data
+    'pass_completion_pct': (30, 100),
     'key_passes': (0, 200),
-    
-    # Defensive actions - active defenders
-    'tackles': (0, 300),                # Very active defensive midfielders
+    'tackles': (0, 300),
     'interceptions': (0, 250),
-    'clearances': (0, 400),             # Center-backs in defensive teams
-    
-    # Possession - typical ranges
-    'touches': (0, 5000),               # High-involvement players
+    'clearances': (0, 400),
+    'touches': (0, 5000),
     'carries': (0, 3000),
-    
-    # Disciplinary - realistic but safe
-    'yellow_cards': (0, 25),            # Very aggressive players maximum
-    'red_cards': (0, 6),                # Extreme cases but possible
-    
-    # Percentages - must be valid percentages
+    'yellow_cards': (0, 25),
+    'red_cards': (0, 6),
     'take_on_success_pct': (0, 100),
     'aerial_duels_won_pct': (0, 100),
 }
@@ -238,7 +219,7 @@ class DuplicateHandler:
         return merged
 
 # ====================================================================
-# MAIN LOADING FUNCTIONS
+# MAIN LOADING FUNCTIONS - FIXED
 # ====================================================================
 
 def load_players(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
@@ -254,7 +235,7 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
    fbref_temp = FBref()
    parsed_season = fbref_temp._season_code.parse(season)
    
-   # ADDED: Clear existing data with parsed season
+   # Clear existing data with parsed season
    if verbose:
        print("Clearing existing player data for this season...")
    
@@ -267,7 +248,8 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
    stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'transfers': 0}
    
    try:
-       players_list_df = fbref_get_league_players(competition, season)
+       # FIXED: Use correct function name
+       players_list_df = fbref_extract_league_players(competition, season)
        
        if players_list_df.empty:
            if verbose:
@@ -285,7 +267,8 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
        for i, player_name in enumerate(unique_players, 1):
            team = 'Unknown'
            try:
-               fbref_data = fbref_get_player(player_name, competition, season)
+               # FIXED: Use correct function signature
+               fbref_data = fbref_extract_data(player_name, 'player', competition, season)
                if not fbref_data:
                    if verbose:
                        print(f"[{i:3d}/{len(unique_players)}] {player_name}")
@@ -295,15 +278,12 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                
                team = fbref_data.get('team', 'Unknown')
                
-               # FIXED: Avoid double Understat prefix
+               # FIXED: Add Understat data with correct function signature
                if table_type == 'domestic':
-                   understat_data = understat_get_player(player_name, competition, season)
+                   understat_data = understat_extract_data(player_name, 'player', competition, season)
                    if understat_data:
-                       for key, value in understat_data.items():
-                           if key.startswith('understat_'):
-                               fbref_data[key] = value
-                           else:
-                               fbref_data[f"understat_{key}"] = value
+                       # Merge Understat data (already has understat_ prefix)
+                       fbref_data.update(understat_data)
                
                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
                cleaned_data['data_quality_score'] = quality_score
@@ -323,6 +303,7 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                stats['failed'] += 1
                continue
        
+       # Handle duplicates and transfers
        duplicates = duplicate_handler.detect_duplicates(all_player_data, 'player')
        final_player_data = []
        processed_keys = set()
@@ -339,6 +320,7 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
            elif key not in duplicates:
                final_player_data.append(player_data)
        
+       # Insert to database
        for player_data in final_player_data:
            try:
                success = db.insert_player_data(player_data, table_type)
@@ -372,12 +354,12 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
    
    db = get_db_manager()
    
-   # FIXED: Parse season to match database format
+   # Parse season to match database format
    from scrappers import FBref
    fbref_temp = FBref()
    parsed_season = fbref_temp._season_code.parse(season)
    
-   # ADDED: Clear existing data with parsed season
+   # Clear existing data with parsed season
    if verbose:
        print("Clearing existing team data for this season...")
    
@@ -389,7 +371,8 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
    stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
    
    try:
-       players_list_df = fbref_get_league_players(competition, season)
+       # FIXED: Use correct function name
+       players_list_df = fbref_extract_league_players(competition, season)
        
        if players_list_df.empty:
            if verbose:
@@ -405,7 +388,8 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
        
        for i, team_name in enumerate(unique_teams, 1):
            try:
-               fbref_data = fbref_get_team(team_name, competition, season)
+               # FIXED: Use correct function signature
+               fbref_data = fbref_extract_data(team_name, 'team', competition, season)
                if not fbref_data:
                    if verbose:
                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
@@ -413,15 +397,12 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                    stats['failed'] += 1
                    continue
                
-               # FIXED: Avoid double Understat prefix
+               # FIXED: Add Understat data with correct function signature
                if table_type == 'domestic':
-                   understat_data = understat_get_team(team_name, competition, season)
+                   understat_data = understat_extract_data(team_name, 'team', competition, season)
                    if understat_data:
-                       for key, value in understat_data.items():
-                           if key.startswith('understat_'):
-                               fbref_data[key] = value
-                           else:
-                               fbref_data[f"understat_{key}"] = value
+                       # Merge Understat data (already has understat_ prefix)
+                       fbref_data.update(understat_data)
                
                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
                cleaned_data['data_quality_score'] = quality_score
@@ -570,7 +551,7 @@ def main():
             try:
                 db = get_db_manager()
                 
-                with db.engine.begin() as conn:  # ✅ .begin() auto-commits
+                with db.engine.begin() as conn:
                     conn.execute(text("DELETE FROM footballdecoded.players_domestic"))
                     conn.execute(text("DELETE FROM footballdecoded.teams_domestic"))
                     conn.execute(text("DELETE FROM footballdecoded.players_european"))
