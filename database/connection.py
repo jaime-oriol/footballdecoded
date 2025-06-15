@@ -108,11 +108,11 @@ class DatabaseManager:
         try:
             table_name = f"footballdecoded.players_{table_type}"
             
-            # Basic fields definition
             basic_fields = ['player_name', 'league', 'season', 'team', 'nationality', 
-                          'position', 'age', 'birth_year', 'fbref_official_name', 
-                          'understat_official_name']
-            
+                        'position', 'age', 'birth_year', 'fbref_official_name', 
+                        'understat_official_name', 'normalized_name', 'teams_played', 
+                        'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+
             if table_type == 'european':
                 basic_fields = [f.replace('league', 'competition') for f in basic_fields]
                 basic_fields = [f for f in basic_fields if 'understat' not in f]
