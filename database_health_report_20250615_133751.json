@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-06-15T13:37:51.994750",
+  "overall_health": "critical",
+  "total_issues": 3,
+  "critical_issues": 3,
+  "warnings": 0,
+  "stats": {
+    "tables_found": 7,
+    "players_domestic_total": 562,
+    "players_domestic_avg_quality": 1.0,
+    "teams_domestic_total": 20,
+    "teams_domestic_avg_quality": 1.0
+  },
+  "issues": [
+    "❌ Performance health check failed: (psycopg2.errors.UndefinedColumn) column \"tablename\" does not exist\nLINE 3:                        tablename,\n                               ^\n\n[SQL: \n                SELECT schemaname,\n                       tablename,\n                       indexname,\n                       idx_scan,\n                       pg_size_pretty(pg_relation_size(indexname::regclass)) as index_size\n                FROM pg_stat_user_indexes\n                WHERE schemaname = 'footballdecoded'\n                ORDER BY idx_scan DESC\n            ]\n(Background on this error at: https://sqlalche.me/e/14/f405)",
+    "❌ JSON validation failed for players_domestic: (psycopg2.errors.UndefinedFunction) function json_typeof(jsonb) does not exist\nLINE 5: ...    COUNT(CASE WHEN fbref_metrics IS NOT NULL AND json_typeo...\n                                                             ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\n\n[SQL: \n                        SELECT \n                            COUNT(*) as total,\n                            COUNT(CASE WHEN fbref_metrics IS NOT NULL THEN 1 END) as not_null,\n                            COUNT(CASE WHEN fbref_metrics IS NOT NULL AND json_typeof(fbref_metrics) = 'object' THEN 1 END) as valid_json\n                        FROM footballdecoded.players_domestic\n                    ]\n(Background on this error at: https://sqlalche.me/e/14/f405)",
+    "❌ JSON validation failed for teams_domestic: (psycopg2.errors.UndefinedFunction) function json_typeof(jsonb) does not exist\nLINE 5: ...    COUNT(CASE WHEN fbref_metrics IS NOT NULL AND json_typeo...\n                                                             ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\n\n[SQL: \n                        SELECT \n                            COUNT(*) as total,\n                            COUNT(CASE WHEN fbref_metrics IS NOT NULL THEN 1 END) as not_null,\n                            COUNT(CASE WHEN fbref_metrics IS NOT NULL AND json_typeof(fbref_metrics) = 'object' THEN 1 END) as valid_json\n                        FROM footballdecoded.teams_domestic\n                    ]\n(Background on this error at: https://sqlalche.me/e/14/f405)"
+  ]
+}
