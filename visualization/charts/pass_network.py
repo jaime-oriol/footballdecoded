@@ -12,28 +12,7 @@ import numpy as np
 from typing import Dict, Tuple, Optional
 from datetime import datetime
 
-from core import draw_pitch, FIELD_CONFIG
-
-# ====================================================================
-# CONFIGURATION
-# ====================================================================
-
-SCALE_CONFIG = {
-    'node_size_min': 500, 'node_size_max': 15000,
-    'node_threshold_halves': 10, 'node_threshold_full_match': 20,
-    'line_width_min': 1.0, 'line_width_max': 8.0,
-    'name_length_threshold': 12
-}
-
-CONNECTION_CONFIG = {
-    'min_passes_halves': 4, 'min_passes_full_match': 8,
-    'alpha': 0.8, 'base_offset': 0.4,
-    'arrow_length': 1.0, 'arrow_width': 0.6, 'name_margin': 2.0
-}
-
-FONT_CONFIG = {'family': 'DejaVu Sans', 'fallback': 'sans-serif'}
-
-HALVES_CONFIG = {'first_half_end': 48, 'second_half_start': 45, 'match_end': 120}
+from core import draw_pitch, SCALE_CONFIG, CONNECTION_CONFIG, FONT_CONFIG, HALVES_CONFIG
 
 # ====================================================================
 # CORE SCALING FUNCTIONS
