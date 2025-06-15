@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded Data Loader - Enhanced and Optimized
+# FootballDecoded Data Loader - FIXED Understat prefixes
 # ====================================================================
 
 import sys
@@ -16,6 +16,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
                      understat_get_player, understat_get_team)
 from database.connection import DatabaseManager, get_db_manager
+from sqlalchemy import text
 
 # ====================================================================
 # CONFIGURATION
@@ -280,11 +281,16 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                 
                 team = fbref_data.get('team', 'Unknown')
                 
+                # FIXED: Avoid double Understat prefix
                 if table_type == 'domestic':
                     understat_data = understat_get_player(player_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
-                            fbref_data[f"understat_{key}"] = value
+                            # If key already starts with 'understat_', don't add prefix
+                            if key.startswith('understat_'):
+                                fbref_data[key] = value  # ✅ No double prefix
+                            else:
+                                fbref_data[f"understat_{key}"] = value  # ✅ Single prefix
                 
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
                 cleaned_data['data_quality_score'] = quality_score
@@ -380,11 +386,16 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                     stats['failed'] += 1
                     continue
                 
+                # FIXED: Avoid double Understat prefix
                 if table_type == 'domestic':
                     understat_data = understat_get_team(team_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
-                            fbref_data[f"understat_{key}"] = value
+                            # If key already starts with 'understat_', don't add prefix
+                            if key.startswith('understat_'):
+                                fbref_data[key] = value  # ✅ No double prefix
+                            else:
+                                fbref_data[f"understat_{key}"] = value  # ✅ Single prefix
                 
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
                 cleaned_data['data_quality_score'] = quality_score
@@ -534,12 +545,11 @@ def main():
             try:
                 db = get_db_manager()
                 
-                with db.engine.connect() as conn:
-                    conn.execute("DELETE FROM footballdecoded.players_domestic")
-                    conn.execute("DELETE FROM footballdecoded.teams_domestic")
-                    conn.execute("DELETE FROM footballdecoded.players_european")
-                    conn.execute("DELETE FROM footballdecoded.teams_european")
-                    conn.commit()
+                with db.engine.begin() as conn:  # ✅ .begin() auto-commits
+                    conn.execute(text("DELETE FROM footballdecoded.players_domestic"))
+                    conn.execute(text("DELETE FROM footballdecoded.teams_domestic"))
+                    conn.execute(text("DELETE FROM footballdecoded.players_european"))
+                    conn.execute(text("DELETE FROM footballdecoded.teams_european"))
                 
                 print("All data cleared successfully")
                 db.close()
