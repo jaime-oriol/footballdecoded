@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded Database Connection Manager
+# FootballDecoded Database Connection Manager - FIXED
 # ====================================================================
 
 import os
@@ -108,24 +108,32 @@ class DatabaseManager:
         try:
             table_name = f"footballdecoded.players_{table_type}"
             
-            basic_fields = ['player_name', 'league', 'season', 'team', 'nationality', 
-                        'position', 'age', 'birth_year', 'fbref_official_name', 
-                        'understat_official_name', 'normalized_name', 'teams_played', 
-                        'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
-
-            if table_type == 'european':
-                basic_fields = [f.replace('league', 'competition') for f in basic_fields]
-                basic_fields = [f for f in basic_fields if 'understat' not in f]
+            # FIXED: Define basic fields correctly for each table type
+            if table_type == 'domestic':
+                basic_fields = ['player_name', 'league', 'season', 'team', 'nationality', 
+                               'position', 'age', 'birth_year', 'fbref_official_name', 
+                               'understat_official_name', 'normalized_name', 'teams_played', 
+                               'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+            else:  # european
+                basic_fields = ['player_name', 'competition', 'season', 'team', 'nationality', 
+                               'position', 'age', 'birth_year', 'fbref_official_name', 
+                               'normalized_name', 'teams_played', 
+                               'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+            
+            # FIXED: Map league -> competition for European tables
+            processed_data = player_data.copy()
+            if table_type == 'european' and 'league' in processed_data:
+                processed_data['competition'] = processed_data['league']
             
             # Separate data
-            basic_data = {k: v for k, v in player_data.items() if k in basic_fields}
-            fbref_metrics = {k: v for k, v in player_data.items() 
+            basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
+            fbref_metrics = {k: v for k, v in processed_data.items() 
                            if k not in basic_fields and not k.startswith('understat_')}
             
             basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
             if table_type == 'domestic':
-                understat_metrics = {k: v for k, v in player_data.items() if k.startswith('understat_')}
+                understat_metrics = {k: v for k, v in processed_data.items() if k.startswith('understat_')}
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
             # Insert data
@@ -140,38 +148,42 @@ class DatabaseManager:
             return False
     
     def insert_team_data(self, team_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-            """Insert team data into appropriate table."""
-            try:
-                table_name = f"footballdecoded.teams_{table_type}"
-                
-                # Basic fields definition - FIXED: Include normalized_name
+        """Insert team data into appropriate table."""
+        try:
+            table_name = f"footballdecoded.teams_{table_type}"
+            
+            # FIXED: Define basic fields correctly for each table type
+            if table_type == 'domestic':
                 basic_fields = ['team_name', 'league', 'season', 'normalized_name', 'fbref_official_name', 'understat_official_name']
-                
-                if table_type == 'european':
-                    basic_fields = [f.replace('league', 'competition') for f in basic_fields]
-                    basic_fields = [f for f in basic_fields if 'understat' not in f]
-                
-                # Separate data
-                basic_data = {k: v for k, v in team_data.items() if k in basic_fields}
-                fbref_metrics = {k: v for k, v in team_data.items() 
-                            if k not in basic_fields and not k.startswith('understat_')}
-                
-                basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
-                
-                if table_type == 'domestic':
-                    understat_metrics = {k: v for k, v in team_data.items() if k.startswith('understat_')}
-                    basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
-                
-                # Insert data
-                df = pd.DataFrame([basic_data])
-                df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
-                        if_exists='append', index=False, method='multi')
-                
-                return True
-                
-            except Exception as e:
-                print(f"Failed to insert team data: {e}")
-                return False
+            else:  # european
+                basic_fields = ['team_name', 'competition', 'season', 'normalized_name', 'fbref_official_name']
+            
+            # FIXED: Map league -> competition for European tables
+            processed_data = team_data.copy()
+            if table_type == 'european' and 'league' in processed_data:
+                processed_data['competition'] = processed_data['league']
+            
+            # Separate data
+            basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
+            fbref_metrics = {k: v for k, v in processed_data.items() 
+                           if k not in basic_fields and not k.startswith('understat_')}
+            
+            basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
+            
+            if table_type == 'domestic':
+                understat_metrics = {k: v for k, v in team_data.items() if k.startswith('understat_')}
+                basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
+            
+            # Insert data
+            df = pd.DataFrame([basic_data])
+            df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
+                     if_exists='append', index=False, method='multi')
+            
+            return True
+            
+        except Exception as e:
+            print(f"Failed to insert team data: {e}")
+            return False
     
     def query_players(self, league: str = None, season: str = None, team: str = None) -> pd.DataFrame:
         """Query players with optional filters."""
@@ -217,7 +229,7 @@ def setup_database() -> bool:
     """Run initial database setup."""
     db = DatabaseManager()
     if db.connect():
-        return db.execute_sql_file('setup.sql')
+        return db.execute_sql_file('database/setup.sql')
     return False
 
 def test_connection():
