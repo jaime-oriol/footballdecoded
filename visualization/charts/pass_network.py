@@ -132,7 +132,7 @@ def create_pass_network(match_data: Dict[str, pd.DataFrame],
     
     fig, ax = plt.subplots(figsize=figsize, facecolor='white')
     
-    _draw_pitch(ax)
+    draw_pitch(ax)
     
     colors = {'primary': primary_color, 'secondary': secondary_color}
     
