@@ -193,14 +193,14 @@ class DatabaseManager:
             table_name = f"footballdecoded.{entity_type}_{table_type}"
             league_field = 'competition' if table_type == 'european' else 'league'
             
-            with self.engine.connect() as conn:
-                # FIXED: Remove %% and use proper parameterized query
+            # FIXED: Use begin() for auto-commit transaction
+            with self.engine.begin() as conn:
                 query = f"DELETE FROM {table_name} WHERE {league_field} = :league AND season = :season"
                 result = conn.execute(
                     text(query), 
                     {'league': competition, 'season': season}
                 )
-                conn.commit()
+                # No need for manual commit() - begin() auto-commits
                 
             print(f"Cleared {result.rowcount} existing records from {table_name}")
             return True
