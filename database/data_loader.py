@@ -242,217 +242,224 @@ class DuplicateHandler:
 # ====================================================================
 
 def load_players(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
-    """Load all players from specific competition and season."""
-    if verbose:
-        print(f"Loading players from {competition} - {season}")
-        print("=" * 70)
-    
-    db = get_db_manager()
-    
-    # ADDED: Clear existing data for this competition/season before loading
-    if verbose:
-        print("Clearing existing player data for this season...")
-    
-    success = db.clear_season_data(competition, season, table_type, 'players')
-    if not success and verbose:
-        print("Warning: Could not clear existing data, may cause duplicates")
-    
-    validator = DataValidator()
-    duplicate_handler = DuplicateHandler()
-    stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'transfers': 0}
-    
-    try:
-        players_list_df = fbref_get_league_players(competition, season)
-        
-        if players_list_df.empty:
-            if verbose:
-                print(f"No players found for {competition} {season}")
-            return stats
-        
-        # Rest of the function remains exactly the same...
-        unique_players = players_list_df['player'].dropna().unique().tolist()
-        stats['total_players'] = len(unique_players)
-        
-        if verbose:
-            print(f"Found {len(unique_players)} players to process")
-            print("Extracting data...\n")
-        
-        all_player_data = []
-        for i, player_name in enumerate(unique_players, 1):
-            team = 'Unknown'
-            try:
-                fbref_data = fbref_get_player(player_name, competition, season)
-                if not fbref_data:
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                        print(f"          {competition} - FAILED (No FBref data)")
-                    stats['failed'] += 1
-                    continue
-                
-                team = fbref_data.get('team', 'Unknown')
-                
-                # FIXED: Avoid double Understat prefix
-                if table_type == 'domestic':
-                    understat_data = understat_get_player(player_name, competition, season)
-                    if understat_data:
-                        for key, value in understat_data.items():
-                            if key.startswith('understat_'):
-                                fbref_data[key] = value
-                            else:
-                                fbref_data[f"understat_{key}"] = value
-                
-                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
-                cleaned_data['data_quality_score'] = quality_score
-                cleaned_data['processing_warnings'] = warnings
-                
-                all_player_data.append(cleaned_data)
-                
-                if verbose:
-                    metrics_count = len(cleaned_data)
-                    print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                    print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")
-                
-            except Exception as e:
-                if verbose:
-                    print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                    print(f"          {team}, {competition} - FAILED ({str(e)[:30]}...)")
-                stats['failed'] += 1
-                continue
-        
-        duplicates = duplicate_handler.detect_duplicates(all_player_data, 'player')
-        final_player_data = []
-        processed_keys = set()
-        
-        for player_data in all_player_data:
-            key = duplicate_handler.create_entity_key(player_data, 'player')
-            
-            if key in duplicates and key not in processed_keys:
-                merged_data = duplicate_handler.merge_transfer_records(duplicates[key], 'player')
-                if merged_data.get('is_transfer'):
-                    stats['transfers'] += 1
-                final_player_data.append(merged_data)
-                processed_keys.add(key)
-            elif key not in duplicates:
-                final_player_data.append(player_data)
-        
-        for player_data in final_player_data:
-            try:
-                success = db.insert_player_data(player_data, table_type)
-                if success:
-                    stats['successful'] += 1
-                else:
-                    stats['failed'] += 1
-            except Exception:
-                stats['failed'] += 1
-        
-        if verbose:
-            print(f"\nPlayers loading complete:")
-            print(f"   Total: {stats['total_players']}")
-            print(f"   Successful: {stats['successful']}")
-            print(f"   Transfers detected: {stats['transfers']}")
-            print(f"   Failed: {stats['failed']}")
-        
-        return stats
-        
-    except Exception as e:
-        if verbose:
-            print(f"Failed to load {competition}: {e}")
-        return stats
+   """Load all players from specific competition and season."""
+   if verbose:
+       print(f"Loading players from {competition} - {season}")
+       print("=" * 70)
+   
+   db = get_db_manager()
+   
+   # FIXED: Parse season to match database format
+   from scrappers import FBref
+   fbref_temp = FBref()
+   parsed_season = fbref_temp._season_code.parse(season)
+   
+   # ADDED: Clear existing data with parsed season
+   if verbose:
+       print("Clearing existing player data for this season...")
+   
+   success = db.clear_season_data(competition, parsed_season, table_type, 'players')
+   if not success and verbose:
+       print("Warning: Could not clear existing data, may cause duplicates")
+   
+   validator = DataValidator()
+   duplicate_handler = DuplicateHandler()
+   stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'transfers': 0}
+   
+   try:
+       players_list_df = fbref_get_league_players(competition, season)
+       
+       if players_list_df.empty:
+           if verbose:
+               print(f"No players found for {competition} {season}")
+           return stats
+       
+       unique_players = players_list_df['player'].dropna().unique().tolist()
+       stats['total_players'] = len(unique_players)
+       
+       if verbose:
+           print(f"Found {len(unique_players)} players to process")
+           print("Extracting data...\n")
+       
+       all_player_data = []
+       for i, player_name in enumerate(unique_players, 1):
+           team = 'Unknown'
+           try:
+               fbref_data = fbref_get_player(player_name, competition, season)
+               if not fbref_data:
+                   if verbose:
+                       print(f"[{i:3d}/{len(unique_players)}] {player_name}")
+                       print(f"          {competition} - FAILED (No FBref data)")
+                   stats['failed'] += 1
+                   continue
+               
+               team = fbref_data.get('team', 'Unknown')
+               
+               # FIXED: Avoid double Understat prefix
+               if table_type == 'domestic':
+                   understat_data = understat_get_player(player_name, competition, season)
+                   if understat_data:
+                       for key, value in understat_data.items():
+                           if key.startswith('understat_'):
+                               fbref_data[key] = value
+                           else:
+                               fbref_data[f"understat_{key}"] = value
+               
+               cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
+               cleaned_data['data_quality_score'] = quality_score
+               cleaned_data['processing_warnings'] = warnings
+               
+               all_player_data.append(cleaned_data)
+               
+               if verbose:
+                   metrics_count = len(cleaned_data)
+                   print(f"[{i:3d}/{len(unique_players)}] {player_name}")
+                   print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")
+               
+           except Exception as e:
+               if verbose:
+                   print(f"[{i:3d}/{len(unique_players)}] {player_name}")
+                   print(f"          {team}, {competition} - FAILED ({str(e)[:30]}...)")
+               stats['failed'] += 1
+               continue
+       
+       duplicates = duplicate_handler.detect_duplicates(all_player_data, 'player')
+       final_player_data = []
+       processed_keys = set()
+       
+       for player_data in all_player_data:
+           key = duplicate_handler.create_entity_key(player_data, 'player')
+           
+           if key in duplicates and key not in processed_keys:
+               merged_data = duplicate_handler.merge_transfer_records(duplicates[key], 'player')
+               if merged_data.get('is_transfer'):
+                   stats['transfers'] += 1
+               final_player_data.append(merged_data)
+               processed_keys.add(key)
+           elif key not in duplicates:
+               final_player_data.append(player_data)
+       
+       for player_data in final_player_data:
+           try:
+               success = db.insert_player_data(player_data, table_type)
+               if success:
+                   stats['successful'] += 1
+               else:
+                   stats['failed'] += 1
+           except Exception:
+               stats['failed'] += 1
+       
+       if verbose:
+           print(f"\nPlayers loading complete:")
+           print(f"   Total: {stats['total_players']}")
+           print(f"   Successful: {stats['successful']}")
+           print(f"   Transfers detected: {stats['transfers']}")
+           print(f"   Failed: {stats['failed']}")
+       
+       return stats
+       
+   except Exception as e:
+       if verbose:
+           print(f"Failed to load {competition}: {e}")
+       return stats
 
 
 def load_teams(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
-    """Load all teams from specific competition and season."""
-    if verbose:
-        print(f"Loading teams from {competition} - {season}")
-        print("=" * 70)
-    
-    db = get_db_manager()
-    
-    # ADDED: Clear existing data for this competition/season before loading
-    if verbose:
-        print("Clearing existing team data for this season...")
-    
-    success = db.clear_season_data(competition, season, table_type, 'teams')
-    if not success and verbose:
-        print("Warning: Could not clear existing data, may cause duplicates")
-    
-    validator = DataValidator()
-    stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
-    
-    try:
-        players_list_df = fbref_get_league_players(competition, season)
-        
-        if players_list_df.empty:
-            if verbose:
-                print(f"No data found for {competition} {season}")
-            return stats
-        
-        # Rest of the function remains exactly the same...
-        unique_teams = players_list_df['team'].dropna().unique().tolist()
-        stats['total_teams'] = len(unique_teams)
-        
-        if verbose:
-            print(f"Found {len(unique_teams)} teams to process")
-            print("Extracting data...\n")
-        
-        for i, team_name in enumerate(unique_teams, 1):
-            try:
-                fbref_data = fbref_get_team(team_name, competition, season)
-                if not fbref_data:
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                        print(f"          League, {competition} - FAILED (No FBref data)")
-                    stats['failed'] += 1
-                    continue
-                
-                # FIXED: Avoid double Understat prefix
-                if table_type == 'domestic':
-                    understat_data = understat_get_team(team_name, competition, season)
-                    if understat_data:
-                        for key, value in understat_data.items():
-                            if key.startswith('understat_'):
-                                fbref_data[key] = value
-                            else:
-                                fbref_data[f"understat_{key}"] = value
-                
-                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
-                cleaned_data['data_quality_score'] = quality_score
-                cleaned_data['processing_warnings'] = warnings
-                
-                success = db.insert_team_data(cleaned_data, table_type)
-                
-                if success:
-                    stats['successful'] += 1
-                    if verbose:
-                        metrics_count = len(cleaned_data)
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                        print(f"          League, {competition} - SUCCESS ({metrics_count} metrics)")
-                else:
-                    stats['failed'] += 1
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                        print(f"          League, {competition} - FAILED (DB insert error)")
-                    
-            except Exception as e:
-                if verbose:
-                    print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                    print(f"          League, {competition} - FAILED ({str(e)[:30]}...)")
-                stats['failed'] += 1
-                continue
-        
-        if verbose:
-            print(f"\nTeams loading complete:")
-            print(f"   Total: {stats['total_teams']}")
-            print(f"   Successful: {stats['successful']}")
-            print(f"   Failed: {stats['failed']}")
-        
-        return stats
-        
-    except Exception as e:
-        if verbose:
-            print(f"Failed to load {competition}: {e}")
-        return stats
-
+   """Load all teams from specific competition and season."""
+   if verbose:
+       print(f"Loading teams from {competition} - {season}")
+       print("=" * 70)
+   
+   db = get_db_manager()
+   
+   # FIXED: Parse season to match database format
+   from scrappers import FBref
+   fbref_temp = FBref()
+   parsed_season = fbref_temp._season_code.parse(season)
+   
+   # ADDED: Clear existing data with parsed season
+   if verbose:
+       print("Clearing existing team data for this season...")
+   
+   success = db.clear_season_data(competition, parsed_season, table_type, 'teams')
+   if not success and verbose:
+       print("Warning: Could not clear existing data, may cause duplicates")
+   
+   validator = DataValidator()
+   stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
+   
+   try:
+       players_list_df = fbref_get_league_players(competition, season)
+       
+       if players_list_df.empty:
+           if verbose:
+               print(f"No data found for {competition} {season}")
+           return stats
+       
+       unique_teams = players_list_df['team'].dropna().unique().tolist()
+       stats['total_teams'] = len(unique_teams)
+       
+       if verbose:
+           print(f"Found {len(unique_teams)} teams to process")
+           print("Extracting data...\n")
+       
+       for i, team_name in enumerate(unique_teams, 1):
+           try:
+               fbref_data = fbref_get_team(team_name, competition, season)
+               if not fbref_data:
+                   if verbose:
+                       print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                       print(f"          League, {competition} - FAILED (No FBref data)")
+                   stats['failed'] += 1
+                   continue
+               
+               # FIXED: Avoid double Understat prefix
+               if table_type == 'domestic':
+                   understat_data = understat_get_team(team_name, competition, season)
+                   if understat_data:
+                       for key, value in understat_data.items():
+                           if key.startswith('understat_'):
+                               fbref_data[key] = value
+                           else:
+                               fbref_data[f"understat_{key}"] = value
+               
+               cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
+               cleaned_data['data_quality_score'] = quality_score
+               cleaned_data['processing_warnings'] = warnings
+               
+               success = db.insert_team_data(cleaned_data, table_type)
+               
+               if success:
+                   stats['successful'] += 1
+                   if verbose:
+                       metrics_count = len(cleaned_data)
+                       print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                       print(f"          League, {competition} - SUCCESS ({metrics_count} metrics)")
+               else:
+                   stats['failed'] += 1
+                   if verbose:
+                       print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                       print(f"          League, {competition} - FAILED (DB insert error)")
+                   
+           except Exception as e:
+               if verbose:
+                   print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                   print(f"          League, {competition} - FAILED ({str(e)[:30]}...)")
+               stats['failed'] += 1
+               continue
+       
+       if verbose:
+           print(f"\nTeams loading complete:")
+           print(f"   Total: {stats['total_teams']}")
+           print(f"   Successful: {stats['successful']}")
+           print(f"   Failed: {stats['failed']}")
+       
+       return stats
+       
+   except Exception as e:
+       if verbose:
+           print(f"Failed to load {competition}: {e}")
+       return stats
 
 def load_complete_competition(competition: str, season: str, verbose: bool = True) -> Dict[str, Dict[str, int]]:
     """Load both players and teams from a competition."""
