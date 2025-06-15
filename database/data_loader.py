@@ -116,11 +116,6 @@ class DataNormalizer:
         name_str = re.sub(r'[^\w\s\-\.]', '', name_str)
         name_str = re.sub(r'\s+', ' ', name_str).strip()
         
-        # Apply known mappings
-        for original, normalized in self.name_mappings.items():
-            if original in name_str:
-                name_str = name_str.replace(original, normalized)
-        
         # Normalize suffixes
         name_str = re.sub(r'\bjr\.?\b', 'jr', name_str)
         name_str = re.sub(r'\bsr\.?\b', 'sr', name_str)
