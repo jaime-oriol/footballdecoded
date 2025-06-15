@@ -251,6 +251,10 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
        # FIXED: Use correct function name
        players_list_df = fbref_extract_league_players(competition, season)
        
+       # FIXED: Handle MultiIndex columns - flatten them
+       if hasattr(players_list_df.columns, 'levels'):
+           players_list_df.columns = [col[0] if col[1] == '' else f"{col[0]}_{col[1]}" for col in players_list_df.columns]
+       
        if players_list_df.empty:
            if verbose:
                print(f"No players found for {competition} {season}")
@@ -373,6 +377,10 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
    try:
        # FIXED: Use correct function name
        players_list_df = fbref_extract_league_players(competition, season)
+       
+       # FIXED: Handle MultiIndex columns - flatten them
+       if hasattr(players_list_df.columns, 'levels'):
+           players_list_df.columns = [col[0] if col[1] == '' else f"{col[0]}_{col[1]}" for col in players_list_df.columns]
        
        if players_list_df.empty:
            if verbose:
