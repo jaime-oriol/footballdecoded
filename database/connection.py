@@ -139,7 +139,7 @@ class DatabaseManager:
             # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
-                     if_exists='append', index=False, method='multi')
+                     if_exists='replace', index=False, method='multi')
             
             return True
             
