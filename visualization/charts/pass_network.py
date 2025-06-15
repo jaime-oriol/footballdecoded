@@ -329,7 +329,7 @@ def _recalculate_connections(passes_df: pd.DataFrame) -> pd.DataFrame:
 
 def _draw_half_visualization(ax, half_data: Dict[str, pd.DataFrame], colors: Dict, title: str, show_labels: bool):
     """Draw complete visualization for match half."""
-    _draw_pitch(ax)
+    draw_pitch(ax)
     
     if not half_data['connections'].empty:
         _draw_connections(ax, half_data['connections'], half_data['players'], colors['secondary'])
