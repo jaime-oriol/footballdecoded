@@ -111,14 +111,14 @@ class DatabaseManager:
             # FIXED: Define basic fields correctly for each table type
             if table_type == 'domestic':
                 basic_fields = ['player_name', 'league', 'season', 'team', 'nationality', 
-                               'position', 'age', 'birth_year', 'fbref_official_name', 
-                               'understat_official_name', 'normalized_name', 'teams_played', 
-                               'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+                            'position', 'age', 'birth_year', 'fbref_official_name', 
+                            'understat_official_name', 'normalized_name', 'teams_played', 
+                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
             else:  # european
                 basic_fields = ['player_name', 'competition', 'season', 'team', 'nationality', 
-                               'position', 'age', 'birth_year', 'fbref_official_name', 
-                               'normalized_name', 'teams_played', 
-                               'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+                            'position', 'age', 'birth_year', 'fbref_official_name', 
+                            'normalized_name', 'teams_played', 
+                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
             
             # FIXED: Map league -> competition for European tables
             processed_data = player_data.copy()
@@ -128,7 +128,7 @@ class DatabaseManager:
             # Separate data
             basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
             fbref_metrics = {k: v for k, v in processed_data.items() 
-                           if k not in basic_fields and not k.startswith('understat_')}
+                        if k not in basic_fields and not k.startswith('understat_')}
             
             basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
@@ -136,10 +136,12 @@ class DatabaseManager:
                 understat_metrics = {k: v for k, v in processed_data.items() if k.startswith('understat_')}
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
+            # REMOVED: DELETE logic moved to data_loader.py
+            
             # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
-                     if_exists='replace', index=False, method='multi')
+                    if_exists='append', index=False, method='multi')
             
             return True
             
@@ -183,6 +185,26 @@ class DatabaseManager:
             
         except Exception as e:
             print(f"Failed to insert team data: {e}")
+            return False
+        
+    def clear_season_data(self, competition: str, season: str, table_type: str, entity_type: str) -> bool:
+        """Clear existing data for a specific competition and season before reloading."""
+        try:
+            table_name = f"footballdecoded.{entity_type}_{table_type}"
+            league_field = 'competition' if table_type == 'european' else 'league'
+            
+            with self.engine.connect() as conn:
+                result = conn.execute(
+                    text(f"DELETE FROM {table_name} WHERE {league_field} = %(league)s AND season = %(season)s"), 
+                    {'league': competition, 'season': season}
+                )
+                conn.commit()
+                
+            print(f"Cleared {result.rowcount} existing records from {table_name}")
+            return True
+            
+        except Exception as e:
+            print(f"Failed to clear existing data: {e}")
             return False
     
     def query_players(self, league: str = None, season: str = None, team: str = None) -> pd.DataFrame:

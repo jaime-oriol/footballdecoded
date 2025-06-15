@@ -248,6 +248,15 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
         print("=" * 70)
     
     db = get_db_manager()
+    
+    # ADDED: Clear existing data for this competition/season before loading
+    if verbose:
+        print("Clearing existing player data for this season...")
+    
+    success = db.clear_season_data(competition, season, table_type, 'players')
+    if not success and verbose:
+        print("Warning: Could not clear existing data, may cause duplicates")
+    
     validator = DataValidator()
     duplicate_handler = DuplicateHandler()
     stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'transfers': 0}
@@ -260,6 +269,7 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                 print(f"No players found for {competition} {season}")
             return stats
         
+        # Rest of the function remains exactly the same...
         unique_players = players_list_df['player'].dropna().unique().tolist()
         stats['total_players'] = len(unique_players)
         
@@ -286,11 +296,10 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                     understat_data = understat_get_player(player_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
-                            # If key already starts with 'understat_', don't add prefix
                             if key.startswith('understat_'):
-                                fbref_data[key] = value  # ✅ No double prefix
+                                fbref_data[key] = value
                             else:
-                                fbref_data[f"understat_{key}"] = value  # ✅ Single prefix
+                                fbref_data[f"understat_{key}"] = value
                 
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
                 cleaned_data['data_quality_score'] = quality_score
@@ -358,6 +367,15 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
         print("=" * 70)
     
     db = get_db_manager()
+    
+    # ADDED: Clear existing data for this competition/season before loading
+    if verbose:
+        print("Clearing existing team data for this season...")
+    
+    success = db.clear_season_data(competition, season, table_type, 'teams')
+    if not success and verbose:
+        print("Warning: Could not clear existing data, may cause duplicates")
+    
     validator = DataValidator()
     stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
     
@@ -369,6 +387,7 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                 print(f"No data found for {competition} {season}")
             return stats
         
+        # Rest of the function remains exactly the same...
         unique_teams = players_list_df['team'].dropna().unique().tolist()
         stats['total_teams'] = len(unique_teams)
         
@@ -391,11 +410,10 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                     understat_data = understat_get_team(team_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
-                            # If key already starts with 'understat_', don't add prefix
                             if key.startswith('understat_'):
-                                fbref_data[key] = value  # ✅ No double prefix
+                                fbref_data[key] = value
                             else:
-                                fbref_data[f"understat_{key}"] = value  # ✅ Single prefix
+                                fbref_data[f"understat_{key}"] = value
                 
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
                 cleaned_data['data_quality_score'] = quality_score
