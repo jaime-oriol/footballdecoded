@@ -194,8 +194,10 @@ class DatabaseManager:
             league_field = 'competition' if table_type == 'european' else 'league'
             
             with self.engine.connect() as conn:
+                # FIXED: Remove %% and use proper parameterized query
+                query = f"DELETE FROM {table_name} WHERE {league_field} = :league AND season = :season"
                 result = conn.execute(
-                    text(f"DELETE FROM {table_name} WHERE {league_field} = %(league)s AND season = %(season)s"), 
+                    text(query), 
                     {'league': competition, 'season': season}
                 )
                 conn.commit()
