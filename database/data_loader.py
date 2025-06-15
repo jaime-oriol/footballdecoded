@@ -1,8 +1,5 @@
 # ====================================================================
-# FootballDecoded - Data Loader Mejorado
-# ====================================================================
-# Soluciona: Series corruptas, duplicados, homónimos, normalización
-# Mantiene: Simplicidad, compatibilidad con wrappers existentes
+# FootballDecoded Data Loader - Enhanced and Optimized
 # ====================================================================
 
 import sys
@@ -15,7 +12,6 @@ from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 from collections import defaultdict
 
-# Add wrappers to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
                      understat_get_player, understat_get_team)
@@ -85,18 +81,17 @@ METRIC_RANGES = {
 }
 
 # ====================================================================
-# DATA CLEANING AND NORMALIZATION
+# DATA PROCESSING CLASSES
 # ====================================================================
 
 class DataNormalizer:
     """Clean and normalize football data."""
-        
+    
     def normalize_name(self, name: str) -> str:
         """Normalize player/team names for consistent matching."""
         if not name or pd.isna(name):
             return ""
         
-        # Handle corrupted pandas Series
         name_str = str(name)
         if '\n' in name_str and 'dtype: object' in name_str:
             lines = name_str.split('\n')
@@ -105,18 +100,11 @@ class DataNormalizer:
                     name_str = line.strip()
                     break
         
-        # Basic normalization
         name_str = name_str.lower().strip()
-        
-        # Remove accents
         name_str = unicodedata.normalize('NFD', name_str)
         name_str = ''.join(c for c in name_str if unicodedata.category(c) != 'Mn')
-        
-        # Clean special characters and normalize spaces
         name_str = re.sub(r'[^\w\s\-\.]', '', name_str)
         name_str = re.sub(r'\s+', ' ', name_str).strip()
-        
-        # Normalize suffixes
         name_str = re.sub(r'\bjr\.?\b', 'jr', name_str)
         name_str = re.sub(r'\bsr\.?\b', 'sr', name_str)
         
@@ -127,7 +115,6 @@ class DataNormalizer:
         if pd.isna(value) or value is None:
             return None
         
-        # Handle corrupted Series
         str_value = str(value)
         if '\n' in str_value and 'dtype: object' in str_value:
             lines = str_value.split('\n')
@@ -136,23 +123,21 @@ class DataNormalizer:
                     str_value = line.strip()
                     break
         
-        # Handle unexpected lists
         if isinstance(value, list):
             if field_name in ['teams_played', 'player_name', 'team_name']:
                 return ', '.join(str(item) for item in value)
         
-        # Handle "nan" strings
         if str_value.lower() in ['nan', 'none', 'null', '']:
             return None
         
         return str_value.strip()
 
-# ====================================================================
-# DATA VALIDATION
-# ====================================================================
 
 class DataValidator:
     """Validate football data integrity."""
+    
+    def __init__(self):
+        self.normalizer = DataNormalizer()
     
     def validate_record(self, record: Dict[str, Any], entity_type: str) -> Tuple[Dict[str, Any], float, List[str]]:
         """Validate and clean a data record."""
@@ -160,13 +145,9 @@ class DataValidator:
         quality_score = 1.0
         warnings = []
         
-        normalizer = DataNormalizer()
-        
-        # Clean all fields
         for field, value in record.items():
-            cleaned_value = normalizer.clean_value(value, field)
+            cleaned_value = self.normalizer.clean_value(value, field)
             
-            # Validate numeric fields
             if field in METRIC_RANGES and cleaned_value is not None:
                 try:
                     numeric_value = float(cleaned_value)
@@ -176,31 +157,29 @@ class DataValidator:
                         warnings.append(f"{field} out of range: {numeric_value}")
                         quality_score -= 0.1
                     else:
-                        cleaned_record[field] = int(numeric_value) if field in ['age', 'birth_year', 'matches_played', 'goals', 'assists'] else numeric_value
+                        if field in ['age', 'birth_year', 'matches_played', 'goals', 'assists']:
+                            cleaned_record[field] = int(numeric_value)
+                        else:
+                            cleaned_record[field] = numeric_value
                 except ValueError:
                     warnings.append(f"Invalid numeric value for {field}: {cleaned_value}")
                     quality_score -= 0.1
             else:
                 cleaned_record[field] = cleaned_value
         
-        # Validate required fields
         required_fields = ['player_name', 'league', 'season', 'team'] if entity_type == 'player' else ['team_name', 'league', 'season']
         for field in required_fields:
             if field not in cleaned_record or not cleaned_record[field]:
                 warnings.append(f"Missing required field: {field}")
                 quality_score -= 0.3
         
-        # Add normalized name for matching
         if entity_type == 'player' and 'player_name' in cleaned_record:
-            cleaned_record['normalized_name'] = normalizer.normalize_name(cleaned_record['player_name'])
+            cleaned_record['normalized_name'] = self.normalizer.normalize_name(cleaned_record['player_name'])
         elif entity_type == 'team' and 'team_name' in cleaned_record:
-            cleaned_record['normalized_name'] = normalizer.normalize_name(cleaned_record['team_name'])
+            cleaned_record['normalized_name'] = self.normalizer.normalize_name(cleaned_record['team_name'])
         
         return cleaned_record, max(0.0, quality_score), warnings
 
-# ====================================================================
-# DUPLICATE DETECTION AND HANDLING
-# ====================================================================
 
 class DuplicateHandler:
     """Handle duplicates and transfers intelligently."""
@@ -226,7 +205,6 @@ class DuplicateHandler:
             key = self.create_entity_key(record, entity_type)
             groups[key].append(record)
         
-        # Return only groups with multiple records
         return {k: v for k, v in groups.items() if len(v) > 1}
     
     def merge_transfer_records(self, records: List[Dict[str, Any]], entity_type: str) -> Dict[str, Any]:
@@ -234,10 +212,8 @@ class DuplicateHandler:
         if not records:
             return {}
         
-        # Use first record as base
         merged = records[0].copy()
         
-        # Aggregate numeric metrics
         numeric_fields = ['minutes_played', 'matches_played', 'goals', 'assists', 'shots', 'tackles', 'interceptions']
         
         for field in numeric_fields:
@@ -250,20 +226,18 @@ class DuplicateHandler:
                         continue
             merged[field] = total
         
-        # Track teams played for transfers
         if entity_type == 'player':
             teams = [r.get('team') for r in records if r.get('team')]
             if len(set(teams)) > 1:
                 merged['teams_played'] = ' -> '.join(teams)
                 merged['is_transfer'] = True
                 merged['transfer_count'] = len(set(teams))
-                # Use last team as current team
                 merged['team'] = teams[-1]
         
         return merged
 
 # ====================================================================
-# MAIN DATA LOADING FUNCTIONS
+# MAIN LOADING FUNCTIONS
 # ====================================================================
 
 def load_players(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
@@ -278,7 +252,6 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
     stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'transfers': 0}
     
     try:
-        # Get player list
         players_list_df = fbref_get_league_players(competition, season)
         
         if players_list_df.empty:
@@ -286,47 +259,51 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                 print(f"No players found for {competition} {season}")
             return stats
         
-        # Extract unique players
         unique_players = players_list_df['player'].dropna().unique().tolist()
         stats['total_players'] = len(unique_players)
         
         if verbose:
             print(f"Found {len(unique_players)} players to process")
+            print("Extracting data...\n")
         
-        # Process each player
         all_player_data = []
         for i, player_name in enumerate(unique_players, 1):
-            if verbose and i % 50 == 0:
-                print(f"Processed {i}/{len(unique_players)} players...")
-            
+            team = 'Unknown'
             try:
-                # Get FBref data
                 fbref_data = fbref_get_player(player_name, competition, season)
                 if not fbref_data:
+                    if verbose:
+                        print(f"[{i:3d}/{len(unique_players)}] {player_name}")
+                        print(f"          {competition} - FAILED (No FBref data)")
                     stats['failed'] += 1
                     continue
                 
-                # Get Understat data for domestic leagues
+                team = fbref_data.get('team', 'Unknown')
+                
                 if table_type == 'domestic':
                     understat_data = understat_get_player(player_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
                             fbref_data[f"understat_{key}"] = value
                 
-                # Validate and clean data
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
                 cleaned_data['data_quality_score'] = quality_score
                 cleaned_data['processing_warnings'] = warnings
                 
                 all_player_data.append(cleaned_data)
                 
+                if verbose:
+                    metrics_count = len(cleaned_data)
+                    print(f"[{i:3d}/{len(unique_players)}] {player_name}")
+                    print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")
+                
             except Exception as e:
                 if verbose:
-                    print(f"Error processing {player_name}: {str(e)}")
+                    print(f"[{i:3d}/{len(unique_players)}] {player_name}")
+                    print(f"          {team}, {competition} - FAILED ({str(e)[:30]}...)")
                 stats['failed'] += 1
                 continue
         
-        # Handle duplicates and transfers
         duplicates = duplicate_handler.detect_duplicates(all_player_data, 'player')
         final_player_data = []
         processed_keys = set()
@@ -335,7 +312,6 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
             key = duplicate_handler.create_entity_key(player_data, 'player')
             
             if key in duplicates and key not in processed_keys:
-                # Merge transfer records
                 merged_data = duplicate_handler.merge_transfer_records(duplicates[key], 'player')
                 if merged_data.get('is_transfer'):
                     stats['transfers'] += 1
@@ -344,7 +320,6 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
             elif key not in duplicates:
                 final_player_data.append(player_data)
         
-        # Insert into database
         for player_data in final_player_data:
             try:
                 success = db.insert_player_data(player_data, table_type)
@@ -352,17 +327,15 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                     stats['successful'] += 1
                 else:
                     stats['failed'] += 1
-            except Exception as e:
-                if verbose:
-                    print(f"Database insert error for {player_data.get('player_name')}: {str(e)}")
+            except Exception:
                 stats['failed'] += 1
         
         if verbose:
-            print(f"Players loading complete:")
-            print(f"  Total: {stats['total_players']}")
-            print(f"  Successful: {stats['successful']}")
-            print(f"  Transfers detected: {stats['transfers']}")
-            print(f"  Failed: {stats['failed']}")
+            print(f"\nPlayers loading complete:")
+            print(f"   Total: {stats['total_players']}")
+            print(f"   Successful: {stats['successful']}")
+            print(f"   Transfers detected: {stats['transfers']}")
+            print(f"   Failed: {stats['failed']}")
         
         return stats
         
@@ -370,6 +343,7 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
         if verbose:
             print(f"Failed to load {competition}: {e}")
         return stats
+
 
 def load_teams(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
     """Load all teams from specific competition and season."""
@@ -382,7 +356,6 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
     stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
     
     try:
-        # Get team list through players
         players_list_df = fbref_get_league_players(competition, season)
         
         if players_list_df.empty:
@@ -390,55 +363,59 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                 print(f"No data found for {competition} {season}")
             return stats
         
-        # Extract unique teams
         unique_teams = players_list_df['team'].dropna().unique().tolist()
         stats['total_teams'] = len(unique_teams)
         
         if verbose:
             print(f"Found {len(unique_teams)} teams to process")
+            print("Extracting data...\n")
         
-        # Process each team
         for i, team_name in enumerate(unique_teams, 1):
-            if verbose and i % 10 == 0:
-                print(f"Processed {i}/{len(unique_teams)} teams...")
-            
             try:
-                # Get FBref data
                 fbref_data = fbref_get_team(team_name, competition, season)
                 if not fbref_data:
+                    if verbose:
+                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                        print(f"          League, {competition} - FAILED (No FBref data)")
                     stats['failed'] += 1
                     continue
                 
-                # Get Understat data for domestic leagues
                 if table_type == 'domestic':
                     understat_data = understat_get_team(team_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
                             fbref_data[f"understat_{key}"] = value
                 
-                # Validate and clean data
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
                 cleaned_data['data_quality_score'] = quality_score
                 cleaned_data['processing_warnings'] = warnings
                 
-                # Insert into database
                 success = db.insert_team_data(cleaned_data, table_type)
+                
                 if success:
                     stats['successful'] += 1
+                    if verbose:
+                        metrics_count = len(cleaned_data)
+                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                        print(f"          League, {competition} - SUCCESS ({metrics_count} metrics)")
                 else:
                     stats['failed'] += 1
+                    if verbose:
+                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                        print(f"          League, {competition} - FAILED (DB insert error)")
                     
             except Exception as e:
                 if verbose:
-                    print(f"Error processing {team_name}: {str(e)}")
+                    print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
+                    print(f"          League, {competition} - FAILED ({str(e)[:30]}...)")
                 stats['failed'] += 1
                 continue
         
         if verbose:
-            print(f"Teams loading complete:")
-            print(f"  Total: {stats['total_teams']}")
-            print(f"  Successful: {stats['successful']}")
-            print(f"  Failed: {stats['failed']}")
+            print(f"\nTeams loading complete:")
+            print(f"   Total: {stats['total_teams']}")
+            print(f"   Successful: {stats['successful']}")
+            print(f"   Failed: {stats['failed']}")
         
         return stats
         
@@ -446,6 +423,7 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
         if verbose:
             print(f"Failed to load {competition}: {e}")
         return stats
+
 
 def load_complete_competition(competition: str, season: str, verbose: bool = True) -> Dict[str, Dict[str, int]]:
     """Load both players and teams from a competition."""
@@ -458,7 +436,6 @@ def load_complete_competition(competition: str, season: str, verbose: bool = Tru
     
     results = {}
     
-    # Load players
     if verbose:
         print("PHASE 1: Loading Players")
         print("-" * 40)
@@ -466,7 +443,6 @@ def load_complete_competition(competition: str, season: str, verbose: bool = Tru
     player_stats = load_players(competition, season, table_type, verbose)
     results['players'] = player_stats
     
-    # Load teams
     if verbose:
         print("\nPHASE 2: Loading Teams")
         print("-" * 40)
@@ -584,6 +560,7 @@ def main():
     
     else:
         print("Invalid option. Please select 1-5.")
+
 
 if __name__ == "__main__":
     main()
