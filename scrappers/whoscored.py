@@ -816,3 +816,4 @@ class WhoScored(BaseSeleniumReader):
             # with open("/tmp/error.html", "w") as f:
             # f.write(self._driver.page_source)
             raise ElementClickInterceptedException()
+        
