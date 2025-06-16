@@ -161,39 +161,64 @@ CREATE TABLE IF NOT EXISTS footballdecoded.teams_european (
 );
 
 -- ====================================================================
+-- AÑADIR COLUMNAS DE IDs ÚNICOS A TABLAS EXISTENTES
+-- ====================================================================
+
+-- Add unique ID columns if they don't exist
+ALTER TABLE footballdecoded.players_domestic 
+ADD COLUMN IF NOT EXISTS unique_player_id VARCHAR(16);
+
+ALTER TABLE footballdecoded.players_european 
+ADD COLUMN IF NOT EXISTS unique_player_id VARCHAR(16);
+
+ALTER TABLE footballdecoded.teams_domestic 
+ADD COLUMN IF NOT EXISTS unique_team_id VARCHAR(16);
+
+ALTER TABLE footballdecoded.teams_european 
+ADD COLUMN IF NOT EXISTS unique_team_id VARCHAR(16);
+
+-- ====================================================================
 -- CONSTRAINTS NUEVOS - BASADOS EN IDS ÚNICOS
 -- ====================================================================
 
 -- Players: unique_player_id + league + season + team (permite transfers)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_players_domestic_unique_id 
-    ON footballdecoded.players_domestic(unique_player_id, league, season, team);
+    ON footballdecoded.players_domestic(unique_player_id, league, season, team)
+    WHERE unique_player_id IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_players_european_unique_id 
-    ON footballdecoded.players_european(unique_player_id, competition, season, team);
+    ON footballdecoded.players_european(unique_player_id, competition, season, team)
+    WHERE unique_player_id IS NOT NULL;
 
 -- Teams: unique_team_id + league + season
 CREATE UNIQUE INDEX IF NOT EXISTS idx_teams_domestic_unique_id 
-    ON footballdecoded.teams_domestic(unique_team_id, league, season);
+    ON footballdecoded.teams_domestic(unique_team_id, league, season)
+    WHERE unique_team_id IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_teams_european_unique_id 
-    ON footballdecoded.teams_european(unique_team_id, competition, season);
+    ON footballdecoded.teams_european(unique_team_id, competition, season)
+    WHERE unique_team_id IS NOT NULL;
 
 -- ====================================================================
 -- PERFORMANCE INDEXES - OPTIMIZADOS PARA IDS ÚNICOS
 -- ====================================================================
 
--- IDs únicos para rendimiento máximo
+-- IDs únicos para rendimiento máximo (solo si la columna existe)
 CREATE INDEX IF NOT EXISTS idx_players_domestic_unique_id_only 
-    ON footballdecoded.players_domestic(unique_player_id);
+    ON footballdecoded.players_domestic(unique_player_id)
+    WHERE unique_player_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_players_european_unique_id_only 
-    ON footballdecoded.players_european(unique_player_id);
+    ON footballdecoded.players_european(unique_player_id)
+    WHERE unique_player_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_teams_domestic_unique_id_only 
-    ON footballdecoded.teams_domestic(unique_team_id);
+    ON footballdecoded.teams_domestic(unique_team_id)
+    WHERE unique_team_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_teams_european_unique_id_only 
-    ON footballdecoded.teams_european(unique_team_id);
+    ON footballdecoded.teams_european(unique_team_id)
+    WHERE unique_team_id IS NOT NULL;
 
 -- Query indexes (league/competition + season)
 CREATE INDEX IF NOT EXISTS idx_players_domestic_league_season 
@@ -235,14 +260,14 @@ CREATE INDEX IF NOT EXISTS idx_players_domestic_quality_score
 CREATE INDEX IF NOT EXISTS idx_players_european_quality_score 
     ON footballdecoded.players_european(data_quality_score);
 
--- Transfer detection con IDs únicos
+-- Transfer detection con IDs únicos (solo si la columna existe)
 CREATE INDEX IF NOT EXISTS idx_players_domestic_transfers 
     ON footballdecoded.players_domestic(unique_player_id, league, season) 
-    WHERE is_transfer = true;
+    WHERE is_transfer = true AND unique_player_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_players_european_transfers 
     ON footballdecoded.players_european(unique_player_id, competition, season) 
-    WHERE is_transfer = true;
+    WHERE is_transfer = true AND unique_player_id IS NOT NULL;
 
 -- JSON search indexes (GIN for fast JSON queries)
 CREATE INDEX IF NOT EXISTS idx_players_domestic_fbref_gin 
