@@ -64,19 +64,14 @@ class DatabaseManager:
             return False
     
     def execute_sql_file(self, filepath: str) -> bool:
-        """Execute SQL file."""
+        """Execute SQL file with proper handling of multi-line statements."""
         try:
-            with open(filepath, 'r') as file:
+            with open(filepath, 'r', encoding='utf-8') as file:
                 sql_content = file.read()
             
-            with self.engine.connect() as conn:
-                statements = [stmt.strip() for stmt in sql_content.split(';') if stmt.strip()]
-                
-                for statement in statements:
-                    if statement:
-                        conn.execute(text(statement))
-                        
-                conn.commit()
+            # Execute the entire file as one statement block
+            with self.engine.begin() as conn:
+                conn.execute(text(sql_content))
             
             print(f"SQL file executed successfully: {filepath}")
             return True
@@ -103,36 +98,36 @@ class DatabaseManager:
             return obj
     
     def insert_player_data(self, player_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-        """Insert player data with unique ID system."""
+        """Insert player data using unique ID system."""
         try:
             table_name = f"footballdecoded.players_{table_type}"
             
-            # Define basic fields with unique ID
+            # Basic fields with unique ID
             if table_type == 'domestic':
-                basic_fields = ['unique_player_id', 'player_name', 'league', 'season', 'team', 
-                              'nationality', 'position', 'age', 'birth_year', 'fbref_official_name', 
-                              'understat_official_name', 'normalized_name', 'teams_played', 
-                              'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+                basic_fields = ['unique_player_id', 'player_name', 'league', 'season', 'team', 'nationality', 
+                            'position', 'age', 'birth_year', 'fbref_official_name', 
+                            'understat_official_name', 'normalized_name', 'teams_played', 
+                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
             else:  # european
-                basic_fields = ['unique_player_id', 'player_name', 'competition', 'season', 'team', 
-                              'nationality', 'position', 'age', 'birth_year', 'fbref_official_name', 
-                              'normalized_name', 'teams_played', 'data_quality_score', 
-                              'processing_warnings', 'is_transfer', 'transfer_count']
+                basic_fields = ['unique_player_id', 'player_name', 'competition', 'season', 'team', 'nationality', 
+                            'position', 'age', 'birth_year', 'fbref_official_name', 
+                            'normalized_name', 'teams_played', 
+                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
             
             # Map league -> competition for European tables
             processed_data = player_data.copy()
             if table_type == 'european' and 'league' in processed_data:
                 processed_data['competition'] = processed_data['league']
             
-            # Validate unique ID exists
+            # Validate unique_player_id exists
             if 'unique_player_id' not in processed_data:
-                print(f"Error: Missing unique_player_id for player {processed_data.get('player_name', 'Unknown')}")
+                print(f"Error: unique_player_id missing for player {processed_data.get('player_name', 'Unknown')}")
                 return False
             
             # Separate data
             basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
             fbref_metrics = {k: v for k, v in processed_data.items() 
-                           if k not in basic_fields and not k.startswith('understat_')}
+                        if k not in basic_fields and not k.startswith('understat_')}
             
             basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
             
@@ -143,7 +138,7 @@ class DatabaseManager:
             # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
-                     if_exists='append', index=False, method='multi')
+                    if_exists='append', index=False, method='multi')
             
             return True
             
@@ -152,27 +147,26 @@ class DatabaseManager:
             return False
     
     def insert_team_data(self, team_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-        """Insert team data with unique ID system."""
+        """Insert team data using unique ID system."""
         try:
             table_name = f"footballdecoded.teams_{table_type}"
             
-            # Define basic fields with unique ID
+            # Basic fields with unique ID
             if table_type == 'domestic':
                 basic_fields = ['unique_team_id', 'team_name', 'league', 'season', 'normalized_name', 
-                              'fbref_official_name', 'understat_official_name', 'data_quality_score', 
-                              'processing_warnings']
+                               'fbref_official_name', 'understat_official_name']
             else:  # european
                 basic_fields = ['unique_team_id', 'team_name', 'competition', 'season', 'normalized_name', 
-                              'fbref_official_name', 'data_quality_score', 'processing_warnings']
+                               'fbref_official_name']
             
             # Map league -> competition for European tables
             processed_data = team_data.copy()
             if table_type == 'european' and 'league' in processed_data:
                 processed_data['competition'] = processed_data['league']
             
-            # Validate unique ID exists
+            # Validate unique_team_id exists
             if 'unique_team_id' not in processed_data:
-                print(f"Error: Missing unique_team_id for team {processed_data.get('team_name', 'Unknown')}")
+                print(f"Error: unique_team_id missing for team {processed_data.get('team_name', 'Unknown')}")
                 return False
             
             # Separate data
@@ -217,145 +211,74 @@ class DatabaseManager:
             print(f"Failed to clear existing data: {e}")
             return False
     
-    def get_player_transfers(self, unique_player_id: str, league: str = None, season: str = None) -> pd.DataFrame:
-        """Get all records for a player across teams (transfers)."""
+    def get_transfers_by_unique_id(self, table_type: str = 'domestic') -> pd.DataFrame:
+        """Get players with multiple teams using unique ID system."""
         try:
-            base_query = """
-            SELECT * FROM footballdecoded.players_domestic 
-            WHERE unique_player_id = :player_id
-            """
-            params = {'player_id': unique_player_id}
+            if table_type == 'domestic':
+                query = """
+                SELECT 
+                    unique_player_id,
+                    player_name,
+                    league,
+                    season,
+                    COUNT(DISTINCT team) as teams_count,
+                    STRING_AGG(DISTINCT team, ' -> ' ORDER BY team) as teams_path,
+                    AVG(data_quality_score) as avg_quality
+                FROM footballdecoded.players_domestic
+                GROUP BY unique_player_id, player_name, league, season
+                HAVING COUNT(DISTINCT team) > 1
+                ORDER BY teams_count DESC
+                """
+            else:
+                query = """
+                SELECT 
+                    unique_player_id,
+                    player_name,
+                    competition as league,
+                    season,
+                    COUNT(DISTINCT team) as teams_count,
+                    STRING_AGG(DISTINCT team, ' -> ' ORDER BY team) as teams_path,
+                    AVG(data_quality_score) as avg_quality
+                FROM footballdecoded.players_european
+                GROUP BY unique_player_id, player_name, competition, season
+                HAVING COUNT(DISTINCT team) > 1
+                ORDER BY teams_count DESC
+                """
             
-            if league:
-                base_query += " AND league = :league"
-                params['league'] = league
-            if season:
-                base_query += " AND season = :season"
-                params['season'] = season
-                
-            base_query += " ORDER BY team"
-            
-            domestic_df = pd.read_sql(base_query, self.engine, params=params)
-            
-            # Check European table too
-            european_query = base_query.replace('footballdecoded.players_domestic', 
-                                              'footballdecoded.players_european')
-            european_query = european_query.replace('league', 'competition')
-            
-            european_df = pd.read_sql(european_query, self.engine, params=params)
-            
-            # Combine results
-            all_records = pd.concat([domestic_df, european_df], ignore_index=True)
-            return all_records
+            return pd.read_sql(query, self.engine)
             
         except Exception as e:
-            print(f"Failed to get player transfers: {e}")
+            print(f"Failed to get transfers: {e}")
             return pd.DataFrame()
     
-    def get_transfer_summary(self, league: str = None, season: str = None) -> pd.DataFrame:
-        """Get summary of all transfers detected."""
+    def get_entity_by_unique_id(self, unique_id: str, entity_type: str, table_type: str = 'domestic') -> pd.DataFrame:
+        """Get all records for a specific unique ID."""
         try:
-            query = """
-            SELECT 
-                unique_player_id,
-                player_name,
-                league,
-                season,
-                COUNT(*) as teams_count,
-                STRING_AGG(team, ' -> ' ORDER BY team) as transfer_path,
-                AVG(data_quality_score) as avg_quality
-            FROM footballdecoded.players_domestic
-            WHERE 1=1
-            """
-            params = {}
+            table_name = f"footballdecoded.{entity_type}_{table_type}"
+            id_field = f"unique_{entity_type}_id"
             
-            if league:
-                query += " AND league = :league"
-                params['league'] = league
-            if season:
-                query += " AND season = :season"
-                params['season'] = season
-                
-            query += """
-            GROUP BY unique_player_id, player_name, league, season
-            HAVING COUNT(*) > 1
-            ORDER BY teams_count DESC, player_name
-            """
+            query = f"SELECT * FROM {table_name} WHERE {id_field} = :unique_id ORDER BY season DESC, team"
             
-            return pd.read_sql(query, self.engine, params=params)
+            return pd.read_sql(query, self.engine, params={'unique_id': unique_id})
             
         except Exception as e:
-            print(f"Failed to get transfer summary: {e}")
+            print(f"Failed to get entity by unique ID: {e}")
             return pd.DataFrame()
     
-    def get_unique_entities_stats(self) -> Dict[str, int]:
-        """Get statistics about unique entities in database."""
-        try:
-            stats = {}
-            
-            # Unique players in domestic leagues
-            result = pd.read_sql(
-                "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_domestic", 
-                self.engine
-            )
-            stats['unique_domestic_players'] = result.iloc[0]['count']
-            
-            # Unique players in European competitions  
-            result = pd.read_sql(
-                "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_european", 
-                self.engine
-            )
-            stats['unique_european_players'] = result.iloc[0]['count']
-            
-            # Unique teams in domestic leagues
-            result = pd.read_sql(
-                "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_domestic", 
-                self.engine
-            )
-            stats['unique_domestic_teams'] = result.iloc[0]['count']
-            
-            # Unique teams in European competitions
-            result = pd.read_sql(
-                "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_european", 
-                self.engine
-            )
-            stats['unique_european_teams'] = result.iloc[0]['count']
-            
-            # Players with transfers (multiple teams)
-            result = pd.read_sql("""
-                SELECT COUNT(*) as count FROM (
-                    SELECT unique_player_id 
-                    FROM footballdecoded.players_domestic 
-                    GROUP BY unique_player_id, league, season 
-                    HAVING COUNT(DISTINCT team) > 1
-                ) transfers
-            """, self.engine)
-            stats['players_with_transfers'] = result.iloc[0]['count']
-            
-            return stats
-            
-        except Exception as e:
-            print(f"Failed to get unique entities stats: {e}")
-            return {}
-    
-    def query_players(self, league: str = None, season: str = None, team: str = None, 
-                     unique_id: str = None) -> pd.DataFrame:
-        """Query players with optional filters including unique ID."""
+    def query_players(self, league: str = None, season: str = None, team: str = None) -> pd.DataFrame:
+        """Query players with optional filters."""
         try:
             query = "SELECT * FROM footballdecoded.players_domestic WHERE 1=1"
             params = {}
             
-            if unique_id:
-                query += " AND unique_player_id = :unique_id"
-                params['unique_id'] = unique_id
             if league:
-                query += " AND league = :league"
+                query += " AND league = %(league)s"
                 params['league'] = league
             if season:
-                query += " AND season = :season"  
+                query += " AND season = %(season)s"  
                 params['season'] = season
             if team:
-                query += " AND team = :team"
+                query += " AND team = %(team)s"
                 params['team'] = team
                 
             return pd.read_sql(query, self.engine, params=params)
@@ -364,70 +287,52 @@ class DatabaseManager:
             print(f"Query failed: {e}")
             return pd.DataFrame()
     
-    def query_teams(self, league: str = None, season: str = None, 
-                   unique_id: str = None) -> pd.DataFrame:
-        """Query teams with optional filters including unique ID."""
+    def get_data_quality_summary(self) -> pd.DataFrame:
+        """Get comprehensive data quality summary."""
         try:
-            query = "SELECT * FROM footballdecoded.teams_domestic WHERE 1=1"
-            params = {}
-            
-            if unique_id:
-                query += " AND unique_team_id = :unique_id"
-                params['unique_id'] = unique_id
-            if league:
-                query += " AND league = :league"
-                params['league'] = league
-            if season:
-                query += " AND season = :season"  
-                params['season'] = season
-                
-            return pd.read_sql(query, self.engine, params=params)
-            
+            query = "SELECT * FROM footballdecoded.data_quality_summary ORDER BY table_name"
+            return pd.read_sql(query, self.engine)
         except Exception as e:
-            print(f"Query failed: {e}")
+            print(f"Failed to get data quality summary: {e}")
             return pd.DataFrame()
     
-    def verify_unique_ids_integrity(self) -> Dict[str, Any]:
-        """Verify integrity of unique ID system."""
+    def get_unique_entities_count(self) -> Dict[str, int]:
+        """Get count of unique entities using ID system."""
         try:
-            integrity_check = {}
+            counts = {}
             
-            # Check for duplicate unique_player_ids within same league/season/team
-            result = pd.read_sql("""
-                SELECT unique_player_id, league, season, team, COUNT(*) as duplicates
-                FROM footballdecoded.players_domestic 
-                GROUP BY unique_player_id, league, season, team
-                HAVING COUNT(*) > 1
-            """, self.engine)
-            integrity_check['duplicate_player_records'] = len(result)
+            # Domestic players
+            result = pd.read_sql(
+                "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_domestic", 
+                self.engine
+            )
+            counts['unique_domestic_players'] = result.iloc[0]['count']
             
-            # Check for missing unique IDs
-            result = pd.read_sql("""
-                SELECT COUNT(*) as count 
-                FROM footballdecoded.players_domestic 
-                WHERE unique_player_id IS NULL OR unique_player_id = ''
-            """, self.engine)
-            integrity_check['players_missing_id'] = result.iloc[0]['count']
+            # European players
+            result = pd.read_sql(
+                "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_european", 
+                self.engine
+            )
+            counts['unique_european_players'] = result.iloc[0]['count']
             
-            result = pd.read_sql("""
-                SELECT COUNT(*) as count 
-                FROM footballdecoded.teams_domestic 
-                WHERE unique_team_id IS NULL OR unique_team_id = ''
-            """, self.engine)
-            integrity_check['teams_missing_id'] = result.iloc[0]['count']
+            # Domestic teams
+            result = pd.read_sql(
+                "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_domestic", 
+                self.engine
+            )
+            counts['unique_domestic_teams'] = result.iloc[0]['count']
             
-            # Check ID length consistency (should be 16 chars)
-            result = pd.read_sql("""
-                SELECT COUNT(*) as count 
-                FROM footballdecoded.players_domestic 
-                WHERE LENGTH(unique_player_id) != 16
-            """, self.engine)
-            integrity_check['players_invalid_id_length'] = result.iloc[0]['count']
+            # European teams
+            result = pd.read_sql(
+                "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_european", 
+                self.engine
+            )
+            counts['unique_european_teams'] = result.iloc[0]['count']
             
-            return integrity_check
+            return counts
             
         except Exception as e:
-            print(f"Failed to verify ID integrity: {e}")
+            print(f"Failed to get unique entities count: {e}")
             return {}
     
     def close(self):
@@ -456,23 +361,17 @@ def setup_database() -> bool:
     return False
 
 def test_connection():
-    """Test database connection with unique ID system."""
+    """Test database connection."""
     try:
         db = get_db_manager()
         print("Database connection test successful")
         
-        # Test basic queries
         result = db.query_players()
-        print(f"Found {len(result)} player records in database")
+        print(f"Found {len(result)} players in database")
         
-        # Test unique ID stats
-        stats = db.get_unique_entities_stats()
-        print(f"Unique players (domestic): {stats.get('unique_domestic_players', 0)}")
-        print(f"Players with transfers: {stats.get('players_with_transfers', 0)}")
-        
-        # Test integrity
-        integrity = db.verify_unique_ids_integrity()
-        print(f"ID integrity check: {integrity}")
+        # Test unique ID system
+        unique_counts = db.get_unique_entities_count()
+        print("Unique entities:", unique_counts)
         
         db.close()
         return True

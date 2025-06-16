@@ -298,23 +298,18 @@ $
 LANGUAGE 'plpgsql';
 
 -- Triggers for automatic timestamp updates
-DROP TRIGGER IF EXISTS update_players_domestic_updated_at ON footballdecoded.players_domestic;
 CREATE TRIGGER update_players_domestic_updated_at 
     BEFORE UPDATE ON footballdecoded.players_domestic 
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_players_european_updated_at ON footballdecoded.players_european;
 CREATE TRIGGER update_players_european_updated_at 
     BEFORE UPDATE ON footballdecoded.players_european 
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_teams_domestic_updated_at ON footballdecoded.teams_domestic;
 CREATE TRIGGER update_teams_domestic_updated_at 
     BEFORE UPDATE ON footballdecoded.teams_domestic 
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_updated_at_column();
 
--- TRIGGER CORREGIDO - ERA "ON" EN LUGAR DE "BEFORE UPDATE ON"
-DROP TRIGGER IF EXISTS update_teams_european_updated_at ON footballdecoded.teams_european;
 CREATE TRIGGER update_teams_european_updated_at 
     BEFORE UPDATE ON footballdecoded.teams_european 
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_updated_at_column();
