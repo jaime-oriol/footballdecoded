@@ -288,12 +288,14 @@ CREATE INDEX IF NOT EXISTS idx_teams_domestic_understat_gin
 
 -- Function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION footballdecoded.update_updated_at_column()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS 
+$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$
+LANGUAGE 'plpgsql';
 
 -- Triggers for automatic timestamp updates
 DROP TRIGGER IF EXISTS update_players_domestic_updated_at ON footballdecoded.players_domestic;
