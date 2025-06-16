@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded Data Loader - FIXED Understat prefixes
+# FootballDecoded Data Loader - Sistema de IDs Únicos
 # ====================================================================
 
 import sys
@@ -8,15 +8,14 @@ import pandas as pd
 import json
 import re
 import unicodedata
+import hashlib
 from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
-from collections import defaultdict
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
                      understat_get_player, understat_get_team)
 from database.connection import DatabaseManager, get_db_manager
-from sqlalchemy import text
 
 # ====================================================================
 # CONFIGURATION
@@ -31,55 +30,78 @@ AVAILABLE_COMPETITIONS = [
     ('INT-Champions League', 'european')
 ]
 
-# Validation ranges
 METRIC_RANGES = {
-    # Basic info - ultra safe ranges
-    'age': (15, 50),                    # Covers youngest debuts to oldest goalkeepers
-    'birth_year': (1950, 2020),         # 50 years old to 15 years old players
-    
-    # Playing time - realistic maximums
-    'minutes_played': (0, 6000),        # ~66 full games (covers all competitions)
-    'matches_played': (0, 80),          # Domestic + cups + international competitions
+    'age': (15, 50),
+    'birth_year': (1950, 2020),
+    'minutes_played': (0, 6000),
+    'matches_played': (0, 80),
     'matches_started': (0, 80),
-    
-    # Scoring - based on historical records
-    'goals': (0, 120),                  # Covers Messi's 91-goal record + margin
-    'assists': (0, 60),                 # Covers highest assist records + margin
+    'goals': (0, 120),
+    'assists': (0, 60),
     'goals_plus_assists': (0, 150),
-    
-    # Shooting - realistic volumes
-    'shots': (0, 600),                  # Covers highest shooters like Ronaldo/Messi
+    'shots': (0, 600),
     'shots_on_target': (0, 300),
     'shots_on_target_pct': (0, 100),
-    
-    # Expected metrics - reasonable bounds
     'expected_goals': (0, 80),
     'expected_assists': (0, 40),
     'non_penalty_expected_goals': (0, 70),
-    
-    # Passing - realistic ranges
-    'passes_completed': (0, 4000),      # High-volume passers like Busquets
+    'passes_completed': (0, 4000),
     'passes_attempted': (0, 4500),
-    'pass_completion_pct': (30, 100),   # Minimum 30% to avoid invalid data
+    'pass_completion_pct': (30, 100),
     'key_passes': (0, 200),
-    
-    # Defensive actions - active defenders
-    'tackles': (0, 300),                # Very active defensive midfielders
+    'tackles': (0, 300),
     'interceptions': (0, 250),
-    'clearances': (0, 400),             # Center-backs in defensive teams
-    
-    # Possession - typical ranges
-    'touches': (0, 5000),               # High-involvement players
+    'clearances': (0, 400),
+    'touches': (0, 5000),
     'carries': (0, 3000),
-    
-    # Disciplinary - realistic but safe
-    'yellow_cards': (0, 25),            # Very aggressive players maximum
-    'red_cards': (0, 6),                # Extreme cases but possible
-    
-    # Percentages - must be valid percentages
+    'yellow_cards': (0, 25),
+    'red_cards': (0, 6),
     'take_on_success_pct': (0, 100),
     'aerial_duels_won_pct': (0, 100),
 }
+
+# ====================================================================
+# SISTEMA DE IDS ÚNICOS
+# ====================================================================
+
+class IDGenerator:
+    """Generador de IDs únicos usando SHA256."""
+    
+    @staticmethod
+    def normalize_for_id(text: str) -> str:
+        """Normalización robusta para generación de IDs."""
+        if not text or pd.isna(text):
+            return ""
+        
+        text = str(text).lower().strip()
+        text = unicodedata.normalize('NFD', text)
+        text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
+        text = re.sub(r'[^\w\s]', '', text)
+        text = re.sub(r'\s+', '_', text).strip('_')
+        text = re.sub(r'_+', '_', text)
+        
+        return text
+    
+    @staticmethod
+    def generate_player_hash_id(name: str, birth_year: Optional[int], nationality: Optional[str]) -> str:
+        """Generar ID único para jugador usando SHA256."""
+        normalized_name = IDGenerator.normalize_for_id(name)
+        birth_str = str(birth_year) if birth_year else "unknown"
+        nation_str = IDGenerator.normalize_for_id(nationality) if nationality else "unknown"
+        
+        combined = f"{normalized_name}_{birth_str}_{nation_str}"
+        hash_obj = hashlib.sha256(combined.encode('utf-8'))
+        return hash_obj.hexdigest()[:16]
+    
+    @staticmethod
+    def generate_team_hash_id(team_name: str, league: str) -> str:
+        """Generar ID único para equipo usando SHA256."""
+        normalized_team = IDGenerator.normalize_for_id(team_name)
+        normalized_league = IDGenerator.normalize_for_id(league)
+        
+        combined = f"{normalized_team}_{normalized_league}"
+        hash_obj = hashlib.sha256(combined.encode('utf-8'))
+        return hash_obj.hexdigest()[:16]
 
 # ====================================================================
 # DATA PROCESSING CLASSES
@@ -135,17 +157,19 @@ class DataNormalizer:
 
 
 class DataValidator:
-    """Validate football data integrity."""
+    """Validate football data integrity with ID generation."""
     
     def __init__(self):
         self.normalizer = DataNormalizer()
+        self.id_generator = IDGenerator()
     
     def validate_record(self, record: Dict[str, Any], entity_type: str) -> Tuple[Dict[str, Any], float, List[str]]:
-        """Validate and clean a data record."""
+        """Validate and clean a data record with unique ID generation."""
         cleaned_record = {}
         quality_score = 1.0
         warnings = []
         
+        # Clean all fields
         for field, value in record.items():
             cleaned_value = self.normalizer.clean_value(value, field)
             
@@ -168,77 +192,32 @@ class DataValidator:
             else:
                 cleaned_record[field] = cleaned_value
         
+        # Validate required fields
         required_fields = ['player_name', 'league', 'season', 'team'] if entity_type == 'player' else ['team_name', 'league', 'season']
         for field in required_fields:
             if field not in cleaned_record or not cleaned_record[field]:
                 warnings.append(f"Missing required field: {field}")
                 quality_score -= 0.3
         
+        # Generate normalized name and unique ID
         if entity_type == 'player' and 'player_name' in cleaned_record:
             cleaned_record['normalized_name'] = self.normalizer.normalize_name(cleaned_record['player_name'])
+            cleaned_record['unique_player_id'] = self.id_generator.generate_player_hash_id(
+                cleaned_record['player_name'],
+                cleaned_record.get('birth_year'),
+                cleaned_record.get('nationality')
+            )
         elif entity_type == 'team' and 'team_name' in cleaned_record:
             cleaned_record['normalized_name'] = self.normalizer.normalize_name(cleaned_record['team_name'])
+            cleaned_record['unique_team_id'] = self.id_generator.generate_team_hash_id(
+                cleaned_record['team_name'],
+                cleaned_record['league']
+            )
         
         return cleaned_record, max(0.0, quality_score), warnings
 
-
-class DuplicateHandler:
-    """Handle duplicates and transfers intelligently."""
-    
-    def create_entity_key(self, record: Dict[str, Any], entity_type: str) -> str:
-        """Create unique key for entity identification."""
-        if entity_type == 'player':
-            name = record.get('normalized_name', '')
-            age = record.get('age', '')
-            nationality = record.get('nationality', '')
-            position = record.get('position', '')
-            return f"{name}_{age}_{nationality}_{position}".lower()
-        else:
-            name = record.get('normalized_name', '')
-            league = record.get('league', '')
-            return f"{name}_{league}".lower()
-    
-    def detect_duplicates(self, records: List[Dict[str, Any]], entity_type: str) -> Dict[str, List[Dict[str, Any]]]:
-        """Group records by entity key to detect duplicates and transfers."""
-        groups = defaultdict(list)
-        
-        for record in records:
-            key = self.create_entity_key(record, entity_type)
-            groups[key].append(record)
-        
-        return {k: v for k, v in groups.items() if len(v) > 1}
-    
-    def merge_transfer_records(self, records: List[Dict[str, Any]], entity_type: str) -> Dict[str, Any]:
-        """Merge records from same entity (transfers)."""
-        if not records:
-            return {}
-        
-        merged = records[0].copy()
-        
-        numeric_fields = ['minutes_played', 'matches_played', 'goals', 'assists', 'shots', 'tackles', 'interceptions']
-        
-        for field in numeric_fields:
-            total = 0
-            for record in records:
-                if field in record and record[field] is not None:
-                    try:
-                        total += float(record[field])
-                    except (ValueError, TypeError):
-                        continue
-            merged[field] = total
-        
-        if entity_type == 'player':
-            teams = [r.get('team') for r in records if r.get('team')]
-            if len(set(teams)) > 1:
-                merged['teams_played'] = ' -> '.join(teams)
-                merged['is_transfer'] = True
-                merged['transfer_count'] = len(set(teams))
-                merged['team'] = teams[-1]
-        
-        return merged
-
 # ====================================================================
-# MAIN LOADING FUNCTIONS
+# MAIN LOADING FUNCTIONS - SIMPLIFICADAS
 # ====================================================================
 
 def load_players(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
@@ -249,13 +228,16 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
     
     db = get_db_manager()
     validator = DataValidator()
-    duplicate_handler = DuplicateHandler()
-    stats = {'total_players': 0, 'successful': 0, 'failed': 0, 'transfers': 0}
+    stats = {'total_players': 0, 'successful': 0, 'failed': 0}
     
     try:
+        # Clear existing data before loading
+        if verbose:
+            print(f"Clearing existing data for {competition} {season}")
+        db.clear_season_data(competition, season, table_type, 'players')
+        
         players_list_df = fbref_get_league_players(competition, season)
         
-        # Handle MultiIndex columns from FBref
         if hasattr(players_list_df.columns, 'levels'):
             players_list_df.columns = [col[0] if col[1] == '' else f"{col[0]}_{col[1]}" for col in players_list_df.columns]
         
@@ -271,80 +253,53 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
             print(f"Found {len(unique_players)} players to process")
             print("Extracting data...\n")
         
-        all_player_data = []
         for i, player_name in enumerate(unique_players, 1):
             team = 'Unknown'
             try:
                 fbref_data = fbref_get_player(player_name, competition, season)
                 if not fbref_data:
                     if verbose:
-                        print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                        print(f"          {competition} - FAILED (No FBref data)")
+                        print(f"[{i:3d}/{len(unique_players)}] {player_name} - FAILED (No FBref data)")
                     stats['failed'] += 1
                     continue
                 
                 team = fbref_data.get('team', 'Unknown')
                 
-                # FIXED: Avoid double Understat prefix
+                # Add Understat data for domestic leagues
                 if table_type == 'domestic':
                     understat_data = understat_get_player(player_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
-                            # If key already starts with 'understat_', don't add prefix
                             if key.startswith('understat_'):
-                                fbref_data[key] = value  # ✅ No double prefix
+                                fbref_data[key] = value
                             else:
-                                fbref_data[f"understat_{key}"] = value  # ✅ Single prefix
+                                fbref_data[f"understat_{key}"] = value
                 
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
                 cleaned_data['data_quality_score'] = quality_score
                 cleaned_data['processing_warnings'] = warnings
                 
-                all_player_data.append(cleaned_data)
+                success = db.insert_player_data(cleaned_data, table_type)
                 
-                if verbose:
-                    metrics_count = len(cleaned_data)
-                    print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                    print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")
+                if success:
+                    stats['successful'] += 1
+                    if verbose:
+                        print(f"[{i:3d}/{len(unique_players)}] {player_name} - SUCCESS")
+                else:
+                    stats['failed'] += 1
+                    if verbose:
+                        print(f"[{i:3d}/{len(unique_players)}] {player_name} - FAILED (DB insert)")
                 
             except Exception as e:
                 if verbose:
-                    print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                    print(f"          {team}, {competition} - FAILED ({str(e)[:30]}...)")
+                    print(f"[{i:3d}/{len(unique_players)}] {player_name} - FAILED ({str(e)[:30]}...)")
                 stats['failed'] += 1
                 continue
-        
-        duplicates = duplicate_handler.detect_duplicates(all_player_data, 'player')
-        final_player_data = []
-        processed_keys = set()
-        
-        for player_data in all_player_data:
-            key = duplicate_handler.create_entity_key(player_data, 'player')
-            
-            if key in duplicates and key not in processed_keys:
-                merged_data = duplicate_handler.merge_transfer_records(duplicates[key], 'player')
-                if merged_data.get('is_transfer'):
-                    stats['transfers'] += 1
-                final_player_data.append(merged_data)
-                processed_keys.add(key)
-            elif key not in duplicates:
-                final_player_data.append(player_data)
-        
-        for player_data in final_player_data:
-            try:
-                success = db.insert_player_data(player_data, table_type)
-                if success:
-                    stats['successful'] += 1
-                else:
-                    stats['failed'] += 1
-            except Exception:
-                stats['failed'] += 1
         
         if verbose:
             print(f"\nPlayers loading complete:")
             print(f"   Total: {stats['total_players']}")
             print(f"   Successful: {stats['successful']}")
-            print(f"   Transfers detected: {stats['transfers']}")
             print(f"   Failed: {stats['failed']}")
         
         return stats
@@ -366,6 +321,11 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
     stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
     
     try:
+        # Clear existing data before loading
+        if verbose:
+            print(f"Clearing existing data for {competition} {season}")
+        db.clear_season_data(competition, season, table_type, 'teams')
+        
         players_list_df = fbref_get_league_players(competition, season)
         
         if players_list_df.empty:
@@ -385,21 +345,19 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                 fbref_data = fbref_get_team(team_name, competition, season)
                 if not fbref_data:
                     if verbose:
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                        print(f"          League, {competition} - FAILED (No FBref data)")
+                        print(f"[{i:3d}/{len(unique_teams)}] {team_name} - FAILED (No FBref data)")
                     stats['failed'] += 1
                     continue
                 
-                # FIXED: Avoid double Understat prefix
+                # Add Understat data for domestic leagues
                 if table_type == 'domestic':
                     understat_data = understat_get_team(team_name, competition, season)
                     if understat_data:
                         for key, value in understat_data.items():
-                            # If key already starts with 'understat_', don't add prefix
                             if key.startswith('understat_'):
-                                fbref_data[key] = value  # ✅ No double prefix
+                                fbref_data[key] = value
                             else:
-                                fbref_data[f"understat_{key}"] = value  # ✅ Single prefix
+                                fbref_data[f"understat_{key}"] = value
                 
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
                 cleaned_data['data_quality_score'] = quality_score
@@ -410,19 +368,15 @@ def load_teams(competition: str, season: str, table_type: str, verbose: bool = T
                 if success:
                     stats['successful'] += 1
                     if verbose:
-                        metrics_count = len(cleaned_data)
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                        print(f"          League, {competition} - SUCCESS ({metrics_count} metrics)")
+                        print(f"[{i:3d}/{len(unique_teams)}] {team_name} - SUCCESS")
                 else:
                     stats['failed'] += 1
                     if verbose:
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                        print(f"          League, {competition} - FAILED (DB insert error)")
+                        print(f"[{i:3d}/{len(unique_teams)}] {team_name} - FAILED (DB insert)")
                     
             except Exception as e:
                 if verbose:
-                    print(f"[{i:3d}/{len(unique_teams)}] {team_name}")
-                    print(f"          League, {competition} - FAILED ({str(e)[:30]}...)")
+                    print(f"[{i:3d}/{len(unique_teams)}] {team_name} - FAILED ({str(e)[:30]}...)")
                 stats['failed'] += 1
                 continue
         
@@ -468,7 +422,7 @@ def load_complete_competition(competition: str, season: str, verbose: bool = Tru
     if verbose:
         print(f"\nCOMPLETE LOADING SUMMARY for {competition} {season}")
         print("=" * 60)
-        print(f"Players - Total: {player_stats['total_players']} | Successful: {player_stats['successful']} | Transfers: {player_stats['transfers']} | Failed: {player_stats['failed']}")
+        print(f"Players - Total: {player_stats['total_players']} | Successful: {player_stats['successful']} | Failed: {player_stats['failed']}")
         print(f"Teams   - Total: {team_stats['total_teams']} | Successful: {team_stats['successful']} | Failed: {team_stats['failed']}")
         
         total_entities = player_stats['total_players'] + team_stats['total_teams']
@@ -484,7 +438,7 @@ def load_complete_competition(competition: str, season: str, verbose: bool = Tru
 
 def main():
     """Main execution function."""
-    print("FootballDecoded Data Loader - Enhanced Version")
+    print("FootballDecoded Data Loader - ID System")
     print("=" * 50)
     print("\n1. Load competition data (players + teams)")
     print("2. Test database connection")
@@ -547,9 +501,12 @@ def main():
         confirm = input("Clear ALL data? (type 'YES' to confirm): ").strip()
         if confirm == "YES":
             try:
+                from database.connection import get_db_manager
+                from sqlalchemy import text
+                
                 db = get_db_manager()
                 
-                with db.engine.begin() as conn:  # ✅ .begin() auto-commits
+                with db.engine.begin() as conn:
                     conn.execute(text("DELETE FROM footballdecoded.players_domestic"))
                     conn.execute(text("DELETE FROM footballdecoded.teams_domestic"))
                     conn.execute(text("DELETE FROM footballdecoded.players_european"))
