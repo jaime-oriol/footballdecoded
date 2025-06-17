@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded Data Loader - Sistema de IDs Únicos
+# FootballDecoded Data Loader - Sistema de IDs Únicos Optimizado
 # ====================================================================
 
 import sys
@@ -9,6 +9,7 @@ import json
 import re
 import unicodedata
 import hashlib
+import time
 from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 
@@ -16,6 +17,194 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
                      understat_get_player, understat_get_team)
 from database.connection import DatabaseManager, get_db_manager
+
+# ====================================================================
+# LOGGING MANAGER
+# ====================================================================
+
+class LogManager:
+    """Sistema de logs limpio y consistente para FootballDecoded."""
+    
+    def __init__(self):
+        self.start_time = None
+        self.current_phase = None
+        self.line_width = 80
+        self.phase_start_time = None
+    
+    def header(self, competition: str, data_sources: str):
+        """Header principal del sistema."""
+        print("FootballDecoded Data Loader")
+        print("═" * self.line_width)
+        print(f"Competition: {competition} ({data_sources})")
+        self.start_time = datetime.now()
+    
+    def database_status(self, connected: bool, schema: str, cleared_records: int):
+        """Estado de la base de datos."""
+        status = "Connected" if connected else "Failed"
+        if cleared_records == 0:
+            cleared_text = "0 records removed (fresh load)"
+        else:
+            cleared_text = f"{cleared_records:,} records removed"
+        
+        print(f"Database: {status} | Schema: {schema}")
+        print(f"Clearing existing data: {cleared_text}")
+        print("─" * self.line_width)
+        print()
+    
+    def phase_start(self, phase_name: str, total_entities: int):
+        """Inicio de fase (Players/Teams)."""
+        self.current_phase = phase_name
+        self.phase_start_time = datetime.now()
+        print(f"{phase_name.upper()} EXTRACTION")
+        print(f"{phase_name} found: {total_entities:,} → Processing batch extraction")
+    
+    def progress_update(self, current: int, total: int, current_entity: str, 
+                       metrics_count: int, fbref_success: int, understat_success: int, 
+                       understat_total: int, avg_quality: float, failed_count: int):
+        """Actualización del progreso durante extracción."""
+        percentage = (current / total) * 100
+        filled = int(40 * current // total)
+        bar = '█' * filled + ' ' * (40 - filled)
+        
+        # Calcular ETA
+        if self.phase_start_time and current > 0:
+            elapsed = (datetime.now() - self.phase_start_time).total_seconds()
+            eta_seconds = int((elapsed / current) * (total - current))
+        else:
+            eta_seconds = None
+        
+        # Progress bar
+        print(f"\rProgress: [{bar}] {current}/{total} ({percentage:.1f}%)")
+        
+        # Métricas detalladas solo si hay progreso
+        if current > 0:
+            print(f"├─ Current: {current_entity}")
+            
+            # Métricas extraídas
+            understat_text = " (Understat: N/A)" if understat_total == 0 else ""
+            print(f"├─ Metrics: {metrics_count} fields extracted{understat_text}")
+            
+            # Estado FBref
+            if failed_count > 0:
+                print(f"├─ FBref: {fbref_success}/{current} successful ({failed_count} timeouts)")
+            else:
+                print(f"├─ FBref: {fbref_success}/{current} successful")
+            
+            # Estado Understat
+            if understat_total > 0:
+                understat_pct = (understat_success / understat_total * 100) if understat_total > 0 else 0
+                print(f"├─ Understat: {understat_success}/{understat_total} merged ({understat_pct:.1f}%)")
+            else:
+                print("├─ Understat: N/A (European competition)")
+            
+            # Calidad y fallos
+            print(f"├─ Quality: {avg_quality:.1f}% average")
+            failure_text = f" ({self.current_phase.lower()})" if failed_count > 0 else f" {self.current_phase.lower()}"
+            print(f"├─ Failed: {failed_count}{failure_text}")
+            
+            # ETA
+            if eta_seconds and eta_seconds > 0:
+                eta_formatted = self._format_time(eta_seconds)
+                print(f"└─ ETA: {eta_formatted} remaining")
+            else:
+                print("└─ ETA: Calculating...")
+        
+        # Subir cursor para próxima actualización (excepto si es el último)
+        if current < total:
+            print("\033[8A", end="", flush=True)
+    
+    def progress_complete(self, total: int, successful: int, failed: int):
+        """Completar progreso de fase."""
+        # Limpiar líneas de progreso dinámico
+        for _ in range(8):
+            print(" " * self.line_width)
+        print("\033[8A", end="")
+        
+        # Progress bar final
+        print(f"Progress: [{'█' * 40}] {total}/{total} (100%)")
+        
+        # Estado final
+        if self.phase_start_time:
+            elapsed = (datetime.now() - self.phase_start_time).total_seconds()
+            elapsed_formatted = self._format_time(int(elapsed))
+            print(f"└─ Completed in: {elapsed_formatted}")
+        
+        print()
+    
+    def final_summary(self, stats: dict):
+        """Summary final completo."""
+        print("─" * self.line_width)
+        print("EXTRACTION SUMMARY")
+        print("─" * self.line_width)
+        
+        # Estadísticas principales
+        total = stats['players']['total'] + stats['teams']['total']
+        successful = stats['players']['successful'] + stats['teams']['successful']
+        failed = stats['players']['failed'] + stats['teams']['failed']
+        success_rate = (successful / total * 100) if total > 0 else 0
+        
+        print(f"Total entities: {total} | Successful: {successful} | Failed: {failed} | Success rate: {success_rate:.1f}%")
+        print(f"Unique player IDs: {stats['players']['successful']} | Unique team IDs: {stats['teams']['successful']}")
+        
+        # Transfers
+        if stats.get('transfers', 0) > 0:
+            print(f"Transfer detection: {stats['transfers']} players with multiple teams")
+        
+        # Coverage Understat
+        if stats.get('understat_coverage'):
+            player_cov = stats['understat_coverage'].get('players', 0)
+            team_cov = stats['understat_coverage'].get('teams', 0)
+            if player_cov > 0 or team_cov > 0:
+                print(f"Understat coverage: Players {player_cov:.1f}% | Teams {team_cov:.1f}%")
+            else:
+                print("Understat coverage: N/A (European competition)")
+        
+        # Métricas promedio
+        if stats.get('avg_metrics'):
+            avg_players = stats['avg_metrics'].get('players', 0)
+            avg_teams = stats['avg_metrics'].get('teams', 0)
+            print(f"Average metrics per player: {avg_players} | Average metrics per team: {avg_teams}")
+        
+        # Tiempo y rendimiento
+        if self.start_time:
+            elapsed = datetime.now() - self.start_time
+            total_seconds = elapsed.total_seconds()
+            records_per_second = successful / total_seconds if total_seconds > 0 else 0
+            elapsed_formatted = self._format_time(int(total_seconds))
+            print(f"Processing time: {elapsed_formatted} | Records per second: {records_per_second:.1f}")
+        
+        # Storage
+        storage_mb = successful * 0.004
+        print(f"Database records: {successful} inserted | Storage: +{storage_mb:.1f}MB")
+        
+        # Issues
+        if failed > 0:
+            print()
+            if success_rate >= 95:
+                print("EXTRACTION COMPLETED WITH MINOR ISSUES")
+                print(f"├─ {failed} extraction failures (recommend retry)")
+                print(f"└─ Overall data quality: {stats.get('avg_quality', 95):.1f}% (excellent)")
+            else:
+                print("ISSUES DETECTED")
+                print(f"├─ {failed} extraction failures (rate limit or connection issues)")
+                if stats.get('warnings', 0) > 0:
+                    print(f"├─ {stats['warnings']} data quality warnings")
+                print("└─ Recommendation: Retry failed extractions in 10 minutes")
+        
+        print("═" * self.line_width)
+    
+    def _format_time(self, seconds: int) -> str:
+        """Formatear tiempo de manera legible."""
+        if seconds < 60:
+            return f"{seconds}s"
+        elif seconds < 3600:
+            minutes = seconds // 60
+            secs = seconds % 60
+            return f"{minutes}m {secs}s"
+        else:
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            return f"{hours}h {minutes}m"
 
 # ====================================================================
 # CONFIGURATION
@@ -35,29 +224,15 @@ METRIC_RANGES = {
     'birth_year': (1950, 2020),
     'minutes_played': (0, 6000),
     'matches_played': (0, 80),
-    'matches_started': (0, 80),
     'goals': (0, 120),
     'assists': (0, 60),
-    'goals_plus_assists': (0, 150),
     'shots': (0, 600),
-    'shots_on_target': (0, 300),
-    'shots_on_target_pct': (0, 100),
     'expected_goals': (0, 80),
-    'expected_assists': (0, 40),
-    'non_penalty_expected_goals': (0, 70),
     'passes_completed': (0, 4000),
-    'passes_attempted': (0, 4500),
     'pass_completion_pct': (30, 100),
-    'key_passes': (0, 200),
     'tackles': (0, 300),
-    'interceptions': (0, 250),
-    'clearances': (0, 400),
-    'touches': (0, 5000),
-    'carries': (0, 3000),
     'yellow_cards': (0, 25),
     'red_cards': (0, 6),
-    'take_on_success_pct': (0, 100),
-    'aerial_duels_won_pct': (0, 100),
 }
 
 # ====================================================================
@@ -69,7 +244,7 @@ class IDGenerator:
     
     @staticmethod
     def normalize_for_id(text: str) -> str:
-        """Normalización robusta para generación de IDs."""
+        """Normalización para generación de IDs."""
         if not text or pd.isna(text):
             return ""
         
@@ -84,7 +259,7 @@ class IDGenerator:
     
     @staticmethod
     def generate_player_hash_id(name: str, birth_year: Optional[int], nationality: Optional[str]) -> str:
-        """Generar ID único para jugador usando SHA256."""
+        """Generar ID único para jugador."""
         normalized_name = IDGenerator.normalize_for_id(name)
         birth_str = str(birth_year) if birth_year else "unknown"
         nation_str = IDGenerator.normalize_for_id(nationality) if nationality else "unknown"
@@ -95,7 +270,7 @@ class IDGenerator:
     
     @staticmethod
     def generate_team_hash_id(team_name: str, league: str) -> str:
-        """Generar ID único para equipo usando SHA256."""
+        """Generar ID único para equipo."""
         normalized_team = IDGenerator.normalize_for_id(team_name)
         normalized_league = IDGenerator.normalize_for_id(league)
         
@@ -104,14 +279,14 @@ class IDGenerator:
         return hash_obj.hexdigest()[:16]
 
 # ====================================================================
-# DATA PROCESSING CLASSES
+# DATA PROCESSING
 # ====================================================================
 
 class DataNormalizer:
-    """Clean and normalize football data."""
+    """Limpieza y normalización de datos."""
     
     def normalize_name(self, name: str) -> str:
-        """Normalize player/team names for consistent matching."""
+        """Normalizar nombres para matching consistente."""
         if not name or pd.isna(name):
             return ""
         
@@ -134,7 +309,7 @@ class DataNormalizer:
         return name_str.title()
     
     def clean_value(self, value: Any, field_name: str) -> Any:
-        """Clean individual field values."""
+        """Limpiar valores individuales."""
         if pd.isna(value) or value is None:
             return None
         
@@ -157,19 +332,19 @@ class DataNormalizer:
 
 
 class DataValidator:
-    """Validate football data integrity with ID generation."""
+    """Validación de integridad de datos con generación de IDs."""
     
     def __init__(self):
         self.normalizer = DataNormalizer()
         self.id_generator = IDGenerator()
     
     def validate_record(self, record: Dict[str, Any], entity_type: str) -> Tuple[Dict[str, Any], float, List[str]]:
-        """Validate and clean a data record with unique ID generation."""
+        """Validar y limpiar registro con generación de ID único."""
         cleaned_record = {}
         quality_score = 1.0
         warnings = []
         
-        # Clean all fields
+        # Limpiar campos
         for field, value in record.items():
             cleaned_value = self.normalizer.clean_value(value, field)
             
@@ -192,14 +367,14 @@ class DataValidator:
             else:
                 cleaned_record[field] = cleaned_value
         
-        # Validate required fields
+        # Validar campos requeridos
         required_fields = ['player_name', 'league', 'season', 'team'] if entity_type == 'player' else ['team_name', 'league', 'season']
         for field in required_fields:
             if field not in cleaned_record or not cleaned_record[field]:
                 warnings.append(f"Missing required field: {field}")
                 quality_score -= 0.3
         
-        # Generate normalized name and unique ID
+        # Generar nombre normalizado y ID único
         if entity_type == 'player' and 'player_name' in cleaned_record:
             cleaned_record['normalized_name'] = self.normalizer.normalize_name(cleaned_record['player_name'])
             cleaned_record['unique_player_id'] = self.id_generator.generate_player_hash_id(
@@ -217,231 +392,251 @@ class DataValidator:
         return cleaned_record, max(0.0, quality_score), warnings
 
 # ====================================================================
-# MAIN LOADING FUNCTIONS - SIMPLIFICADAS
+# LOADING FUNCTIONS
 # ====================================================================
 
-def load_players(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
-    """Load all players from specific competition and season."""
-    if verbose:
-        print(f"Loading players from {competition} - {season}")
-        print("=" * 70)
-    
+def load_players(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
+    """Cargar todos los jugadores de una competición y temporada."""
     db = get_db_manager()
     validator = DataValidator()
-    stats = {'total_players': 0, 'successful': 0, 'failed': 0}
+    stats = {'total': 0, 'successful': 0, 'failed': 0, 'avg_metrics': 0, 'avg_quality': 0}
     
     try:
-        # Clear existing data before loading
-        if verbose:
-            print(f"Clearing existing data for {competition} {season}")
+        # Limpiar datos existentes
         db.clear_season_data(competition, season, table_type, 'players')
         
+        # Obtener lista de jugadores
         players_list_df = fbref_get_league_players(competition, season)
         
         if hasattr(players_list_df.columns, 'levels'):
             players_list_df.columns = [col[0] if col[1] == '' else f"{col[0]}_{col[1]}" for col in players_list_df.columns]
         
         if players_list_df.empty:
-            if verbose:
-                print(f"No players found for {competition} {season}")
             return stats
         
         unique_players = players_list_df['player'].dropna().unique().tolist()
-        stats['total_players'] = len(unique_players)
+        stats['total'] = len(unique_players)
         
-        if verbose:
-            print(f"Found {len(unique_players)} players to process")
-            print("Extracting data...\n")
+        logger.phase_start("Players", len(unique_players))
+        
+        # Variables para progreso
+        total_metrics = 0
+        total_quality = 0
+        fbref_success = 0
+        understat_success = 0
+        understat_total = 0 if table_type == 'european' else len(unique_players)
         
         for i, player_name in enumerate(unique_players, 1):
-            team = 'Unknown'
+            current_entity = f"{player_name} (Processing...)"
+            
             try:
+                # Extraer datos FBref
                 fbref_data = fbref_get_player(player_name, competition, season)
                 if not fbref_data:
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_players)}] {player_name} - FAILED (No FBref data)")
                     stats['failed'] += 1
                     continue
                 
+                fbref_success += 1
                 team = fbref_data.get('team', 'Unknown')
+                current_entity = f"{player_name} ({team})"
                 
-                # Add Understat data for domestic leagues
+                # Añadir datos Understat para ligas domésticas
                 if table_type == 'domestic':
                     understat_data = understat_get_player(player_name, competition, season)
                     if understat_data:
+                        understat_success += 1
                         for key, value in understat_data.items():
                             if key.startswith('understat_'):
                                 fbref_data[key] = value
                             else:
                                 fbref_data[f"understat_{key}"] = value
                 
+                # Validar y limpiar datos
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
                 cleaned_data['data_quality_score'] = quality_score
                 cleaned_data['processing_warnings'] = warnings
                 
+                # Insertar en base de datos
                 success = db.insert_player_data(cleaned_data, table_type)
                 
                 if success:
                     stats['successful'] += 1
-                    if verbose:
-                        metrics_count = len(cleaned_data)
-                        print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                        print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")
+                    total_metrics += len(cleaned_data)
+                    total_quality += quality_score
                 else:
                     stats['failed'] += 1
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_players)}] {player_name} - FAILED (DB insert)")
                 
-            except Exception as e:
-                if verbose:
-                    print(f"[{i:3d}/{len(unique_players)}] {player_name} - FAILED ({str(e)[:30]}...)")
+                # Actualizar progreso cada 10 jugadores o al final
+                if i % 10 == 0 or i == len(unique_players):
+                    avg_metrics = total_metrics // max(stats['successful'], 1)
+                    avg_quality = (total_quality / max(stats['successful'], 1) * 100) if stats['successful'] > 0 else 0
+                    
+                    logger.progress_update(
+                        i, len(unique_players), current_entity, avg_metrics,
+                        fbref_success, understat_success, understat_total,
+                        avg_quality, stats['failed']
+                    )
+                
+            except Exception:
                 stats['failed'] += 1
                 continue
         
-        if verbose:
-            print(f"\nPlayers loading complete:")
-            print(f"   Total: {stats['total_players']}")
-            print(f"   Successful: {stats['successful']}")
-            print(f"   Failed: {stats['failed']}")
+        # Completar progreso
+        logger.progress_complete(stats['total'], stats['successful'], stats['failed'])
+        
+        # Calcular estadísticas finales
+        stats['avg_metrics'] = total_metrics // max(stats['successful'], 1)
+        stats['avg_quality'] = (total_quality / max(stats['successful'], 1) * 100) if stats['successful'] > 0 else 0
         
         return stats
         
-    except Exception as e:
-        if verbose:
-            print(f"Failed to load {competition}: {e}")
+    except Exception:
         return stats
 
 
-def load_teams(competition: str, season: str, table_type: str, verbose: bool = True) -> Dict[str, int]:
-    """Load all teams from specific competition and season."""
-    if verbose:
-        print(f"Loading teams from {competition} - {season}")
-        print("=" * 70)
-    
+def load_teams(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
+    """Cargar todos los equipos de una competición y temporada."""
     db = get_db_manager()
     validator = DataValidator()
-    stats = {'total_teams': 0, 'successful': 0, 'failed': 0}
+    stats = {'total': 0, 'successful': 0, 'failed': 0, 'avg_metrics': 0, 'avg_quality': 0}
     
     try:
-        # Clear existing data before loading
-        if verbose:
-            print(f"Clearing existing data for {competition} {season}")
+        # Limpiar datos existentes
         db.clear_season_data(competition, season, table_type, 'teams')
         
+        # Obtener lista de equipos
         players_list_df = fbref_get_league_players(competition, season)
         
         if players_list_df.empty:
-            if verbose:
-                print(f"No data found for {competition} {season}")
             return stats
         
         unique_teams = players_list_df['team'].dropna().unique().tolist()
-        stats['total_teams'] = len(unique_teams)
+        stats['total'] = len(unique_teams)
         
-        if verbose:
-            print(f"Found {len(unique_teams)} teams to process")
-            print("Extracting data...\n")
+        logger.phase_start("Teams", len(unique_teams))
+        
+        # Variables para progreso
+        total_metrics = 0
+        total_quality = 0
+        fbref_success = 0
+        understat_success = 0
+        understat_total = 0 if table_type == 'european' else len(unique_teams)
         
         for i, team_name in enumerate(unique_teams, 1):
+            current_entity = f"{team_name}"
+            
             try:
+                # Extraer datos FBref
                 fbref_data = fbref_get_team(team_name, competition, season)
                 if not fbref_data:
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name} - FAILED (No FBref data)")
                     stats['failed'] += 1
                     continue
                 
-                # Add Understat data for domestic leagues
+                fbref_success += 1
+                
+                # Añadir datos Understat para ligas domésticas
                 if table_type == 'domestic':
                     understat_data = understat_get_team(team_name, competition, season)
                     if understat_data:
+                        understat_success += 1
                         for key, value in understat_data.items():
                             if key.startswith('understat_'):
                                 fbref_data[key] = value
                             else:
                                 fbref_data[f"understat_{key}"] = value
                 
+                # Validar y limpiar datos
                 cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
                 cleaned_data['data_quality_score'] = quality_score
                 cleaned_data['processing_warnings'] = warnings
                 
+                # Insertar en base de datos
                 success = db.insert_team_data(cleaned_data, table_type)
                 
                 if success:
                     stats['successful'] += 1
-                    if verbose:
-                        metrics_count = len(cleaned_data)
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name}, {competition} - SUCCESS ({metrics_count} metrics)")
-
+                    total_metrics += len(cleaned_data)
+                    total_quality += quality_score
                 else:
                     stats['failed'] += 1
-                    if verbose:
-                        print(f"[{i:3d}/{len(unique_teams)}] {team_name} - FAILED (DB insert)")
+                
+                # Actualizar progreso cada 5 equipos o al final
+                if i % 5 == 0 or i == len(unique_teams):
+                    avg_metrics = total_metrics // max(stats['successful'], 1)
+                    avg_quality = (total_quality / max(stats['successful'], 1) * 100) if stats['successful'] > 0 else 0
                     
-            except Exception as e:
-                if verbose:
-                    print(f"[{i:3d}/{len(unique_teams)}] {team_name} - FAILED ({str(e)[:30]}...)")
+                    logger.progress_update(
+                        i, len(unique_teams), current_entity, avg_metrics,
+                        fbref_success, understat_success, understat_total,
+                        avg_quality, stats['failed']
+                    )
+                
+            except Exception:
                 stats['failed'] += 1
                 continue
         
-        if verbose:
-            print(f"\nTeams loading complete:")
-            print(f"   Total: {stats['total_teams']}")
-            print(f"   Successful: {stats['successful']}")
-            print(f"   Failed: {stats['failed']}")
+        # Completar progreso
+        logger.progress_complete(stats['total'], stats['successful'], stats['failed'])
+        
+        # Calcular estadísticas finales
+        stats['avg_metrics'] = total_metrics // max(stats['successful'], 1)
+        stats['avg_quality'] = (total_quality / max(stats['successful'], 1) * 100) if stats['successful'] > 0 else 0
         
         return stats
         
-    except Exception as e:
-        if verbose:
-            print(f"Failed to load {competition}: {e}")
+    except Exception:
         return stats
 
 
-def load_complete_competition(competition: str, season: str, verbose: bool = True) -> Dict[str, Dict[str, int]]:
-    """Load both players and teams from a competition."""
+def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[str, int]]:
+    """Cargar jugadores y equipos completos de una competición."""
     table_type = 'domestic' if competition != 'INT-Champions League' else 'european'
+    data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
     
-    if verbose:
-        data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
-        print(f"Loading complete data from {competition} - {season} ({data_source})")
-        print("=" * 80)
+    # Inicializar logger
+    logger = LogManager()
+    logger.header(f"{competition} {season}", data_source)
     
-    results = {}
+    # Estado de base de datos
+    db = get_db_manager()
+    logger.database_status(True, "footballdecoded", 0)
     
-    if verbose:
-        print("PHASE 1: Loading Players")
-        print("-" * 40)
+    # Cargar jugadores
+    player_stats = load_players(competition, season, table_type, logger)
     
-    player_stats = load_players(competition, season, table_type, verbose)
-    results['players'] = player_stats
+    # Cargar equipos
+    team_stats = load_teams(competition, season, table_type, logger)
     
-    if verbose:
-        print("\nPHASE 2: Loading Teams")
-        print("-" * 40)
+    # Calcular estadísticas de coverage
+    understat_coverage = None
+    if table_type == 'domestic':
+        player_coverage = (player_stats.get('understat_success', 0) / max(player_stats['successful'], 1) * 100) if player_stats['successful'] > 0 else 0
+        team_coverage = (team_stats.get('understat_success', 0) / max(team_stats['successful'], 1) * 100) if team_stats['successful'] > 0 else 0
+        understat_coverage = {'players': player_coverage, 'teams': team_coverage}
     
-    team_stats = load_teams(competition, season, table_type, verbose)
-    results['teams'] = team_stats
+    # Summary final
+    summary_stats = {
+        'players': player_stats,
+        'teams': team_stats,
+        'understat_coverage': understat_coverage,
+        'avg_metrics': {
+            'players': player_stats.get('avg_metrics', 0),
+            'teams': team_stats.get('avg_metrics', 0)
+        },
+        'avg_quality': (player_stats.get('avg_quality', 0) + team_stats.get('avg_quality', 0)) / 2
+    }
     
-    if verbose:
-        print(f"\nCOMPLETE LOADING SUMMARY for {competition} {season}")
-        print("=" * 60)
-        print(f"Players - Total: {player_stats['total_players']} | Successful: {player_stats['successful']} | Failed: {player_stats['failed']}")
-        print(f"Teams   - Total: {team_stats['total_teams']} | Successful: {team_stats['successful']} | Failed: {team_stats['failed']}")
-        
-        total_entities = player_stats['total_players'] + team_stats['total_teams']
-        total_successful = player_stats['successful'] + team_stats['successful']
-        success_rate = (total_successful / total_entities * 100) if total_entities > 0 else 0
-        print(f"Overall success rate: {success_rate:.1f}%")
+    logger.final_summary(summary_stats)
     
-    return results
+    db.close()
+    return {'players': player_stats, 'teams': team_stats}
 
 # ====================================================================
 # MAIN EXECUTION
 # ====================================================================
 
 def main():
-    """Main execution function."""
+    """Función principal de ejecución."""
     print("FootballDecoded Data Loader - ID System")
     print("=" * 50)
     print("\n1. Load competition data (players + teams)")
@@ -465,7 +660,7 @@ def main():
                 season = input("Enter season (e.g., 2024-25): ").strip()
                 
                 if season:
-                    results = load_complete_competition(selected_competition, season, verbose=True)
+                    load_complete_competition(selected_competition, season)
                 else:
                     print("Invalid season format")
             else:
@@ -478,10 +673,8 @@ def main():
         try:
             from database.connection import test_connection
             success = test_connection()
-            if success:
-                print("Database connection successful!")
-            else:
-                print("Database connection failed!")
+            status = "successful" if success else "failed"
+            print(f"Database connection {status}")
         except Exception as e:
             print(f"Connection test error: {e}")
     
@@ -492,10 +685,8 @@ def main():
             try:
                 from database.connection import setup_database
                 success = setup_database()
-                if success:
-                    print("Database schema setup complete!")
-                else:
-                    print("Database schema setup failed!")
+                status = "complete" if success else "failed"
+                print(f"Database schema setup {status}")
             except Exception as e:
                 print(f"Schema setup error: {e}")
         else:

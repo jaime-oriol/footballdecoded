@@ -17,7 +17,7 @@ load_dotenv()
 # ====================================================================
 
 class DatabaseConfig:
-    """Database configuration from environment variables."""
+    """Configuración de base de datos desde variables de entorno."""
     
     def __init__(self):
         self.host = os.getenv('DB_HOST', 'localhost')
@@ -37,14 +37,14 @@ class DatabaseConfig:
 # ====================================================================
 
 class DatabaseManager:
-    """Manages database connections and operations with unique ID system."""
+    """Gestiona conexiones y operaciones de base de datos con sistema de IDs únicos."""
     
     def __init__(self):
         self.config = DatabaseConfig()
         self.engine = None
         
     def connect(self) -> bool:
-        """Establish database connection."""
+        """Establecer conexión a la base de datos."""
         try:
             self.engine = create_engine(
                 self.config.connection_string,
@@ -56,32 +56,27 @@ class DatabaseManager:
             with self.engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             
-            print("Database connection established")
             return True
             
-        except Exception as e:
-            print(f"Database connection failed: {e}")
+        except Exception:
             return False
     
     def execute_sql_file(self, filepath: str) -> bool:
-        """Execute SQL file with proper handling of multi-line statements."""
+        """Ejecutar archivo SQL con manejo de statements multi-línea."""
         try:
             with open(filepath, 'r', encoding='utf-8') as file:
                 sql_content = file.read()
             
-            # Execute the entire file as one statement block
             with self.engine.begin() as conn:
                 conn.execute(text(sql_content))
             
-            print(f"SQL file executed successfully: {filepath}")
             return True
             
-        except Exception as e:
-            print(f"Failed to execute SQL file: {e}")
+        except Exception:
             return False
     
     def _serialize_for_json(self, obj):
-        """Convert numpy/pandas types to JSON-serializable types."""
+        """Convertir tipos numpy/pandas a tipos serializables JSON."""
         if isinstance(obj, dict):
             return {k: self._serialize_for_json(v) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple)):
@@ -98,33 +93,28 @@ class DatabaseManager:
             return obj
     
     def insert_player_data(self, player_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-        """Insert player data using unique ID system."""
+        """Insertar datos de jugador usando sistema de IDs únicos."""
         try:
             table_name = f"footballdecoded.players_{table_type}"
             
-            # Basic fields with unique ID
             if table_type == 'domestic':
                 basic_fields = ['unique_player_id', 'player_name', 'league', 'season', 'team', 'nationality', 
                             'position', 'age', 'birth_year', 'fbref_official_name', 
                             'understat_official_name', 'normalized_name', 'teams_played', 
                             'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
-            else:  # european
+            else:
                 basic_fields = ['unique_player_id', 'player_name', 'competition', 'season', 'team', 'nationality', 
                             'position', 'age', 'birth_year', 'fbref_official_name', 
                             'normalized_name', 'teams_played', 
                             'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
             
-            # Map league -> competition for European tables
             processed_data = player_data.copy()
             if table_type == 'european' and 'league' in processed_data:
                 processed_data['competition'] = processed_data['league']
             
-            # Validate unique_player_id exists
             if 'unique_player_id' not in processed_data:
-                print(f"Error: unique_player_id missing for player {processed_data.get('player_name', 'Unknown')}")
                 return False
             
-            # Separate data
             basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
             fbref_metrics = {k: v for k, v in processed_data.items() 
                         if k not in basic_fields and not k.startswith('understat_')}
@@ -135,41 +125,34 @@ class DatabaseManager:
                 understat_metrics = {k: v for k, v in processed_data.items() if k.startswith('understat_')}
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
-            # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
                     if_exists='append', index=False, method='multi')
             
             return True
             
-        except Exception as e:
-            print(f"Failed to insert player data: {e}")
+        except Exception:
             return False
     
     def insert_team_data(self, team_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
-        """Insert team data using unique ID system."""
+        """Insertar datos de equipo usando sistema de IDs únicos."""
         try:
             table_name = f"footballdecoded.teams_{table_type}"
             
-            # Basic fields with unique ID
             if table_type == 'domestic':
                 basic_fields = ['unique_team_id', 'team_name', 'league', 'season', 'normalized_name', 
                                'fbref_official_name', 'understat_official_name']
-            else:  # european
+            else:
                 basic_fields = ['unique_team_id', 'team_name', 'competition', 'season', 'normalized_name', 
                                'fbref_official_name']
             
-            # Map league -> competition for European tables
             processed_data = team_data.copy()
             if table_type == 'european' and 'league' in processed_data:
                 processed_data['competition'] = processed_data['league']
             
-            # Validate unique_team_id exists
             if 'unique_team_id' not in processed_data:
-                print(f"Error: unique_team_id missing for team {processed_data.get('team_name', 'Unknown')}")
                 return False
             
-            # Separate data
             basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
             fbref_metrics = {k: v for k, v in processed_data.items() 
                            if k not in basic_fields and not k.startswith('understat_')}
@@ -180,19 +163,17 @@ class DatabaseManager:
                 understat_metrics = {k: v for k, v in team_data.items() if k.startswith('understat_')}
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
             
-            # Insert data
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded', 
                      if_exists='append', index=False, method='multi')
             
             return True
             
-        except Exception as e:
-            print(f"Failed to insert team data: {e}")
+        except Exception:
             return False
         
-    def clear_season_data(self, competition: str, season: str, table_type: str, entity_type: str) -> bool:
-        """Clear existing data for a specific competition and season before reloading."""
+    def clear_season_data(self, competition: str, season: str, table_type: str, entity_type: str) -> int:
+        """Limpiar datos existentes para una competición y temporada específica."""
         try:
             table_name = f"footballdecoded.{entity_type}_{table_type}"
             league_field = 'competition' if table_type == 'european' else 'league'
@@ -204,15 +185,13 @@ class DatabaseManager:
                     {'league': competition, 'season': season}
                 )
                 
-            print(f"Cleared {result.rowcount} existing records from {table_name}")
-            return True
+            return result.rowcount
             
-        except Exception as e:
-            print(f"Failed to clear existing data: {e}")
-            return False
+        except Exception:
+            return 0
     
     def get_transfers_by_unique_id(self, table_type: str = 'domestic') -> pd.DataFrame:
-        """Get players with multiple teams using unique ID system."""
+        """Obtener jugadores con múltiples equipos usando sistema de IDs únicos."""
         try:
             if table_type == 'domestic':
                 query = """
@@ -247,12 +226,11 @@ class DatabaseManager:
             
             return pd.read_sql(query, self.engine)
             
-        except Exception as e:
-            print(f"Failed to get transfers: {e}")
+        except Exception:
             return pd.DataFrame()
     
     def get_entity_by_unique_id(self, unique_id: str, entity_type: str, table_type: str = 'domestic') -> pd.DataFrame:
-        """Get all records for a specific unique ID."""
+        """Obtener todos los registros para un ID único específico."""
         try:
             table_name = f"footballdecoded.{entity_type}_{table_type}"
             id_field = f"unique_{entity_type}_id"
@@ -261,12 +239,11 @@ class DatabaseManager:
             
             return pd.read_sql(query, self.engine, params={'unique_id': unique_id})
             
-        except Exception as e:
-            print(f"Failed to get entity by unique ID: {e}")
+        except Exception:
             return pd.DataFrame()
     
     def query_players(self, league: str = None, season: str = None, team: str = None) -> pd.DataFrame:
-        """Query players with optional filters."""
+        """Consultar jugadores con filtros opcionales."""
         try:
             query = "SELECT * FROM footballdecoded.players_domestic WHERE 1=1"
             params = {}
@@ -283,46 +260,40 @@ class DatabaseManager:
                 
             return pd.read_sql(query, self.engine, params=params)
             
-        except Exception as e:
-            print(f"Query failed: {e}")
+        except Exception:
             return pd.DataFrame()
     
     def get_data_quality_summary(self) -> pd.DataFrame:
-        """Get comprehensive data quality summary."""
+        """Obtener resumen completo de calidad de datos."""
         try:
             query = "SELECT * FROM footballdecoded.data_quality_summary ORDER BY table_name"
             return pd.read_sql(query, self.engine)
-        except Exception as e:
-            print(f"Failed to get data quality summary: {e}")
+        except Exception:
             return pd.DataFrame()
     
     def get_unique_entities_count(self) -> Dict[str, int]:
-        """Get count of unique entities using ID system."""
+        """Obtener conteo de entidades únicas usando sistema de IDs."""
         try:
             counts = {}
             
-            # Domestic players
             result = pd.read_sql(
                 "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_domestic", 
                 self.engine
             )
             counts['unique_domestic_players'] = result.iloc[0]['count']
             
-            # European players
             result = pd.read_sql(
                 "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_european", 
                 self.engine
             )
             counts['unique_european_players'] = result.iloc[0]['count']
             
-            # Domestic teams
             result = pd.read_sql(
                 "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_domestic", 
                 self.engine
             )
             counts['unique_domestic_teams'] = result.iloc[0]['count']
             
-            # European teams
             result = pd.read_sql(
                 "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_european", 
                 self.engine
@@ -331,22 +302,20 @@ class DatabaseManager:
             
             return counts
             
-        except Exception as e:
-            print(f"Failed to get unique entities count: {e}")
+        except Exception:
             return {}
     
     def close(self):
-        """Close database connections."""
+        """Cerrar conexiones de base de datos."""
         if self.engine:
             self.engine.dispose()
-            print("Database connection closed")
 
 # ====================================================================
 # CONVENIENCE FUNCTIONS
 # ====================================================================
 
 def get_db_manager() -> DatabaseManager:
-    """Get configured database manager instance."""
+    """Obtener instancia configurada del gestor de base de datos."""
     db = DatabaseManager()
     if db.connect():
         return db
@@ -354,30 +323,25 @@ def get_db_manager() -> DatabaseManager:
         raise ConnectionError("Failed to connect to database")
 
 def setup_database() -> bool:
-    """Run initial database setup."""
+    """Ejecutar configuración inicial de base de datos."""
     db = DatabaseManager()
     if db.connect():
         return db.execute_sql_file('database/setup.sql')
     return False
 
-def test_connection():
-    """Test database connection."""
+def test_connection() -> bool:
+    """Probar conexión a base de datos."""
     try:
         db = get_db_manager()
-        print("Database connection test successful")
         
         result = db.query_players()
-        print(f"Found {len(result)} players in database")
         
-        # Test unique ID system
         unique_counts = db.get_unique_entities_count()
-        print("Unique entities:", unique_counts)
         
         db.close()
         return True
         
-    except Exception as e:
-        print(f"Connection test failed: {e}")
+    except Exception:
         return False
 
 if __name__ == "__main__":
