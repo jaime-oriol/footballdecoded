@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded Data Loader - Fixed Version
+# FootballDecoded Data Loader - Sistema de IDs Únicos
 # ====================================================================
 
 import sys
@@ -22,7 +22,7 @@ from database.connection import DatabaseManager, get_db_manager
 # CONFIGURATION
 # ====================================================================
 
-AVAILABLE_COMPETITIONS = [
+COMPETITIONS = [
     ('ENG-Premier League', 'domestic'),
     ('ESP-La Liga', 'domestic'),
     ('ITA-Serie A', 'domestic'), 
@@ -47,7 +47,6 @@ METRIC_RANGES = {
     'red_cards': (0, 6),
 }
 
-# Rate limiting configuration
 RATE_LIMITS = {
     'entity_delay': 8,
     'competition_delay': 180,
@@ -55,34 +54,6 @@ RATE_LIMITS = {
     'batch_size': 250,
     'retry_delays': [30, 90, 300]
 }
-
-# ====================================================================
-# DATA CLEANING UTILITIES
-# ====================================================================
-
-def clean_pandas_series_value(value):
-    """Clean pandas Series artifacts and malformed strings."""
-    if pd.isna(value) or value is None:
-        return None
-        
-    str_value = str(value)
-    
-    # Handle pandas Series string representation
-    if '\n' in str_value and ('dtype:' in str_value or 'Name:' in str_value):
-        lines = str_value.split('\n')
-        for line in lines:
-            line = line.strip()
-            if line and 'Name:' not in line and 'dtype:' not in line:
-                str_value = line
-                break
-    
-    # Clean malformed characters
-    str_value = re.sub(r'\)+$', '', str_value)  # Remove trailing )
-    str_value = re.sub(r'\s+\)+', ')', str_value)  # Fix )) to )
-    str_value = re.sub(r'\s+', ' ', str_value)  # Normalize spaces
-    str_value = str_value.strip()
-    
-    return str_value if str_value else None
 
 # ====================================================================
 # LOGGING SYSTEM
@@ -96,13 +67,13 @@ class LogManager:
     
     def header(self, competition: str, data_sources: str):
         print("FootballDecoded Data Loader")
-        print("═" * self.line_width)
+        print("=" * self.line_width)
         print(f"Competition: {competition} ({data_sources})")
         self.start_time = datetime.now()
     
     def massive_header(self, season: str):
         print("FootballDecoded Massive Annual Loader")
-        print("═" * self.line_width)
+        print("=" * self.line_width)
         print(f"Season: {season} | All Competitions")
         self.start_time = datetime.now()
     
@@ -112,18 +83,18 @@ class LogManager:
         
         print(f"Database: {status} | Schema: {schema}")
         print(f"Clearing existing data: {cleared_text}")
-        print("─" * self.line_width)
+        print("-" * self.line_width)
         print()
     
     def competition_start(self, comp_number: int, total_comps: int, competition: str, data_source: str):
         print(f"[{comp_number}/{total_comps}] {competition.upper()}")
         print(f"Data source: {data_source}")
-        print("─" * 50)
+        print("-" * 50)
     
     def phase_start(self, phase_name: str, total_entities: int):
         self.phase_start_time = datetime.now()
         print(f"{phase_name.upper()} EXTRACTION")
-        print(f"{phase_name} found: {total_entities:,} → Processing extraction")
+        print(f"{phase_name} found: {total_entities:,} -> Processing extraction")
     
     def progress_update(self, current: int, total: int, current_entity: str, 
                        metrics_count: int, fbref_success: int, understat_success: int, 
@@ -131,33 +102,30 @@ class LogManager:
         percentage = (current / total) * 100
         filled = int(40 * current // total)
         
-        # Fixed progress bar with white background and green fill
-        bar_filled = '█' * filled
-        bar_empty = '░' * (40 - filled)
-        bar = f'\033[42m{bar_filled}\033[47m{bar_empty}\033[0m'
+        green_blocks = '▓' * filled
+        gray_blocks = '░' * (40 - filled)
+        bar = f'\033[32m{green_blocks}\033[37m{gray_blocks}\033[0m'
         
         print(f"\rProgress: [{bar}] {current}/{total} ({percentage:.1f}%)")
         
         if current > 0:
-            # Clean entity name display
-            clean_entity = clean_pandas_series_value(current_entity)
-            print(f"├─ Current: {clean_entity}")
+            print(f"|- Current: {current_entity}")
             
             understat_text = " (Understat: N/A)" if understat_total == 0 else ""
-            print(f"├─ Metrics: {metrics_count} fields extracted{understat_text}")
+            print(f"|- Metrics: {metrics_count} fields extracted{understat_text}")
             
             if failed_count > 0:
-                print(f"├─ FBref: {fbref_success}/{current} successful ({failed_count} timeouts)")
+                print(f"|- FBref: {fbref_success}/{current} successful ({failed_count} timeouts)")
             else:
-                print(f"├─ FBref: {fbref_success}/{current} successful")
+                print(f"|- FBref: {fbref_success}/{current} successful")
             
             if understat_total > 0:
                 understat_pct = (understat_success / understat_total * 100) if understat_total > 0 else 0
-                print(f"├─ Understat: {understat_success}/{understat_total} merged ({understat_pct:.1f}%)")
+                print(f"|- Understat: {understat_success}/{understat_total} merged ({understat_pct:.1f}%)")
             else:
-                print("├─ Understat: N/A (European competition)")
+                print("|- Understat: N/A (European competition)")
             
-            print(f"└─ Failed: {failed_count}")
+            print(f"|- Failed: {failed_count}")
         
         if current < total:
             print("\033[6A", end="", flush=True)
@@ -167,14 +135,14 @@ class LogManager:
             print(" " * self.line_width)
         print("\033[6A", end="")
         
-        # Completed progress bar in full green
-        bar = f'\033[42m{"█" * 40}\033[0m'
+        full_bar = '▓' * 40
+        bar = f'\033[32m{full_bar}\033[0m'
         print(f"Progress: [{bar}] {total}/{total} (100%)")
         
         if self.phase_start_time:
             elapsed = (datetime.now() - self.phase_start_time).total_seconds()
             elapsed_formatted = self._format_time(int(elapsed))
-            print(f"└─ Completed in: {elapsed_formatted}")
+            print(f"|- Completed in: {elapsed_formatted}")
         
         print()
     
@@ -190,9 +158,9 @@ class LogManager:
         print()
     
     def massive_summary(self, all_stats: Dict, total_time: int):
-        print("─" * self.line_width)
+        print("-" * self.line_width)
         print("MASSIVE LOAD SUMMARY")
-        print("─" * self.line_width)
+        print("-" * self.line_width)
         
         total_entities = sum(stats['players']['total'] + stats['teams']['total'] for stats in all_stats.values())
         total_successful = sum(stats['players']['successful'] + stats['teams']['successful'] for stats in all_stats.values())
@@ -216,12 +184,12 @@ class LogManager:
             rate = (success/total*100) if total > 0 else 0
             print(f"  {comp}: {success}/{total} ({rate:.1f}%)")
         
-        print("═" * self.line_width)
+        print("=" * self.line_width)
     
     def final_summary(self, stats: dict):
-        print("─" * self.line_width)
+        print("-" * self.line_width)
         print("EXTRACTION SUMMARY")
-        print("─" * self.line_width)
+        print("-" * self.line_width)
         
         total = stats['players']['total'] + stats['teams']['total']
         successful = stats['players']['successful'] + stats['teams']['successful']
@@ -256,13 +224,13 @@ class LogManager:
             print()
             if success_rate >= 95:
                 print("EXTRACTION COMPLETED WITH MINOR ISSUES")
-                print(f"├─ {failed} extraction failures (recommend retry)")
+                print(f"|- {failed} extraction failures (recommend retry)")
             else:
                 print("ISSUES DETECTED")
-                print(f"├─ {failed} extraction failures (rate limit or connection issues)")
-                print("├─ Recommendation: Retry failed extractions in 10 minutes")
+                print(f"|- {failed} extraction failures (rate limit or connection issues)")
+                print("|- Recommendation: Retry failed extractions in 10 minutes")
         
-        print("═" * self.line_width)
+        print("=" * self.line_width)
     
     def _format_time(self, seconds: int) -> str:
         if seconds < 60:
@@ -286,12 +254,7 @@ class IDGenerator:
         if not text or pd.isna(text):
             return ""
         
-        # Clean pandas artifacts first
-        text = clean_pandas_series_value(text)
-        if not text:
-            return ""
-        
-        text = text.lower().strip()
+        text = str(text).lower().strip()
         text = unicodedata.normalize('NFD', text)
         text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
         text = re.sub(r'[^\w\s]', '', text)
@@ -302,13 +265,9 @@ class IDGenerator:
     
     @staticmethod
     def generate_player_hash_id(name: str, birth_year: Optional[int], nationality: Optional[str]) -> str:
-        # Clean all inputs first
-        clean_name = clean_pandas_series_value(name)
-        normalized_name = IDGenerator.normalize_for_id(clean_name)
+        normalized_name = IDGenerator.normalize_for_id(name)
         birth_str = str(birth_year) if birth_year else "unknown"
-        
-        clean_nationality = clean_pandas_series_value(nationality)
-        nation_str = IDGenerator.normalize_for_id(clean_nationality) if clean_nationality else "unknown"
+        nation_str = IDGenerator.normalize_for_id(nationality) if nationality else "unknown"
         
         combined = f"{normalized_name}_{birth_str}_{nation_str}"
         hash_obj = hashlib.sha256(combined.encode('utf-8'))
@@ -316,12 +275,8 @@ class IDGenerator:
     
     @staticmethod
     def generate_team_hash_id(team_name: str, league: str) -> str:
-        # Clean inputs first
-        clean_team = clean_pandas_series_value(team_name)
-        clean_league = clean_pandas_series_value(league)
-        
-        normalized_team = IDGenerator.normalize_for_id(clean_team)
-        normalized_league = IDGenerator.normalize_for_id(clean_league)
+        normalized_team = IDGenerator.normalize_for_id(team_name)
+        normalized_league = IDGenerator.normalize_for_id(league)
         
         combined = f"{normalized_team}_{normalized_league}"
         hash_obj = hashlib.sha256(combined.encode('utf-8'))
@@ -333,38 +288,47 @@ class IDGenerator:
 
 class DataNormalizer:
     def normalize_name(self, name: str) -> str:
-        """Clean and normalize names without hardcoded mappings."""
-        # First clean pandas artifacts
-        clean_name = clean_pandas_series_value(name)
-        if not clean_name:
+        if not name or pd.isna(name):
             return ""
         
-        # Basic normalization
-        clean_name = clean_name.strip()
-        clean_name = unicodedata.normalize('NFD', clean_name)
-        clean_name = ''.join(c for c in clean_name if unicodedata.category(c) != 'Mn')
-        clean_name = re.sub(r'\s+', ' ', clean_name)
+        name_str = str(name)
+        if '\n' in name_str and 'dtype: object' in name_str:
+            lines = name_str.split('\n')
+            for line in lines:
+                if 'Name:' not in line and 'dtype:' not in line and line.strip():
+                    name_str = line.strip()
+                    break
         
-        return clean_name.title()
+        name_str = name_str.lower().strip()
+        name_str = unicodedata.normalize('NFD', name_str)
+        name_str = ''.join(c for c in name_str if unicodedata.category(c) != 'Mn')
+        name_str = re.sub(r'[^\w\s\-\.]', '', name_str)
+        name_str = re.sub(r'\s+', ' ', name_str).strip()
+        name_str = re.sub(r'\bjr\.?\b', 'jr', name_str)
+        name_str = re.sub(r'\bsr\.?\b', 'sr', name_str)
+        
+        return name_str.title()
     
     def clean_value(self, value: Any, field_name: str) -> Any:
-        """Enhanced clean_value with pandas Series handling."""
-        # First clean pandas artifacts
-        cleaned_value = clean_pandas_series_value(value)
-        
-        if cleaned_value is None:
+        if pd.isna(value) or value is None:
             return None
-            
-        # Handle lists properly
+        
+        str_value = str(value)
+        if '\n' in str_value and 'dtype: object' in str_value:
+            lines = str_value.split('\n')
+            for line in lines:
+                if 'Name:' not in line and 'dtype:' not in line and line.strip():
+                    str_value = line.strip()
+                    break
+        
         if isinstance(value, list):
             if field_name in ['teams_played', 'player_name', 'team_name']:
                 return ', '.join(str(item) for item in value)
         
-        # Final cleanup
-        if str(cleaned_value).lower() in ['nan', 'none', 'null', '']:
+        if str_value.lower() in ['nan', 'none', 'null', '']:
             return None
         
-        return cleaned_value
+        return str_value.strip()
 
 class DataValidator:
     def __init__(self):
@@ -451,7 +415,7 @@ class RateLimiter:
         return True
 
 # ====================================================================
-# CORE LOADING FUNCTIONS - Apply fixes to avoid data corruption
+# CORE LOADING FUNCTIONS
 # ====================================================================
 
 def load_players(competition: str, season: str, table_type: str, logger: LogManager, rate_limiter: RateLimiter) -> Dict[str, int]:
@@ -464,15 +428,12 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
         
         players_list_df = fbref_get_league_players(competition, season)
         
-        # Clean column headers from pandas artifacts
         if hasattr(players_list_df.columns, 'levels'):
             players_list_df.columns = [col[0] if col[1] == '' else f"{col[0]}_{col[1]}" for col in players_list_df.columns]
         
         if players_list_df.empty:
             return stats
         
-        # Clean player names before processing
-        players_list_df['player'] = players_list_df['player'].apply(clean_pandas_series_value)
         unique_players = players_list_df['player'].dropna().unique().tolist()
         stats['total'] = len(unique_players)
         
@@ -484,9 +445,7 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
         understat_total = 0 if table_type == 'european' else len(unique_players)
         
         for i, player_name in enumerate(unique_players, 1):
-            # Clean player name for display
-            clean_player_name = clean_pandas_series_value(player_name)
-            current_entity = f"{clean_player_name} (Processing...)"
+            current_entity = f"{player_name} (Processing...)"
             
             try:
                 fbref_data = fbref_get_player(player_name, competition, season)
@@ -496,10 +455,8 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
                     continue
                 
                 fbref_success += 1
-                
-                # Clean team name from FBref data
-                team = clean_pandas_series_value(fbref_data.get('team', 'Unknown'))
-                current_entity = f"{clean_player_name} ({team})"
+                team = fbref_data.get('team', 'Unknown')
+                current_entity = f"{player_name} ({team})"
                 
                 if table_type == 'domestic':
                     understat_data = understat_get_player(player_name, competition, season)
@@ -558,8 +515,6 @@ def load_teams(competition: str, season: str, table_type: str, logger: LogManage
         if players_list_df.empty:
             return stats
         
-        # Clean team names before processing
-        players_list_df['team'] = players_list_df['team'].apply(clean_pandas_series_value)
         unique_teams = players_list_df['team'].dropna().unique().tolist()
         stats['total'] = len(unique_teams)
         
@@ -571,9 +526,7 @@ def load_teams(competition: str, season: str, table_type: str, logger: LogManage
         understat_total = 0 if table_type == 'european' else len(unique_teams)
         
         for i, team_name in enumerate(unique_teams, 1):
-            # Clean team name for display
-            clean_team_name = clean_pandas_series_value(team_name)
-            current_entity = f"{clean_team_name}"
+            current_entity = f"{team_name}"
             
             try:
                 fbref_data = fbref_get_team(team_name, competition, season)
@@ -660,12 +613,7 @@ def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[s
     db.close()
     return {'players': player_stats, 'teams': team_stats}
 
-# ====================================================================
-# MASSIVE ANNUAL LOADER
-# ====================================================================
-
 def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
-    """Load all competitions for a given season with intelligent rate limiting."""
     logger = LogManager()
     logger.massive_header(season)
     
@@ -677,27 +625,21 @@ def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
     
     start_time = datetime.now()
     
-    for i, (competition, table_type) in enumerate(AVAILABLE_COMPETITIONS, 1):
+    for i, (competition, table_type) in enumerate(COMPETITIONS, 1):
         data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
         
-        logger.competition_start(i, len(AVAILABLE_COMPETITIONS), competition, data_source)
+        logger.competition_start(i, len(COMPETITIONS), competition, data_source)
         
         try:
-            # Load players
             player_stats = load_players(competition, season, table_type, logger, rate_limiter)
-            
-            # Load teams  
             team_stats = load_teams(competition, season, table_type, logger, rate_limiter)
             
-            # Store stats
             competition_stats = {'players': player_stats, 'teams': team_stats}
             all_stats[competition] = competition_stats
             
-            # Competition summary
             logger.competition_summary(competition_stats, competition)
             
-            # Rate limit between competitions (except last one)
-            if i < len(AVAILABLE_COMPETITIONS):
+            if i < len(COMPETITIONS):
                 rate_limiter.wait_between_competitions(competition)
             
         except Exception as e:
@@ -706,7 +648,6 @@ def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
                                     'teams': {'total': 0, 'successful': 0, 'failed': 0}}
             continue
     
-    # Final massive summary
     total_time = int((datetime.now() - start_time).total_seconds())
     logger.massive_summary(all_stats, total_time)
     
@@ -719,7 +660,7 @@ def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
 
 def main():
     print("FootballDecoded Data Loader - ID System")
-    print("═" * 50)
+    print("=" * 50)
     print("\n1. Load competition data (players + teams)")
     print("2. Load ALL competitions for season (massive)")
     print("3. Test database connection")
@@ -731,14 +672,14 @@ def main():
     
     if choice == "1":
         print("\nAvailable competitions:")
-        for i, (comp_name, comp_type) in enumerate(AVAILABLE_COMPETITIONS, 1):
+        for i, (comp_name, comp_type) in enumerate(COMPETITIONS, 1):
             data_source = "FBref + Understat" if comp_type == 'domestic' else "FBref only"
             print(f"   {i}. {comp_name} ({data_source})")
         
         try:
-            comp_choice = int(input(f"\nSelect competition (1-{len(AVAILABLE_COMPETITIONS)}): ").strip())
-            if 1 <= comp_choice <= len(AVAILABLE_COMPETITIONS):
-                selected_competition, _ = AVAILABLE_COMPETITIONS[comp_choice - 1]
+            comp_choice = int(input(f"\nSelect competition (1-{len(COMPETITIONS)}): ").strip())
+            if 1 <= comp_choice <= len(COMPETITIONS):
+                selected_competition, _ = COMPETITIONS[comp_choice - 1]
                 season = input("Enter season (e.g., 2024-25): ").strip()
                 
                 if season:
