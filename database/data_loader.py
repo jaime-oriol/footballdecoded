@@ -286,7 +286,7 @@ def load_players(competition: str, season: str, table_type: str, verbose: bool =
                     if verbose:
                         metrics_count = len(cleaned_data)
                         print(f"[{i:3d}/{len(unique_players)}] {player_name}")
-                        print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")print(f"[{i:3d}/{len(unique_players)}] {player_name} - SUCCESS")
+                        print(f"          {team}, {competition} - SUCCESS ({metrics_count} metrics)")
                 else:
                     stats['failed'] += 1
                     if verbose:
