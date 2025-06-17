@@ -11,14 +11,33 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database.connection import get_db_manager
 
 # ====================================================================
+# CONSISTENT VISUAL FORMATTING
+# ====================================================================
+
+LINE_WIDTH = 80
+
+def print_header(title: str):
+    """Consistent header formatting matching data_loader."""
+    print(title)
+    print("═" * LINE_WIDTH)
+
+def print_section(title: str):
+    """Consistent section formatting."""
+    print(title)
+    print("─" * LINE_WIDTH)
+
+def print_footer():
+    """Consistent footer formatting."""
+    print("═" * LINE_WIDTH)
+
+# ====================================================================
 # DATABASE STATUS FUNCTIONS
 # ====================================================================
 
 def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
     """Check available data in database with unique ID reporting."""
     if verbose:
-        print("FootballDecoded Database Status - Unique ID System")
-        print("═" * 80)
+        print_header("FootballDecoded Database Status - Unique ID System")
     
     db = get_db_manager()
     results = {}
@@ -44,8 +63,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['players_domestic'] = players_domestic
         
         if verbose and not players_domestic.empty:
-            print("DOMESTIC PLAYERS (FBref + Understat)")
-            print("─" * 80)
+            print_section("DOMESTIC PLAYERS (FBref + Understat)")
             for _, row in players_domestic.iterrows():
                 understat_pct = (row['with_understat'] / row['total_records'] * 100) if row['total_records'] > 0 else 0
                 transfer_ratio = row['total_records'] / row['unique_players'] if row['unique_players'] > 0 else 1
@@ -71,8 +89,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['players_european'] = players_european
         
         if verbose and not players_european.empty:
-            print("EUROPEAN PLAYERS (FBref only)")
-            print("─" * 80)
+            print_section("EUROPEAN PLAYERS (FBref only)")
             for _, row in players_european.iterrows():
                 transfer_ratio = row['total_records'] / row['unique_players'] if row['unique_players'] > 0 else 1
                 print(f"├─ {row['competition']} {row['season']}: {row['unique_players']} players | {row['total_records']} records | Ratio: {transfer_ratio:.2f}")
@@ -97,8 +114,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['teams_domestic'] = teams_domestic
         
         if verbose and not teams_domestic.empty:
-            print("DOMESTIC TEAMS (FBref + Understat)")
-            print("─" * 80)
+            print_section("DOMESTIC TEAMS (FBref + Understat)")
             for _, row in teams_domestic.iterrows():
                 understat_pct = (row['with_understat'] / row['total_records'] * 100) if row['total_records'] > 0 else 0
                 print(f"├─ {row['league']} {row['season']}: {row['unique_teams']} teams | Understat: {understat_pct:.1f}%")
@@ -122,16 +138,14 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         results['teams_european'] = teams_european
         
         if verbose and not teams_european.empty:
-            print("EUROPEAN TEAMS (FBref only)")
-            print("─" * 80)
+            print_section("EUROPEAN TEAMS (FBref only)")
             for _, row in teams_european.iterrows():
                 print(f"├─ {row['competition']} {row['season']}: {row['unique_teams']} teams")
             print()
         
         # Transfers report using unique IDs
         if verbose:
-            print("TRANSFER ANALYSIS (Multi-team players)")
-            print("─" * 80)
+            print_section("TRANSFER ANALYSIS (Multi-team players)")
             
             # Get transfers for domestic leagues
             transfers_domestic = db.get_transfers_by_unique_id('domestic')
@@ -155,10 +169,9 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 print("└─ No transfers detected")
             print()
         
-        # Data quality summary - Fixed to not depend on view
+        # Data quality summary
         if verbose:
-            print("DATA QUALITY SUMMARY")
-            print("─" * 80)
+            print_section("DATA QUALITY SUMMARY")
             
             quality_queries = [
                 ("players_domestic", "SELECT 'players_domestic' as table_name, COUNT(*) as total_records, COUNT(DISTINCT unique_player_id) as unique_entities, AVG(data_quality_score) as avg_quality_score FROM footballdecoded.players_domestic WHERE unique_player_id IS NOT NULL"),
@@ -186,8 +199,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
             total_domestic_teams = teams_domestic['total_records'].sum() if not teams_domestic.empty else 0
             total_european_teams = teams_european['total_records'].sum() if not teams_european.empty else 0
             
-            print("SUMMARY")
-            print("─" * 80)
+            print_section("SUMMARY")
             print(f"├─ Unique domestic players: {unique_counts.get('unique_domestic_players', 0)}")
             print(f"├─ Unique european players: {unique_counts.get('unique_european_players', 0)}")
             print(f"├─ Unique domestic teams: {unique_counts.get('unique_domestic_teams', 0)}")
@@ -201,7 +213,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
             else:
                 print("└─ No transfers detected")
         
-        print("═" * 80)
+        print_footer()
         db.close()
         return results
         
@@ -214,8 +226,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
 def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
     """Check integrity of unique ID system."""
     if verbose:
-        print("Unique ID System Integrity Check")
-        print("═" * 80)
+        print_header("Unique ID System Integrity Check")
     
     db = get_db_manager()
     results = {}
@@ -229,8 +240,7 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
             'teams_european': "SELECT COUNT(*) as count FROM footballdecoded.teams_european WHERE unique_team_id IS NULL"
         }
         
-        print("Missing ID Check:")
-        print("─" * 80)
+        print_section("Missing ID Check:")
         for table, query in missing_ids_queries.items():
             result = pd.read_sql(query, db.engine)
             missing_count = result.iloc[0]['count']
@@ -241,8 +251,7 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
         print()
         
         # Check for duplicate unique IDs within same league/season/team
-        print("Duplicate ID Check:")
-        print("─" * 80)
+        print_section("Duplicate ID Check:")
         
         duplicate_queries = {
             'players_domestic': """
@@ -268,8 +277,7 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
         print()
         
         # Check ID format consistency
-        print("ID Format Check:")
-        print("─" * 80)
+        print_section("ID Format Check:")
         
         format_queries = {
             'players_domestic': "SELECT COUNT(*) as count FROM footballdecoded.players_domestic WHERE LENGTH(unique_player_id) != 16",
@@ -286,7 +294,7 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
                 status = "OK" if invalid_count == 0 else f"ERROR: {invalid_count} invalid format"
                 print(f"├─ {table}: {status}")
         
-        print("═" * 80)
+        print_footer()
         db.close()
         return results
         
@@ -300,8 +308,7 @@ def analyze_transfers(league: str = None, season: str = None, verbose: bool = Tr
     """Detailed transfer analysis using unique ID system."""
     if verbose:
         filter_text = f" for {league} {season}" if league and season else ""
-        print(f"Transfer Analysis{filter_text}")
-        print("═" * 80)
+        print_header(f"Transfer Analysis{filter_text}")
     
     db = get_db_manager()
     
@@ -322,23 +329,21 @@ def analyze_transfers(league: str = None, season: str = None, verbose: bool = Tr
             if not all_transfers.empty:
                 print(f"Found {len(all_transfers)} players with multiple teams")
                 print()
-                print("Top transfers by team count:")
-                print("─" * 80)
+                print_section("Top transfers by team count:")
                 for _, transfer in all_transfers.head(10).iterrows():
                     print(f"├─ {transfer['player_name']} ({transfer['league']} {transfer['season']})")
                     print(f"   Teams: {transfer['teams_path']} | Quality: {transfer['avg_quality']:.3f}")
                 print()
                 
                 # Statistics
-                print("Transfer Statistics:")
-                print("─" * 80)
+                print_section("Transfer Statistics:")
                 print(f"├─ Average teams per transfer: {all_transfers['teams_count'].mean():.2f}")
                 print(f"├─ Max teams for one player: {all_transfers['teams_count'].max()}")
                 print(f"└─ Players with 3+ teams: {len(all_transfers[all_transfers['teams_count'] >= 3])}")
             else:
                 print("└─ No transfers found with current filters")
         
-        print("═" * 80)
+        print_footer()
         db.close()
         return all_transfers
         
@@ -350,16 +355,14 @@ def analyze_transfers(league: str = None, season: str = None, verbose: bool = Tr
 
 def quick_status():
     """Quick database status check with unique ID info."""
-    print("FootballDecoded Database Quick Status")
-    print("═" * 80)
+    print_header("FootballDecoded Database Quick Status")
     
     db = get_db_manager()
     
     try:
         unique_counts = db.get_unique_entities_count()
         
-        print("UNIQUE ENTITIES")
-        print("─" * 80)
+        print_section("UNIQUE ENTITIES")
         print(f"├─ Unique domestic players: {unique_counts.get('unique_domestic_players', 0)}")
         print(f"├─ Unique european players: {unique_counts.get('unique_european_players', 0)}")
         print(f"├─ Unique domestic teams: {unique_counts.get('unique_domestic_teams', 0)}")
@@ -374,8 +377,7 @@ def quick_status():
             ('teams_european', 'European team records')
         ]
         
-        print("RECORD COUNTS")
-        print("─" * 80)
+        print_section("RECORD COUNTS")
         total_records = 0
         for i, (table_name, display_name) in enumerate(tables):
             try:
@@ -396,11 +398,10 @@ def quick_status():
         transfers_european = db.get_transfers_by_unique_id('european')
         total_transfers = len(transfers_domestic) + len(transfers_european)
         
-        print("TRANSFER DETECTION")
-        print("─" * 80)
+        print_section("TRANSFER DETECTION")
         print(f"└─ Players with transfers: {total_transfers}")
         
-        print("═" * 80)
+        print_footer()
         db.close()
         
     except Exception as e:
