@@ -11,11 +11,16 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Tuple, Optional
 from datetime import datetime
+from matplotlib.collections import LineCollection
+import matplotlib.colors as mcolors
 
-from core import draw_pitch, SCALE_CONFIG, CONNECTION_CONFIG, FONT_CONFIG, HALVES_CONFIG
+from core import (
+    draw_pitch, SCALE_CONFIG, CONNECTION_CONFIG, FONT_CONFIG, HALVES_CONFIG,
+    optimize_name, save_high_quality
+)
 
 # ====================================================================
-# CORE SCALING FUNCTIONS
+# PASS NETWORK SPECIFIC SCALING
 # ====================================================================
 
 def calculate_node_sizes(players_df: pd.DataFrame, is_full_match: bool = False) -> pd.DataFrame:
@@ -24,11 +29,10 @@ def calculate_node_sizes(players_df: pd.DataFrame, is_full_match: bool = False) 
         return players_df
     
     df_with_sizes = players_df.copy()
-    max_passes = df_with_sizes['total_passes'].max()
     threshold = SCALE_CONFIG['node_threshold_full_match'] if is_full_match else SCALE_CONFIG['node_threshold_halves']
     
     df_with_sizes['node_size'] = df_with_sizes['total_passes'].apply(
-        lambda passes: _calculate_node_size(passes, max_passes, threshold)
+        lambda passes: _calculate_node_size(passes, df_with_sizes['total_passes'].max(), threshold)
     )
     return df_with_sizes
 
@@ -54,19 +58,22 @@ def calculate_line_widths(connections_df: pd.DataFrame, is_full_match: bool = Fa
     )
     return df_with_widths
 
+def get_node_radius(node_size: float) -> float:
+    """Convert node size to radius for calculations."""
+    return np.sqrt(node_size / np.pi) * 0.105
+
 def _calculate_node_size(total_passes: int, max_passes: int, threshold: int) -> float:
     """Calculate individual node size with linear scaling."""
     if total_passes <= 10:
         return 400
     if total_passes >= 110:
-        return 12400  # Máximo real con factor doble
+        return 12400
     
-    # Dos tramos: crecimiento lento + aceleración final
     if total_passes <= 60:
-        return 400 + (total_passes - 10) * 80  # Factor bajo: 80
+        return 400 + (total_passes - 10) * 80
     else:
-        base = 400 + (60 - 10) * 80  # = 4400
-        return base + (total_passes - 60) * 160  # Factor alto: 160
+        base = 400 + (60 - 10) * 80
+        return base + (total_passes - 60) * 160
 
 def _calculate_line_width(pass_count: int, min_connections: int, max_connections: int, min_required: int) -> float:
     """Calculate individual line width with smooth scaling."""
@@ -79,10 +86,6 @@ def _calculate_line_width(pass_count: int, min_connections: int, max_connections
     normalized = (pass_count - min_connections) / (max_connections - min_connections)
     curved = normalized ** 0.6
     return SCALE_CONFIG['line_width_min'] + curved * (SCALE_CONFIG['line_width_max'] - SCALE_CONFIG['line_width_min'])
-
-def get_node_radius(node_size: float) -> float:
-    """Convert node size to radius for calculations."""
-    return np.sqrt(node_size / np.pi) * 0.105
 
 # ====================================================================
 # MAIN VISUALIZATION FUNCTIONS
@@ -350,9 +353,6 @@ def _draw_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame
     if valid_connections.empty:
         return
     
-    from matplotlib.collections import LineCollection
-    import matplotlib.colors as mcolors
-    
     for _, conn in valid_connections.iterrows():
         source_data = players_df[players_df['player'] == conn['source']]
         target_data = players_df[players_df['player'] == conn['target']]
@@ -374,7 +374,6 @@ def _draw_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame
         
         line_width = conn['line_width']
         
-        # Create gradient line
         num_points = 75
         x_points = np.linspace(start_x, end_x, num_points)
         y_points = np.linspace(start_y, end_y, num_points)
@@ -391,8 +390,6 @@ def _draw_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame
         ax.add_collection(lc)
         
         _draw_connection_arrow(ax, start_x, start_y, end_x, end_y, color, line_width, 1.0)
-        
-        _draw_connection_arrow(ax, start_x, start_y, end_x, end_y, color, line_width, 1.0)
 
 def _draw_labels(ax, players_df: pd.DataFrame):
     """Draw optimized player labels."""
@@ -400,7 +397,7 @@ def _draw_labels(ax, players_df: pd.DataFrame):
         full_name = player['player']
         x, y = player['avg_x'], player['avg_y']
         
-        display_name = _optimize_name(full_name)
+        display_name = optimize_name(full_name)
         
         ax.text(x, y, display_name, ha='center', va='center',
                color='white', fontsize=16, fontweight='bold',
@@ -415,7 +412,6 @@ def _draw_legend(ax, players_df: pd.DataFrame, connections_df: pd.DataFrame, tea
    legend_y = -9
    text_y = legend_y - 1.5
    
-   # Main title
    total_passes = players_df['total_passes'].sum() if not players_df.empty else 0
    ax.text(52.5, text_y, f"Pases: {total_passes}", 
           ha='center', va='center', fontsize=18, fontweight='bold', 
@@ -442,7 +438,6 @@ def _draw_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFr
               family=FONT_CONFIG['family'])
        return
    
-   # Positioning
    arrow_length = 14
    number_offset = 3
    positions = [x - arrow_length/2 - number_offset, x + arrow_length/2 + number_offset]
@@ -450,13 +445,11 @@ def _draw_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFr
    text_y = y - 1.5
    display_values = [threshold, max_passes]
    
-   # Draw circles
    for i, (pos, passes) in enumerate(zip(positions, display_values)):
        node_size = _calculate_node_size(int(passes), max_passes, threshold) * 0.4
        ax.scatter(pos, circle_y, s=node_size, c=color, alpha=0.6, 
                  edgecolors=color, linewidth=2, zorder=10)
    
-   # Draw text
    ax.text(positions[0], text_y, f"≤10", ha='center', va='center',
           fontsize=16, fontweight='bold', color='black', 
           family=FONT_CONFIG['family'])
@@ -465,7 +458,6 @@ def _draw_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFr
           fontsize=16, fontweight='bold', color='black', 
           family=FONT_CONFIG['family'])
    
-   # Draw arrow
    arrow_start_x = x - arrow_length/2
    arrow_end_x = x + arrow_length/2
    ax.annotate('', xy=(arrow_end_x, text_y), xytext=(arrow_start_x, text_y),
@@ -493,24 +485,19 @@ def _draw_lines_legend(ax, x: float, y: float, color: str, connections_df: pd.Da
               family=FONT_CONFIG['family'])
        return
    
-   # Positioning
    arrow_length = 14
    number_offset = 3
    positions = [x - arrow_length/2 - number_offset, x + arrow_length/2 + number_offset]
    line_y = y + 1
    text_y = y - 1.5
    
-   # Force both lines to appear with minimum visibility
-   # Thin line (left)
    ax.plot([positions[0] - 1.5, positions[0] + 1.5], [line_y, line_y], color=color, 
           linewidth=2.5, alpha=0.8, solid_capstyle='round')
    
-   # Thick line (right)
    thick_width = _calculate_line_width(int(max_conn), min_conn, max_conn, min_required) * 1.5
    ax.plot([positions[1] - 1.5, positions[1] + 1.5], [line_y, line_y], color=color, 
           linewidth=max(thick_width, 5.0), alpha=0.8, solid_capstyle='round')
    
-   # Draw text
    ax.text(positions[0], text_y, f"≥{min_required}", ha='center', va='center',
           fontsize=16, fontweight='bold', color='black',
           family=FONT_CONFIG['family'])
@@ -519,7 +506,6 @@ def _draw_lines_legend(ax, x: float, y: float, color: str, connections_df: pd.Da
           fontsize=16, fontweight='bold', color='black',
           family=FONT_CONFIG['family'])
    
-   # Draw arrow
    arrow_start_x = x - arrow_length/2
    arrow_end_x = x + arrow_length/2
    ax.annotate('', xy=(arrow_end_x, text_y), xytext=(arrow_start_x, text_y),
@@ -553,18 +539,6 @@ def _draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end
            color=color, linewidth=max(1.8, line_width * 0.7), 
            alpha=1.0, solid_capstyle='round', zorder=100)
 
-def _optimize_name(full_name: str) -> str:
-    """Optimize player name for display."""
-    if len(full_name) <= SCALE_CONFIG['name_length_threshold']:
-        return full_name
-    
-    name_parts = full_name.split()
-    
-    if len(name_parts) >= 2:
-        return name_parts[-1]
-    else:
-        return full_name[:SCALE_CONFIG['name_length_threshold']]
-
 def _calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
                                r1: float, r2: float, pass_count: int) -> Tuple[float, float, float, float]:
     """Calculate connection start and end points avoiding node overlap."""
@@ -590,7 +564,6 @@ def _calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
         end_y = y2 - reduced_margin * uy + perp_y * offset
         
         if np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2) < 1.0:
-            # Para casos SUPER PEGADOS: hacer línea MÁS LARGA
             start_x = x1 + r1 * ux + perp_x * offset
             start_y = y1 + r1 * uy + perp_y * offset
             end_x = x2 - 1.5 * ux + perp_x * offset 
@@ -640,22 +613,6 @@ def _save_individual_halves(first_half_data: Dict[str, pd.DataFrame],
 # ====================================================================
 # CONVENIENCE FUNCTIONS
 # ====================================================================
-
-def save_high_quality(fig: plt.Figure, team_name: str, suffix: str = "") -> str:
-    """Save high quality visualization."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    clean_name = team_name.replace(" ", "_").replace("-", "_")
-    
-    filename = f"pass_network_{clean_name}"
-    if suffix:
-        filename += f"_{suffix}"
-    filename += f"_{timestamp}.png"
-    
-    fig.savefig(filename, dpi=300, bbox_inches='tight', 
-               facecolor='white', edgecolor='none', format='png')
-    
-    print(f"High quality save: {filename}")
-    return filename
 
 def load_from_csv_files(passes_path: str, players_path: str, connections_path: str) -> Dict[str, pd.DataFrame]:
     """Load data from specific CSV files."""
