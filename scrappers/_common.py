@@ -244,10 +244,9 @@ class BaseReader(ABC):
         self.rate_limit = 0
         self.max_delay = 0
         if self.no_store:
-            logger.debug("🚫 Caching disabled")
+            logger.debug("Caching disabled")
         else:
-            # IMPROVED: Only log once on first initialization
-            logger.debug("💾 Cache: %s", str(self.data_dir).replace(str(Path.home()), "~"))
+            logger.debug("Cache: %s", str(self.data_dir).replace(str(Path.home()), "~"))
             self.data_dir.mkdir(parents=True, exist_ok=True)
 
     def get(
@@ -289,9 +288,9 @@ class BaseReader(ABC):
         """
         is_cached = self._is_cached(filepath, max_age)
         if no_cache or self.no_cache or not is_cached:
-            logger.debug("🌐 Fetching %s", url)
+            logger.debug("Fetching %s", url)
             return self._download_and_save(url, filepath, var)
-        logger.debug("📂 Cache hit: %s", url)
+        logger.debug("Cache hit: %s", url)
         if filepath is None:
             raise ValueError("No filepath provided for cached data.")
         return filepath.open(mode="rb")
@@ -459,7 +458,7 @@ class BaseReader(ABC):
     @seasons.setter
     def seasons(self, seasons: Optional[Union[str, int, Iterable[Union[str, int]]]]) -> None:
         if seasons is None:
-            logger.debug("ℹ️  No seasons specified - using last 5 seasons")
+            logger.debug("No seasons specified - using last 5 seasons")
             year = datetime.now(tz=timezone.utc).year
             seasons = [f"{y - 1}-{y}" for y in range(year, year - 6, -1)]
         if isinstance(seasons, (str, int)):
@@ -521,11 +520,10 @@ class BaseRequestsReader(BaseReader):
                 if not self.no_store and filepath is not None:
                     with filepath.open(mode="wb") as fh:
                         fh.write(payload)
-                    # REMOVED: No logging for each cache operation to reduce noise
                 return io.BytesIO(payload)
             except Exception:
                 logger.exception(
-                    "❌ Error scraping %s (attempt %d/5)",
+                    "Error scraping %s (attempt %d/5)",
                     url,
                     i + 1,
                 )
@@ -563,7 +561,7 @@ class BaseSeleniumReader(BaseReader):
             self._driver = self._init_webdriver()
         except WebDriverException as e:
             logger.error(
-                "❌ ChromeDriver failed to start: %s",
+                "ChromeDriver failed to start: %s",
                 str(e)[:100] + "..." if len(str(e)) > 100 else str(e),
             )
 
@@ -619,11 +617,10 @@ class BaseSeleniumReader(BaseReader):
                     filepath.parent.mkdir(parents=True, exist_ok=True)
                     with filepath.open(mode="wb") as fh:
                         fh.write(response)
-                    # REMOVED: No logging for each cache operation to reduce noise
                 return io.BytesIO(response)
             except Exception:
                 logger.exception(
-                    "❌ Error scraping %s (attempt %d/5, retry in %ds)",
+                    "Error scraping %s (attempt %d/5, retry in %ds)",
                     url,
                     i + 1,
                     i * 10,
@@ -743,9 +740,9 @@ def get_proxy() -> dict[str, str]:
         full_proxy_list.extend(proxy_json)
 
         if not full_proxy_list:
-            logger.debug("ℹ️  No proxies available")
+            logger.debug("No proxies available")
             return {}
-        logger.debug(f"🔍 Found {len(full_proxy_list)} proxy servers, checking...")
+        logger.debug(f"Found {len(full_proxy_list)} proxy servers, checking...")
 
     # creating proxy dict
     final_proxy_list = []
@@ -766,7 +763,7 @@ def get_proxy() -> dict[str, str]:
         if check_proxy(proxy):
             return proxy
 
-    logger.debug("ℹ️  No working proxies found")
+    logger.debug("No working proxies found")
     return {}
 
 
@@ -776,7 +773,7 @@ def check_proxy(proxy: dict) -> bool:
         r0 = tls_requests.get("https://ipinfo.io/json", proxies=proxy, timeout=15)
         return r0.status_code == 200
     except Exception as error:
-        logger.error(f"❌ Proxy failed: {error!s}")
+        logger.error(f"Proxy failed: {error!s}")
         return False
 
 
