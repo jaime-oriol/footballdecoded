@@ -10,6 +10,7 @@ import re
 import unicodedata
 import hashlib
 import time
+import random
 from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 
@@ -47,30 +48,37 @@ METRIC_RANGES = {
     'red_cards': (0, 6),
 }
 
-# MASSIVE LOAD ONLY - Conservative rate limiting para 100% seguridad
-MASSIVE_LOAD_CONFIG = {
-    'league_delay_minutes': 45,  # 45 minutos entre ligas
-    'progress_save_interval': 50,  # Guardar progreso cada 50 entidades
-    'connection_timeout_hours': 12  # Timeout total de 12 horas
+LOAD_CONFIG = {
+    'massive_league_delay_minutes': 45,
+    'massive_progress_save_interval': 50,
+    'massive_connection_timeout_hours': 12,
+    'block_pause_min': 30,
+    'block_pause_max': 60,
+    'progress_bar_width': 40,
+    'line_width': 80
 }
 
-# ====================================================================
-# LOGGING SYSTEM ESTANDARIZADO
-# ====================================================================
+BLOCK_1_COMPETITIONS = [
+    ('ENG-Premier League', 'domestic'),
+    ('ESP-La Liga', 'domestic'),
+    ('ITA-Serie A', 'domestic')
+]
+
+BLOCK_2_COMPETITIONS = [
+    ('GER-Bundesliga', 'domestic'),
+    ('FRA-Ligue 1', 'domestic'),
+    ('INT-Champions League', 'european')
+]
 
 # ====================================================================
-# LOGGING SYSTEM ESTANDARIZADO - NUEVO FORMATO PROFESIONAL
-# ====================================================================
-
-# ====================================================================
-# LOGGING SYSTEM ESTANDARIZADO - NUEVO FORMATO PROFESIONAL
+# LOGGING SYSTEM
 # ====================================================================
 
 class LogManager:
     def __init__(self):
         self.start_time = None
         self.phase_start_time = None
-        self.line_width = 80
+        self.line_width = LOAD_CONFIG['line_width']
         self.current_lines_printed = 0
     
     def header(self, competition: str, season: str, data_sources: str):
@@ -78,13 +86,11 @@ class LogManager:
         print("═" * self.line_width)
         print(f"Competition: {competition} {season} ({data_sources})")
         
-        # Database status and existing records count
         try:
             db = get_db_manager()
             db_status = "Connected"
             schema = "footballdecoded"
             
-            # Count existing records that will be cleared
             table_type = 'domestic' if competition != 'INT-Champions League' else 'european'
             existing_records = self._count_existing_records(db, competition, season, table_type)
             
@@ -109,9 +115,8 @@ class LogManager:
         print(f"FootballDecoded {block_name} Loader")
         print("═" * self.line_width)
         print(f"Season: {season} | {block_name} ({num_competitions} leagues)")
-        print(f"Random pauses: 30-60 minutes between leagues")
+        print(f"Random pauses: {LOAD_CONFIG['block_pause_min']}-{LOAD_CONFIG['block_pause_max']} minutes between leagues")
         
-        # Database status
         try:
             db = get_db_manager()
             db_status = "Connected"
@@ -138,44 +143,23 @@ class LogManager:
         self.current_lines_printed = 0
         print(f"{phase_name.upper()} EXTRACTION")
         print(f"{phase_name} found: {total_entities:,} -> Processing extraction")
-        print()  # Línea en blanco para separar
+        print()
     
     def progress_update(self, current: int, total: int, current_entity: str, 
-                       metrics_count: int, fbref_success: int, understat_success: int, 
-                       understat_total: int, failed_count: int, entity_type: str,
+                       metrics_count: int, failed_count: int, entity_type: str,
                        entity_context: str, state: str):
-        """
-        Nuevo formato de progreso profesional.
-        
-        Args:
-            current: Número actual de entidades procesadas
-            total: Total de entidades a procesar
-            current_entity: Nombre de la entidad actual
-            metrics_count: Número de métricas extraídas
-            fbref_success: Éxitos de FBref
-            understat_success: Éxitos de Understat
-            understat_total: Total de Understat
-            failed_count: Contador de fallos
-            entity_type: 'Player' o 'Team'
-            entity_context: Equipo (para jugadores) o Liga (para equipos)
-            state: 'Success' o 'Failed'
-        """
-        # Limpiar líneas anteriores si no es la primera iteración
         if self.current_lines_printed > 0:
             for _ in range(self.current_lines_printed):
-                print("\033[1A\033[K", end="")  # Subir una línea y limpiarla
+                print("\033[1A\033[K", end="")
         
-        # Calcular progreso
         percentage = (current / total) * 100
-        filled = int(40 * current // total)
+        filled = int(LOAD_CONFIG['progress_bar_width'] * current // total)
         
-        # Barra de progreso con fondo blanco y relleno verde
         progress_bar = (
-            '\033[42m' + ' ' * filled +     # Verde para la parte completada
-            '\033[0m' + '░' * (40 - filled)  # Gris claro para la parte restante
+            '\033[42m' + ' ' * filled +
+            '\033[0m' + '░' * (LOAD_CONFIG['progress_bar_width'] - filled)
         )
         
-        # Imprimir nueva información
         lines = [
             f"Progress: [{progress_bar}] {current}/{total} ({percentage:.1f}%)",
             f"├─ {entity_type}: {current_entity}",
@@ -190,28 +174,23 @@ class LogManager:
         
         self.current_lines_printed = len(lines)
         
-        # Si no hemos terminado, mantener el cursor en la posición correcta
         if current < total:
             print(end="", flush=True)
     
     def progress_complete(self, total: int):
-        """Completar el progreso y mostrar barra al 100%."""
-        # Limpiar líneas anteriores
         if self.current_lines_printed > 0:
             for _ in range(self.current_lines_printed):
                 print("\033[1A\033[K", end="")
         
-        # Barra completada al 100%
-        progress_bar = '\033[42m' + ' ' * 40 + '\033[0m'
+        progress_bar = '\033[42m' + ' ' * LOAD_CONFIG['progress_bar_width'] + '\033[0m'
         print(f"Progress: [{progress_bar}] {total}/{total} (100%)")
         
-        # Tiempo transcurrido
         if self.phase_start_time:
             elapsed = (datetime.now() - self.phase_start_time).total_seconds()
             elapsed_formatted = self._format_time(int(elapsed))
             print(f"└─ Completed in: {elapsed_formatted}")
         
-        print()  # Línea en blanco para separar
+        print()
         self.current_lines_printed = 0
     
     def competition_summary(self, stats: dict, competition: str):
@@ -235,7 +214,6 @@ class LogManager:
         print(f"Remaining: {remaining_leagues} leagues in this block")
         print("─" * self.line_width)
         
-        # Countdown timer
         for minute in range(pause_minutes, 0, -1):
             print(f"\rResuming in: {minute} minutes...", end="", flush=True)
             time.sleep(60)
@@ -318,18 +296,14 @@ class LogManager:
         print("═" * self.line_width)
     
     def _count_existing_records(self, db, competition: str, season: str, table_type: str) -> int:
-        """Count existing records for a specific competition and season."""
         try:
-            # IMPORTAR SeasonCode para parsing consistente
             from scrappers._common import SeasonCode
             
-            # PARSEAR temporada para consistencia con datos almacenados
             season_code = SeasonCode.from_leagues([competition])
-            parsed_season = season_code.parse(season)  # "2023-24" → "2324"
+            parsed_season = season_code.parse(season)
             
             league_field = 'competition' if table_type == 'european' else 'league'
             
-            # Count players
             player_query = f"""
                 SELECT COUNT(*) as count 
                 FROM footballdecoded.players_{table_type} 
@@ -340,7 +314,6 @@ class LogManager:
                 'season': parsed_season
             })
             
-            # Count teams
             team_query = f"""
                 SELECT COUNT(*) as count 
                 FROM footballdecoded.teams_{table_type} 
@@ -352,60 +325,6 @@ class LogManager:
             })
             
             total_records = player_result.iloc[0]['count'] + team_result.iloc[0]['count']
-            return total_records
-            
-        except Exception:
-            return 0
-    
-    def _count_total_existing_records(self, db, season: str) -> int:
-        """Count total existing records across all competitions for a season."""
-        try:
-            # IMPORTAR SeasonCode para parsing consistente
-            from scrappers._common import SeasonCode
-            
-            total_records = 0
-            
-            # Definir todas las competiciones disponibles
-            competitions = [
-                ('ENG-Premier League', 'domestic'),
-                ('ESP-La Liga', 'domestic'),
-                ('ITA-Serie A', 'domestic'), 
-                ('GER-Bundesliga', 'domestic'),
-                ('FRA-Ligue 1', 'domestic'),
-                ('INT-Champions League', 'european')
-            ]
-            
-            for competition, table_type in competitions:
-                # PARSEAR temporada para cada competición
-                season_code = SeasonCode.from_leagues([competition])
-                parsed_season = season_code.parse(season)
-                
-                league_field = 'competition' if table_type == 'european' else 'league'
-                
-                # Count players for this competition
-                player_query = f"""
-                    SELECT COUNT(*) as count 
-                    FROM footballdecoded.players_{table_type} 
-                    WHERE {league_field} = %(league)s AND season = %(season)s
-                """
-                player_result = pd.read_sql(player_query, db.engine, params={
-                    'league': competition, 
-                    'season': parsed_season
-                })
-                
-                # Count teams for this competition
-                team_query = f"""
-                    SELECT COUNT(*) as count 
-                    FROM footballdecoded.teams_{table_type} 
-                    WHERE {league_field} = %(league)s AND season = %(season)s
-                """
-                team_result = pd.read_sql(team_query, db.engine, params={
-                    'league': competition, 
-                    'season': parsed_season
-                })
-                
-                total_records += player_result.iloc[0]['count'] + team_result.iloc[0]['count']
-            
             return total_records
             
         except Exception:
@@ -567,14 +486,14 @@ class DataValidator:
 # CORE LOADING FUNCTIONS
 # ====================================================================
 
-def load_players(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
-    """Load players - NO rate limiting for normal load."""
+def load_entities(entity_type: str, competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
+    """Load entities (players or teams) with unified logic."""
     db = get_db_manager()
     validator = DataValidator()
     stats = {'total': 0, 'successful': 0, 'failed': 0, 'avg_metrics': 0}
     
     try:
-        db.clear_season_data(competition, season, table_type, 'players')
+        db.clear_season_data(competition, season, table_type, f'{entity_type}s')
         
         players_list_df = fbref_get_league_players(competition, season)
         
@@ -584,45 +503,54 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
         if players_list_df.empty:
             return stats
         
-        unique_players = players_list_df['player'].dropna().unique().tolist()
-        stats['total'] = len(unique_players)
+        if entity_type == 'player':
+            unique_entities = players_list_df['player'].dropna().unique().tolist()
+        else:
+            unique_entities = players_list_df['team'].dropna().unique().tolist()
+            
+        stats['total'] = len(unique_entities)
         
-        logger.phase_start("Players", len(unique_players))
+        logger.phase_start(entity_type.title() + 's', len(unique_entities))
         
         total_metrics = 0
         fbref_success = 0
         understat_success = 0
-        understat_total = 0 if table_type == 'european' else len(unique_players)
         
-        for i, player_name in enumerate(unique_players, 1):
-            current_entity = player_name
+        for i, entity_name in enumerate(unique_entities, 1):
+            current_entity = entity_name
             entity_context = "Processing..."
             state = "Processing"
             
             try:
-                # FBref extraction - direct, no retries
-                fbref_data = fbref_get_player(player_name, competition, season)
+                if entity_type == 'player':
+                    fbref_data = fbref_get_player(entity_name, competition, season)
+                    if fbref_data:
+                        entity_context = fbref_data.get('team', 'Unknown')
+                else:
+                    fbref_data = fbref_get_team(entity_name, competition, season)
+                    if fbref_data:
+                        entity_context = competition
+                
                 if not fbref_data:
                     stats['failed'] += 1
                     state = "Failed"
                     entity_context = "Unknown"
                     
-                    # Actualizar progreso con fallo
                     avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
                     logger.progress_update(
-                        i, len(unique_players), current_entity, avg_metrics,
-                        fbref_success, understat_success, understat_total, stats['failed'],
-                        'Player', entity_context, state
+                        i, len(unique_entities), current_entity, avg_metrics,
+                        stats['failed'], entity_type.title(), entity_context, state
                     )
                     continue
                 
                 fbref_success += 1
-                team = fbref_data.get('team', 'Unknown')
-                entity_context = team
                 
-                # Understat extraction for domestic leagues
                 if table_type == 'domestic':
-                    understat_data = understat_get_player(player_name, competition, season)
+                    if entity_type == 'player':
+                        understat_data = understat_get_player(entity_name, competition, season)
+                    else:
+                        understat_data = understat_get_team(entity_name, competition, season)
+                    
                     if understat_data:
                         understat_success += 1
                         for key, value in understat_data.items():
@@ -631,12 +559,14 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
                             else:
                                 fbref_data[f"understat_{key}"] = value
                 
-                # Data validation and storage
-                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'player')
+                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, entity_type)
                 cleaned_data['data_quality_score'] = quality_score
                 cleaned_data['processing_warnings'] = warnings
                 
-                success = db.insert_player_data(cleaned_data, table_type)
+                if entity_type == 'player':
+                    success = db.insert_player_data(cleaned_data, table_type)
+                else:
+                    success = db.insert_team_data(cleaned_data, table_type)
                 
                 if success:
                     stats['successful'] += 1
@@ -649,9 +579,8 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
                 avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
                 
                 logger.progress_update(
-                    i, len(unique_players), current_entity, avg_metrics,
-                    fbref_success, understat_success, understat_total, stats['failed'],
-                    'Player', entity_context, state
+                    i, len(unique_entities), current_entity, avg_metrics,
+                    stats['failed'], entity_type.title(), entity_context, state
                 )
                 
             except Exception:
@@ -661,9 +590,8 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
                 avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
                 
                 logger.progress_update(
-                    i, len(unique_players), current_entity, avg_metrics,
-                    fbref_success, understat_success, understat_total, stats['failed'],
-                    'Player', entity_context, state
+                    i, len(unique_entities), current_entity, avg_metrics,
+                    stats['failed'], entity_type.title(), entity_context, state
                 )
                 continue
         
@@ -674,111 +602,17 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
         
     except Exception:
         return stats
+
+def load_players(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
+    """Load players using unified entity loading logic."""
+    return load_entities('player', competition, season, table_type, logger)
 
 def load_teams(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
-    """Load teams - NO rate limiting for normal load."""
-    db = get_db_manager()
-    validator = DataValidator()
-    stats = {'total': 0, 'successful': 0, 'failed': 0, 'avg_metrics': 0}
-    
-    try:
-        db.clear_season_data(competition, season, table_type, 'teams')
-        
-        players_list_df = fbref_get_league_players(competition, season)
-        
-        if players_list_df.empty:
-            return stats
-        
-        unique_teams = players_list_df['team'].dropna().unique().tolist()
-        stats['total'] = len(unique_teams)
-        
-        logger.phase_start("Teams", len(unique_teams))
-        
-        total_metrics = 0
-        fbref_success = 0
-        understat_success = 0
-        understat_total = 0 if table_type == 'european' else len(unique_teams)
-        
-        for i, team_name in enumerate(unique_teams, 1):
-            current_entity = team_name
-            entity_context = competition
-            state = "Processing"
-            
-            try:
-                # FBref extraction - direct, no retries
-                fbref_data = fbref_get_team(team_name, competition, season)
-                if not fbref_data:
-                    stats['failed'] += 1
-                    state = "Failed"
-                    
-                    # Actualizar progreso con fallo
-                    avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
-                    logger.progress_update(
-                        i, len(unique_teams), current_entity, avg_metrics,
-                        fbref_success, understat_success, understat_total, stats['failed'],
-                        'Team', entity_context, state
-                    )
-                    continue
-                
-                fbref_success += 1
-                
-                # Understat extraction for domestic leagues
-                if table_type == 'domestic':
-                    understat_data = understat_get_team(team_name, competition, season)
-                    if understat_data:
-                        understat_success += 1
-                        for key, value in understat_data.items():
-                            if key.startswith('understat_'):
-                                fbref_data[key] = value
-                            else:
-                                fbref_data[f"understat_{key}"] = value
-                
-                # Data validation and storage
-                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, 'team')
-                cleaned_data['data_quality_score'] = quality_score
-                cleaned_data['processing_warnings'] = warnings
-                
-                success = db.insert_team_data(cleaned_data, table_type)
-                
-                if success:
-                    stats['successful'] += 1
-                    total_metrics += len(cleaned_data)
-                    state = "Success"
-                else:
-                    stats['failed'] += 1
-                    state = "Failed"
-                
-                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
-                
-                logger.progress_update(
-                    i, len(unique_teams), current_entity, avg_metrics,
-                    fbref_success, understat_success, understat_total, stats['failed'],
-                    'Team', entity_context, state
-                )
-                
-            except Exception:
-                stats['failed'] += 1
-                state = "Failed"
-                entity_context = "Error"
-                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
-                
-                logger.progress_update(
-                    i, len(unique_teams), current_entity, avg_metrics,
-                    fbref_success, understat_success, understat_total, stats['failed'],
-                    'Team', entity_context, state
-                )
-                continue
-        
-        logger.progress_complete(stats['total'])
-        stats['avg_metrics'] = total_metrics // max(stats['successful'], 1)
-        
-        return stats
-        
-    except Exception:
-        return stats
+    """Load teams using unified entity loading logic."""
+    return load_entities('team', competition, season, table_type, logger)
 
 def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[str, int]]:
-    """Load complete competition - NO rate limiting."""
+    """Load complete competition."""
     table_type = 'domestic' if competition != 'INT-Champions League' else 'european'
     data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
     
@@ -805,23 +639,8 @@ def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[s
     return {'players': player_stats, 'teams': team_stats}
 
 # ====================================================================
-# MASSIVE BLOCK LOADER - SISTEMA DE BLOQUES CON PAUSAS ALEATORIAS
+# MASSIVE BLOCK LOADER
 # ====================================================================
-
-import random
-
-# Configuración de bloques
-BLOCK_1_COMPETITIONS = [
-    ('ENG-Premier League', 'domestic'),
-    ('ESP-La Liga', 'domestic'),
-    ('ITA-Serie A', 'domestic')
-]
-
-BLOCK_2_COMPETITIONS = [
-    ('GER-Bundesliga', 'domestic'),
-    ('FRA-Ligue 1', 'domestic'),
-    ('INT-Champions League', 'european')
-]
 
 def load_competition_block(block_competitions: List[Tuple[str, str]], block_name: str, season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
     """Load a block of competitions with random pauses between leagues."""
@@ -837,22 +656,17 @@ def load_competition_block(block_competitions: List[Tuple[str, str]], block_name
         logger.competition_start(i, len(block_competitions), competition, data_source)
         
         try:
-            # Load players and teams for this competition
             player_stats = load_players(competition, season, table_type, logger)
             team_stats = load_teams(competition, season, table_type, logger)
             
-            # Store stats
             competition_stats = {'players': player_stats, 'teams': team_stats}
             all_stats[competition] = competition_stats
             
-            # Competition summary
             logger.competition_summary(competition_stats, competition)
             
-            # RANDOM PAUSE between leagues (except after last one)
             if i < len(block_competitions):
                 next_competition = block_competitions[i][0]
-                # Random pause between 30-60 minutes
-                pause_minutes = random.randint(30, 60)
+                pause_minutes = random.randint(LOAD_CONFIG['block_pause_min'], LOAD_CONFIG['block_pause_max'])
                 logger.block_league_pause(
                     i, len(block_competitions), 
                     next_competition, 
@@ -867,22 +681,21 @@ def load_competition_block(block_competitions: List[Tuple[str, str]], block_name
             }
             continue
     
-    # Final block summary
     total_time = int((datetime.now() - start_time).total_seconds())
     logger.block_summary(all_stats, total_time, block_name)
     
     return all_stats
 
 # ====================================================================
-# UPDATED MAIN EXECUTION
+# MAIN EXECUTION
 # ====================================================================
 
 def main():
     print("FootballDecoded Data Loader")
     print("═" * 50)
     print("\n1. Load competition data (players + teams)")
-    print("2. Load Block 1: ENG + ESP + ITA (30-60min pauses)")
-    print("3. Load Block 2: GER + FRA + Champions (30-60min pauses)")
+    print("2. Load Block 1: ENG + ESP + ITA")
+    print("3. Load Block 2: GER + FRA + Champions")
     print("4. Test database connection")
     print("5. Setup database schema")
     print("6. Clear all existing data")
@@ -901,7 +714,7 @@ def main():
             comp_choice = int(input(f"\nSelect competition (1-{len(all_competitions)}): ").strip())
             if 1 <= comp_choice <= len(all_competitions):
                 selected_competition, _ = all_competitions[comp_choice - 1]
-                season = input("Enter season (e.g., 2023-24): ").strip()
+                season = input("Enter season (e.g., 2024-25): ").strip()
                 
                 if season:
                     load_complete_competition(selected_competition, season)
@@ -913,18 +726,17 @@ def main():
             print("Invalid input")
     
     elif choice == "2":
-        season = input("Enter season for Block 1 load (e.g., 2023-24): ").strip()
+        season = input("Enter season for Block 1 load (e.g., 2024-25): ").strip()
         if season:
             print(f"\nBLOCK 1 LOAD CONFIGURATION")
             print("═" * 50)
             print(f"Season: {season}")
             print("Competitions: ENG-Premier League, ESP-La Liga, ITA-Serie A")
-            print("Random pauses: 30-60 minutes between leagues")
+            print(f"Random pauses: {LOAD_CONFIG['block_pause_min']}-{LOAD_CONFIG['block_pause_max']} minutes between leagues")
             
-            # Calculate estimated time
-            avg_pause = 45  # Average of 30-60 minutes
+            avg_pause = (LOAD_CONFIG['block_pause_min'] + LOAD_CONFIG['block_pause_max']) / 2
             estimated_hours = (avg_pause * (len(BLOCK_1_COMPETITIONS) - 1)) / 60
-            estimated_hours += 1.5  # Add processing time
+            estimated_hours += 1.5
             print(f"Estimated duration: {estimated_hours:.1f} hours")
             print(f"IP safety: Random timing approach")
             print()
@@ -942,18 +754,17 @@ def main():
             print("Invalid season format")
     
     elif choice == "3":
-        season = input("Enter season for Block 2 load (e.g., 2023-24): ").strip()
+        season = input("Enter season for Block 2 load (e.g., 2024-25): ").strip()
         if season:
             print(f"\nBLOCK 2 LOAD CONFIGURATION")
             print("═" * 50)
             print(f"Season: {season}")
             print("Competitions: GER-Bundesliga, FRA-Ligue 1, INT-Champions League")
-            print("Random pauses: 30-60 minutes between leagues")
+            print(f"Random pauses: {LOAD_CONFIG['block_pause_min']}-{LOAD_CONFIG['block_pause_max']} minutes between leagues")
             
-            # Calculate estimated time
-            avg_pause = 45  # Average of 30-60 minutes
+            avg_pause = (LOAD_CONFIG['block_pause_min'] + LOAD_CONFIG['block_pause_max']) / 2
             estimated_hours = (avg_pause * (len(BLOCK_2_COMPETITIONS) - 1)) / 60
-            estimated_hours += 1.5  # Add processing time
+            estimated_hours += 1.5
             print(f"Estimated duration: {estimated_hours:.1f} hours")
             print(f"IP safety: Random timing approach")
             print()
