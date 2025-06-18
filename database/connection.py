@@ -81,11 +81,11 @@ class DatabaseManager:
             return {k: self._serialize_for_json(v) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple)):
             return [self._serialize_for_json(item) for item in obj]
-        elif isinstance(obj, (np.integer, pd.Int64Dtype)):
+        elif isinstance(obj, np.integer):
             return int(obj)
-        elif isinstance(obj, (np.floating, pd.Float64Dtype)):
+        elif isinstance(obj, np.floating):
             return float(obj)
-        elif isinstance(obj, (np.bool_, pd.BooleanDtype)):
+        elif isinstance(obj, np.bool_):
             return bool(obj)
         elif pd.isna(obj):
             return None
@@ -175,12 +175,10 @@ class DatabaseManager:
     def clear_season_data(self, competition: str, season: str, table_type: str, entity_type: str) -> int:
         """Limpiar datos existentes para una competición y temporada específica."""
         try:
-            # IMPORTAR SeasonCode para parsing consistente
             from scrappers._common import SeasonCode
             
-            # PARSEAR temporada para consistencia con datos almacenados
             season_code = SeasonCode.from_leagues([competition])
-            parsed_season = season_code.parse(season)  # "2023-24" → "2324"
+            parsed_season = season_code.parse(season)
             
             table_name = f"footballdecoded.{entity_type}_{table_type}"
             league_field = 'competition' if table_type == 'european' else 'league'
@@ -189,7 +187,7 @@ class DatabaseManager:
                 query = f"DELETE FROM {table_name} WHERE {league_field} = :league AND season = :season"
                 result = conn.execute(
                     text(query), 
-                    {'league': competition, 'season': parsed_season}  # Usar parsed_season
+                    {'league': competition, 'season': parsed_season}
                 )
                 
             return result.rowcount
