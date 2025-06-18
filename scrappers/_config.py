@@ -28,7 +28,7 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Logger - IMPROVED: Clean and professional formatting
+# Logger configuration
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -91,15 +91,14 @@ if _f_custom_teamnname_replacements.is_file():
             for to_replace in to_replace_list:
                 TEAMNAME_REPLACEMENTS[to_replace] = team
     logger.debug(
-        "✅ Team name replacements loaded from %s",
+        "Team name replacements loaded from %s",
         _f_custom_teamnname_replacements.name,
     )
 else:
     logger.debug(
-        "ℹ️ Team name replacements config not found at %s",
+        "Team name replacements config not found at %s",
         _f_custom_teamnname_replacements.name,
     )
-
 
 # League dict - Only sources used in FootballDecoded: FBref, WhoScored, Understat, FotMob
 LEAGUE_DICT = {
@@ -176,9 +175,9 @@ _f_custom_league_dict = CONFIG_DIR / "league_dict.json"
 if _f_custom_league_dict.is_file():
     with _f_custom_league_dict.open(encoding="utf8") as json_file:
         LEAGUE_DICT = {**LEAGUE_DICT, **json.load(json_file)}
-    logger.debug("✅ Custom league dict loaded from %s", _f_custom_league_dict.name)
+    logger.debug("Custom league dict loaded from %s", _f_custom_league_dict.name)
 else:
     logger.debug(
-        "ℹ️ Custom league dict config not found at %s",
+        "Custom league dict config not found at %s",
         _f_custom_league_dict.name,
     )
