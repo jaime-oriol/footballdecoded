@@ -142,20 +142,20 @@ def check_available_modules():
     
     try:
         from . import fbref_data
-        modules_status['fbref'] = "✅ Available"
+        modules_status['fbref'] = "Available"
     except ImportError as e:
-        modules_status['fbref'] = f"❌ Error: {e}"
+        modules_status['fbref'] = f"Error: {e}"
     
     try:
         from . import understat_data
-        modules_status['understat'] = "✅ Available"
+        modules_status['understat'] = "Available"
     except ImportError as e:
-        modules_status['understat'] = f"❌ Error: {e}"
+        modules_status['understat'] = f"Error: {e}"
     
     try:
         from . import whoscored_data
-        modules_status['whoscored'] = "✅ Available"
+        modules_status['whoscored'] = "Available"
     except ImportError as e:
-        modules_status['whoscored'] = f"❌ Error: {e}"
+        modules_status['whoscored'] = f"Error: {e}"
     
     return modules_status
