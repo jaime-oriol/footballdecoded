@@ -175,6 +175,13 @@ class DatabaseManager:
     def clear_season_data(self, competition: str, season: str, table_type: str, entity_type: str) -> int:
         """Limpiar datos existentes para una competición y temporada específica."""
         try:
+            # IMPORTAR SeasonCode para parsing consistente
+            from scrappers._common import SeasonCode
+            
+            # PARSEAR temporada para consistencia con datos almacenados
+            season_code = SeasonCode.from_leagues([competition])
+            parsed_season = season_code.parse(season)  # "2023-24" → "2324"
+            
             table_name = f"footballdecoded.{entity_type}_{table_type}"
             league_field = 'competition' if table_type == 'european' else 'league'
             
@@ -182,7 +189,7 @@ class DatabaseManager:
                 query = f"DELETE FROM {table_name} WHERE {league_field} = :league AND season = :season"
                 result = conn.execute(
                     text(query), 
-                    {'league': competition, 'season': season}
+                    {'league': competition, 'season': parsed_season}  # Usar parsed_season
                 )
                 
             return result.rowcount
