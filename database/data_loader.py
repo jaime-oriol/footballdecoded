@@ -62,6 +62,10 @@ MASSIVE_LOAD_CONFIG = {
 # LOGGING SYSTEM ESTANDARIZADO - NUEVO FORMATO PROFESIONAL
 # ====================================================================
 
+# ====================================================================
+# LOGGING SYSTEM ESTANDARIZADO - NUEVO FORMATO PROFESIONAL
+# ====================================================================
+
 class LogManager:
     def __init__(self):
         self.start_time = None
@@ -101,33 +105,24 @@ class LogManager:
         print()
         self.start_time = datetime.now()
     
-    def massive_header(self, season: str):
-        print("FootballDecoded Massive Annual Loader")
+    def massive_header_block(self, block_name: str, season: str, num_competitions: int):
+        print(f"FootballDecoded {block_name} Loader")
         print("═" * self.line_width)
-        print(f"Season: {season} | All Competitions (6 leagues)")
-        print(f"Rate limiting: {MASSIVE_LOAD_CONFIG['league_delay_minutes']} minutes between leagues")
+        print(f"Season: {season} | {block_name} ({num_competitions} leagues)")
+        print(f"Random pauses: 30-60 minutes between leagues")
         
-        # Database status and total existing records
+        # Database status
         try:
             db = get_db_manager()
             db_status = "Connected"
             schema = "footballdecoded"
-            
-            # Count total existing records across all competitions for this season
-            total_existing = self._count_total_existing_records(db, season)
-            
             db.close()
         except:
             db_status = "Failed"
             schema = "unknown"
-            total_existing = 0
         
         print(f"Database: {db_status} | Schema: {schema}")
-        
-        if total_existing > 0:
-            print(f"Clearing existing data: {total_existing} records removed")
-        else:
-            print("Clearing existing data: 0 records removed (fresh load)")
+        print("Note: Individual competition clearing will be done per league")
             
         print("─" * self.line_width)
         print()
@@ -230,27 +225,26 @@ class LogManager:
         print(f"Players: {stats['players']['successful']} | Teams: {stats['teams']['successful']}")
         print()
     
-    def massive_league_pause(self, current_league: int, total_leagues: int, next_league: str, delay_minutes: int):
+    def block_league_pause(self, current_league: int, total_leagues: int, next_league: str, pause_minutes: int):
         remaining_leagues = total_leagues - current_league
-        estimated_time = remaining_leagues * delay_minutes
         
         print("─" * self.line_width)
-        print(f"MASSIVE LOAD RATE LIMITING")
+        print(f"BLOCK LOAD RANDOM PAUSE")
         print(f"Next: {next_league}")
-        print(f"Pausing: {delay_minutes} minutes (ensuring IP safety)")
-        print(f"Remaining: {remaining_leagues} leagues | Est. time: {estimated_time} minutes")
+        print(f"Random pause: {pause_minutes} minutes (IP safety)")
+        print(f"Remaining: {remaining_leagues} leagues in this block")
         print("─" * self.line_width)
         
         # Countdown timer
-        for minute in range(delay_minutes, 0, -1):
+        for minute in range(pause_minutes, 0, -1):
             print(f"\rResuming in: {minute} minutes...", end="", flush=True)
             time.sleep(60)
         print(f"\rResuming now...                  ")
         print()
     
-    def massive_summary(self, all_stats: Dict, total_time: int):
+    def block_summary(self, all_stats: Dict, total_time: int, block_name: str):
         print("─" * self.line_width)
-        print("MASSIVE LOAD SUMMARY")
+        print(f"{block_name.upper()} SUMMARY")
         print("─" * self.line_width)
         
         total_entities = sum(stats['players']['total'] + stats['teams']['total'] for stats in all_stats.values())
@@ -268,7 +262,7 @@ class LogManager:
         print(f"Unique players loaded: {total_players:,}")
         print(f"Unique teams loaded: {total_teams:,}")
         
-        print("\nPer competition breakdown:")
+        print(f"\n{block_name} breakdown:")
         for comp, stats in all_stats.items():
             success = stats['players']['successful'] + stats['teams']['successful']
             total = stats['players']['total'] + stats['teams']['total']
@@ -811,21 +805,36 @@ def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[s
     return {'players': player_stats, 'teams': team_stats}
 
 # ====================================================================
-# MASSIVE ANNUAL LOADER - CON RATE LIMITING CONSERVATIVO
+# MASSIVE BLOCK LOADER - SISTEMA DE BLOQUES CON PAUSAS ALEATORIAS
 # ====================================================================
 
-def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
-    """Load all competitions with conservative rate limiting - 100% IP safety."""
+import random
+
+# Configuración de bloques
+BLOCK_1_COMPETITIONS = [
+    ('ENG-Premier League', 'domestic'),
+    ('ESP-La Liga', 'domestic'),
+    ('ITA-Serie A', 'domestic')
+]
+
+BLOCK_2_COMPETITIONS = [
+    ('GER-Bundesliga', 'domestic'),
+    ('FRA-Ligue 1', 'domestic'),
+    ('INT-Champions League', 'european')
+]
+
+def load_competition_block(block_competitions: List[Tuple[str, str]], block_name: str, season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
+    """Load a block of competitions with random pauses between leagues."""
     logger = LogManager()
-    logger.massive_header(season)
+    logger.massive_header_block(block_name, season, len(block_competitions))
     
     all_stats = {}
     start_time = datetime.now()
     
-    for i, (competition, table_type) in enumerate(AVAILABLE_COMPETITIONS, 1):
+    for i, (competition, table_type) in enumerate(block_competitions, 1):
         data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
         
-        logger.competition_start(i, len(AVAILABLE_COMPETITIONS), competition, data_source)
+        logger.competition_start(i, len(block_competitions), competition, data_source)
         
         try:
             # Load players and teams for this competition
@@ -839,13 +848,15 @@ def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
             # Competition summary
             logger.competition_summary(competition_stats, competition)
             
-            # MASSIVE LOAD RATE LIMITING - Only between complete leagues
-            if i < len(AVAILABLE_COMPETITIONS):
-                next_competition = AVAILABLE_COMPETITIONS[i][0]
-                logger.massive_league_pause(
-                    i, len(AVAILABLE_COMPETITIONS), 
+            # RANDOM PAUSE between leagues (except after last one)
+            if i < len(block_competitions):
+                next_competition = block_competitions[i][0]
+                # Random pause between 30-60 minutes
+                pause_minutes = random.randint(30, 60)
+                logger.block_league_pause(
+                    i, len(block_competitions), 
                     next_competition, 
-                    MASSIVE_LOAD_CONFIG['league_delay_minutes']
+                    pause_minutes
                 )
             
         except Exception as e:
@@ -856,38 +867,40 @@ def load_massive_annual(season: str) -> Dict[str, Dict[str, Dict[str, int]]]:
             }
             continue
     
-    # Final massive summary
+    # Final block summary
     total_time = int((datetime.now() - start_time).total_seconds())
-    logger.massive_summary(all_stats, total_time)
+    logger.block_summary(all_stats, total_time, block_name)
     
     return all_stats
 
 # ====================================================================
-# MAIN EXECUTION
+# UPDATED MAIN EXECUTION
 # ====================================================================
 
 def main():
     print("FootballDecoded Data Loader")
     print("═" * 50)
     print("\n1. Load competition data (players + teams)")
-    print("2. Load ALL competitions for season (massive)")
-    print("3. Test database connection")
-    print("4. Setup database schema")
-    print("5. Clear all existing data")
-    print("6. Check database status")
+    print("2. Load Block 1: ENG + ESP + ITA (30-60min pauses)")
+    print("3. Load Block 2: GER + FRA + Champions (30-60min pauses)")
+    print("4. Test database connection")
+    print("5. Setup database schema")
+    print("6. Clear all existing data")
+    print("7. Check database status")
     
-    choice = input("\nSelect option (1-6): ").strip()
+    choice = input("\nSelect option (1-7): ").strip()
     
     if choice == "1":
         print("\nAvailable competitions:")
-        for i, (comp_name, comp_type) in enumerate(AVAILABLE_COMPETITIONS, 1):
+        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS
+        for i, (comp_name, comp_type) in enumerate(all_competitions, 1):
             data_source = "FBref + Understat" if comp_type == 'domestic' else "FBref only"
             print(f"   {i}. {comp_name} ({data_source})")
         
         try:
-            comp_choice = int(input(f"\nSelect competition (1-{len(AVAILABLE_COMPETITIONS)}): ").strip())
-            if 1 <= comp_choice <= len(AVAILABLE_COMPETITIONS):
-                selected_competition, _ = AVAILABLE_COMPETITIONS[comp_choice - 1]
+            comp_choice = int(input(f"\nSelect competition (1-{len(all_competitions)}): ").strip())
+            if 1 <= comp_choice <= len(all_competitions):
+                selected_competition, _ = all_competitions[comp_choice - 1]
                 season = input("Enter season (e.g., 2023-24): ").strip()
                 
                 if season:
@@ -900,35 +913,64 @@ def main():
             print("Invalid input")
     
     elif choice == "2":
-        season = input("Enter season for massive load (e.g., 2023-24): ").strip()
+        season = input("Enter season for Block 1 load (e.g., 2023-24): ").strip()
         if season:
-            print(f"\nMASSIVE ANNUAL LOAD CONFIGURATION")
+            print(f"\nBLOCK 1 LOAD CONFIGURATION")
             print("═" * 50)
             print(f"Season: {season}")
-            print(f"Competitions: {len(AVAILABLE_COMPETITIONS)} leagues")
-            print(f"Rate limiting: {MASSIVE_LOAD_CONFIG['league_delay_minutes']} minutes between leagues")
+            print("Competitions: ENG-Premier League, ESP-La Liga, ITA-Serie A")
+            print("Random pauses: 30-60 minutes between leagues")
             
             # Calculate estimated time
-            estimated_hours = (MASSIVE_LOAD_CONFIG['league_delay_minutes'] * (len(AVAILABLE_COMPETITIONS) - 1)) / 60
-            estimated_hours += 2  # Add processing time
+            avg_pause = 45  # Average of 30-60 minutes
+            estimated_hours = (avg_pause * (len(BLOCK_1_COMPETITIONS) - 1)) / 60
+            estimated_hours += 1.5  # Add processing time
             print(f"Estimated duration: {estimated_hours:.1f} hours")
-            print(f"IP safety: 100% conservative approach")
+            print(f"IP safety: Random timing approach")
             print()
             
-            confirm = input(f"Proceed with massive load? (y/N): ").strip().lower()
+            confirm = input(f"Proceed with Block 1 load? (y/N): ").strip().lower()
             if confirm == 'y':
-                print(f"\nStarting massive annual load for {season}...")
-                print("IMPORTANT: Conservative rate limiting active")
-                print("You can safely leave this running overnight")
+                print(f"\nStarting Block 1 load for {season}...")
+                print("IMPORTANT: Random pauses between leagues (30-60 min)")
                 print()
                 
-                load_massive_annual(season)
+                load_competition_block(BLOCK_1_COMPETITIONS, "Block 1", season)
             else:
-                print("Massive load cancelled")
+                print("Block 1 load cancelled")
         else:
             print("Invalid season format")
     
     elif choice == "3":
+        season = input("Enter season for Block 2 load (e.g., 2023-24): ").strip()
+        if season:
+            print(f"\nBLOCK 2 LOAD CONFIGURATION")
+            print("═" * 50)
+            print(f"Season: {season}")
+            print("Competitions: GER-Bundesliga, FRA-Ligue 1, INT-Champions League")
+            print("Random pauses: 30-60 minutes between leagues")
+            
+            # Calculate estimated time
+            avg_pause = 45  # Average of 30-60 minutes
+            estimated_hours = (avg_pause * (len(BLOCK_2_COMPETITIONS) - 1)) / 60
+            estimated_hours += 1.5  # Add processing time
+            print(f"Estimated duration: {estimated_hours:.1f} hours")
+            print(f"IP safety: Random timing approach")
+            print()
+            
+            confirm = input(f"Proceed with Block 2 load? (y/N): ").strip().lower()
+            if confirm == 'y':
+                print(f"\nStarting Block 2 load for {season}...")
+                print("IMPORTANT: Random pauses between leagues (30-60 min)")
+                print()
+                
+                load_competition_block(BLOCK_2_COMPETITIONS, "Block 2", season)
+            else:
+                print("Block 2 load cancelled")
+        else:
+            print("Invalid season format")
+    
+    elif choice == "4":
         print("\nTesting database connection...")
         try:
             from database.connection import test_connection
@@ -938,7 +980,7 @@ def main():
         except Exception as e:
             print(f"Connection test error: {e}")
     
-    elif choice == "4":
+    elif choice == "5":
         confirm = input("Setup database schema? This will create/recreate tables (y/N): ").strip().lower()
         if confirm == 'y':
             print("\nSetting up database schema...")
@@ -952,7 +994,7 @@ def main():
         else:
             print("Schema setup cancelled")
     
-    elif choice == "5":
+    elif choice == "6":
         confirm = input("Clear ALL data? (type 'YES' to confirm): ").strip()
         if confirm == "YES":
             try:
@@ -974,7 +1016,7 @@ def main():
         else:
             print("Clear operation cancelled")
     
-    elif choice == "6":
+    elif choice == "7":
         print("\nChecking database status...")
         try:
             from database.database_checker import check_database_status
@@ -985,7 +1027,7 @@ def main():
             print(f"Error checking database: {e}")
     
     else:
-        print("Invalid option. Please select 1-6.")
+        print("Invalid option. Please select 1-7.")
 
 
 if __name__ == "__main__":
