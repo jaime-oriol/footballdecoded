@@ -58,29 +58,45 @@ MASSIVE_LOAD_CONFIG = {
 # LOGGING SYSTEM ESTANDARIZADO
 # ====================================================================
 
+# ====================================================================
+# LOGGING SYSTEM ESTANDARIZADO - NUEVO FORMATO PROFESIONAL
+# ====================================================================
+
 class LogManager:
     def __init__(self):
         self.start_time = None
         self.phase_start_time = None
         self.line_width = 80
+        self.current_lines_printed = 0
     
     def header(self, competition: str, season: str, data_sources: str):
         print("FootballDecoded Data Loader")
         print("═" * self.line_width)
         print(f"Competition: {competition} {season} ({data_sources})")
         
-        # Database status
+        # Database status and existing records count
         try:
             db = get_db_manager()
             db_status = "Connected"
             schema = "footballdecoded"
+            
+            # Count existing records that will be cleared
+            table_type = 'domestic' if competition != 'INT-Champions League' else 'european'
+            existing_records = self._count_existing_records(db, competition, season, table_type)
+            
             db.close()
         except:
             db_status = "Failed"
             schema = "unknown"
+            existing_records = 0
         
         print(f"Database: {db_status} | Schema: {schema}")
-        print("Clearing existing data: 0 records removed (fresh load)")
+        
+        if existing_records > 0:
+            print(f"Clearing existing data: {existing_records} records removed")
+        else:
+            print("Clearing existing data: 0 records removed (fresh load)")
+            
         print("─" * self.line_width)
         print()
         self.start_time = datetime.now()
@@ -91,18 +107,28 @@ class LogManager:
         print(f"Season: {season} | All Competitions (6 leagues)")
         print(f"Rate limiting: {MASSIVE_LOAD_CONFIG['league_delay_minutes']} minutes between leagues")
         
-        # Database status
+        # Database status and total existing records
         try:
             db = get_db_manager()
             db_status = "Connected"
             schema = "footballdecoded"
+            
+            # Count total existing records across all competitions for this season
+            total_existing = self._count_total_existing_records(db, season)
+            
             db.close()
         except:
             db_status = "Failed"
             schema = "unknown"
+            total_existing = 0
         
         print(f"Database: {db_status} | Schema: {schema}")
-        print("Clearing existing data: 0 records removed (fresh load)")
+        
+        if total_existing > 0:
+            print(f"Clearing existing data: {total_existing} records removed")
+        else:
+            print("Clearing existing data: 0 records removed (fresh load)")
+            
         print("─" * self.line_width)
         print()
         self.start_time = datetime.now()
@@ -114,55 +140,84 @@ class LogManager:
     
     def phase_start(self, phase_name: str, total_entities: int):
         self.phase_start_time = datetime.now()
+        self.current_lines_printed = 0
         print(f"{phase_name.upper()} EXTRACTION")
         print(f"{phase_name} found: {total_entities:,} -> Processing extraction")
+        print()  # Línea en blanco para separar
     
     def progress_update(self, current: int, total: int, current_entity: str, 
                        metrics_count: int, fbref_success: int, understat_success: int, 
-                       understat_total: int, failed_count: int):
+                       understat_total: int, failed_count: int, entity_type: str,
+                       entity_context: str, state: str):
+        """
+        Nuevo formato de progreso profesional.
+        
+        Args:
+            current: Número actual de entidades procesadas
+            total: Total de entidades a procesar
+            current_entity: Nombre de la entidad actual
+            metrics_count: Número de métricas extraídas
+            fbref_success: Éxitos de FBref
+            understat_success: Éxitos de Understat
+            understat_total: Total de Understat
+            failed_count: Contador de fallos
+            entity_type: 'Player' o 'Team'
+            entity_context: Equipo (para jugadores) o Liga (para equipos)
+            state: 'Success' o 'Failed'
+        """
+        # Limpiar líneas anteriores si no es la primera iteración
+        if self.current_lines_printed > 0:
+            for _ in range(self.current_lines_printed):
+                print("\033[1A\033[K", end="")  # Subir una línea y limpiarla
+        
+        # Calcular progreso
         percentage = (current / total) * 100
         filled = int(40 * current // total)
-        bar = '\033[42m' + ' ' * filled + '\033[0m' + ' ' * (40 - filled)
         
-        print(f"\rProgress: [{bar}] {current}/{total} ({percentage:.1f}%)")
+        # Barra de progreso con fondo blanco y relleno verde
+        progress_bar = (
+            '\033[42m' + ' ' * filled +     # Verde para la parte completada
+            '\033[0m' + '░' * (40 - filled)  # Gris claro para la parte restante
+        )
         
-        if current > 0:
-            print(f"├─ Current: {current_entity}")
-            
-            if understat_total == 0:
-                understat_text = " (Understat: N/A)"
-            else:
-                understat_text = ""
-            print(f"├─ Metrics: {metrics_count} fields extracted{understat_text}")
-            
-            print(f"├─ FBref: {fbref_success}/{current} successful")
-            
-            if understat_total > 0:
-                understat_pct = (understat_success / understat_total * 100) if understat_total > 0 else 0
-                print(f"├─ Understat: {understat_success}/{understat_total} merged ({understat_pct:.1f}%)")
-            else:
-                print("├─ Understat: N/A (European competition)")
-            
-            print(f"└─ Failed: {failed_count}")
+        # Imprimir nueva información
+        lines = [
+            f"Progress: [{progress_bar}] {current}/{total} ({percentage:.1f}%)",
+            f"├─ {entity_type}: {current_entity}",
+            f"├─ {'Team' if entity_type == 'Player' else 'League'}: {entity_context}",
+            f"├─ Metrics: {metrics_count} fields extracted",
+            f"├─ State: {state}",
+            f"└─ Failed: {failed_count}"
+        ]
         
+        for line in lines:
+            print(line)
+        
+        self.current_lines_printed = len(lines)
+        
+        # Si no hemos terminado, mantener el cursor en la posición correcta
         if current < total:
-            print("\033[6A", end="", flush=True)
+            print(end="", flush=True)
     
     def progress_complete(self, total: int):
-        # Clear previous lines
-        for _ in range(6):
-            print(" " * self.line_width)
-        print("\033[6A", end="")
+        """Completar el progreso y mostrar barra al 100%."""
+        # Limpiar líneas anteriores
+        if self.current_lines_printed > 0:
+            for _ in range(self.current_lines_printed):
+                print("\033[1A\033[K", end="")
         
-        bar = '\033[42m' + ' ' * 40 + '\033[0m'
-        print(f"Progress: [{bar}] {total}/{total} (100%)")
+        # Barra completada al 100%
+        progress_bar = '\033[42m' + ' ' * 40 + '\033[0m'
+        print(f"Progress: [{progress_bar}] {total}/{total} (100%)")
         
+        # Tiempo transcurrido
         if self.phase_start_time:
             elapsed = (datetime.now() - self.phase_start_time).total_seconds()
             elapsed_formatted = self._format_time(int(elapsed))
             print(f"└─ Completed in: {elapsed_formatted}")
         
-        print()
+        print()  # Línea en blanco para separar
+        self.current_lines_printed = 0
     
     def competition_summary(self, stats: dict, competition: str):
         total = stats['players']['total'] + stats['teams']['total']
@@ -267,6 +322,100 @@ class LogManager:
                 print("└─ Recommendation: Check network connection and retry")
         
         print("═" * self.line_width)
+    
+    def _count_existing_records(self, db, competition: str, season: str, table_type: str) -> int:
+        """Count existing records for a specific competition and season."""
+        try:
+            # IMPORTAR SeasonCode para parsing consistente
+            from scrappers._common import SeasonCode
+            
+            # PARSEAR temporada para consistencia con datos almacenados
+            season_code = SeasonCode.from_leagues([competition])
+            parsed_season = season_code.parse(season)  # "2023-24" → "2324"
+            
+            league_field = 'competition' if table_type == 'european' else 'league'
+            
+            # Count players
+            player_query = f"""
+                SELECT COUNT(*) as count 
+                FROM footballdecoded.players_{table_type} 
+                WHERE {league_field} = %(league)s AND season = %(season)s
+            """
+            player_result = pd.read_sql(player_query, db.engine, params={
+                'league': competition, 
+                'season': parsed_season
+            })
+            
+            # Count teams
+            team_query = f"""
+                SELECT COUNT(*) as count 
+                FROM footballdecoded.teams_{table_type} 
+                WHERE {league_field} = %(league)s AND season = %(season)s
+            """
+            team_result = pd.read_sql(team_query, db.engine, params={
+                'league': competition, 
+                'season': parsed_season
+            })
+            
+            total_records = player_result.iloc[0]['count'] + team_result.iloc[0]['count']
+            return total_records
+            
+        except Exception:
+            return 0
+    
+    def _count_total_existing_records(self, db, season: str) -> int:
+        """Count total existing records across all competitions for a season."""
+        try:
+            # IMPORTAR SeasonCode para parsing consistente
+            from scrappers._common import SeasonCode
+            
+            total_records = 0
+            
+            # Definir todas las competiciones disponibles
+            competitions = [
+                ('ENG-Premier League', 'domestic'),
+                ('ESP-La Liga', 'domestic'),
+                ('ITA-Serie A', 'domestic'), 
+                ('GER-Bundesliga', 'domestic'),
+                ('FRA-Ligue 1', 'domestic'),
+                ('INT-Champions League', 'european')
+            ]
+            
+            for competition, table_type in competitions:
+                # PARSEAR temporada para cada competición
+                season_code = SeasonCode.from_leagues([competition])
+                parsed_season = season_code.parse(season)
+                
+                league_field = 'competition' if table_type == 'european' else 'league'
+                
+                # Count players for this competition
+                player_query = f"""
+                    SELECT COUNT(*) as count 
+                    FROM footballdecoded.players_{table_type} 
+                    WHERE {league_field} = %(league)s AND season = %(season)s
+                """
+                player_result = pd.read_sql(player_query, db.engine, params={
+                    'league': competition, 
+                    'season': parsed_season
+                })
+                
+                # Count teams for this competition
+                team_query = f"""
+                    SELECT COUNT(*) as count 
+                    FROM footballdecoded.teams_{table_type} 
+                    WHERE {league_field} = %(league)s AND season = %(season)s
+                """
+                team_result = pd.read_sql(team_query, db.engine, params={
+                    'league': competition, 
+                    'season': parsed_season
+                })
+                
+                total_records += player_result.iloc[0]['count'] + team_result.iloc[0]['count']
+            
+            return total_records
+            
+        except Exception:
+            return 0
     
     def _format_time(self, seconds: int) -> str:
         if seconds < 60:
@@ -421,7 +570,7 @@ class DataValidator:
         return cleaned_record, max(0.0, quality_score), warnings
 
 # ====================================================================
-# CORE LOADING FUNCTIONS - SIN RATE LIMITING PARA LOAD NORMAL
+# CORE LOADING FUNCTIONS
 # ====================================================================
 
 def load_players(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
@@ -452,18 +601,30 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
         understat_total = 0 if table_type == 'european' else len(unique_players)
         
         for i, player_name in enumerate(unique_players, 1):
-            current_entity = f"{player_name} (Processing...)"
+            current_entity = player_name
+            entity_context = "Processing..."
+            state = "Processing"
             
             try:
                 # FBref extraction - direct, no retries
                 fbref_data = fbref_get_player(player_name, competition, season)
                 if not fbref_data:
                     stats['failed'] += 1
+                    state = "Failed"
+                    entity_context = "Unknown"
+                    
+                    # Actualizar progreso con fallo
+                    avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
+                    logger.progress_update(
+                        i, len(unique_players), current_entity, avg_metrics,
+                        fbref_success, understat_success, understat_total, stats['failed'],
+                        'Player', entity_context, state
+                    )
                     continue
                 
                 fbref_success += 1
                 team = fbref_data.get('team', 'Unknown')
-                current_entity = f"{player_name} ({team})"
+                entity_context = team
                 
                 # Understat extraction for domestic leagues
                 if table_type == 'domestic':
@@ -486,18 +647,30 @@ def load_players(competition: str, season: str, table_type: str, logger: LogMana
                 if success:
                     stats['successful'] += 1
                     total_metrics += len(cleaned_data)
+                    state = "Success"
                 else:
                     stats['failed'] += 1
+                    state = "Failed"
                 
-                avg_metrics = total_metrics // max(stats['successful'], 1)
+                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
                 
                 logger.progress_update(
                     i, len(unique_players), current_entity, avg_metrics,
-                    fbref_success, understat_success, understat_total, stats['failed']
+                    fbref_success, understat_success, understat_total, stats['failed'],
+                    'Player', entity_context, state
                 )
                 
             except Exception:
                 stats['failed'] += 1
+                state = "Failed"
+                entity_context = "Error"
+                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
+                
+                logger.progress_update(
+                    i, len(unique_players), current_entity, avg_metrics,
+                    fbref_success, understat_success, understat_total, stats['failed'],
+                    'Player', entity_context, state
+                )
                 continue
         
         logger.progress_complete(stats['total'])
@@ -533,13 +706,24 @@ def load_teams(competition: str, season: str, table_type: str, logger: LogManage
         understat_total = 0 if table_type == 'european' else len(unique_teams)
         
         for i, team_name in enumerate(unique_teams, 1):
-            current_entity = f"{team_name}"
+            current_entity = team_name
+            entity_context = competition
+            state = "Processing"
             
             try:
                 # FBref extraction - direct, no retries
                 fbref_data = fbref_get_team(team_name, competition, season)
                 if not fbref_data:
                     stats['failed'] += 1
+                    state = "Failed"
+                    
+                    # Actualizar progreso con fallo
+                    avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
+                    logger.progress_update(
+                        i, len(unique_teams), current_entity, avg_metrics,
+                        fbref_success, understat_success, understat_total, stats['failed'],
+                        'Team', entity_context, state
+                    )
                     continue
                 
                 fbref_success += 1
@@ -565,18 +749,30 @@ def load_teams(competition: str, season: str, table_type: str, logger: LogManage
                 if success:
                     stats['successful'] += 1
                     total_metrics += len(cleaned_data)
+                    state = "Success"
                 else:
                     stats['failed'] += 1
+                    state = "Failed"
                 
-                avg_metrics = total_metrics // max(stats['successful'], 1)
+                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
                 
                 logger.progress_update(
                     i, len(unique_teams), current_entity, avg_metrics,
-                    fbref_success, understat_success, understat_total, stats['failed']
+                    fbref_success, understat_success, understat_total, stats['failed'],
+                    'Team', entity_context, state
                 )
                 
             except Exception:
                 stats['failed'] += 1
+                state = "Failed"
+                entity_context = "Error"
+                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
+                
+                logger.progress_update(
+                    i, len(unique_teams), current_entity, avg_metrics,
+                    fbref_success, understat_success, understat_total, stats['failed'],
+                    'Team', entity_context, state
+                )
                 continue
         
         logger.progress_complete(stats['total'])
