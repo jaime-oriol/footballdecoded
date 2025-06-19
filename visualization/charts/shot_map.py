@@ -17,8 +17,8 @@ from visualization.core import (
 
 # Sistema suave como pass_network pero adaptado a xG
 XG_SCALE_CONFIG = {
-    'min_size': 200,        # Coherente con pass_network
-    'max_size': 2500,       # Rango razonable para shot map
+    'min_size': 500,        # Coherente con pass_network
+    'max_size': 3200,       # Rango razonable para shot map
     'low_threshold': 0.05,  # xG bajo
     'mid_threshold': 0.30,  # xG medio (punto de inflexión)
     'high_threshold': 0.80, # xG alto
@@ -124,12 +124,12 @@ def create_shot_map(match_id: int, league: str, season: str,
     _draw_team_shots_unified(ax, shots_with_sizes, team_a, colors[team_a], 'left_to_right')
     _draw_team_shots_unified(ax, shots_with_sizes, team_b, colors[team_b], 'right_to_left')
     
-    # Layout inferior con leyenda unificada
-    _add_unified_layout(ax, shots_with_sizes, team_a, team_b, colors)
+    # Layout interior con leyendas y xG en corners
+    _add_interior_layout(ax, shots_with_sizes, team_a, team_b, colors)
     
-    # Formato final
-    ax.set_xlim(-5, 110)
-    ax.set_ylim(-10, 77)
+    # Formato final - límites con márgenes iguales en los 4 lados
+    ax.set_xlim(-2, 107)
+    ax.set_ylim(-2, 70)
     ax.set_aspect('equal')
     ax.axis('off')
     plt.tight_layout()
@@ -171,7 +171,6 @@ def _draw_team_shots_unified(ax, shots_df: pd.DataFrame, team_name: str, team_co
             face_color = '#FFD700'
             edge_color = team_color
         elif result == 'Saved Shot':
-
             face_color = team_color
             alpha = 0.5
         else:
@@ -216,25 +215,27 @@ def _draw_goal_line(ax, shot_x: float, shot_y: float, direction: str, team_color
     lc = LineCollection(segments, colors=colors_alpha, linewidths=3.5, capstyle='round', zorder=7)
     ax.add_collection(lc)
 
-def _add_unified_layout(ax, shots_df: pd.DataFrame, team_a: str, team_b: str, colors: Dict):
-    """Layout con leyenda de escalado unificado."""
+def _add_interior_layout(ax, shots_df: pd.DataFrame, team_a: str, team_b: str, colors: Dict):
+    """Layout interior con leyendas centrales y xG en círculo central."""
     
-    # Estadísticas de equipos
+    # Calcular xG por equipo
     team_a_shots = shots_df[shots_df['team'] == team_a]
-    a_total, a_xg, a_goals = len(team_a_shots), team_a_shots['shot_xg'].sum(), team_a_shots['is_goal'].sum()
-    
     team_b_shots = shots_df[shots_df['team'] == team_b]
-    b_total, b_xg, b_goals = len(team_b_shots), team_b_shots['shot_xg'].sum(), team_b_shots['is_goal'].sum()
     
-    # Estadísticas de equipos
-    ax.text(0, -3, f"Disparos: {b_total} | xG: {b_xg:.2f} | Goles: {b_goals}",
-           fontsize=14, ha='left', color=colors[team_b], fontweight='bold', family=FONT_CONFIG['family'])
+    a_xg = team_a_shots['shot_xg'].sum()
+    b_xg = team_b_shots['shot_xg'].sum()
     
-    ax.text(105, -3, f"Disparos: {a_total} | xG: {a_xg:.2f} | Goles: {a_goals}",
-           fontsize=14, ha='right', color=colors[team_a], fontweight='bold', family=FONT_CONFIG['family'])
+    # Determinar cuál tiene mayor xG para el styling
+    a_has_higher_xg = a_xg >= b_xg
     
-    # LEYENDA XG UNIFICADA (misma lógica que pass_network)
-    center_x = 52.5
+    # xG en laterales del círculo central con styling diferenciado
+    center_x, center_y = 52.5, 34
+    lateral_offset = 18  # Distancia del centro a los laterales - fuera del círculo
+    
+    _draw_central_xg(ax, center_x - lateral_offset, center_y, b_xg, colors[team_b], not a_has_higher_xg)  # Izquierda
+    _draw_central_xg(ax, center_x + lateral_offset, center_y, a_xg, colors[team_a], a_has_higher_xg)     # Derecha
+    
+    # LEYENDAS CENTRALES (mantenidas intactas)
     legend_y = 2
     
     # Leyenda de escalado xG (coherente con pass_network)
@@ -242,6 +243,25 @@ def _add_unified_layout(ax, shots_df: pd.DataFrame, team_a: str, team_b: str, co
     
     # Leyenda de símbolos (lado derecho)
     _draw_symbols_legend(ax, center_x+3.5, legend_y)
+
+def _draw_central_xg(ax, x: float, y: float, xg_value: float, team_color: str, is_higher: bool):
+    """Dibujar xG en lateral del círculo central con styling diferenciado y tamaño grande."""
+    
+    # Styling según si es mayor o menor xG - tamaño aumentado
+    if is_higher:
+        # xG mayor: fondo relleno del color del equipo
+        bbox_props = dict(boxstyle="round,pad=0.6", facecolor=team_color, 
+                         edgecolor=team_color, linewidth=3, alpha=0.9)
+        text_color = 'white'
+    else:
+        # xG menor: solo borde del color del equipo
+        bbox_props = dict(boxstyle="round,pad=0.6", facecolor='white', 
+                         edgecolor=team_color, linewidth=3, alpha=0.9)
+        text_color = team_color
+    
+    ax.text(x, y, f"{xg_value:.1f} xG", ha='center', va='center',
+           fontsize=18, fontweight='bold', color=text_color,
+           family=FONT_CONFIG['family'], bbox=bbox_props, zorder=20)
 
 def _draw_xg_scale_legend(ax, x: float, y: float, color: str, shots_df: pd.DataFrame):
     """Leyenda con escalado dinámico basado en xG máximo del partido."""
@@ -355,13 +375,12 @@ def create_shot_map_with_match_data(match_data: Dict[str, pd.DataFrame],
     _draw_team_shots_unified(ax, shots_with_sizes, team_a, colors[team_a], 'left_to_right')
     _draw_team_shots_unified(ax, shots_with_sizes, team_b, colors[team_b], 'right_to_left')
     
-    ax.text(52.5, 72, "Shot Map", ha='center', va='center',
-           fontsize=20, fontweight='bold', family=FONT_CONFIG['family'])
+    # Layout interior optimizado
+    _add_interior_layout(ax, shots_with_sizes, team_a, team_b, colors)
     
-    _add_unified_layout(ax, shots_with_sizes, team_a, team_b, colors)
-    
-    ax.set_xlim(-5, 110)
-    ax.set_ylim(-10, 77)
+    # Límites con márgenes iguales en los 4 lados
+    ax.set_xlim(-2, 107)
+    ax.set_ylim(-2, 70)
     ax.set_aspect('equal')
     ax.axis('off')
     plt.tight_layout()
