@@ -341,7 +341,7 @@ def _draw_players(ax, players_df: pd.DataFrame, color: str):
         x, y = player['avg_x'], player['avg_y']
         node_size = player['node_size']
         
-        ax.scatter(x, y, s=node_size, c=color, alpha=0.6,
+        ax.scatter(x, y, s=node_size, c=color, alpha=0.5,
                   edgecolors=color, linewidth=4, zorder=10)
 
 def _draw_connections(ax, connections_df: pd.DataFrame, players_df: pd.DataFrame, color: str):
@@ -431,7 +431,7 @@ def _draw_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFr
    
    if min_passes == max_passes:
        node_size = players_df['node_size'].iloc[0] * 0.4
-       ax.scatter(x, y + 2, s=node_size, c=color, alpha=0.6, 
+       ax.scatter(x, y + 2, s=node_size, c=color, alpha=0.5, 
                  edgecolors=color, linewidth=2, zorder=10)
        ax.text(x, y - 1.5, f"{int(min_passes)}", ha='center', va='center',
               fontsize=16, fontweight='bold', color='black', 
@@ -447,7 +447,7 @@ def _draw_nodes_legend(ax, x: float, y: float, color: str, players_df: pd.DataFr
    
    for i, (pos, passes) in enumerate(zip(positions, display_values)):
        node_size = _calculate_node_size(int(passes), max_passes, threshold) * 0.4
-       ax.scatter(pos, circle_y, s=node_size, c=color, alpha=0.6, 
+       ax.scatter(pos, circle_y, s=node_size, c=color, alpha=0.5, 
                  edgecolors=color, linewidth=2, zorder=10)
    
    ax.text(positions[0], text_y, f"≤10", ha='center', va='center',

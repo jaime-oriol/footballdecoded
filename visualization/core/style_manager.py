@@ -23,7 +23,7 @@ SCALE_CONFIG = {
 
 CONNECTION_CONFIG = {
     'min_passes_halves': 4, 'min_passes_full_match': 8,
-    'alpha': 0.8, 'base_offset': 0.4,
+    'alpha': 0.5, 'base_offset': 0.4,
     'arrow_length': 1.0, 'arrow_width': 0.6, 'name_margin': 2.0
 }
 
