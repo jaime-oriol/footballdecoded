@@ -1,13 +1,13 @@
 # ====================================================================
-# FootballDecoded - Match Data Extractor
+# FootballDecoded - Enhanced Match Data Extractor
 # ====================================================================
-# Generic module for extracting and processing match data
+# Multi-source module for extracting complete match data
 # ====================================================================
 
 import pandas as pd
 import numpy as np
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from datetime import datetime
 
 # ====================================================================
@@ -21,79 +21,151 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 # ====================================================================
 
 def extract_match_data(match_id: int, league: str, season: str, 
-                      force_reload: bool = False, verbose: bool = True) -> Dict[str, pd.DataFrame]:
+                      source: str = 'whoscored',
+                      data_types: List[str] = None,
+                      force_reload: bool = False, 
+                      verbose: bool = True) -> Dict[str, pd.DataFrame]:
     """
-    Extract and process complete match data.
+    Extract complete match data from multiple sources.
     
     Args:
-        match_id: Match ID
+        match_id: Match ID (specific to the source)
         league: League identifier
         season: Season identifier
+        source: 'whoscored' or 'understat' - determines ID ecosystem
+        data_types: List of data types to extract ['passes', 'shots', 'all']
         force_reload: Re-extract even if data exists
         verbose: Show progress
         
     Returns:
-        Dict with 'passes', 'players', 'connections'
+        Dict with available data: 'passes', 'players', 'connections', 'shots'
     """
     if verbose:
-        print(f"Processing match {match_id} ({league} {season})")
+        print(f"Processing match {match_id} ({league} {season}) - Source: {source}")
     
-    if not force_reload and _data_exists(match_id):
+    cache_key = f"{source}_{match_id}"
+    
+    if not force_reload and _data_exists(cache_key):
         if verbose:
-            print("   Data found, loading from files...")
-        return load_match_data(match_id)
+            print("   Data found, loading from cache...")
+        return load_match_data(cache_key)
     
-    if verbose:
-        print("   Extracting data from WhoScored...")
-    
-    try:
-        from wrappers import whoscored_extract_match_events
-        events_df = whoscored_extract_match_events(match_id, league, season, verbose=False)
-        
-        if events_df.empty:
-            raise ValueError(f"No events found for match {match_id}")
-        
-        passes_df = _process_passes(events_df, verbose)
-        players_df = _calculate_players(passes_df, verbose)
-        connections_df = _calculate_connections(passes_df, verbose)
-        
-        result = {
-            'passes': passes_df,
-            'players': players_df, 
-            'connections': connections_df
-        }
-        
-        save_match_data(result, match_id, verbose)
-        return result
-        
-    except Exception as e:
-        if verbose:
-            print(f"   Error in extraction: {e}")
-        raise
-
-
-def load_match_data(match_id: int) -> Dict[str, pd.DataFrame]:
-    """Load previously processed data."""
     result = {}
     
-    for data_type in ['passes', 'players', 'connections']:
-        filepath = _get_filepath(match_id, data_type)
+    # Determine what to extract
+    if data_types is None:
+        data_types = ['all']
+    
+    extract_passes = 'passes' in data_types or 'all' in data_types
+    extract_shots = 'shots' in data_types or 'all' in data_types
+    
+    # Extract from WhoScored (passes, events, spatial data)
+    if source == 'whoscored' and extract_passes:
+        if verbose:
+            print("   Extracting spatial data from WhoScored...")
         
-        if os.path.exists(filepath):
-            result[data_type] = pd.read_csv(filepath)
-        else:
-            result[data_type] = pd.DataFrame()
+        try:
+            from wrappers import whoscored_extract_match_events
+            events_df = whoscored_extract_match_events(match_id, league, season, verbose=False)
+            
+            if not events_df.empty:
+                passes_data = _process_whoscored_data(events_df, verbose)
+                result.update(passes_data)
+            else:
+                if verbose:
+                    print("   No WhoScored events found")
+        except Exception as e:
+            if verbose:
+                print(f"   Error extracting WhoScored data: {e}")
+    
+    # Extract from Understat (shots with xG)
+    if source == 'understat' and extract_shots:
+        if verbose:
+            print("   Extracting shot data from Understat...")
+        
+        try:
+            from wrappers import understat_extract_shot_events
+            shots_df = understat_extract_shot_events(match_id, league, season, verbose=False)
+            
+            if not shots_df.empty:
+                result['shots'] = _process_understat_shots(shots_df, verbose)
+            else:
+                if verbose:
+                    print("   No Understat shots found")
+        except Exception as e:
+            if verbose:
+                print(f"   Error extracting Understat data: {e}")
+    
+    # Cross-source extraction (when we have both IDs)
+    if source == 'both':
+        # This would require both match IDs - implement later if needed
+        pass
+    
+    if result:
+        save_match_data(result, cache_key, verbose)
     
     return result
 
 
-def save_match_data(data_dict: Dict[str, pd.DataFrame], match_id: int, verbose: bool = True):
+def extract_complete_match(whoscored_id: int, understat_id: int, 
+                          league: str, season: str,
+                          force_reload: bool = False,
+                          verbose: bool = True) -> Dict[str, pd.DataFrame]:
+    """
+    Extract complete match data from both sources using different IDs.
+    
+    Args:
+        whoscored_id: WhoScored match ID
+        understat_id: Understat match ID  
+        league: League identifier
+        season: Season identifier
+        
+    Returns:
+        Dict with all available data from both sources
+    """
+    if verbose:
+        print(f"Extracting complete match data ({league} {season})")
+        print(f"   WhoScored ID: {whoscored_id}")
+        print(f"   Understat ID: {understat_id}")
+    
+    # Extract from both sources
+    whoscored_data = extract_match_data(whoscored_id, league, season, 
+                                       source='whoscored', verbose=verbose)
+    understat_data = extract_match_data(understat_id, league, season, 
+                                       source='understat', verbose=verbose)
+    
+    # Combine results
+    combined_data = {**whoscored_data, **understat_data}
+    
+    if verbose and combined_data:
+        available_types = list(combined_data.keys())
+        print(f"   Combined data types: {', '.join(available_types)}")
+    
+    return combined_data
+
+
+def load_match_data(cache_key: str) -> Dict[str, pd.DataFrame]:
+    """Load previously processed data."""
+    result = {}
+    
+    possible_types = ['passes', 'players', 'connections', 'shots']
+    
+    for data_type in possible_types:
+        filepath = _get_filepath(cache_key, data_type)
+        
+        if os.path.exists(filepath):
+            result[data_type] = pd.read_csv(filepath)
+    
+    return result
+
+
+def save_match_data(data_dict: Dict[str, pd.DataFrame], cache_key: str, verbose: bool = True):
     """Save processed data to CSV."""
     os.makedirs(DATA_DIR, exist_ok=True)
     
     for data_type, df in data_dict.items():
         if not df.empty:
-            filepath = _get_filepath(match_id, data_type)
+            filepath = _get_filepath(cache_key, data_type)
             df.to_csv(filepath, index=False, encoding='utf-8')
             
             if verbose:
@@ -102,19 +174,56 @@ def save_match_data(data_dict: Dict[str, pd.DataFrame], match_id: int, verbose: 
 
 def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dict[str, pd.DataFrame]:
     """Filter data for specific team."""
-    team_players = match_data['players'][match_data['players']['team'] == team_name]
-    team_connections = match_data['connections'][match_data['connections']['team'] == team_name] if not match_data['connections'].empty else pd.DataFrame()
-    team_passes = match_data['passes'][match_data['passes']['team'] == team_name]
+    result = {}
     
-    return {
-        'passes': team_passes,
-        'players': team_players,
-        'connections': team_connections
-    }
+    # Filter passes data
+    if 'passes' in match_data:
+        result['passes'] = match_data['passes'][match_data['passes']['team'] == team_name]
+    
+    if 'players' in match_data:
+        result['players'] = match_data['players'][match_data['players']['team'] == team_name]
+    
+    if 'connections' in match_data:
+        connections = match_data['connections']
+        if not connections.empty:
+            result['connections'] = connections[connections['team'] == team_name]
+        else:
+            result['connections'] = pd.DataFrame()
+    
+    # Filter shots data
+    if 'shots' in match_data:
+        shots = match_data['shots']
+        if 'shot_team' in shots.columns:
+            result['shots'] = shots[shots['shot_team'] == team_name]
+        elif 'team' in shots.columns:
+            result['shots'] = shots[shots['team'] == team_name]
+    
+    return result
 
 # ====================================================================
-# DATA PROCESSING
+# WHOSCORED DATA PROCESSING
 # ====================================================================
+
+def _process_whoscored_data(events_df: pd.DataFrame, verbose: bool) -> Dict[str, pd.DataFrame]:
+    """Process WhoScored events into passes, players, and connections."""
+    result = {}
+    
+    try:
+        passes_df = _process_passes(events_df, verbose)
+        result['passes'] = passes_df
+        
+        players_df = _calculate_players(passes_df, verbose)
+        result['players'] = players_df
+        
+        connections_df = _calculate_connections(passes_df, verbose)
+        result['connections'] = connections_df
+        
+    except Exception as e:
+        if verbose:
+            print(f"   Error processing WhoScored data: {e}")
+    
+    return result
+
 
 def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     """Extract and clean successful passes."""
@@ -124,7 +233,9 @@ def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     ].copy()
     
     if passes.empty:
-        raise ValueError("No successful passes found")
+        if verbose:
+            print("   No successful passes found")
+        return pd.DataFrame()
     
     # Convert coordinates to field meters
     passes['field_x'] = (passes['x'] / 100) * 105
@@ -154,6 +265,9 @@ def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
 
 def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     """Calculate average positions and player statistics."""
+    if passes_df.empty:
+        return pd.DataFrame()
+    
     player_stats = passes_df.groupby(['player', 'team']).agg({
         'field_x': 'mean',
         'field_y': 'mean',
@@ -185,6 +299,9 @@ def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
 
 def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     """Calculate pass connections between players."""
+    if passes_df.empty:
+        return pd.DataFrame()
+    
     passes_sorted = passes_df.sort_values(['minute', 'second']).reset_index(drop=True)
     connections = []
     
@@ -235,6 +352,41 @@ def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFra
     
     return result
 
+# ====================================================================
+# UNDERSTAT DATA PROCESSING
+# ====================================================================
+
+def _process_understat_shots(shots_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
+    """Process Understat shots data."""
+    if shots_df.empty:
+        return pd.DataFrame()
+    
+    processed_shots = shots_df.copy()
+    
+    # Ensure we have the required columns for shot maps
+    required_cols = ['shot_team', 'shot_player', 'shot_xg', 'shot_location_x', 'shot_location_y', 'shot_result']
+    missing_cols = [col for col in required_cols if col not in processed_shots.columns]
+    
+    if missing_cols:
+        if verbose:
+            print(f"   Warning: Missing columns in shots data: {missing_cols}")
+    
+    # Convert coordinates to field meters if needed
+    if 'shot_location_x' in processed_shots.columns and 'shot_location_y' in processed_shots.columns:
+        # Understat coordinates are typically 0-1, convert to field dimensions
+        processed_shots['field_x'] = processed_shots['shot_location_x'] * 105
+        processed_shots['field_y'] = processed_shots['shot_location_y'] * 68
+    
+    if verbose:
+        teams = processed_shots['shot_team'].unique() if 'shot_team' in processed_shots.columns else ['Unknown']
+        total_shots = len(processed_shots)
+        print(f"   {total_shots} shots | Teams: {', '.join(teams)}")
+    
+    return processed_shots
+
+# ====================================================================
+# UTILITY FUNCTIONS
+# ====================================================================
 
 def _get_line_width(count: int) -> float:
     """Calculate line width based on pass count."""
@@ -245,19 +397,50 @@ def _get_line_width(count: int) -> float:
     elif count < 18: return 7.0
     else: return 10.0
 
-# ====================================================================
-# UTILITY FUNCTIONS
-# ====================================================================
 
-def _data_exists(match_id: int) -> bool:
-    """Check if all data files exist."""
-    for data_type in ['passes', 'players', 'connections']:
-        if not os.path.exists(_get_filepath(match_id, data_type)):
-            return False
-    return True
+def _data_exists(cache_key: str) -> bool:
+    """Check if any data files exist for the cache key."""
+    possible_types = ['passes', 'players', 'connections', 'shots']
+    
+    for data_type in possible_types:
+        if os.path.exists(_get_filepath(cache_key, data_type)):
+            return True
+    return False
 
 
-def _get_filepath(match_id: int, data_type: str) -> str:
+def _get_filepath(cache_key: str, data_type: str) -> str:
     """Generate file path for data type."""
-    filename = f"match_{match_id}_{data_type}.csv"
+    filename = f"match_{cache_key}_{data_type}.csv"
     return os.path.join(DATA_DIR, filename)
+
+# ====================================================================
+# CONVENIENCE FUNCTIONS
+# ====================================================================
+
+def get_available_data_types(match_data: Dict[str, pd.DataFrame]) -> List[str]:
+    """Get list of available data types in match data."""
+    return [key for key, df in match_data.items() if not df.empty]
+
+
+def print_match_summary(match_data: Dict[str, pd.DataFrame]):
+    """Print summary of available match data."""
+    print("Match Data Summary:")
+    print("=" * 40)
+    
+    for data_type, df in match_data.items():
+        if not df.empty:
+            print(f"   {data_type.title()}: {len(df)} records")
+            
+            if data_type == 'passes' and 'team' in df.columns:
+                teams = df['team'].unique()
+                print(f"      Teams: {', '.join(teams)}")
+            
+            elif data_type == 'shots' and 'shot_team' in df.columns:
+                teams = df['shot_team'].unique()
+                total_xg = df['shot_xg'].sum() if 'shot_xg' in df.columns else 0
+                print(f"      Teams: {', '.join(teams)}")
+                print(f"      Total xG: {total_xg:.2f}")
+        else:
+            print(f"   {data_type.title()}: No data")
+    
+    print("=" * 40)
