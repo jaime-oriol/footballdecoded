@@ -624,9 +624,7 @@ def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[s
     
     understat_coverage = None
     if table_type == 'domestic':
-        player_coverage = (understat_success / max(player_stats['successful'], 1) * 100) if player_stats['successful'] > 0 else 0
-        team_coverage = (understat_success / max(team_stats['successful'], 1) * 100) if team_stats['successful'] > 0 else 0
-        understat_coverage = {'players': player_coverage, 'teams': team_coverage}
+        understat_coverage = {'players': 0, 'teams': 0}
     
     summary_stats = {
         'players': player_stats,
