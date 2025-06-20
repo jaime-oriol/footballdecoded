@@ -1,8 +1,6 @@
 # ====================================================================
 # FootballDecoded - Pass Network Visualization
 # ====================================================================
-# Professional pass network visualizer with dynamic scaling
-# ====================================================================
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -10,7 +8,6 @@ import matplotlib.patheffects as path_effects
 import pandas as pd
 import numpy as np
 from typing import Dict, Tuple, Optional
-from datetime import datetime
 from matplotlib.collections import LineCollection
 import matplotlib.colors as mcolors
 
@@ -20,7 +17,7 @@ from core import (
 )
 
 # ====================================================================
-# PASS NETWORK SPECIFIC SCALING
+# SCALING SYSTEM
 # ====================================================================
 
 def calculate_node_sizes(players_df: pd.DataFrame, is_full_match: bool = False) -> pd.DataFrame:

@@ -6,24 +6,25 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from typing import Dict, Tuple, Optional
+from matplotlib.collections import LineCollection
+import matplotlib.colors as mcolors
 
 from visualization.core import (
     draw_pitch, get_primary_color, FONT_CONFIG
 )
 
 # ====================================================================
-# CONFIGURACIÓN UNIFICADA DE ESCALADO
+# SCALING CONFIGURATION
 # ====================================================================
 
-# Sistema suave como pass_network pero adaptado a xG
 XG_SCALE_CONFIG = {
-    'min_size': 500,        # Coherente con pass_network
-    'max_size': 3200,       # Rango razonable para shot map
-    'low_threshold': 0.05,  # xG bajo
-    'mid_threshold': 0.30,  # xG medio (punto de inflexión)
-    'high_threshold': 0.80, # xG alto
-    'slope_low': 800,       # Crecimiento suave inicial
-    'slope_high': 800       # Crecimiento suave final
+    'min_size': 500,
+    'max_size': 3200,
+    'low_threshold': 0.05,
+    'mid_threshold': 0.30,
+    'high_threshold': 0.80,
+    'slope_low': 800,
+    'slope_high': 800
 }
 
 RESULT_STYLES = {
@@ -35,39 +36,27 @@ RESULT_STYLES = {
 }
 
 # ====================================================================
-# SISTEMA DE ESCALADO UNIFICADO (Adaptado de Pass Network)
+# SCALING SYSTEM
 # ====================================================================
 
 def calculate_xg_node_size(xg_value: float) -> float:
-    """
-    Sistema suave de escalado adaptado del pass_network.
-    
-    Escalado por tramos como pass_network:
-    - xG ≤ 0.05 → Tamaño mínimo (400)
-    - xG 0.05-0.30 → Crecimiento suave
-    - xG 0.30-0.80 → Crecimiento suave continuado  
-    - xG ≥ 0.80 → Tamaño máximo (2000)
-    """
+    """Sistema suave de escalado adaptado del pass_network."""
     config = XG_SCALE_CONFIG
     
-    # Casos extremos (igual que pass_network)
     if xg_value <= config['low_threshold']:
         return config['min_size']
     if xg_value >= config['high_threshold']:
         return config['max_size']
     
-    # Crecimiento por tramos (lógica pass_network adaptada)
     if xg_value <= config['mid_threshold']:
-        # Fase 1: Crecimiento suave (0.05 → 0.30)
-        range_xg = config['mid_threshold'] - config['low_threshold']  # 0.25
+        range_xg = config['mid_threshold'] - config['low_threshold']
         progress = (xg_value - config['low_threshold']) / range_xg
         return config['min_size'] + progress * config['slope_low']
     else:
-        # Fase 2: Crecimiento suave continuado (0.30 → 0.80)
-        base_size = config['min_size'] + config['slope_low']  # 1200
-        range_xg = config['high_threshold'] - config['mid_threshold']  # 0.50
+        base_size = config['min_size'] + config['slope_low']
+        range_xg = config['high_threshold'] - config['mid_threshold']
         progress = (xg_value - config['mid_threshold']) / range_xg
-        remaining_size = config['max_size'] - base_size  # 800
+        remaining_size = config['max_size'] - base_size
         return base_size + progress * remaining_size
 
 def calculate_shot_sizes(shots_df: pd.DataFrame) -> pd.DataFrame:
@@ -76,14 +65,12 @@ def calculate_shot_sizes(shots_df: pd.DataFrame) -> pd.DataFrame:
         return shots_df
     
     df_with_sizes = shots_df.copy()
-    
-    # SOLO el xG determina el tamaño - sin multiplicadores artificiales
     df_with_sizes['final_node_size'] = df_with_sizes['shot_xg'].apply(calculate_xg_node_size)
     
     return df_with_sizes
 
 # ====================================================================
-# FUNCIÓN PRINCIPAL DE SHOT MAP
+# MAIN FUNCTION
 # ====================================================================
 
 def create_shot_map(match_id: int, league: str, season: str,
@@ -92,7 +79,6 @@ def create_shot_map(match_id: int, league: str, season: str,
                    save_path: Optional[str] = None) -> plt.Figure:
     """Create shot map con sistema de escalado unificado."""
     
-    # Extraer datos
     from wrappers import understat_extract_shot_events
     shots_df = understat_extract_shot_events(match_id, league, season)
     
@@ -107,27 +93,21 @@ def create_shot_map(match_id: int, league: str, season: str,
     
     team_a, team_b = teams[0], teams[1]
     
-    # APLICAR SISTEMA DE ESCALADO UNIFICADO
     shots_with_sizes = calculate_shot_sizes(shots_clean)
     
-    # Crear figura
     fig, ax = plt.subplots(figsize=figsize, facecolor='white')
     draw_pitch(ax)
     
-    # Obtener colores
     colors = {
         team_a: get_primary_color(team_a) if not team_colors else team_colors.get(team_a, get_primary_color(team_a)),
         team_b: get_primary_color(team_b) if not team_colors else team_colors.get(team_b, get_primary_color(team_b))
     }
     
-    # Dibujar disparos con tamaños calculados
     _draw_team_shots_unified(ax, shots_with_sizes, team_a, colors[team_a], 'left_to_right')
     _draw_team_shots_unified(ax, shots_with_sizes, team_b, colors[team_b], 'right_to_left')
     
-    # Layout interior con leyendas y xG en corners
     _add_interior_layout(ax, shots_with_sizes, team_a, team_b, colors)
     
-    # Formato final - límites con márgenes iguales en los 4 lados
     ax.set_xlim(-2, 107)
     ax.set_ylim(-2, 70)
     ax.set_aspect('equal')
@@ -142,7 +122,7 @@ def create_shot_map(match_id: int, league: str, season: str,
     return fig
 
 # ====================================================================
-# FUNCIONES DE DIBUJO UNIFICADAS
+# DRAWING FUNCTIONS
 # ====================================================================
 
 def _draw_team_shots_unified(ax, shots_df: pd.DataFrame, team_name: str, team_color: str, direction: str):
@@ -150,7 +130,6 @@ def _draw_team_shots_unified(ax, shots_df: pd.DataFrame, team_name: str, team_co
     team_shots = shots_df[shots_df['team'] == team_name]
     
     for _, shot in team_shots.iterrows():
-        # Coordenadas
         x = float(shot['shot_location_x']) * 105
         y = float(shot['shot_location_y']) * 68
         
@@ -158,27 +137,21 @@ def _draw_team_shots_unified(ax, shots_df: pd.DataFrame, team_name: str, team_co
             x = 105 - x
             y = 68 - y
         
-        # Usar tamaño calculado DIRECTAMENTE del xG
-        final_size = shot['final_node_size']  # Solo xG, sin multiplicadores
+        final_size = shot['final_node_size']
         
-        # Estilo según resultado
         result = shot['shot_result']
         style = RESULT_STYLES.get(result, RESULT_STYLES['Missed Shot'])
         
-        # Colores específicos según tipo
         if result == 'Goal':
-            # Goles: dorado por dentro, borde del equipo
             face_color = '#FFD700'
             edge_color = team_color
         elif result == 'Saved Shot':
             face_color = team_color
             alpha = 0.5
         else:
-            # Resto: blanco por dentro, borde del equipo
             face_color = 'white'
             edge_color = team_color
         
-        # Aplicar alpha específico para paradas
         if result == 'Saved Shot':
             ax.scatter(x, y, s=final_size, c=face_color, marker=style['marker'],
                       alpha=alpha, edgecolors=edge_color, 
@@ -188,19 +161,14 @@ def _draw_team_shots_unified(ax, shots_df: pd.DataFrame, team_name: str, team_co
                       alpha=style['alpha'], edgecolors=edge_color, 
                       linewidth=style['width'], zorder=10)
         
-        # Línea de dirección para goles
         if result == 'Goal':
             _draw_goal_line(ax, x, y, direction, team_color)
 
 def _draw_goal_line(ax, shot_x: float, shot_y: float, direction: str, team_color: str):
     """Dibujar línea de dirección del gol con gradiente."""
-    from matplotlib.collections import LineCollection
-    import matplotlib.colors as mcolors
-    
     goal_x = 105 if direction == 'left_to_right' else 0
     goal_y = 34
     
-    # Crear línea con gradiente
     num_points = 50
     x_points = np.linspace(shot_x, goal_x, num_points)
     y_points = np.linspace(shot_y, goal_y, num_points)
@@ -218,43 +186,33 @@ def _draw_goal_line(ax, shot_x: float, shot_y: float, direction: str, team_color
 def _add_interior_layout(ax, shots_df: pd.DataFrame, team_a: str, team_b: str, colors: Dict):
     """Layout interior con leyendas centrales y xG en círculo central."""
     
-    # Calcular xG por equipo
     team_a_shots = shots_df[shots_df['team'] == team_a]
     team_b_shots = shots_df[shots_df['team'] == team_b]
     
     a_xg = team_a_shots['shot_xg'].sum()
     b_xg = team_b_shots['shot_xg'].sum()
     
-    # Determinar cuál tiene mayor xG para el styling
     a_has_higher_xg = a_xg >= b_xg
     
-    # xG en laterales del círculo central con styling diferenciado
     center_x, center_y = 52.5, 34
-    lateral_offset = 18  # Distancia del centro a los laterales - fuera del círculo
+    lateral_offset = 18
     
-    _draw_central_xg(ax, center_x - lateral_offset, center_y, b_xg, colors[team_b], not a_has_higher_xg)  # Izquierda
-    _draw_central_xg(ax, center_x + lateral_offset, center_y, a_xg, colors[team_a], a_has_higher_xg)     # Derecha
+    _draw_central_xg(ax, center_x - lateral_offset, center_y, b_xg, colors[team_b], not a_has_higher_xg)
+    _draw_central_xg(ax, center_x + lateral_offset, center_y, a_xg, colors[team_a], a_has_higher_xg)
     
-    # LEYENDAS CENTRALES (mantenidas intactas)
     legend_y = 2
     
-    # Leyenda de escalado xG (coherente con pass_network)
     _draw_xg_scale_legend(ax, center_x-15, legend_y, colors[team_a], shots_df)
-    
-    # Leyenda de símbolos (lado derecho)
     _draw_symbols_legend(ax, center_x+3.5, legend_y)
 
 def _draw_central_xg(ax, x: float, y: float, xg_value: float, team_color: str, is_higher: bool):
-    """Dibujar xG en lateral del círculo central con styling diferenciado y tamaño grande."""
+    """Dibujar xG en lateral del círculo central con styling diferenciado."""
     
-    # Styling según si es mayor o menor xG - tamaño aumentado
     if is_higher:
-        # xG mayor: fondo relleno del color del equipo
         bbox_props = dict(boxstyle="round,pad=0.6", facecolor=team_color, 
                          edgecolor=team_color, linewidth=3, alpha=0.9)
         text_color = 'white'
     else:
-        # xG menor: solo borde del color del equipo
         bbox_props = dict(boxstyle="round,pad=0.6", facecolor='white', 
                          edgecolor=team_color, linewidth=3, alpha=0.9)
         text_color = team_color
@@ -266,80 +224,65 @@ def _draw_central_xg(ax, x: float, y: float, xg_value: float, team_color: str, i
 def _draw_xg_scale_legend(ax, x: float, y: float, color: str, shots_df: pd.DataFrame):
     """Leyenda con escalado dinámico basado en xG máximo del partido."""
     
-    # Calcular xG máximo real del partido
     max_xg_match = shots_df['shot_xg'].max()
     
-    # Ajustar umbrales dinámicamente
     if max_xg_match <= 0.8:
-        # Si el xG máximo es bajo, usar el máximo real como umbral superior
         high_xg = max_xg_match
-        low_xg = min(0.05, max_xg_match * 0.1)  # Proporcionalmente menor
+        low_xg = min(0.05, max_xg_match * 0.1)
     else:
-        # Si hay disparos de muy alto xG, mantener rango amplio
-        high_xg = XG_SCALE_CONFIG['high_threshold']  # 0.80
-        low_xg = XG_SCALE_CONFIG['low_threshold']    # 0.05
+        high_xg = XG_SCALE_CONFIG['high_threshold']
+        low_xg = XG_SCALE_CONFIG['low_threshold']
     
-    # Tamaños basados en umbrales dinámicos
     low_size = calculate_xg_node_size(low_xg)
     high_size = calculate_xg_node_size(high_xg)
     
-    # Layout exacto como pass_network
     arrow_length = 14
     number_offset = 3
     positions = [x - arrow_length/2 - number_offset, x + arrow_length/2 + number_offset]
     circle_y = y + 3
     text_y = y - 1.2
     
-    # Círculo pequeño (xG bajo) - tamaño real
     ax.scatter(positions[0]+1, circle_y, s=low_size, c='white',
               edgecolors='black', linewidth=2)
     ax.text(positions[0]+1, text_y, f"{low_xg:.2f}", ha='center', fontsize=12, 
            fontweight='bold', family=FONT_CONFIG['family'])
     
-    # Círculo grande (xG alto) - tamaño real
     ax.scatter(positions[1]-1, circle_y, s=high_size, c='white', 
               edgecolors='black', linewidth=2)
     ax.text(positions[1]-1, text_y, f"{high_xg:.2f}", ha='center', fontsize=12, 
            fontweight='bold', family=FONT_CONFIG['family'])
     
-    # Flecha ENTRE los números (como pass_network) - coordenadas exactas
     arrow_start_x = x - arrow_length/2
     arrow_end_x = x + arrow_length/2
     ax.annotate('', xy=(arrow_end_x, text_y + 0.5), xytext=(arrow_start_x, text_y + 0.5),
                arrowprops=dict(arrowstyle='->', color='black', lw=3, alpha=1))
     
-    # Texto xG centrado sobre la flecha
     ax.text(x, circle_y-2.5, "xG", ha='center', va='center', fontsize=14, 
            fontweight='bold', family=FONT_CONFIG['family'])
 
 def _draw_symbols_legend(ax, x: float, y: float):
-    """Leyenda de símbolos (mantenida del diseño original)."""
+    """Leyenda de símbolos."""
     
-    # Gol (estrella): dorado por dentro, borde negro
     ax.scatter(x, y, s=300, marker='*', c='#FFD700', edgecolors='black', linewidth=2)
     ax.text(x + 1.5, y, "Gol", ha='left', va='center', fontsize=11, 
            fontweight='bold', family=FONT_CONFIG['family'])
     
-    # Separador
     ax.text(x + 5, y, "|", ha='center', va='center', fontsize=11, 
            family=FONT_CONFIG['family'])
     
-    # Parada (cuadrado): gris más claro, borde negro
     ax.scatter(x + 7, y, s=200, marker='s', c='gray', alpha=0.5, edgecolors='black', linewidth=2)
     ax.text(x + 8.5, y, "Parada", ha='left', va='center', fontsize=11, 
            fontweight='bold', family=FONT_CONFIG['family'])
     
-    # Separador
     ax.text(x + 14.5, y, "|", ha='center', va='center', fontsize=11, 
            family=FONT_CONFIG['family'])
     
-    # Otros (círculo): blanco por dentro, borde negro
     ax.scatter(x + 16, y, s=150, marker='o', c='white', edgecolors='black', linewidth=2)
     ax.text(x + 17.25, y, "Otros", ha='left', va='center', fontsize=11, 
            fontweight='bold', family=FONT_CONFIG['family'])
 
 # ====================================================================
-# FUNCIÓN PARA DATOS PRE-CARGADOS
+# CONVENIENCE FUNCTION
 # ====================================================================
 
 def create_shot_map_with_match_data(match_data: Dict[str, pd.DataFrame],
@@ -358,27 +301,21 @@ def create_shot_map_with_match_data(match_data: Dict[str, pd.DataFrame],
     
     team_a, team_b = teams[0], teams[1]
     
-    # APLICAR SISTEMA DE ESCALADO UNIFICADO
     shots_with_sizes = calculate_shot_sizes(shots_clean)
     
-    # Crear figura
     fig, ax = plt.subplots(figsize=(16, 10), facecolor='white')
     draw_pitch(ax)
     
-    # Colores
     colors = {
         team_a: get_primary_color(team_a) if not team_colors else team_colors.get(team_a, get_primary_color(team_a)),
         team_b: get_primary_color(team_b) if not team_colors else team_colors.get(team_b, get_primary_color(team_b))
     }
     
-    # Dibujar
     _draw_team_shots_unified(ax, shots_with_sizes, team_a, colors[team_a], 'left_to_right')
     _draw_team_shots_unified(ax, shots_with_sizes, team_b, colors[team_b], 'right_to_left')
     
-    # Layout interior optimizado
     _add_interior_layout(ax, shots_with_sizes, team_a, team_b, colors)
     
-    # Límites con márgenes iguales en los 4 lados
     ax.set_xlim(-2, 107)
     ax.set_ylim(-2, 70)
     ax.set_aspect('equal')

@@ -1,14 +1,11 @@
 # ====================================================================
 # FootballDecoded - Enhanced Match Data Extractor
 # ====================================================================
-# Multi-source module for extracting complete match data
-# ====================================================================
 
 import pandas as pd
 import numpy as np
 import os
 from typing import Dict, Optional, List
-from datetime import datetime
 
 # ====================================================================
 # CONFIGURATION
@@ -52,14 +49,12 @@ def extract_match_data(match_id: int, league: str, season: str,
     
     result = {}
     
-    # Determine what to extract
     if data_types is None:
         data_types = ['all']
     
     extract_passes = 'passes' in data_types or 'all' in data_types
     extract_shots = 'shots' in data_types or 'all' in data_types
     
-    # Extract from WhoScored (passes, events, spatial data)
     if source == 'whoscored' and extract_passes:
         if verbose:
             print("   Extracting spatial data from WhoScored...")
@@ -78,7 +73,6 @@ def extract_match_data(match_id: int, league: str, season: str,
             if verbose:
                 print(f"   Error extracting WhoScored data: {e}")
     
-    # Extract from Understat (shots with xG)
     if source == 'understat' and extract_shots:
         if verbose:
             print("   Extracting shot data from Understat...")
@@ -96,16 +90,10 @@ def extract_match_data(match_id: int, league: str, season: str,
             if verbose:
                 print(f"   Error extracting Understat data: {e}")
     
-    # Cross-source extraction (when we have both IDs)
-    if source == 'both':
-        # This would require both match IDs - implement later if needed
-        pass
-    
     if result:
         save_match_data(result, cache_key, verbose)
     
     return result
-
 
 def extract_complete_match(whoscored_id: int, understat_id: int, 
                           league: str, season: str,
@@ -128,13 +116,11 @@ def extract_complete_match(whoscored_id: int, understat_id: int,
         print(f"   WhoScored ID: {whoscored_id}")
         print(f"   Understat ID: {understat_id}")
     
-    # Extract from both sources
     whoscored_data = extract_match_data(whoscored_id, league, season, 
                                        source='whoscored', verbose=verbose)
     understat_data = extract_match_data(understat_id, league, season, 
                                        source='understat', verbose=verbose)
     
-    # Combine results
     combined_data = {**whoscored_data, **understat_data}
     
     if verbose and combined_data:
@@ -142,7 +128,6 @@ def extract_complete_match(whoscored_id: int, understat_id: int,
         print(f"   Combined data types: {', '.join(available_types)}")
     
     return combined_data
-
 
 def load_match_data(cache_key: str) -> Dict[str, pd.DataFrame]:
     """Load previously processed data."""
@@ -158,7 +143,6 @@ def load_match_data(cache_key: str) -> Dict[str, pd.DataFrame]:
     
     return result
 
-
 def save_match_data(data_dict: Dict[str, pd.DataFrame], cache_key: str, verbose: bool = True):
     """Save processed data to CSV."""
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -171,12 +155,10 @@ def save_match_data(data_dict: Dict[str, pd.DataFrame], cache_key: str, verbose:
             if verbose:
                 print(f"   Saved: {data_type} ({len(df)} rows)")
 
-
 def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dict[str, pd.DataFrame]:
     """Filter data for specific team."""
     result = {}
     
-    # Filter passes data
     if 'passes' in match_data:
         result['passes'] = match_data['passes'][match_data['passes']['team'] == team_name]
     
@@ -190,7 +172,6 @@ def filter_team_data(match_data: Dict[str, pd.DataFrame], team_name: str) -> Dic
         else:
             result['connections'] = pd.DataFrame()
     
-    # Filter shots data
     if 'shots' in match_data:
         shots = match_data['shots']
         if 'shot_team' in shots.columns:
@@ -224,7 +205,6 @@ def _process_whoscored_data(events_df: pd.DataFrame, verbose: bool) -> Dict[str,
     
     return result
 
-
 def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     """Extract and clean successful passes."""
     passes = events_df[
@@ -237,11 +217,9 @@ def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
             print("   No successful passes found")
         return pd.DataFrame()
     
-    # Convert coordinates to field meters
     passes['field_x'] = (passes['x'] / 100) * 105
     passes['field_y'] = (passes['y'] / 100) * 68
     
-    # Calculate pass distance if end coordinates available
     if 'end_x' in passes.columns and 'end_y' in passes.columns:
         passes['field_end_x'] = (passes['end_x'] / 100) * 105
         passes['field_end_y'] = (passes['end_y'] / 100) * 68
@@ -261,7 +239,6 @@ def _process_passes(events_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
         print(f"   {len(passes_clean)} passes | Teams: {', '.join(teams)}")
     
     return passes_clean
-
 
 def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     """Calculate average positions and player statistics."""
@@ -295,7 +272,6 @@ def _calculate_players(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
         print(f"   {len(result)} players processed")
     
     return result
-
 
 def _calculate_connections(passes_df: pd.DataFrame, verbose: bool) -> pd.DataFrame:
     """Calculate pass connections between players."""
@@ -363,7 +339,6 @@ def _process_understat_shots(shots_df: pd.DataFrame, verbose: bool) -> pd.DataFr
     
     processed_shots = shots_df.copy()
     
-    # Ensure we have the required columns for shot maps
     required_cols = ['shot_team', 'shot_player', 'shot_xg', 'shot_location_x', 'shot_location_y', 'shot_result']
     missing_cols = [col for col in required_cols if col not in processed_shots.columns]
     
@@ -371,9 +346,7 @@ def _process_understat_shots(shots_df: pd.DataFrame, verbose: bool) -> pd.DataFr
         if verbose:
             print(f"   Warning: Missing columns in shots data: {missing_cols}")
     
-    # Convert coordinates to field meters if needed
     if 'shot_location_x' in processed_shots.columns and 'shot_location_y' in processed_shots.columns:
-        # Understat coordinates are typically 0-1, convert to field dimensions
         processed_shots['field_x'] = processed_shots['shot_location_x'] * 105
         processed_shots['field_y'] = processed_shots['shot_location_y'] * 68
     
@@ -397,7 +370,6 @@ def _get_line_width(count: int) -> float:
     elif count < 18: return 7.0
     else: return 10.0
 
-
 def _data_exists(cache_key: str) -> bool:
     """Check if any data files exist for the cache key."""
     possible_types = ['passes', 'players', 'connections', 'shots']
@@ -406,7 +378,6 @@ def _data_exists(cache_key: str) -> bool:
         if os.path.exists(_get_filepath(cache_key, data_type)):
             return True
     return False
-
 
 def _get_filepath(cache_key: str, data_type: str) -> str:
     """Generate file path for data type."""
@@ -420,7 +391,6 @@ def _get_filepath(cache_key: str, data_type: str) -> str:
 def get_available_data_types(match_data: Dict[str, pd.DataFrame]) -> List[str]:
     """Get list of available data types in match data."""
     return [key for key, df in match_data.items() if not df.empty]
-
 
 def print_match_summary(match_data: Dict[str, pd.DataFrame]):
     """Print summary of available match data."""
