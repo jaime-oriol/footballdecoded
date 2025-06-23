@@ -1,5 +1,5 @@
 # ====================================================================
-# FootballDecoded - Shot Map con Sistema de Escalado Unificado
+# FootballDecoded - Shot Map con Líneas Cohesivas al Pass Network
 # ====================================================================
 
 import matplotlib.pyplot as plt
@@ -8,6 +8,7 @@ import numpy as np
 from typing import Dict, Tuple, Optional
 from matplotlib.collections import LineCollection
 import matplotlib.colors as mcolors
+import matplotlib.patheffects as path_effects
 
 from visualization.core import (
     draw_pitch, get_primary_color, FONT_CONFIG
@@ -27,6 +28,14 @@ XG_SCALE_CONFIG = {
     'slope_high': 800
 }
 
+GOAL_LINE_CONFIG = {
+    'width_base': 2.8,
+    'width_multiplier': 0.3,
+    'gradient_points': 60,
+    'arrow_size': 0.8,
+    'arrow_extension': 0.2
+}
+
 RESULT_STYLES = {
     'Goal': {'marker': '*', 'alpha': 1.0, 'face': '#FFD700', 'edge': 'team_color', 'width': 2},
     'Saved Shot': {'marker': 's', 'alpha': 1.0, 'face': 'team_color', 'edge': 'black', 'width': 2},
@@ -36,7 +45,7 @@ RESULT_STYLES = {
 }
 
 # ====================================================================
-# SCALING SYSTEM
+# SCALING SYSTEM (Mantenido del original)
 # ====================================================================
 
 def calculate_xg_node_size(xg_value: float) -> float:
@@ -77,7 +86,7 @@ def create_shot_map(match_id: int, league: str, season: str,
                    team_colors: Dict[str, str] = None,
                    figsize: Tuple[int, int] = (16, 10),
                    save_path: Optional[str] = None) -> plt.Figure:
-    """Create shot map con sistema de escalado unificado."""
+    """Create shot map con sistema de escalado unificado y líneas cohesivas."""
     
     from wrappers import understat_extract_shot_events
     shots_df = understat_extract_shot_events(match_id, league, season)
@@ -162,26 +171,93 @@ def _draw_team_shots_unified(ax, shots_df: pd.DataFrame, team_name: str, team_co
                       linewidth=style['width'], zorder=10)
         
         if result == 'Goal':
-            _draw_goal_line(ax, x, y, direction, team_color)
+            _draw_goal_line_cohesive(ax, x, y, direction, team_color, shot['shot_xg'])
 
-def _draw_goal_line(ax, shot_x: float, shot_y: float, direction: str, team_color: str):
-    """Dibujar línea de dirección del gol con gradiente."""
+def _draw_goal_line_cohesive(ax, shot_x: float, shot_y: float, direction: str, team_color: str, xg_value: float):
+    """
+    Dibujar línea de gol con gradiente y flecha final al estilo pass_network.
+    Adapta el grosor según el xG del disparo.
+    """
+    # Determinar la portería objetivo
     goal_x = 105 if direction == 'left_to_right' else 0
     goal_y = 34
     
-    num_points = 50
-    x_points = np.linspace(shot_x, goal_x, num_points)
-    y_points = np.linspace(shot_y, goal_y, num_points)
+    # Calcular grosor basado en xG (similar a pass_count en connections)
+    base_width = GOAL_LINE_CONFIG['width_base']
+    width_factor = GOAL_LINE_CONFIG['width_multiplier']
+    line_width = base_width + (xg_value * width_factor * 8)  # Escalar según xG
+    line_width = max(line_width, 1.5)  # Mínimo
+    line_width = min(line_width, 6.0)  # Máximo
     
+    # Calcular dirección y distancia
+    dx, dy = goal_x - shot_x, goal_y - shot_y
+    length = np.sqrt(dx**2 + dy**2)
+    
+    if length == 0:
+        return
+    
+    # Vector unitario
+    ux, uy = dx / length, dy / length
+    
+    # Calcular punto final (sin llegar exactamente a la portería)
+    margin = 2.0  # Espacio antes de la portería
+    end_x = goal_x - margin * ux
+    end_y = goal_y - margin * uy
+    
+    # Crear gradiente suave con más puntos
+    num_points = GOAL_LINE_CONFIG['gradient_points']
+    x_points = np.linspace(shot_x, end_x, num_points)
+    y_points = np.linspace(shot_y, end_y, num_points)
+    
+    # Crear segmentos para LineCollection
     points = np.array([x_points, y_points]).T.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
     
-    alphas = np.linspace(0.3, 1.0, len(segments))
+    # Gradiente de transparencia (como en pass_network)
+    alphas = np.linspace(0.15, 1.0, len(segments))
     rgb = mcolors.to_rgb(team_color)
-    colors_alpha = [(rgb[0], rgb[1], rgb[2], alpha) for alpha in alphas]
+    colors_with_alpha = [(rgb[0], rgb[1], rgb[2], alpha) for alpha in alphas]
     
-    lc = LineCollection(segments, colors=colors_alpha, linewidths=3.5, capstyle='round', zorder=7)
+    # Dibujar línea con gradiente
+    lc = LineCollection(segments, colors=colors_with_alpha, linewidths=line_width,
+                       capstyle='round', zorder=8)
     ax.add_collection(lc)
+    
+    # Dibujar flecha al final (adaptada de pass_network)
+    _draw_goal_arrow_cohesive(ax, shot_x, shot_y, end_x, end_y, team_color, line_width)
+
+def _draw_goal_arrow_cohesive(ax, start_x: float, start_y: float, end_x: float, end_y: float,
+                             color: str, line_width: float):
+    """
+    Dibujar flecha al final de la línea de gol usando la misma lógica que pass_network.
+    """
+    # Calcular dirección
+    dx, dy = end_x - start_x, end_y - start_y
+    length = np.sqrt(dx**2 + dy**2)
+    
+    if length == 0:
+        return
+    
+    # Vector unitario y perpendicular
+    ux, uy = dx / length, dy / length
+    px, py = -uy, ux
+    
+    # Tamaño de flecha adaptado del line_width
+    size = max(GOAL_LINE_CONFIG['arrow_size'], line_width * 0.25)
+    extension = size * GOAL_LINE_CONFIG['arrow_extension']
+    
+    # Punto de la punta (ligeramente extendido)
+    tip_x = end_x + extension * ux
+    tip_y = end_y + extension * uy
+    
+    # Punto base de la flecha
+    origin_x = tip_x - size * 1.0 * ux + size * 0.7 * px
+    origin_y = tip_y - size * 1.0 * uy + size * 0.7 * py
+    
+    # Dibujar la flecha
+    ax.plot([tip_x, origin_x], [tip_y, origin_y], 
+           color=color, linewidth=max(2.0, line_width * 0.8), 
+           alpha=1.0, solid_capstyle='round', zorder=100)
 
 def _add_interior_layout(ax, shots_df: pd.DataFrame, team_a: str, team_b: str, colors: Dict):
     """Layout interior con leyendas centrales y xG en círculo central."""
@@ -288,7 +364,7 @@ def _draw_symbols_legend(ax, x: float, y: float):
 def create_shot_map_with_match_data(match_data: Dict[str, pd.DataFrame],
                                    team_colors: Dict[str, str] = None,
                                    save_path: Optional[str] = None) -> plt.Figure:
-    """Crear shot map desde datos pre-cargados con escalado unificado."""
+    """Crear shot map desde datos pre-cargados con escalado unificado y líneas cohesivas."""
     if 'shots' not in match_data or match_data['shots'].empty:
         raise ValueError("No shot data found in match_data")
     
