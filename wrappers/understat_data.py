@@ -124,7 +124,8 @@ def extract_shot_events(
     league: str,
     season: str,
     player_filter: Optional[str] = None,
-    team_filter: Optional[str] = None
+    team_filter: Optional[str] = None,
+    verbose: bool = False  # ← AGREGAR ESTE PARÁMETRO
 ) -> pd.DataFrame:
     """
     Extraer eventos de disparos con información espacial y táctica completa.
@@ -135,15 +136,21 @@ def extract_shot_events(
         season: Identificador de temporada
         player_filter: Filtro opcional de nombre de jugador
         team_filter: Filtro opcional de nombre de equipo
+        verbose: Mostrar información de progreso
         
     Returns:
         DataFrame con eventos de disparos completos y análisis táctico
     """
     try:
+        if verbose:
+            print(f"   Extracting shot data for match {match_id}...")
+            
         understat = Understat(leagues=[league], seasons=[season])
         shot_events = understat.read_shot_events(match_id=match_id)
         
         if shot_events is None or shot_events.empty:
+            if verbose:
+                print(f"   No shot events found for match {match_id}")
             return pd.DataFrame()
         
         enhanced_events = _process_shot_events(shot_events)
@@ -152,10 +159,15 @@ def extract_shot_events(
         if not filtered_events.empty:
             filtered_events['match_id'] = match_id
             filtered_events['data_source'] = 'understat'
+            
+        if verbose:
+            print(f"   Found {len(filtered_events)} shot events")
         
         return filtered_events
         
-    except Exception:
+    except Exception as e:
+        if verbose:
+            print(f"   Error extracting shot events: {e}")
         return pd.DataFrame()
 
 
