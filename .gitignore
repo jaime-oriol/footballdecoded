@@ -1,6 +1,6 @@
+# Logs
 logs
 config
-
 *.py[cod]
 
 # C extensions
@@ -43,3 +43,7 @@ pip-log.txt
 # ...except these
 !.gitignore
 !.travis.yml
+
+# Football data folders (PRIVATE)
+viz/
+wrappers/
