@@ -1,0 +1,96 @@
+team,source,target,pass_count,direction,avg_source_x,avg_source_y,avg_target_x,avg_target_y
+Athletic Club,Aitor Paredes,Unai Simón,3,A_to_B,25.03,69.8,15.33,53.67
+Athletic Club,Yuri Berchiche,Aitor Paredes,5,B_to_A,39.22,87.2,30.86,74.02
+Athletic Club,Alex Berenguer,Óscar De Marcos,5,A_to_B,46.86,12.18,46.12,12.9
+Athletic Club,Óscar De Marcos,Alex Berenguer,5,B_to_A,62.44,16.84,72.82,16.68
+Athletic Club,Maroan Sannadi,Nico Williams,3,A_to_B,66.2,35.7,77.07,52.6
+Athletic Club,Íñigo Ruíz de Galarreta,Maroan Sannadi,3,B_to_A,50.27,34.9,69.63,13.77
+Athletic Club,Óscar De Marcos,Maroan Sannadi,5,B_to_A,40.1,7.4,61.12,12.92
+Athletic Club,Mikel Jauregizar,Nico Williams,8,A_to_B,51.8,71.58,64.41,91.19
+Athletic Club,Unai Gómez,Mikel Jauregizar,4,B_to_A,48.75,62.18,50.78,68.0
+Athletic Club,Nico Williams,Íñigo Ruíz de Galarreta,3,A_to_B,68.17,66.77,67.83,47.07
+Athletic Club,Yuri Berchiche,Oihan Sancet,3,B_to_A,47.57,77.63,63.23,68.07
+Athletic Club,Yuri Berchiche,Unai Gómez,4,B_to_A,52.98,94.18,54.62,74.9
+Athletic Club,Unai Gómez,Íñigo Ruíz de Galarreta,3,A_to_B,58.27,73.17,50.1,64.43
+Athletic Club,Unai Núñez,Óscar De Marcos,4,A_to_B,38.75,39.7,48.18,6.65
+Athletic Club,Óscar De Marcos,Unai Núñez,3,B_to_A,41.13,19.23,31.43,28.63
+Athletic Club,Unai Simón,Maroan Sannadi,5,A_to_B,13.52,44.86,67.02,30.96
+Athletic Club,Yuri Berchiche,Nico Williams,4,A_to_B,50.85,88.72,55.2,81.2
+Athletic Club,Yuri Berchiche,Íñigo Ruíz de Galarreta,3,A_to_B,21.83,90.8,27.17,64.67
+Athletic Club,Íñigo Ruíz de Galarreta,Óscar De Marcos,4,A_to_B,70.08,33.25,79.3,14.68
+Athletic Club,Óscar De Marcos,Íñigo Ruíz de Galarreta,3,B_to_A,57.43,11.27,51.7,18.9
+Barcelona,Alejandro Balde,Fermín López,10,A_to_B,49.02,86.26,53.49,86.96
+Barcelona,Fermín López,Alejandro Balde,3,B_to_A,67.83,87.9,70.17,92.27
+Barcelona,Alejandro Balde,Gavi,3,A_to_B,65.73,89.0,59.47,70.63
+Barcelona,Gavi,Alejandro Balde,6,B_to_A,42.2,59.98,48.1,90.92
+Barcelona,Alejandro Balde,Pau Cubarsí,13,A_to_B,44.82,87.84,33.12,76.1
+Barcelona,Pau Cubarsí,Alejandro Balde,9,B_to_A,29.09,74.52,37.61,89.32
+Barcelona,Alejandro Balde,Pedri,15,A_to_B,50.62,83.03,48.05,70.39
+Barcelona,Pedri,Alejandro Balde,22,B_to_A,51.87,56.78,54.32,84.87
+Barcelona,Alejandro Balde,Raphinha,10,A_to_B,51.58,89.54,57.46,92.19
+Barcelona,Raphinha,Alejandro Balde,8,B_to_A,55.24,91.01,45.02,90.54
+Barcelona,Alejandro Balde,Ronald Araújo,3,A_to_B,33.47,73.33,27.37,47.07
+Barcelona,Ronald Araújo,Alejandro Balde,3,B_to_A,40.6,41.3,45.4,67.0
+Barcelona,Andreas Christensen,Eric García,5,A_to_B,29.8,31.64,32.58,10.5
+Barcelona,Eric García,Andreas Christensen,4,B_to_A,31.1,6.3,22.58,24.3
+Barcelona,Frenkie de Jong,Andreas Christensen,3,B_to_A,38.6,54.63,30.97,43.13
+Barcelona,Andreas Christensen,Gavi,6,A_to_B,34.33,35.37,37.75,30.47
+Barcelona,Gavi,Andreas Christensen,8,B_to_A,43.71,29.01,38.85,31.05
+Barcelona,Andreas Christensen,Iñaki Peña,4,A_to_B,24.22,29.68,8.35,47.5
+Barcelona,Iñaki Peña,Andreas Christensen,4,B_to_A,7.9,51.75,14.15,35.7
+Barcelona,Andreas Christensen,Pedri,10,A_to_B,35.72,32.04,43.49,35.19
+Barcelona,Pedri,Andreas Christensen,6,B_to_A,53.07,41.47,41.12,37.17
+Barcelona,Eric García,Dani Olmo,4,B_to_A,44.75,17.02,56.75,19.85
+Barcelona,Fermín López,Dani Olmo,3,B_to_A,63.73,79.67,64.17,57.73
+Barcelona,Gavi,Dani Olmo,4,B_to_A,30.95,36.2,40.48,30.62
+Barcelona,Dani Olmo,Lamine Yamal,4,A_to_B,57.15,30.45,60.22,20.72
+Barcelona,Dani Olmo,Pedri,3,A_to_B,60.3,42.87,60.0,55.17
+Barcelona,Dani Olmo,Robert Lewandowski,3,A_to_B,68.67,36.23,72.23,40.97
+Barcelona,Eric García,Fermín López,10,A_to_B,39.96,11.44,53.07,16.86
+Barcelona,Fermín López,Eric García,6,B_to_A,58.47,19.95,52.07,18.27
+Barcelona,Eric García,Gavi,14,A_to_B,33.91,12.9,33.35,25.4
+Barcelona,Gavi,Eric García,12,B_to_A,41.48,31.2,41.86,18.16
+Barcelona,Eric García,Lamine Yamal,12,A_to_B,49.95,15.02,57.38,10.06
+Barcelona,Lamine Yamal,Eric García,11,B_to_A,57.28,10.98,51.05,14.09
+Barcelona,Eric García,Pedri,11,A_to_B,39.43,11.2,41.14,26.65
+Barcelona,Pedri,Eric García,18,B_to_A,42.02,37.99,39.37,15.98
+Barcelona,Eric García,Ronald Araújo,16,A_to_B,40.12,10.81,32.17,28.5
+Barcelona,Ronald Araújo,Eric García,20,B_to_A,30.51,30.78,36.12,13.02
+Barcelona,Fermín López,Gavi,4,A_to_B,39.5,55.9,34.33,55.65
+Barcelona,Gavi,Fermín López,6,B_to_A,38.95,38.98,42.78,49.18
+Barcelona,Fermín López,Lamine Yamal,7,A_to_B,67.76,37.19,70.77,36.07
+Barcelona,Lamine Yamal,Fermín López,5,B_to_A,67.78,30.04,75.12,36.06
+Barcelona,Fermín López,Pedri,9,A_to_B,58.22,71.9,56.59,66.08
+Barcelona,Pedri,Fermín López,11,B_to_A,47.49,48.71,58.08,49.72
+Barcelona,Fermín López,Raphinha,3,A_to_B,38.4,76.37,53.6,87.37
+Barcelona,Fermín López,Robert Lewandowski,4,A_to_B,46.45,64.47,58.48,57.18
+Barcelona,Ronald Araújo,Fermín López,5,B_to_A,36.36,31.86,49.2,35.66
+Barcelona,Gavi,Iñaki Peña,3,A_to_B,29.07,33.23,20.57,41.67
+Barcelona,Gavi,Lamine Yamal,6,A_to_B,41.9,28.83,50.95,13.53
+Barcelona,Lamine Yamal,Gavi,5,B_to_A,62.6,13.32,54.76,21.84
+Barcelona,Gavi,Pau Cubarsí,5,A_to_B,46.24,69.3,40.06,67.84
+Barcelona,Pau Cubarsí,Gavi,13,B_to_A,36.62,69.82,40.78,56.22
+Barcelona,Gavi,Pedri,18,A_to_B,39.09,44.93,42.25,48.43
+Barcelona,Pedri,Gavi,18,B_to_A,50.38,49.6,47.58,38.98
+Barcelona,Raphinha,Gavi,3,B_to_A,51.77,79.9,47.9,74.53
+Barcelona,Gavi,Ronald Araújo,18,A_to_B,43.64,40.92,37.81,33.47
+Barcelona,Ronald Araújo,Gavi,16,B_to_A,37.59,37.14,42.85,43.16
+Barcelona,Iñaki Peña,Pau Cubarsí,9,A_to_B,12.59,52.89,18.9,70.39
+Barcelona,Pau Cubarsí,Iñaki Peña,5,B_to_A,24.66,85.26,17.24,60.6
+Barcelona,Iñaki Peña,Pedri,5,A_to_B,12.52,50.48,21.14,53.78
+Barcelona,Iñaki Peña,Ronald Araújo,13,A_to_B,11.62,52.31,22.25,35.01
+Barcelona,Ronald Araújo,Iñaki Peña,5,B_to_A,31.16,38.98,13.76,49.04
+Barcelona,Lamine Yamal,Pedri,8,A_to_B,65.41,37.38,65.41,47.34
+Barcelona,Pedri,Lamine Yamal,11,B_to_A,55.95,45.6,57.6,31.73
+Barcelona,Lamine Yamal,Ronald Araújo,3,A_to_B,59.6,14.1,52.07,21.5
+Barcelona,Ronald Araújo,Lamine Yamal,6,B_to_A,39.45,35.05,53.93,10.55
+Barcelona,Pau Cubarsí,Pedri,7,A_to_B,26.03,73.33,35.17,65.99
+Barcelona,Pedri,Pau Cubarsí,3,B_to_A,34.27,70.83,29.67,76.43
+Barcelona,Raphinha,Pau Cubarsí,3,B_to_A,52.5,85.83,40.9,75.07
+Barcelona,Pau Cubarsí,Ronald Araújo,6,A_to_B,31.88,64.07,34.18,27.75
+Barcelona,Pedri,Raphinha,6,A_to_B,37.47,49.23,43.57,58.15
+Barcelona,Raphinha,Pedri,5,B_to_A,72.14,56.94,66.76,52.22
+Barcelona,Pedri,Robert Lewandowski,3,A_to_B,48.07,52.6,58.5,56.03
+Barcelona,Robert Lewandowski,Pedri,3,B_to_A,62.3,62.9,58.57,59.97
+Barcelona,Pedri,Ronald Araújo,12,A_to_B,44.29,53.18,35.87,36.41
+Barcelona,Ronald Araújo,Pedri,21,B_to_A,33.44,31.49,41.16,40.82

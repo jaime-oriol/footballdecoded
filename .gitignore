@@ -45,5 +45,5 @@ pip-log.txt
 !.travis.yml
 
 # Football data folders (PRIVATE)
-viz/
-wrappers/
+# viz/
+# wrappers/
