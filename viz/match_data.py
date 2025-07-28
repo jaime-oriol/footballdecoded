@@ -282,21 +282,28 @@ def _aggregate_players(events: pd.DataFrame) -> pd.DataFrame:
 
 def _aggregate_zones(events: pd.DataFrame) -> pd.DataFrame:
     def get_zone(x, y):
-        if x < 33.33:
-            zone_base = 0
+        # 18 zones: 6x3 grid (6 horizontal, 3 vertical)
+        if x < 16.67:
+            zone_x = 0
+        elif x < 33.33:
+            zone_x = 1
+        elif x < 50:
+            zone_x = 2
         elif x < 66.67:
-            zone_base = 6
+            zone_x = 3
+        elif x < 83.33:
+            zone_x = 4
         else:
-            zone_base = 12
+            zone_x = 5
         
         if y < 33.33:
-            zone_offset = 0
+            zone_y = 0
         elif y < 66.67:
-            zone_offset = 2
+            zone_y = 1
         else:
-            zone_offset = 4
+            zone_y = 2
         
-        return zone_base + zone_offset + 1
+        return zone_x * 3 + zone_y + 1
     
     events['zone_id'] = events.apply(lambda r: get_zone(r['x'], r['y']), axis=1)
     
@@ -314,12 +321,8 @@ def _aggregate_zones(events: pd.DataFrame) -> pd.DataFrame:
 
 def _save_match_data(data: Dict[str, pd.DataFrame], league: str, season: str,
                     home: str, away: str, date: str):
-    home_clean = ''.join(c for c in home[:3].upper() if c.isalnum())
-    away_clean = ''.join(c for c in away[:3].upper() if c.isalnum())
-    date_clean = date.replace('-', '')
-    
-    base_dir = os.path.join(os.path.dirname(__file__), 'data', league, season,
-                           f"{home_clean}{away_clean}_{date_clean}")
+    # Simple save to /data/ folder
+    base_dir = os.path.join(os.path.dirname(__file__), 'data')
     os.makedirs(base_dir, exist_ok=True)
     
     filenames = {
