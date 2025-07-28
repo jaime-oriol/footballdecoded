@@ -55,6 +55,7 @@ def extract_match_complete(ws_id: int, us_id: int, league: str, season: str,
         'zones': zones
     }
     
+
     _save_match_data(result, league, season, home_team, away_team, match_date)
     
     # Summary
