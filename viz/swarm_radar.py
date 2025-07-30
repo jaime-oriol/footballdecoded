@@ -35,8 +35,10 @@ def create_swarm_radar(df, player_ids, metrics_config, comparison_text,
     df_expanded = _extract_metrics_to_columns(df, metrics_config['metrics'])
     df_expanded = _calculate_per90_metrics(df_expanded, metrics_config['metrics'])
     
+    # Filtrar para percentiles
     df_percentiles = df_expanded[_get_minutes_played(df_expanded) >= min_minutes].copy()
     
+    # Calcular percentiles para todos
     for metric in metrics_config['metrics']:
         df_expanded[f'{metric}_percentile'] = _calculate_percentile(
             df_expanded[metric], df_percentiles[metric]
@@ -104,7 +106,7 @@ def _calculate_percentile(player_values, reference_values):
     ref_clean = reference_values.dropna()
     
     for value in player_values:
-        if pd.isna(value):
+        if pd.isna(value) or len(ref_clean) == 0:
             percentiles.append(0)
         else:
             percentile = stats.percentileofscore(ref_clean, value)
@@ -115,18 +117,21 @@ def _calculate_percentile(player_values, reference_values):
 def _generate_radar_visualization(df, player_ids, metrics_config, comparison_text, colors):
     """Genera visualización completa"""
     
+    # Marcar jugadores principales
     df['primary_player'] = 'Other'
-    df['plot_size'] = 7
-    
     for i, player_id in enumerate(player_ids):
         mask = df['unique_player_id'] == player_id
         df.loc[mask, 'primary_player'] = f'Player_{i+1}'
-        df.loc[mask, 'plot_size'] = 9
     
+    # TODOS los jugadores tienen el mismo tamaño en swarmplot
+    df['plot_size'] = 5  # Tamaño pequeño para todos
+    
+    # Ordenar para consistencia
     df = df.sort_values('primary_player')
     
     num_metrics = len(metrics_config['metrics'])
     
+    # Calcular posiciones angulares
     theta_mid = np.radians(np.linspace(0, 360, num_metrics+1))[:-1] + np.pi/2
     theta_mid = [x if x < 2*np.pi else x - 2*np.pi for x in theta_mid]
     
@@ -134,9 +139,11 @@ def _generate_radar_visualization(df, player_ids, metrics_config, comparison_tex
     x_base = 0.325 + r_base * np.cos(theta_mid)
     y_base = 0.3 + 0.89 * r_base * np.sin(theta_mid)
     
+    # Crear figura principal
     fig = plt.figure(constrained_layout=False, figsize=(9, 11))
     fig.set_facecolor('#313332')
     
+    # Radar principal
     radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     theta = np.arange(0, 2*np.pi, 0.01)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
@@ -149,60 +156,57 @@ def _generate_radar_visualization(df, player_ids, metrics_config, comparison_tex
     ax_mins, ax_maxs = [], []
     path_eff = [path_effects.Stroke(linewidth=2, foreground='#313332'), path_effects.Normal()]
     
+    # Para cada métrica
     for idx, metric in enumerate(metrics_config['metrics']):
         
+        # Crear mini figura para swarmplot
         fig_save, ax_save = plt.subplots(figsize=(4.5, 1.5))
-        fig_save.set_facecolor('#313332')
-        fig_save.patch.set_alpha(0)
+        fig_save.patch.set_alpha(0)  # Transparente el patch
+        ax_save.patch.set_alpha(0)    # Transparente el axis
         
-        # Colores por jugador
-        colors_list = []
-        for _, row in df.iterrows():
-            if row['primary_player'] == 'Player_1':
-                colors_list.append(colors[0])
-            elif row['primary_player'] == 'Player_2' and len(player_ids) > 1:
-                colors_list.append(colors[1])
-            else:
-                colors_list.append('grey')
+        # Filtrar valores válidos
+        valid_data = df[df[metric].notna()]
         
-        sns.scatterplot(x=df[metric], y=[""]*len(df), 
-                       c=colors_list, s=df['plot_size']*10, 
-                       edgecolor='w', linewidth=0.5, alpha=0.8)
+        if len(valid_data) > 0:
+            # Swarmplot simple - TODOS grises y pequeños
+            sns.swarmplot(x=valid_data[metric], y=[""]*len(valid_data), 
+                         color='grey', size=5, edgecolor='w', linewidth=0.5, 
+                         alpha=0.6, ax=ax_save, zorder=1)
         
-        # Percentiles de jugadores principales
-        for i, player_id in enumerate(player_ids):
-            player_data = df[df['unique_player_id'] == player_id]
-            if not player_data.empty:
-                percentile = player_data[f'{metric}_percentile'].iloc[0]
-                value = player_data[metric].iloc[0]
-                ax_save.axvline(value, color=colors[i], alpha=0.7, linestyle='--', linewidth=2)
-                ax_save.text(value, 0.1, f'{percentile:.0f}%', 
-                           ha='center', va='bottom', color=colors[i], 
-                           fontweight='bold', fontsize=8)
-        
-        ax_save.patch.set_alpha(0)
+        # Configurar el axis
+        ax_save.legend([], [], frameon=False)
         ax_save.set_ylim(-0.5, 0.5)
         ax_save.spines['bottom'].set_position(('axes', 0.5))
         ax_save.spines['bottom'].set_color('w')
         ax_save.spines['top'].set_visible(False)
-        ax_save.spines['right'].set_color('w')
+        ax_save.spines['right'].set_visible(False)
         ax_save.spines['left'].set_visible(False)
         ax_save.set_xlabel("")
         ax_save.set_ylabel("")
-        ax_save.tick_params(left=False, bottom=True, colors='w', labelsize=8)
+        ax_save.tick_params(left=False, right=False, bottom=True, colors='w', labelsize=8)
+        ax_save.set_yticklabels([])
         
+        # Rotar etiquetas según posición
         if theta_mid[idx] < np.pi/2 or theta_mid[idx] > 3*np.pi/2:
             plt.setp(ax_save.get_xticklabels(), path_effects=path_eff, fontweight='bold')
         else:
             plt.setp(ax_save.get_xticklabels(), path_effects=path_eff, fontweight='bold', rotation=180)
         
+        # Invertir si es métrica negativa
         if metric in metrics_config.get('negative_metrics', []):
             ax_save.invert_xaxis()
         
-        ax_mins.append(ax_save.get_xlim()[0])
-        ax_maxs.append(ax_save.get_xlim()[1] * 1.05)
+        # Guardar límites con margen reducido para evitar desbordamiento
+        x_min, x_max = ax_save.get_xlim()
+        x_range = x_max - x_min
+        # Reducir el rango para que los puntos no se desborden
+        ax_mins.append(x_min - x_range * 0.1)
+        ax_maxs.append(x_max + x_range * 0.1)
         
-        fig_save.savefig('temp_swarm.png', dpi=300, bbox_inches='tight', facecolor='#313332')
+        # Guardar imagen temporal con fondo transparente
+        fig_save.savefig('temp_swarm.png', dpi=300, bbox_inches='tight', 
+                        transparent=True, facecolor='none', edgecolor='none')
+        plt.close(fig_save)
         
         # Posicionar en radar
         scales = (0, 1, 0, 1)
@@ -218,20 +222,19 @@ def _generate_radar_visualization(df, player_ids, metrics_config, comparison_tex
         ax_loc = ax_div.new_locator(nx=0, ny=0)
         ax.set_axes_locator(ax_loc)
         
+        # Añadir imagen
         img = Image.open('temp_swarm.png')
         aux_ax.imshow(img, extent=[-0.18, 1.12, -0.15, 1.15])
         ax.axis('off')
         
-        # Título métrica
+        # Título de la métrica
         text_rotation = 90 if theta_mid[idx] >= np.pi else -90
         radar_ax.text(theta_mid[idx], 0.92, metrics_config['titles'][idx], 
                      ha="center", va="center", fontweight="bold", 
                      fontsize=10, color='w',
                      rotation=text_rotation + (180/np.pi) * theta_mid[idx])
-        
-        plt.close(fig_save)
     
-    # Info jugadores
+    # Info jugadores (arriba)
     for i, player_id in enumerate(player_ids):
         player_data = df[df['unique_player_id'] == player_id]
         if not player_data.empty:
@@ -253,8 +256,8 @@ def _generate_radar_visualization(df, player_ids, metrics_config, comparison_tex
             fig.text(x_pos, 0.909, f"{row['league']} {row['season']}", 
                     fontweight="bold", fontsize=12, color='w')
     
-    # Pizza radar central
-    _add_pizza_radar(fig, df, player_ids, metrics_config, ax_mins, ax_maxs, colors)
+    # Pizza radar central con percentiles
+    _add_pizza_radar_with_percentiles(fig, df, player_ids, metrics_config, ax_mins, ax_maxs, colors)
     
     # Texto descriptivo
     fig.text(0.975, 0.953, "Player Comparison", fontweight="bold", 
@@ -263,9 +266,9 @@ def _generate_radar_visualization(df, player_ids, metrics_config, comparison_tex
     fig.text(0.975, 0.942, description_text, fontweight="regular", 
             fontsize=8, color='w', ha='right', va='top')
     
-    # Footer
-    fig.text(0.5, 0.02, "Created with FootballDecoded", 
-            fontstyle="italic", ha="center", fontsize=9, color="white")
+    # Footer con disclaimer
+    fig.text(0.5, 0.02, "Created by Jaime Oriol | *Missing values assigned percentile 0", 
+            fontstyle="italic", ha="center", fontsize=9, color="white", alpha=0.8)
     
     # Limpiar archivos temporales
     if os.path.exists('temp_swarm.png'):
@@ -274,17 +277,20 @@ def _generate_radar_visualization(df, player_ids, metrics_config, comparison_tex
     radar_ax.set_rmax(1)
     return fig
 
-def _add_pizza_radar(fig, df, player_ids, metrics_config, ax_mins, ax_maxs, colors):
-    """Añade radar pizza central"""
+def _add_pizza_radar_with_percentiles(fig, df, player_ids, metrics_config, ax_mins, ax_maxs, colors):
+    """Añade radar pizza central con percentiles en cajas"""
     
+    # Configurar radar pizza
     pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
-    pizza_ax.set_theta_offset(17)
+    pizza_ax.set_theta_offset(np.radians(17))
     pizza_ax.axis('off')
     
+    # Reordenar métricas para PyPizza
     pizza_metrics = [metrics_config['metrics'][0]] + list(reversed(metrics_config['metrics'][1:]))
     pizza_mins = [ax_mins[0]] + list(reversed(ax_mins[1:]))
     pizza_maxs = [ax_maxs[0]] + list(reversed(ax_maxs[1:]))
     
+    # Objeto PyPizza
     radar_object = PyPizza(params=pizza_metrics,
                           background_color="w",
                           straight_line_color="w",
@@ -296,14 +302,36 @@ def _add_pizza_radar(fig, df, player_ids, metrics_config, ax_mins, ax_maxs, colo
                           other_circle_lw=0.1,
                           inner_circle_size=18)
     
-    # Valores jugadores
+    # Valores y percentiles de jugadores
     player_values = []
+    player_percentiles = []
+    
     for player_id in player_ids:
         player_data = df[df['unique_player_id'] == player_id]
         if not player_data.empty:
-            values = player_data[pizza_metrics].values[0].tolist()
+            values = []
+            percentiles = []
+            for metric in pizza_metrics:
+                val = player_data[metric].values[0]
+                perc = player_data[f'{metric}_percentile'].values[0]
+                
+                # Si el valor es NaN, usar el mínimo
+                if pd.isna(val):
+                    metric_idx = pizza_metrics.index(metric)
+                    val = pizza_mins[metric_idx]
+                    perc = 0
+                
+                # IMPORTANTE: Verificar también si el percentil es NaN
+                if pd.isna(perc):
+                    perc = 0
+                
+                values.append(val)
+                percentiles.append(int(perc))
+            
             player_values.append(values)
+            player_percentiles.append(percentiles)
     
+    # Dibujar radar
     if len(player_values) == 1:
         radar_object.make_pizza(values=player_values[0],
                                color_blank_space='same',
@@ -321,3 +349,59 @@ def _add_pizza_radar(fig, df, player_ids, metrics_config, ax_mins, ax_maxs, colo
                                kwargs_compare=dict(facecolor=colors[1], alpha=0.3, 
                                                   edgecolor='#313332', linewidth=1),
                                ax=pizza_ax)
+    
+    # Añadir percentiles en cajas - AHORA USANDO PERCENTILES NO VALORES
+    _add_percentile_boxes(pizza_ax, player_values, player_percentiles, 
+                         pizza_mins, pizza_maxs, colors, len(pizza_metrics))
+
+def _add_percentile_boxes(ax, player_values, player_percentiles, mins, maxs, colors, n_metrics):
+    """Añade cajas con percentiles al final de cada arco"""
+    
+    # Calcular ángulos para cada métrica
+    angles = np.linspace(0, 2 * np.pi, n_metrics, endpoint=False)
+    
+    # Ajustar offset del radar pizza
+    angles = angles + np.radians(17)
+    
+    for player_idx, (values, percentiles) in enumerate(zip(player_values, player_percentiles)):
+        for metric_idx, (value, percentile, min_val, max_val) in enumerate(zip(values, percentiles, mins, maxs)):
+            
+            # Normalizar valor al rango 0-1
+            if max_val - min_val > 0:
+                norm_value = (value - min_val) / (max_val - min_val)
+            else:
+                norm_value = 0
+            
+            # Radio del valor en el radar (0.18 a 0.86)
+            radius = 0.18 + norm_value * 0.68
+            
+            # Calcular posición
+            angle = angles[metric_idx]
+            x = radius * np.cos(angle)
+            y = radius * np.sin(angle)
+            
+            # Añadir caja con percentil bien formateada
+            bbox_props = dict(boxstyle="round,pad=0.2", 
+                            facecolor=colors[player_idx], 
+                            edgecolor='white',
+                            linewidth=1.0,
+                            alpha=0.95)
+            
+            # Offset para evitar solapamiento entre jugadores
+            if len(player_values) > 1 and player_idx == 1:
+                # Mover ligeramente el segundo jugador
+                offset_angle = 0.08
+                x += offset_angle * np.cos(angle + np.pi/2)
+                y += offset_angle * np.sin(angle + np.pi/2)
+            
+            # Formatear percentil correctamente (0-99, no los valores reales)
+            # Añadir asterisco si el percentil era 0 (valor faltante)
+            percentile_text = f'{int(percentile)}' if percentile > 0 else f'{int(percentile)}*'
+            
+            ax.text(x, y, percentile_text, 
+                   ha='center', va='center',
+                   fontsize=8, fontweight='bold',
+                   color='white',
+                   bbox=bbox_props,
+                   transform=ax.transData,
+                   zorder=100)
