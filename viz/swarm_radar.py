@@ -68,9 +68,8 @@ def create_player_radar(df_data,
     if player_2_id:
         player_2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
     
-    # Setup comparison data based on percentile columns
-    percentile_metrics = [m + '_pct' if not m.endswith('_pct') else m for m in metrics]
-    comparison_df = df_data[['unique_player_id'] + percentile_metrics].copy()
+    # Setup comparison data using raw metrics
+    comparison_df = df_data[['unique_player_id'] + metrics].copy()
     
     # Tag primary players
     comparison_df['Primary Player'] = 'Untagged'
@@ -90,15 +89,35 @@ def create_player_radar(df_data,
     # Define positions for mini plots
     theta_mid = np.radians(np.linspace(0, 360, num_metrics+1))[:-1] + np.pi/2
     theta_mid = [x if x < 2*np.pi else x - 2*np.pi for x in theta_mid]
-    r_base = np.linspace(0.25, 0.25, num_metrics+1)[:-1]
-    x_base, y_base = 0.325 + r_base * np.cos(theta_mid), 0.3 + 0.89 * r_base * np.sin(theta_mid)
+    
+    # Adjust radial distance based on position with 3 categories
+    r_base = []
+    plot_extents = []
+    for angle in theta_mid:
+        angle_deg = np.degrees(angle) % 360
+        
+        # Vertical plots (top/bottom)
+        if (angle_deg > 70 and angle_deg < 110) or (angle_deg > 250 and angle_deg < 290):
+            r_base.append(0.23)
+            plot_extents.append([-0.18, 1.12, -0.15, 1.15])
+        # Lateral plots (left/right)
+        elif (angle_deg > 160 and angle_deg < 200) or (angle_deg > 340 or angle_deg < 20):
+            r_base.append(0.25)
+            plot_extents.append([-0.18, 1.12, -0.15, 1.15])
+        # Diagonal plots
+        else:
+            r_base.append(0.24)
+            # Adjusted extent for better centering of diagonal plots
+            plot_extents.append([-0.08, 1.02, -0.15, 1.15])
+    
+    x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
     # Create figure
     fig = plt.figure(constrained_layout=False, figsize=(9, 11))
     fig.set_facecolor('#313332')
     
-    # Setup radar background
-    theta = np.arange(0, 2*np.pi, 0.01)
+    # Setup radar background - limit lines to radar area
+    theta = np.linspace(0, 2*np.pi, 100)
     radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
     radar_ax.plot(theta, theta*0 + 0.3425, color='grey', lw=1, alpha=0.3)
@@ -112,18 +131,18 @@ def create_player_radar(df_data,
     ax_maxs = []
     
     # Create mini swarm plots
-    for idx, (metric, pct_metric) in enumerate(zip(metrics, percentile_metrics)):
+    for idx, metric in enumerate(metrics):
         # Create mini figure
         fig_save, ax_save = plt.subplots(figsize=(4.5, 1.5))
         fig_save.set_facecolor('#313332')
         fig_save.patch.set_alpha(0)
         
-        # Plot swarm
-        sns.swarmplot(x=comparison_df[pct_metric], 
+        # Plot swarm with raw values and size=3
+        sns.swarmplot(x=comparison_df[metric], 
                      y=[""]*len(comparison_df), 
                      color='grey', 
                      edgecolor='w', 
-                     size=4, 
+                     size=3,
                      zorder=1)
         
         ax_save.legend([], [], frameon=False)
@@ -146,7 +165,7 @@ def create_player_radar(df_data,
             ax_save.invert_xaxis()
         
         ax_mins.append(ax_save.get_xlim()[0])
-        ax_maxs.append(ax_save.get_xlim()[1]*1.05)
+        ax_maxs.append(ax_save.get_xlim()[1])
         
         # Save temp image
         temp_path = f'temp_{idx}.png'
@@ -168,7 +187,8 @@ def create_player_radar(df_data,
         ax.set_axes_locator(ax_loc)
         
         img = Image.open(temp_path)
-        aux_ax.imshow(img, extent=[-0.18, 1.12, -0.15, 1.15])
+        # Use specific extent for this plot
+        aux_ax.imshow(img, extent=plot_extents[idx])
         ax.axis('off')
         ax.axis['right'].set_visible(False)
         ax.axis['top'].set_visible(False)
@@ -217,11 +237,11 @@ def create_player_radar(df_data,
     pizza_ax.axis('off')
     
     # Reorder metrics for pizza
-    pizza_metrics = [percentile_metrics[0]] + list(reversed(percentile_metrics[1:]))
+    pizza_metrics = [metrics[0]] + list(reversed(metrics[1:]))
     ax_mins = [ax_mins[0]] + list(reversed(ax_mins[1:]))
     ax_maxs = [ax_maxs[0]] + list(reversed(ax_maxs[1:]))
     
-    # Get values for radar
+    # Get values for radar using raw metrics
     radar_values_p1 = [player_1_data[m] for m in pizza_metrics]
     radar_values_p2 = [player_2_data[m] for m in pizza_metrics] if player_2_data is not None else None
     
@@ -256,12 +276,14 @@ def create_player_radar(df_data,
     
     radar_object.make_pizza(**kwargs)
     
-    # Add title and description
-    fig.text(0.975, 0.953, radar_title, fontweight="bold", fontsize=12, color='w', ha='right')
-    # Wrap description if too long
+    # Add title and description - fixed alignment
+    title_x = 0.835  # Starting position for title (right aligned)
+    fig.text(title_x, 0.953, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
+    
+    # Calculate where title starts to align description below it
     import textwrap
     wrapped_desc = "\n".join(textwrap.wrap(radar_description, 40))
-    fig.text(0.975, 0.942, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='right', va='top')
+    fig.text(title_x, 0.935, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='left', va='top')
     
     # Add footer
     fig.text(0.5, 0.02, "Created by Jaime Oriol", 
