@@ -1,299 +1,281 @@
-#!/usr/bin/env python3
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib import font_manager
-from mplsoccer import PyPizza
+import matplotlib.patheffects as path_effects
+from matplotlib.transforms import Affine2D
+import mpl_toolkits.axisartist.floating_axes as floating_axes
+from mpl_toolkits.axes_grid1 import Divider
+import mpl_toolkits.axes_grid1.axes_size as Size
 import seaborn as sns
+from mplsoccer import PyPizza
 from PIL import Image
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
-class HybridPizzaSwarm:
+def create_player_radar(df_data, 
+                       player_1_id,
+                       metrics,
+                       metric_titles,
+                       player_2_id=None,
+                       player_1_color='lightskyblue',
+                       player_2_color='coral',
+                       radar_title='Player Comparison',
+                       radar_description='Statistical comparison of selected players',
+                       negative_metrics=None,
+                       save_path='player_radar.png',
+                       show_plot=True):
     """
-    Hybrid pizza chart: raw values + percentile labels + swarm distribution
+    Create a swarm radar visualization for player comparison
+    
+    Parameters:
+    -----------
+    df_data : pd.DataFrame
+        DataFrame with player data including metrics and percentiles
+    player_1_id : str
+        unique_player_id for the primary player
+    metrics : list
+        List of 10 metric column names to display
+    metric_titles : list
+        List of 10 display titles for the metrics
+    player_2_id : str, optional
+        unique_player_id for the comparison player
+    player_1_color : str
+        Color for player 1 (default: 'lightskyblue')
+    player_2_color : str
+        Color for player 2 (default: 'coral')
+    radar_title : str
+        Title for the radar chart
+    radar_description : str
+        Description text for the radar
+    negative_metrics : list, optional
+        List of metrics where lower is better
+    save_path : str
+        Path to save the figure
     """
     
-    def __init__(self, df, background_color='#313332'):
-        self.df = df
-        self.bg_color = background_color
-        
-    def create_chart(self, player1_id, player2_id=None, metrics_config=None, 
-                    title_template="Forward Template", comparison_desc="", 
-                    player1_color='#1A78CF', player2_color='coral', figsize=(11, 11)):
-        """
-        Create hybrid pizza with swarm background
-        
-        Args:
-            player1_id: unique_player_id for primary player
-            player2_id: unique_player_id for comparison (optional)
-            metrics_config: dict with 'metrics' and 'titles'
-            title_template: Template name (e.g., "Centre Mid Template")
-            comparison_desc: Description text for comparison group
-            player1_color: Primary player color
-            player2_color: Comparison player color
-            figsize: Figure size
-        """
-        # Get player data
-        p1_data = self._get_player_data(player1_id)
-        p2_data = self._get_player_data(player2_id) if player2_id else None
-        
-        if p1_data is None:
-            raise ValueError(f"Player {player1_id} not found")
-            
-        # Extract metrics
-        metrics = metrics_config['metrics']
-        titles = metrics_config['titles']
-        
-        # Get raw values and percentiles
-        p1_values, p1_pcts = self._extract_values_and_pcts(p1_data, metrics)
-        p2_values, p2_pcts = None, None
-        if p2_data is not None:
-            p2_values, p2_pcts = self._extract_values_and_pcts(p2_data, metrics)
-        
-        # Get metric ranges from full dataset
-        ranges = self._calculate_ranges(metrics)
-        
-        # Create figure
-        fig = plt.figure(figsize=figsize, facecolor=self.bg_color)
-        
-        # Add swarm plots in background
-        self._add_swarm_background(fig, metrics, titles, ranges)
-        
-        # Add pizza chart overlay
-        pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], projection='polar')
-        self._create_pizza_overlay(pizza_ax, p1_values, p1_pcts, p2_values, p2_pcts, 
-                                  ranges, player1_color, player2_color)
-        
-        # Add headers and info
-        self._add_headers(fig, p1_data, p2_data, title_template, comparison_desc,
-                         player1_color, player2_color)
-        
-        # Add footer
-        fig.text(0.5, 0.02, "data: fbref via footballdecoded | viz: custom hybrid chart",
-                fontstyle="italic", ha="center", fontsize=9, color="white")
-        
-        return fig
+    if negative_metrics is None:
+        negative_metrics = []
     
-    def _get_player_data(self, player_id):
-        """Get player row by unique_player_id"""
-        if player_id is None:
-            return None
-        mask = self.df['unique_player_id'] == player_id
-        return self.df[mask].iloc[0] if mask.any() else None
+    # Validate inputs
+    if len(metrics) != 10 or len(metric_titles) != 10:
+        raise ValueError("Must provide exactly 10 metrics and 10 titles")
     
-    def _extract_values_and_pcts(self, player_data, metrics):
-        """Extract raw values and percentiles for metrics"""
-        values, pcts = [], []
-        
-        for metric in metrics:
-            # Raw value
-            val = player_data.get(metric, np.nan)
-            if pd.isna(val):
-                values.append(0)
-            else:
-                values.append(float(val))
-            
-            # Percentile
-            pct_col = f"{metric}_pct"
-            pct = player_data.get(pct_col, np.nan)
-            if pd.isna(pct):
-                pcts.append(50)
-            else:
-                pcts.append(int(pct))
-            
-        return values, pcts
+    # Get player data
+    player_1_data = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]
+    player_2_data = None
+    if player_2_id:
+        player_2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
     
-    def _calculate_ranges(self, metrics):
-        """Calculate min/max ranges for each metric"""
-        ranges = []
-        for metric in metrics:
-            if metric in self.df.columns:
-                valid_vals = self.df[metric].dropna()
-                if len(valid_vals) > 0:
-                    ranges.append((valid_vals.min(), valid_vals.max()))
-                else:
-                    ranges.append((0, 1))
-            else:
-                ranges.append((0, 1))
-        return ranges
+    # Setup comparison data based on percentile columns
+    percentile_metrics = [m + '_pct' if not m.endswith('_pct') else m for m in metrics]
+    comparison_df = df_data[['unique_player_id'] + percentile_metrics].copy()
     
-    def _add_swarm_background(self, fig, metrics, titles, ranges):
-        """Add swarm plots as background layer"""
-        n_metrics = len(metrics)
-        angles = np.linspace(0, 2*np.pi, n_metrics, endpoint=False)
-        
-        # Create swarm for each metric
-        for i, (metric, title, (min_val, max_val)) in enumerate(zip(metrics, titles, ranges)):
-            if metric not in self.df.columns:
-                continue
-                
-            # Get metric values
-            values = self.df[metric].dropna()
-            if len(values) == 0:
-                continue
-            
-            # Normalize to 0-1 for plotting
-            norm_values = (values - min_val) / (max_val - min_val + 1e-10)
-            
-            # Create radial positions with jitter
-            angle = angles[i]
-            n_points = len(norm_values)
-            
-            # Add angular jitter
-            angle_jitter = np.random.normal(0, 0.02, n_points)
-            point_angles = angle + angle_jitter
-            
-            # Radial positions (0.15 to 0.85 of radius)
-            radial_positions = 0.15 + norm_values * 0.7
-            
-            # Convert to x,y
-            x = 0.5 + radial_positions * np.cos(point_angles + np.pi/2) * 0.45
-            y = 0.48 + radial_positions * np.sin(point_angles + np.pi/2) * 0.45
-            
-            # Plot swarm points
-            ax_swarm = fig.add_axes([0, 0, 1, 1])
-            ax_swarm.scatter(x, y, s=15, alpha=0.3, color='grey', edgecolors='none')
-            ax_swarm.set_xlim(0, 1)
-            ax_swarm.set_ylim(0, 1)
-            ax_swarm.axis('off')
+    # Tag primary players
+    comparison_df['Primary Player'] = 'Untagged'
+    comparison_df.loc[comparison_df['unique_player_id'] == player_1_id, 'Primary Player'] = 'Primary 1'
+    if player_2_id:
+        comparison_df.loc[comparison_df['unique_player_id'] == player_2_id, 'Primary Player'] = 'Primary 2'
     
-    def _create_pizza_overlay(self, ax, p1_vals, p1_pcts, p2_vals, p2_pcts, 
-                             ranges, color1, color2):
-        """Create pizza chart with raw values and percentile labels"""
-        # Normalize values to 0-100 scale for pizza
-        norm_p1_vals = []
-        norm_p2_vals = [] if p2_vals else None
+    # Sort to highlight tagged players
+    comparison_df = comparison_df.sort_values('Primary Player')
+    
+    # Path effects
+    path_eff = [path_effects.Stroke(linewidth=2, foreground='#313332'), path_effects.Normal()]
+    
+    # Number of metrics (always 10)
+    num_metrics = 10
+    
+    # Define positions for mini plots
+    theta_mid = np.radians(np.linspace(0, 360, num_metrics+1))[:-1] + np.pi/2
+    theta_mid = [x if x < 2*np.pi else x - 2*np.pi for x in theta_mid]
+    r_base = np.linspace(0.25, 0.25, num_metrics+1)[:-1]
+    x_base, y_base = 0.325 + r_base * np.cos(theta_mid), 0.3 + 0.89 * r_base * np.sin(theta_mid)
+    
+    # Create figure
+    fig = plt.figure(constrained_layout=False, figsize=(9, 11))
+    fig.set_facecolor('#313332')
+    
+    # Setup radar background
+    theta = np.arange(0, 2*np.pi, 0.01)
+    radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
+    radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
+    radar_ax.plot(theta, theta*0 + 0.3425, color='grey', lw=1, alpha=0.3)
+    radar_ax.plot(theta, theta*0 + 0.5150, color='grey', lw=1, alpha=0.3)
+    radar_ax.plot(theta, theta*0 + 0.6875, color='grey', lw=1, alpha=0.3)
+    radar_ax.plot(theta, theta*0 + 0.86, color='grey', lw=1, alpha=0.3)
+    radar_ax.axis('off')
+    
+    # Store axis limits
+    ax_mins = []
+    ax_maxs = []
+    
+    # Create mini swarm plots
+    for idx, (metric, pct_metric) in enumerate(zip(metrics, percentile_metrics)):
+        # Create mini figure
+        fig_save, ax_save = plt.subplots(figsize=(4.5, 1.5))
+        fig_save.set_facecolor('#313332')
+        fig_save.patch.set_alpha(0)
         
-        for i, (val, (min_r, max_r)) in enumerate(zip(p1_vals, ranges)):
-            norm_val = ((val - min_r) / (max_r - min_r + 1e-10)) * 100
-            norm_p1_vals.append(norm_val)
-            
-            if p2_vals:
-                val2 = p2_vals[i]
-                norm_val2 = ((val2 - min_r) / (max_r - min_r + 1e-10)) * 100
-                norm_p2_vals.append(norm_val2)
+        # Plot swarm
+        sns.swarmplot(x=comparison_df[pct_metric], 
+                     y=[""]*len(comparison_df), 
+                     color='grey', 
+                     edgecolor='w', 
+                     size=4, 
+                     zorder=1)
         
-        # Create pizza
-        baker = PyPizza(
-            params=[''] * len(p1_vals),  # Empty params, we'll add custom labels
-            background_color=self.bg_color,
-            straight_line_color="#FFFFFF",
-            straight_line_lw=1,
-            last_circle_color="#FFFFFF",
-            last_circle_lw=1,
-            other_circle_lw=0.5,
-            other_circle_color="#666666",
-            inner_circle_size=20
-        )
+        ax_save.legend([], [], frameon=False)
+        ax_save.patch.set_alpha(0)
+        ax_save.spines['bottom'].set_position(('axes', 0.5))
+        ax_save.spines['bottom'].set_color('w')
+        ax_save.spines['top'].set_color(None)
+        ax_save.spines['right'].set_color('w')
+        ax_save.spines['left'].set_color(None)
+        ax_save.set_xlabel("")
+        ax_save.tick_params(left=False, bottom=True)
+        ax_save.tick_params(axis='both', which='major', labelsize=8, zorder=10, pad=0, colors='w')
         
-        # Make pizza
-        if norm_p2_vals:
-            baker.make_pizza(
-                norm_p1_vals,
-                compare_values=norm_p2_vals,
-                ax=ax,
-                color_blank_space=['#000000', '#000000'],
-                slice_colors=[color1] * len(p1_vals),
-                blank_alpha=0.1,
-                kwargs_slices=dict(edgecolor="#FFFFFF", zorder=2, linewidth=1.5, alpha=0.8),
-                kwargs_compare=dict(facecolor=color2, edgecolor="#FFFFFF", zorder=3, 
-                                  linewidth=1.5, alpha=0.8),
-                kwargs_params=dict(fontsize=0),  # Hide param labels
-                kwargs_values=dict(fontsize=0)   # Hide values
-            )
+        if theta_mid[idx] < np.pi/2 or theta_mid[idx] > 3*np.pi/2:
+            plt.xticks(path_effects=path_eff, fontweight='bold')
         else:
-            baker.make_pizza(
-                norm_p1_vals,
-                ax=ax,
-                color_blank_space='#000000',
-                slice_colors=[color1] * len(p1_vals),
-                blank_alpha=0.1,
-                kwargs_slices=dict(edgecolor="#FFFFFF", zorder=2, linewidth=1.5, alpha=0.8),
-                kwargs_params=dict(fontsize=0),
-                kwargs_values=dict(fontsize=0)
-            )
+            plt.xticks(path_effects=path_eff, fontweight='bold', rotation=180)
         
-        # Add percentile labels at arc ends
-        angles = np.linspace(0, 2*np.pi, len(p1_vals), endpoint=False)
-        for i, (pct1, angle) in enumerate(zip(p1_pcts, angles)):
-            # Position for percentile label (at edge of arc)
-            radius = 0.85 + (norm_p1_vals[i] / 100) * 0.7
-            x = radius * np.cos(angle + np.pi/2)
-            y = radius * np.sin(angle + np.pi/2)
-            
-            # Add percentile badge
-            ax.text(x, y, str(pct1), ha='center', va='center',
-                   bbox=dict(boxstyle="round,pad=0.3", facecolor=color1, 
-                            edgecolor='white', linewidth=1),
-                   fontsize=9, color='white', fontweight='bold', zorder=10)
-            
-            # Add second player percentile if exists
-            if p2_pcts:
-                radius2 = 0.85 + (norm_p2_vals[i] / 100) * 0.7
-                x2 = radius2 * np.cos(angle + np.pi/2)
-                y2 = radius2 * np.sin(angle + np.pi/2)
-                
-                # Offset to avoid overlap
-                offset_angle = 0.08
-                x2 += np.cos(angle + np.pi/2 + offset_angle) * 0.1
-                y2 += np.sin(angle + np.pi/2 + offset_angle) * 0.1
-                
-                ax.text(x2, y2, str(p2_pcts[i]), ha='center', va='center',
-                       bbox=dict(boxstyle="round,pad=0.3", facecolor=color2,
-                                edgecolor='white', linewidth=1),
-                       fontsize=9, color='white', fontweight='bold', zorder=10)
+        if metric in negative_metrics:
+            ax_save.invert_xaxis()
         
-        # Add metric labels
-        for i, (title, angle) in enumerate(zip(metrics_config['titles'], angles)):
-            x = 1.15 * np.cos(angle + np.pi/2)
-            y = 1.15 * np.sin(angle + np.pi/2)
-            
-            rotation = np.degrees(angle) - 90
-            if rotation < -90:
-                rotation += 180
-                
-            ax.text(x, y, title, ha='center', va='center', rotation=rotation,
-                   fontsize=10, color='white', fontweight='bold')
+        ax_mins.append(ax_save.get_xlim()[0])
+        ax_maxs.append(ax_save.get_xlim()[1]*1.05)
         
-        ax.set_xlim(-1.5, 1.5)
-        ax.set_ylim(-1.5, 1.5)
+        # Save temp image
+        temp_path = f'temp_{idx}.png'
+        fig_save.savefig(temp_path, dpi=300)
+        
+        # Add to main figure
+        scales = (0, 1, 0, 1)
+        t = Affine2D().scale(3, 1).rotate_deg(theta_mid[idx]*(180/np.pi))
+        h = floating_axes.GridHelperCurveLinear(t, scales)
+        ax = floating_axes.FloatingSubplot(fig, 111, grid_helper=h)
+        
+        ax = fig.add_subplot(ax)
+        aux_ax = ax.get_aux_axes(t)
+        
+        horiz_scale = [Size.Scaled(1.04)]
+        vert_scale = [Size.Scaled(1.0)]
+        ax_div = Divider(fig, [x_base[idx], y_base[idx], 0.35, 0.35], horiz_scale, vert_scale, aspect=True)
+        ax_loc = ax_div.new_locator(nx=0, ny=0)
+        ax.set_axes_locator(ax_loc)
+        
+        img = Image.open(temp_path)
+        aux_ax.imshow(img, extent=[-0.18, 1.12, -0.15, 1.15])
         ax.axis('off')
+        ax.axis['right'].set_visible(False)
+        ax.axis['top'].set_visible(False)
+        ax.axis['bottom'].set_visible(False)
+        ax.axis['left'].set_visible(False)
+        
+        # Add metric title
+        if theta_mid[idx] >= np.pi:
+            text_rotation_delta = 90
+        else:
+            text_rotation_delta = -90
+        
+        radar_ax.text(theta_mid[idx], 0.92, metric_titles[idx], 
+                     ha="center", va="center", fontweight="bold", 
+                     fontsize=10, color='w',
+                     rotation=text_rotation_delta + (180/np.pi) * theta_mid[idx])
+        
+        plt.close(fig_save)
+        # Clean up temp file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
     
-    def _add_headers(self, fig, p1_data, p2_data, template, desc, color1, color2):
-        """Add player info, logos and descriptions"""
-        # Player 1 info
-        fig.text(0.11, 0.95, p1_data['player_name'], fontweight="bold", 
-                fontsize=16, color=color1)
-        fig.text(0.11, 0.925, f"{p1_data['team']} | {p1_data['league']}", 
-                fontsize=12, color='white')
-        fig.text(0.11, 0.905, f"Season {p1_data['season']}", 
-                fontsize=11, color='#CCCCCC')
-        
-        # Player 2 info (if exists)
-        if p2_data is not None:
-            fig.text(0.5, 0.95, p2_data['player_name'], fontweight="bold",
-                    fontsize=16, color=color2)
-            fig.text(0.5, 0.925, f"{p2_data['team']} | {p2_data['league']}",
-                    fontsize=12, color='white')
-            fig.text(0.5, 0.905, f"Season {p2_data['season']}", 
-                    fontsize=11, color='#CCCCCC')
-        
-        # Template and description
-        fig.text(0.89, 0.95, template, fontweight="bold", fontsize=14,
-                color='white', ha='right')
-        if desc:
-            fig.text(0.89, 0.925, desc, fontsize=10, color='#CCCCCC',
-                    ha='right', va='top', wrap=True)
-
-# Convenience function
-def create_hybrid_chart(df, player1_id, player2_id=None, metrics_config=None,
-                       title_template="Position Template", comparison_desc="",
-                       player1_color='#1A78CF', player2_color='coral'):
-    """Quick function to create hybrid pizza chart"""
-    chart = HybridPizzaSwarm(df)
-    return chart.create_chart(player1_id, player2_id, metrics_config,
-                             title_template, comparison_desc, 
-                             player1_color, player2_color)
+    radar_ax.set_rmax(1)
+    
+    # Add player 1 info
+    fig.text(0.11, 0.953, player_1_data['player_name'], fontweight="bold", fontsize=14, color=player_1_color)
+    fig.text(0.11, 0.931, player_1_data['team'], fontweight="bold", fontsize=12, color='w')
+    fig.text(0.11, 0.909, f"{player_1_data['league']} {player_1_data['season']}", fontweight="bold", fontsize=12, color='w')
+    # Add minutes and matches info
+    minutes = int(player_1_data.get('minutes_played', 0))
+    matches = int(player_1_data.get('matches_played', 0))
+    fig.text(0.11, 0.887, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
+    
+    # Add player 2 info if exists
+    if player_2_data is not None:
+        fig.text(0.48, 0.953, player_2_data['player_name'], fontweight="bold", fontsize=14, color=player_2_color)
+        fig.text(0.48, 0.931, player_2_data['team'], fontweight="bold", fontsize=12, color='w')
+        fig.text(0.48, 0.909, f"{player_2_data['league']} {player_2_data['season']}", fontweight="bold", fontsize=12, color='w')
+        minutes2 = int(player_2_data.get('minutes_played', 0))
+        matches2 = int(player_2_data.get('matches_played', 0))
+        fig.text(0.48, 0.887, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
+    
+    # Add PyPizza radar
+    pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
+    pizza_ax.set_theta_offset(17)
+    pizza_ax.axis('off')
+    
+    # Reorder metrics for pizza
+    pizza_metrics = [percentile_metrics[0]] + list(reversed(percentile_metrics[1:]))
+    ax_mins = [ax_mins[0]] + list(reversed(ax_mins[1:]))
+    ax_maxs = [ax_maxs[0]] + list(reversed(ax_maxs[1:]))
+    
+    # Get values for radar
+    radar_values_p1 = [player_1_data[m] for m in pizza_metrics]
+    radar_values_p2 = [player_2_data[m] for m in pizza_metrics] if player_2_data is not None else None
+    
+    # Create radar object
+    radar_object = PyPizza(params=pizza_metrics,
+                          background_color="w",
+                          straight_line_color="w",
+                          min_range=ax_mins,
+                          max_range=ax_maxs,
+                          straight_line_lw=1,
+                          straight_line_limit=100,
+                          last_circle_lw=0.1,
+                          other_circle_lw=0.1,
+                          inner_circle_size=18)
+    
+    # Plot radar
+    kwargs = {
+        'values': radar_values_p1,
+        'color_blank_space': 'same',
+        'blank_alpha': 0,
+        'bottom': 5,
+        'kwargs_params': dict(fontsize=0, color='None'),
+        'kwargs_values': dict(fontsize=0, color='None'),
+        'kwargs_slices': dict(facecolor=player_1_color, alpha=0.3, edgecolor='#313332', linewidth=1, zorder=1),
+        'ax': pizza_ax
+    }
+    
+    if radar_values_p2:
+        kwargs['compare_values'] = radar_values_p2
+        kwargs['kwargs_compare_values'] = dict(fontsize=0, color='None')
+        kwargs['kwargs_compare'] = dict(facecolor=player_2_color, alpha=0.3, edgecolor='#313332', linewidth=1, zorder=3)
+    
+    radar_object.make_pizza(**kwargs)
+    
+    # Add title and description
+    fig.text(0.975, 0.953, radar_title, fontweight="bold", fontsize=12, color='w', ha='right')
+    # Wrap description if too long
+    import textwrap
+    wrapped_desc = "\n".join(textwrap.wrap(radar_description, 40))
+    fig.text(0.975, 0.942, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='right', va='top')
+    
+    # Add footer
+    fig.text(0.5, 0.02, "Created by Jaime Oriol", 
+             fontstyle="italic", ha="center", fontsize=9, color="white")
+    
+    # Save figure
+    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='#313332')
+    if show_plot:
+        plt.show()
+    else:
+        plt.close()
+    
+    # Clean up any remaining temp files
+    for i in range(10):
+        temp_file = f'temp_{i}.png'
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
