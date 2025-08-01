@@ -39,9 +39,13 @@ def create_player_radar(df_data,
                        save_path='player_radar.png',
                        show_plot=True,
                        use_swarm=True,
-                       team_colors=None):
+                       team_colors=None,
+                       team_logos=None):  # ← AÑADIDO AQUÍ
     """
     Create swarm radar or traditional radar for player comparison
+    
+    Args:
+        team_logos: dict mapping team names to logo paths {'Barcelona': 'path/to/barca.png'}
     """
     if negative_metrics is None:
         negative_metrics = []
@@ -57,15 +61,15 @@ def create_player_radar(df_data,
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                            player_1_color, player_2_color, radar_title, radar_description,
-                           negative_metrics, save_path, show_plot)
+                           negative_metrics, save_path, show_plot, team_logos)  # ← AÑADIDO
     else:
         _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                                 radar_title, radar_description, save_path, show_plot, team_colors)
+                                 radar_title, radar_description, save_path, show_plot, team_colors, team_logos)  # ← AÑADIDO
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                        player_1_color, player_2_color, radar_title, radar_description,
-                       negative_metrics, save_path, show_plot):
-    """Original swarm radar - unchanged"""
+                       negative_metrics, save_path, show_plot, team_logos):  # ← AÑADIDO
+    """Original swarm radar with logo support"""
     
     comparison_df = df_data[['unique_player_id'] + metrics].copy()
     
@@ -92,11 +96,12 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
-    fig = plt.figure(constrained_layout=False, figsize=(9, 11))
+    # Adjusted figure with less vertical space
+    fig = plt.figure(constrained_layout=False, figsize=(9, 10))
     fig.set_facecolor('#313332')
     
     theta = np.linspace(0, 2*np.pi, 100)
-    radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
+    radar_ax = fig.add_axes([0.025, 0.05, 0.95, 0.90], polar=True)  # Shifted up
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
     radar_ax.plot(theta, theta*0 + 0.3425, color='grey', lw=1, alpha=0.3)
     radar_ax.plot(theta, theta*0 + 0.5150, color='grey', lw=1, alpha=0.3)
@@ -182,22 +187,49 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_ax.set_rmax(1)
     
-    fig.text(0.11, 0.953, player_1_data['player_name'], fontweight="bold", fontsize=14, color=player_1_color)
-    fig.text(0.11, 0.931, player_1_data['team'], fontweight="bold", fontsize=12, color='w')
-    fig.text(0.11, 0.909, f"{player_1_data['league']} {player_1_data['season']}", fontweight="bold", fontsize=12, color='w')
+    # Team logos if provided
+    if team_logos and player_1_data['team'] in team_logos:
+        try:
+            logo_1 = Image.open(team_logos[player_1_data['team']])
+            logo_ax_1 = fig.add_axes([0.05, 0.945, 0.04, 0.04])
+            logo_ax_1.imshow(logo_1)
+            logo_ax_1.axis('off')
+            text_x_1 = 0.11
+        except:
+            text_x_1 = 0.11
+    else:
+        text_x_1 = 0.11
+    
+    # Player 1 info
+    fig.text(text_x_1, 0.963, player_1_data['player_name'], fontweight="bold", fontsize=14, color=player_1_color)
+    fig.text(text_x_1, 0.941, player_1_data['team'], fontweight="bold", fontsize=12, color='w')
+    fig.text(text_x_1, 0.919, f"{player_1_data['league']} {player_1_data['season']}", fontweight="bold", fontsize=12, color='w')
     minutes = int(player_1_data.get('minutes_played', 0))
     matches = int(player_1_data.get('matches_played', 0))
-    fig.text(0.11, 0.887, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
+    fig.text(text_x_1, 0.897, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
     
     if player_2_data is not None:
-        fig.text(0.48, 0.953, player_2_data['player_name'], fontweight="bold", fontsize=14, color=player_2_color)
-        fig.text(0.48, 0.931, player_2_data['team'], fontweight="bold", fontsize=12, color='w')
-        fig.text(0.48, 0.909, f"{player_2_data['league']} {player_2_data['season']}", fontweight="bold", fontsize=12, color='w')
+        # Team 2 logo if provided
+        if team_logos and player_2_data['team'] in team_logos:
+            try:
+                logo_2 = Image.open(team_logos[player_2_data['team']])
+                logo_ax_2 = fig.add_axes([0.42, 0.945, 0.04, 0.04])
+                logo_ax_2.imshow(logo_2)
+                logo_ax_2.axis('off')
+                text_x_2 = 0.48
+            except:
+                text_x_2 = 0.48
+        else:
+            text_x_2 = 0.48
+            
+        fig.text(text_x_2, 0.963, player_2_data['player_name'], fontweight="bold", fontsize=14, color=player_2_color)
+        fig.text(text_x_2, 0.941, player_2_data['team'], fontweight="bold", fontsize=12, color='w')
+        fig.text(text_x_2, 0.919, f"{player_2_data['league']} {player_2_data['season']}", fontweight="bold", fontsize=12, color='w')
         minutes2 = int(player_2_data.get('minutes_played', 0))
         matches2 = int(player_2_data.get('matches_played', 0))
-        fig.text(0.48, 0.887, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
+        fig.text(text_x_2, 0.897, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
     
-    pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
+    pizza_ax = fig.add_axes([0.09, 0.10, 0.82, 0.82], polar=True)  # Shifted up
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
     
@@ -238,13 +270,14 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     radar_object.make_pizza(**kwargs)
     
     title_x = 0.835
-    fig.text(title_x, 0.953, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
+    fig.text(title_x, 0.963, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
     
     import textwrap
     wrapped_desc = "\n".join(textwrap.wrap(radar_description, 40))
-    fig.text(title_x, 0.935, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='left', va='top')
+    fig.text(title_x, 0.945, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='left', va='top')
     
-    fig.text(0.5, 0.02, "Created by Jaime Oriol", 
+    # Footer moved up - NO "Inspired by"
+    fig.text(0.5, 0.05, "Created by Jaime Oriol", 
              fontstyle="italic", ha="center", fontsize=9, color="white")
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='#313332')
@@ -253,133 +286,196 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     else:
         plt.close()
     
+    # Cleanup temp files
     for i in range(10):
         temp_file = f'temp_{i}.png'
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                             radar_title, radar_description, save_path, show_plot, team_colors):
-    """Traditional radar with exact swarm layout and fixed percentile rings"""
+                             radar_title, radar_description, save_path, show_plot, team_colors, team_logos):
+    """Traditional radar with fixed percentile rings and swarm layout"""
     
-    # Suppress font warnings completely
     plt.rcParams['font.family'] = 'sans-serif'
     
     # Set colors
     if team_colors is None:
-        if player_2_data is not None:
-            colors = ['#FF6B6B', '#4ECDC4']  # Vibrant red-coral, vibrant teal
-        else:
-            colors = ['#FF6B6B', '#FFFFFF']  # Vibrant red-coral, white
+        colors = ['#FF6B6B', '#4ECDC4'] if player_2_data is not None else ['#FF6B6B', '#FFFFFF']
     else:
         colors = team_colors
     
-    # Create figure with exact swarm structure
-    fig, ax = plt.subplots(figsize=(9, 11), facecolor='#313332')
+    # Create figure with exact swarm dimensions and spacing
+    fig = plt.figure(figsize=(9, 10), facecolor='#313332')
     
     # Calculate 9 percentile values for each metric
     percentile_levels = [1, 14, 26, 38, 50, 62, 74, 86, 99]
-    ranges = []
+    percentile_values_all = []
     
     for metric in metrics:
-        metric_values = df_data[metric].dropna()
-        percentile_values = np.percentile(metric_values, percentile_levels)
-        ranges.append([percentile_values[0], percentile_values[-1]])  # min, max for range
+        metric_data = df_data[metric].dropna()
+        percentiles = np.percentile(metric_data, percentile_levels)
+        percentile_values_all.append(percentiles)
     
-    # Prepare data
-    values_1 = [player_1_data[metric] for metric in metrics]
+    # Create radar axis - match swarm positioning
+    ax = fig.add_subplot(111, projection='polar', position=[0.09, 0.10, 0.82, 0.75])
     
-    if USE_SOCCERPLOTS:
-        # Use soccerplots radar
-        if player_2_data is None:
-            # Single player
-            radar = Radar(label_fontsize=13, range_fontsize=10, 
-                         label_color='white', range_color='white')
-            fig, ax = radar.plot_radar(ranges=ranges, params=metric_titles, values=values_1, 
-                                      radar_color=colors, figax=(fig, ax))
+    # Setup angles
+    num_vars = len(metrics)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    angles += angles[:1]
+    
+    # Configure radar
+    ax.set_theta_offset(np.pi / 2)
+    ax.set_theta_direction(-1)
+    ax.set_facecolor('#313332')
+    
+    # Draw the 9 rings with exact swarm styling
+    ring_positions = np.linspace(0.17, 0.86, 9)  # Match swarm ring positions
+    for i, pos in enumerate(ring_positions):
+        if i == 0:
+            ax.plot(angles, [pos]*len(angles), color='white', linewidth=1, alpha=1.0)
         else:
-            # Two players
-            values_2 = [player_2_data[metric] for metric in metrics]
-            values = [values_1, values_2]
+            ax.plot(angles, [pos]*len(angles), color='grey', linewidth=1, alpha=0.3)
+    
+    # Add grid lines from center to edge
+    for angle in angles[:-1]:
+        ax.plot([angle, angle], [0, 0.86], color='grey', linewidth=0.5, alpha=0.3)
+    
+    # Add percentile value labels - ONE PER RING ON EACH SPOKE
+    for metric_idx, percentiles in enumerate(percentile_values_all):
+        angle = angles[metric_idx]
+        
+        for ring_idx, (ring_pos, percentile_val) in enumerate(zip(ring_positions, percentiles)):
+            # Format value based on magnitude
+            if percentile_val < 0.01:
+                label = f'{percentile_val:.3f}'
+            elif percentile_val < 1:
+                label = f'{percentile_val:.2f}'
+            elif percentile_val < 10:
+                label = f'{percentile_val:.1f}'
+            else:
+                label = f'{int(percentile_val)}'
             
-            radar = Radar(label_fontsize=12, range_fontsize=9,
-                         label_color='white', range_color='white')
-            fig, ax = radar.plot_radar(ranges=ranges, params=metric_titles, values=values, 
-                                      radar_color=colors, figax=(fig, ax), compare=True)
+            # Position label on the ring
+            ax.text(angle, ring_pos, label,
+                   ha='center', va='center',
+                   size=7, color='white', weight='normal',
+                   bbox=dict(boxstyle='round,pad=0.15', facecolor='#313332', 
+                            edgecolor='none', alpha=0.9))
+    
+    # Plot player data
+    def get_percentile_position(value, percentiles):
+        """Convert value to radar position based on percentiles"""
+        # Handle edge cases
+        if value <= percentiles[0]:
+            return ring_positions[0]
+        if value >= percentiles[-1]:
+            return ring_positions[-1]
+            
+        # Find which percentile range the value falls into
+        for i in range(len(percentiles) - 1):
+            if percentiles[i] <= value <= percentiles[i + 1]:
+                # Interpolate between ring positions
+                fraction = (value - percentiles[i]) / (percentiles[i + 1] - percentiles[i])
+                return ring_positions[i] + fraction * (ring_positions[i + 1] - ring_positions[i])
+        
+        return ring_positions[-1]
+    
+    # Player 1 data
+    player_1_positions = []
+    for metric, percentiles in zip(metrics, percentile_values_all):
+        val = player_1_data[metric]
+        pos = get_percentile_position(val, percentiles)
+        player_1_positions.append(pos)
+    player_1_positions += player_1_positions[:1]
+    
+    # Plot player 1 - if single player, use alternating pattern
+    if player_2_data is None:
+        # Create alternating pattern using both team colors
+        ax.plot(angles, player_1_positions, color=colors[0], linewidth=3)
+        
+        # Fill with alternating colors
+        for i in range(len(angles) - 1):
+            angle_slice = [angles[i], angles[i + 1]]
+            values_slice = [player_1_positions[i], player_1_positions[i + 1]]
+            color_idx = i % 2  # Alternate between 0 and 1
+            ax.fill(angle_slice + [0, 0], values_slice + [0, 0], 
+                   color=colors[color_idx], alpha=0.4, edgecolor=colors[0], linewidth=1)
     else:
-        # mplsoccer radar fallback
-        min_ranges = [r[0] for r in ranges]
-        max_ranges = [r[1] for r in ranges]
-        
-        # Calculate custom range values for 9 rings
-        range_values = []
-        for metric in metrics:
-            metric_values = df_data[metric].dropna()
-            percentile_values = np.percentile(metric_values, percentile_levels)
-            range_values.append(percentile_values)
-        
-        radar = Radar(params=metric_titles, min_range=min_ranges, max_range=max_ranges,
-                     num_rings=9, ring_width=1)
-        fig, ax = radar.setup_axis(facecolor='#313332')
-        
-        rings_inner = radar.draw_circles(ax=ax, facecolor='#555', edgecolor='#777', linewidth=0.5)
-        
-        if player_2_data is None:
-            radar_output = radar.draw_radar(values_1, ax=ax, 
-                                          kwargs_radar={'facecolor': colors[0], 'alpha': 0.7,
-                                                       'edgecolor': colors[0], 'linewidth': 2})
-        else:
-            values_2 = [player_2_data[metric] for metric in metrics]
-            radar_output1 = radar.draw_radar(values_1, ax=ax, 
-                                           kwargs_radar={'facecolor': colors[0], 'alpha': 0.5,
-                                                        'edgecolor': colors[0], 'linewidth': 2})
-            radar_output2 = radar.draw_radar(values_2, ax=ax, 
-                                           kwargs_radar={'facecolor': colors[1], 'alpha': 0.5,
-                                                        'edgecolor': colors[1], 'linewidth': 2})
-        
-        # Custom range labels with percentile values
-        for i, (metric, percentile_vals) in enumerate(zip(metrics, range_values)):
-            angle = 2 * np.pi * i / len(metrics)
-            for j, val in enumerate(percentile_vals[::2]):  # Show every other value to avoid crowding
-                radius = 0.2 + (0.8 * j / 4)  # Spread across 4 rings
-                x = radius * np.cos(angle + np.pi/2)
-                y = radius * np.sin(angle + np.pi/2)
-                ax.text(x, y, f'{val:.2f}', fontsize=8, ha='center', va='center', 
-                       color='white', fontweight='bold')
-                
-        param_labels = radar.draw_param_labels(ax=ax, fontsize=11, color='white', fontweight='bold')
+        # Two players - normal solid fills
+        ax.plot(angles, player_1_positions, color=colors[0], linewidth=2.5)
+        ax.fill(angles, player_1_positions, color=colors[0], alpha=0.3)
     
-    # Apply dark styling
-    fig.patch.set_facecolor('#313332')
-    if hasattr(ax, 'set_facecolor'):
-        ax.set_facecolor('#313332')
+    # Player 2 data if exists
+    if player_2_data is not None:
+        player_2_positions = []
+        for metric, percentiles in zip(metrics, percentile_values_all):
+            val = player_2_data[metric]
+            pos = get_percentile_position(val, percentiles)
+            player_2_positions.append(pos)
+        player_2_positions += player_2_positions[:1]
+        
+        ax.plot(angles, player_2_positions, color=colors[1], linewidth=2.5)
+        ax.fill(angles, player_2_positions, color=colors[1], alpha=0.3)
     
-    # EXACT swarm layout structure
-    fig.text(0.11, 0.953, player_1_data['player_name'], fontweight="bold", fontsize=14, color=colors[0])
-    fig.text(0.11, 0.931, player_1_data['team'], fontweight="bold", fontsize=12, color='w')
-    fig.text(0.11, 0.909, f"{player_1_data['league']} {player_1_data['season']}", fontweight="bold", fontsize=12, color='w')
+    # Add metric labels - CLOSER to radar
+    ax.set_xticks(angles[:-1])
+    # Set label position closer
+    ax.tick_params(axis='x', pad=5)  # Reduce padding
+    ax.set_xticklabels(metric_titles, size=10, weight='bold', color='white')
+    
+    # Clean up radar appearance
+    ax.set_ylim(0, 1)
+    ax.set_yticks([])
+    ax.grid(False)
+    ax.spines['polar'].set_visible(False)
+    
+    # EXACT SWARM LAYOUT - Player info and logos
+    # Player 1
+    if team_logos and player_1_data['team'] in team_logos:
+        try:
+            logo_1 = Image.open(team_logos[player_1_data['team']])
+            logo_ax_1 = fig.add_axes([0.05, 0.945, 0.04, 0.04])
+            logo_ax_1.imshow(logo_1)
+            logo_ax_1.axis('off')
+        except:
+            pass
+    
+    fig.text(0.11, 0.963, player_1_data['player_name'], fontweight="bold", fontsize=14, color=colors[0])
+    fig.text(0.11, 0.941, player_1_data['team'], fontweight="bold", fontsize=12, color='w')
+    fig.text(0.11, 0.919, f"{player_1_data['league']} {player_1_data['season']}", fontweight="bold", fontsize=12, color='w')
     minutes = int(player_1_data.get('minutes_played', 0))
     matches = int(player_1_data.get('matches_played', 0))
-    fig.text(0.11, 0.887, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
+    fig.text(0.11, 0.897, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
     
+    # Player 2
     if player_2_data is not None:
-        fig.text(0.48, 0.953, player_2_data['player_name'], fontweight="bold", fontsize=14, color=colors[1])
+        if team_logos and player_2_data['team'] in team_logos:
+            try:
+                logo_2 = Image.open(team_logos[player_2_data['team']])
+                logo_ax_2 = fig.add_axes([0.42, 0.945, 0.04, 0.04])
+                logo_ax_2.imshow(logo_2)
+                logo_ax_2.axis('off')
+            except:
+                pass
+                
+        fig.text(0.48, 0.963, player_2_data['player_name'], fontweight="bold", fontsize=14, color=colors[1])
         fig.text(0.48, 0.931, player_2_data['team'], fontweight="bold", fontsize=12, color='w')
         fig.text(0.48, 0.909, f"{player_2_data['league']} {player_2_data['season']}", fontweight="bold", fontsize=12, color='w')
         minutes2 = int(player_2_data.get('minutes_played', 0))
         matches2 = int(player_2_data.get('matches_played', 0))
-        fig.text(0.48, 0.887, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
+        fig.text(0.48, 0.897, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
     
     # Title and description - exact swarm position
     title_x = 0.835
-    fig.text(title_x, 0.953, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
+    fig.text(title_x, 0.963, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
     
     import textwrap
     wrapped_desc = "\n".join(textwrap.wrap(radar_description, 40))
-    fig.text(title_x, 0.935, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='left', va='top')
+    fig.text(title_x, 0.945, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='left', va='top')
     
-    # Footer - exact swarm position (NO "Inspired by")
-    fig.text(0.5, 0.02, "Created by Jaime Oriol", 
+    # Footer - exact swarm position
+    fig.text(0.5, 0.05, "Created by Jaime Oriol", 
              fontstyle="italic", ha="center", fontsize=9, color="white")
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='#313332')
