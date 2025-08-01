@@ -40,7 +40,7 @@ def create_player_radar(df_data,
                        show_plot=True,
                        use_swarm=True,
                        team_colors=None,
-                       team_logos=None):  # ← AÑADIDO AQUÍ
+                       team_logos=None):
     """
     Create swarm radar or traditional radar for player comparison
     
@@ -61,14 +61,14 @@ def create_player_radar(df_data,
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                            player_1_color, player_2_color, radar_title, radar_description,
-                           negative_metrics, save_path, show_plot, team_logos)  # ← AÑADIDO
+                           negative_metrics, save_path, show_plot, team_logos)
     else:
         _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                                 radar_title, radar_description, save_path, show_plot, team_colors, team_logos)  # ← AÑADIDO
+                                 radar_title, radar_description, save_path, show_plot, team_colors, team_logos)
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                        player_1_color, player_2_color, radar_title, radar_description,
-                       negative_metrics, save_path, show_plot, team_logos):  # ← AÑADIDO
+                       negative_metrics, save_path, show_plot, team_logos):
     """Original swarm radar with logo support"""
     
     comparison_df = df_data[['unique_player_id'] + metrics].copy()
@@ -100,8 +100,11 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     fig = plt.figure(constrained_layout=False, figsize=(9, 10))
     fig.set_facecolor('#313332')
     
+    # FIXED: Use the same axes position for both radar_ax and pizza_ax
+    axes_position = [0.09, 0.10, 0.82, 0.82]
+    
     theta = np.linspace(0, 2*np.pi, 100)
-    radar_ax = fig.add_axes([0.025, 0.05, 0.95, 0.90], polar=True)  # Shifted up
+    radar_ax = fig.add_axes(axes_position, polar=True)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
     radar_ax.plot(theta, theta*0 + 0.3425, color='grey', lw=1, alpha=0.3)
     radar_ax.plot(theta, theta*0 + 0.5150, color='grey', lw=1, alpha=0.3)
@@ -229,7 +232,8 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         matches2 = int(player_2_data.get('matches_played', 0))
         fig.text(text_x_2, 0.897, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
     
-    pizza_ax = fig.add_axes([0.09, 0.10, 0.82, 0.82], polar=True)  # Shifted up
+    # FIXED: Use the same axes position as radar_ax
+    pizza_ax = fig.add_axes(axes_position, polar=True)
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
     
@@ -418,14 +422,15 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         ax.plot(angles, player_2_positions, color=colors[1], linewidth=2.5)
         ax.fill(angles, player_2_positions, color=colors[1], alpha=0.3)
     
-    # Add metric labels - CLOSER to radar
+    # Add metric labels - BACK TO ORIGINAL METHOD BUT CLOSER
     ax.set_xticks(angles[:-1])
-    # Set label position closer
-    ax.tick_params(axis='x', pad=5)  # Reduce padding
     ax.set_xticklabels(metric_titles, size=10, weight='bold', color='white')
     
+    # TRICK: Set label position much closer using pad
+    ax.tick_params(axis='x', pad=1)  # Negative pad brings labels closer
+    
     # Clean up radar appearance
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 0.95)  # Slightly increase to give more room for labels
     ax.set_yticks([])
     ax.grid(False)
     ax.spines['polar'].set_visible(False)
@@ -460,8 +465,8 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
                 pass
                 
         fig.text(0.48, 0.963, player_2_data['player_name'], fontweight="bold", fontsize=14, color=colors[1])
-        fig.text(0.48, 0.931, player_2_data['team'], fontweight="bold", fontsize=12, color='w')
-        fig.text(0.48, 0.909, f"{player_2_data['league']} {player_2_data['season']}", fontweight="bold", fontsize=12, color='w')
+        fig.text(0.48, 0.941, player_2_data['team'], fontweight="bold", fontsize=12, color='w')
+        fig.text(0.48, 0.919, f"{player_2_data['league']} {player_2_data['season']}", fontweight="bold", fontsize=12, color='w')
         minutes2 = int(player_2_data.get('minutes_played', 0))
         matches2 = int(player_2_data.get('matches_played', 0))
         fig.text(0.48, 0.897, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
