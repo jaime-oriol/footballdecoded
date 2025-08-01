@@ -97,14 +97,12 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
     # Adjusted figure with less vertical space
-    fig = plt.figure(constrained_layout=False, figsize=(9, 10))
+    fig = plt.figure(constrained_layout=False, figsize=(9, 11))
     fig.set_facecolor('#313332')
     
-    # FIXED: Use the same axes position for both radar_ax and pizza_ax
-    axes_position = [0.09, 0.10, 0.82, 0.82]
-    
+
     theta = np.linspace(0, 2*np.pi, 100)
-    radar_ax = fig.add_axes(axes_position, polar=True)
+    radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
     radar_ax.plot(theta, theta*0 + 0.3425, color='grey', lw=1, alpha=0.3)
     radar_ax.plot(theta, theta*0 + 0.5150, color='grey', lw=1, alpha=0.3)
@@ -232,8 +230,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         matches2 = int(player_2_data.get('matches_played', 0))
         fig.text(text_x_2, 0.897, f"{minutes2} mins | {matches2} matches", fontsize=10, color='w', alpha=0.8)
     
-    # FIXED: Use the same axes position as radar_ax
-    pizza_ax = fig.add_axes(axes_position, polar=True)
+    pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
     
