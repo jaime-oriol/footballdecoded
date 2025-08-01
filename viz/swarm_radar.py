@@ -89,11 +89,15 @@ def create_player_radar(df_data,
     # Define positions for mini plots
     theta_mid = np.radians(np.linspace(0, 360, num_metrics+1))[:-1] + np.pi/2
     theta_mid = [x if x < 2*np.pi else x - 2*np.pi for x in theta_mid]
-
-    # Use constant radial distance like original
-    r_base = np.linspace(0.25, 0.25, num_metrics+1)[:-1]
-
-    x_base, y_base = 0.325 + r_base * np.cos(theta_mid), 0.3 + 0.89 * r_base * np.sin(theta_mid)
+    
+    # Adjust radial distance based on position
+    r_base = []
+    for angle in theta_mid:
+        # Check if plot is at top/bottom (around 90 or 270 degrees)
+        if (angle > np.pi/4 and angle < 3*np.pi/4) or (angle > 5*np.pi/4 and angle < 7*np.pi/4):
+            r_base.append(0.231)  # Closer to center for vertical plots
+        else:
+            r_base.append(0.25)  # Original distance for lateral plots
     
     x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
@@ -172,7 +176,6 @@ def create_player_radar(df_data,
         ax.set_axes_locator(ax_loc)
         
         img = Image.open(temp_path)
-        # Use same extent for all plots like original
         aux_ax.imshow(img, extent=[-0.18, 1.12, -0.15, 1.15])
         ax.axis('off')
         ax.axis['right'].set_visible(False)
