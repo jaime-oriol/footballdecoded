@@ -71,14 +71,14 @@ def create_player_radar(df_data,
 
 def _add_player_info(fig, player_data, colors, position_idx, team_logos):
     """Unified player info and logo handling"""
-    logo_x = 0.05 if position_idx == 0 else 0.42
+    logo_x = 0.03 if position_idx == 0 else 0.40
     text_x = 0.11 if position_idx == 0 else 0.48
     color = colors[position_idx]
     
     if team_logos and player_data['team'] in team_logos:
         try:
             logo = Image.open(team_logos[player_data['team']])
-            logo_ax = fig.add_axes([logo_x, 0.945, 0.04, 0.04])
+            logo_ax = fig.add_axes([logo_x, 0.922, 0.08, 0.06])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
