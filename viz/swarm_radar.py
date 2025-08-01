@@ -78,7 +78,7 @@ def _add_player_info(fig, player_data, colors, position_idx, team_logos):
     if team_logos and player_data['team'] in team_logos:
         try:
             logo = Image.open(team_logos[player_data['team']])
-            logo_ax = fig.add_axes([logo_x, 0.922, 0.08, 0.06])
+            logo_ax = fig.add_axes([logo_x, 0.920, 0.08, 0.06])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
