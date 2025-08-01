@@ -143,7 +143,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         fig_save.patch.set_alpha(0)
         
         sns.swarmplot(x=comparison_df[metric], y=[""]*len(comparison_df), 
-                     color='grey', edgecolor='w', size=3, zorder=1)
+                     color='grey', edgecolor='w', size=3.5, zorder=1)
         
         ax_save.legend([], [], frameon=False)
         ax_save.patch.set_alpha(0)
