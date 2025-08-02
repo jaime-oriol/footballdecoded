@@ -13,33 +13,142 @@ from PIL import Image
 import os
 import warnings
 import textwrap
+import dataframe_image as dfi
+from soccerplots.radar_chart import Radar
 
 warnings.filterwarnings('ignore')
-import logging
-logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
 
-try:
-    from soccerplots.radar_chart import Radar
-    USE_SOCCERPLOTS = True
-except ImportError:
-    from mplsoccer import Radar
-    USE_SOCCERPLOTS = False
+def create_player_metrics_table(df_data, player_1_id, player_2_id, metrics, team_colors, save_path):
+    p1_data = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]
+    p2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0] if player_2_id else None
+    
+    if player_2_id is not None:
+        columns = [p1_data['player_name'], 'pct1', p2_data['player_name'], 'pct2']
+        team1_league = f"{p1_data.get('league', p1_data.get('competition', 'N/A'))} {p1_data['season']}"
+        team2_league = f"{p2_data.get('league', p2_data.get('competition', 'N/A'))} {p2_data['season']}"
+    else:
+        columns = [p1_data['player_name'], 'pct']
+        team1_league = f"{p1_data.get('league', p1_data.get('competition', 'N/A'))} {p1_data['season']}"
+        team2_league = None
+    
+    table_data = {}
+    
+    if player_2_id is not None:
+        table_data['Competition'] = [team1_league, '', team2_league, '']
+        table_data['Minutes Played'] = [str(int(p1_data.get('minutes_played', 0))), '', 
+                                       str(int(p2_data.get('minutes_played', 0))), '']
+        table_data['Matches'] = [str(int(p1_data.get('matches_played', 0))), '', 
+                               str(int(p2_data.get('matches_played', 0))), '']
+    else:
+        table_data['Competition'] = [team1_league, '']
+        table_data['Minutes Played'] = [str(int(p1_data.get('minutes_played', 0))), '']
+        table_data['Matches'] = [str(int(p1_data.get('matches_played', 0))), '']
+    
+    for metric in metrics:
+        base_metric = metric.replace('_per90', '').replace('_pct', '')
+        percentile_col = f'{base_metric}_pct'
+        
+        val_p1 = p1_data.get(metric, 0)
+        pct_p1 = p1_data.get(percentile_col, 0)
+        
+        # Manejar valores NA en percentiles
+        if pd.isna(pct_p1):
+            pct_p1 = 0
+        
+        if isinstance(val_p1, (int, float)):
+            val_p1_str = f"{val_p1:.1f}" if val_p1 < 10 and val_p1 >= 1 else f"{int(val_p1)}" if val_p1 >= 1 else f"{val_p1:.2f}"
+        else:
+            val_p1_str = str(val_p1)
+        
+        if player_2_id is not None and p2_data is not None:
+            val_p2 = p2_data.get(metric, 0)
+            pct_p2 = p2_data.get(percentile_col, 0)
+            
+            # Manejar valores NA en percentiles
+            if pd.isna(pct_p2):
+                pct_p2 = 0
+            
+            if isinstance(val_p2, (int, float)):
+                val_p2_str = f"{val_p2:.1f}" if val_p2 < 10 and val_p2 >= 1 else f"{int(val_p2)}" if val_p2 >= 1 else f"{val_p2:.2f}"
+            else:
+                val_p2_str = str(val_p2)
+            
+            table_data[metric] = [val_p1_str, str(int(pct_p1)), val_p2_str, str(int(pct_p2))]
+        else:
+            table_data[metric] = [val_p1_str, str(int(pct_p1))]
+    
+    df_table = pd.DataFrame(table_data, index=columns).T
+    return style_and_export_table(df_table, team_colors, p1_data, p2_data, save_path)
 
-def create_player_radar(df_data, 
-                       player_1_id,
-                       metrics,
-                       metric_titles,
-                       player_2_id=None,
-                       player_1_color='#FF6B6B',
-                       player_2_color='#4ECDC4',
-                       team_colors=None,
-                       radar_title='Player Comparison',
-                       radar_description='Statistical comparison of selected players',
-                       negative_metrics=None,
-                       save_path='player_radar.png',
-                       show_plot=True,
-                       use_swarm=True,
-                       team_logos=None):
+def style_and_export_table(df_table, team_colors, p1_data, p2_data, save_path):
+    color1 = team_colors[0] if len(team_colors) > 0 else '#004D98'
+    color2 = team_colors[1] if len(team_colors) > 1 else '#DB0030'
+    
+    metric_rows = df_table.index[3:]
+    pct_cols = [col for col in df_table.columns if col.endswith('_pct') or col in ['pct1', 'pct2', 'pct']]
+    
+    def color_percentiles(val):
+        try:
+            # Manejar valores NA o no numéricos
+            if pd.isna(val) or val == '':
+                return 'color: #424242'
+            
+            val_num = float(val)
+            if val_num >= 90:
+                return 'color: #1B5E20; font-weight: bold'
+            elif val_num >= 75:
+                return 'color: #2E7D32; font-weight: bold'
+            elif val_num <= 10:
+                return 'color: #C62828; font-weight: bold'
+            elif val_num <= 25:
+                return 'color: #D32F2F; font-weight: bold'
+            else:
+                return 'color: #424242'
+        except:
+            return 'color: #424242'
+    
+    # Crear estilos base
+    base_styles = [
+        {'selector': 'th.col_heading', 
+         'props': [('background-color', '#F5F5F5'), ('text-align', 'center'),
+                   ('font-weight', 'bold'), ('border', '1px solid #CCCCCC')]},
+        {'selector': f'th.col_heading.level0.col0',
+         'props': [('color', color1), ('font-size', '14px')]},
+        {'selector': 'td', 
+         'props': [('text-align', 'center'), ('border', '1px solid #EEEEEE'), ('padding', '8px')]},
+        {'selector': 'th.index_name', 
+         'props': [('background-color', '#FAFAFA')]},
+        {'selector': 'th.row_heading',
+         'props': [('background-color', '#FAFAFA'), ('text-align', 'left'),
+                   ('font-weight', 'bold'), ('border', '1px solid #CCCCCC')]}
+    ]
+    
+    # Añadir estilo para segundo jugador si existe
+    if p2_data is not None:
+        base_styles.append({
+            'selector': f'th.col_heading.level0.col2',
+            'props': [('color', color2), ('font-size', '14px')]
+        })
+    
+    styler = df_table.style.applymap(
+        color_percentiles, subset=(metric_rows, pct_cols)
+    ).set_table_styles(base_styles)
+    
+    # Formateo simple - todo como string
+    format_dict = {col: '{}' for col in df_table.columns}
+    
+    styler = styler.format(format_dict)
+    
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    dfi.export(styler, save_path, dpi=300, table_conversion='matplotlib')
+    
+    return plt.imread(save_path)
+
+def create_player_radar(df_data, player_1_id, metrics, metric_titles, player_2_id=None,
+                       player_1_color='#FF6B6B', player_2_color='#4ECDC4', team_colors=None,
+                       radar_title='Player Comparison', radar_description='Statistical comparison',
+                       negative_metrics=None, save_path='player_radar.png', show_plot=True,
+                       use_swarm=True, team_logos=None, show_table=True):
     
     if negative_metrics is None:
         negative_metrics = []
@@ -49,51 +158,44 @@ def create_player_radar(df_data,
     
     plt.rcParams['font.family'] = 'sans-serif'
     
-    # Unified color system - team_colors priority
-    if team_colors is None:
-        colors = [player_1_color, player_2_color]
-    else:
-        colors = team_colors
+    colors = team_colors if team_colors is not None else [player_1_color, player_2_color]
     
     player_1_data = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]
-    player_2_data = None
-    if player_2_id:
-        player_2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
+    player_2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0] if player_2_id else None
+    
+    table_image = None
+    if show_table:
+        table_path = save_path.replace('.png', '_table.png')
+        table_image = create_player_metrics_table(df_data, player_1_id, player_2_id, metrics, colors, table_path)
     
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                            colors, radar_title, radar_description, negative_metrics, 
-                           save_path, show_plot, team_logos)
+                           save_path, show_plot, team_logos, table_image)
     else:
         _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                                  colors, radar_title, radar_description, save_path, 
-                                 show_plot, team_logos)
+                                 show_plot, team_logos, table_image)
 
 def _add_player_info(fig, player_data, colors, position_idx, team_logos):
-    """Unified player info and logo handling"""
     logo_x = 0.03 if position_idx == 0 else 0.40
     text_x = 0.11 if position_idx == 0 else 0.48
     color = colors[position_idx]
     
     if team_logos and player_data['team'] in team_logos:
-        try:
-            logo = Image.open(team_logos[player_data['team']])
-            logo_ax = fig.add_axes([logo_x, 0.920, 0.08, 0.06])
-            logo_ax.imshow(logo)
-            logo_ax.axis('off')
-        except:
-            pass
+        logo = Image.open(team_logos[player_data['team']])
+        logo_ax = fig.add_axes([logo_x, 0.920, 0.08, 0.06])
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
     
     fig.text(text_x, 0.963, player_data['player_name'], fontweight="bold", fontsize=14, color=color)
     fig.text(text_x, 0.941, player_data['team'], fontweight="bold", fontsize=12, color='w')
-    fig.text(text_x, 0.919, f"{player_data['league']} {player_data['season']}", fontweight="bold", fontsize=12, color='w')
     
-    minutes = int(player_data.get('minutes_played', 0))
-    matches = int(player_data.get('matches_played', 0))
-    fig.text(text_x, 0.897, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
+    league = player_data.get('league', player_data.get('competition', 'N/A'))
+    season = player_data['season']
+    fig.text(text_x, 0.919, f"{league} {season}", fontweight="bold", fontsize=12, color='w')
 
 def _add_title_footer(fig, radar_title, radar_description):
-    """Unified title and footer handling"""
     title_x = 0.835
     fig.text(title_x, 0.963, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
     
@@ -105,7 +207,7 @@ def _add_title_footer(fig, radar_title, radar_description):
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                        colors, radar_title, radar_description, negative_metrics, 
-                       save_path, show_plot, team_logos):
+                       save_path, show_plot, team_logos, table_image=None):
     
     comparison_df = df_data[['unique_player_id'] + metrics].copy()
     
@@ -126,10 +228,14 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
-    fig = plt.figure(constrained_layout=False, figsize=(9, 11), facecolor='#313332')
+    if table_image is not None:
+        fig = plt.figure(constrained_layout=False, figsize=(16, 11), facecolor='#313332')
+        radar_ax = fig.add_axes([0.025, 0, 0.65, 0.95], polar=True)
+    else:
+        fig = plt.figure(constrained_layout=False, figsize=(9, 11), facecolor='#313332')
+        radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     
     theta = np.linspace(0, 2*np.pi, 100)
-    radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
     for r in [0.3425, 0.5150, 0.6875, 0.86]:
         radar_ax.plot(theta, theta*0 + r, color='grey', lw=1, alpha=0.3)
@@ -204,7 +310,12 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     if player_2_data is not None:
         _add_player_info(fig, player_2_data, colors, 1, team_logos)
     
-    pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
+    if table_image is not None:
+        table_ax = fig.add_axes([0.70, 0.15, 0.28, 0.70])
+        table_ax.imshow(table_image)
+        table_ax.axis('off')
+    
+    pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82] if table_image is None else [0.09, 0.065, 0.55, 0.82], polar=True)
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
     
@@ -253,9 +364,14 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                              colors, radar_title, radar_description, save_path, 
-                             show_plot, team_logos):
+                             show_plot, team_logos, table_image=None):
     
-    fig = plt.figure(figsize=(9, 10), facecolor='#313332')
+    if table_image is not None:
+        fig = plt.figure(figsize=(16, 10), facecolor='#313332')
+        ax = fig.add_subplot(121, projection='polar', position=[0.05, 0.10, 0.55, 0.75])
+    else:
+        fig = plt.figure(figsize=(9, 10), facecolor='#313332')
+        ax = fig.add_subplot(111, projection='polar', position=[0.09, 0.10, 0.82, 0.75])
     
     percentile_levels = [1, 14, 26, 38, 50, 62, 74, 86, 99]
     percentile_values_all = []
@@ -264,8 +380,6 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         metric_data = df_data[metric].dropna()
         percentiles = np.percentile(metric_data, percentile_levels)
         percentile_values_all.append(percentiles)
-    
-    ax = fig.add_subplot(111, projection='polar', position=[0.09, 0.10, 0.82, 0.75])
     
     num_vars = len(metrics)
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
@@ -355,6 +469,11 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     _add_player_info(fig, player_1_data, colors, 0, team_logos)
     if player_2_data is not None:
         _add_player_info(fig, player_2_data, colors, 1, team_logos)
+    
+    if table_image is not None:
+        table_ax = fig.add_axes([0.62, 0.15, 0.35, 0.70])
+        table_ax.imshow(table_image)
+        table_ax.axis('off')
     
     _add_title_footer(fig, radar_title, radar_description)
     
