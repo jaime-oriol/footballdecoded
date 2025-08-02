@@ -20,7 +20,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # Datos jugadores
     p1 = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]
     p2 = None
-    if player_2_id:
+    if player_2_id is not None:
         p2 = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
     
     # Setup figura
@@ -35,11 +35,13 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # HEADER
     y_start = 13.5
     
+    # Jugador 1
     ax.text(2, y_start, p1['player_name'], 
             fontweight='bold', fontsize=11, color=team_colors[0], ha='center')
     ax.text(2, y_start - 0.4, f"{p1['league']} {p1['season']}", 
             fontsize=8, color='white', alpha=0.8, ha='center')
     
+    # Jugador 2
     if p2 is not None:
         ax.text(6, y_start, p2['player_name'], 
                 fontweight='bold', fontsize=11, color=team_colors[1], ha='center')
@@ -54,20 +56,22 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # CONTEXTO (Minutos y Partidos)
     y_context = y_start - 1.2
     
-    ax.text(0.7, y_context, "Minutes Played", fontsize=8, color='white', alpha=0.9)
-    ax.text(2, y_context, f"{int(p1.get('minutes_played', 0))}", 
-            fontsize=8, color='white', ha='center')
+    # Minutes
+    ax.text(0.7, y_context, "Minutes", fontsize=8, color='white', alpha=0.9)
+    min1 = int(p1.get('minutes_played', 0))
+    ax.text(2, y_context, f"{min1}", fontsize=8, color='white', ha='center')
     if p2 is not None:
-        ax.text(6, y_context, f"{int(p2.get('minutes_played', 0))}", 
-                fontsize=8, color='white', ha='center')
+        min2 = int(p2.get('minutes_played', 0))
+        ax.text(6, y_context, f"{min2}", fontsize=8, color='white', ha='center')
     
+    # Matches
     y_context -= 0.4
-    ax.text(0.7, y_context, "Matches Played", fontsize=8, color='white', alpha=0.9)
-    ax.text(2, y_context, f"{int(p1.get('matches_played', 0))}", 
-            fontsize=8, color='white', ha='center')
+    ax.text(0.7, y_context, "Matches", fontsize=8, color='white', alpha=0.9)
+    mat1 = int(p1.get('matches_played', 0))
+    ax.text(2, y_context, f"{mat1}", fontsize=8, color='white', ha='center')
     if p2 is not None:
-        ax.text(6, y_context, f"{int(p2.get('matches_played', 0))}", 
-                fontsize=8, color='white', ha='center')
+        mat2 = int(p2.get('matches_played', 0))
+        ax.text(6, y_context, f"{mat2}", fontsize=8, color='white', ha='center')
     
     # Línea separadora
     y_line = y_context - 0.3
@@ -94,48 +98,66 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         
         # Jugador 1: valor y percentil
         val_1 = p1.get(metric, 0)
-        pct_1 = p1.get(f"{metric}_pct", 50)
+        # Buscar percentil con sufijo _pct
+        pct_col = f"{metric}_pct"
+        pct_1 = p1.get(pct_col, 0)
+        
+        # Si es NaN, usar 0
+        if pd.isna(pct_1):
+            pct_1 = 0
         
         # Formateo valor
-        if 0 < val_1 < 0.01:
-            val_str_1 = f"{val_1:.3f}"
-        elif val_1 < 1:
+        if pd.isna(val_1):
+            val_str_1 = "0.0"
+        elif 0 < val_1 < 1:
             val_str_1 = f"{val_1:.2f}"
-        else:
+        elif val_1 < 10:
             val_str_1 = f"{val_1:.1f}"
+        else:
+            val_str_1 = f"{int(val_1)}"
         
         # Color percentil
-        if pd.notna(pct_1):
-            pct_color_1 = '#4CAF50' if pct_1 > 85 else '#F44336' if pct_1 < 15 else 'white'
+        if pct_1 > 85:
+            pct_color_1 = '#4CAF50'  # Verde
+        elif pct_1 < 15:
+            pct_color_1 = '#F44336'  # Rojo
         else:
-            pct_color_1 = 'grey'
-            pct_1 = '-'
+            pct_color_1 = 'white'
         
         ax.text(1.7, y_pos, val_str_1, fontsize=8, color='white', ha='right')
-        ax.text(2.3, y_pos, f"({int(pct_1) if pct_1 != '-' else '-'})", 
-                fontsize=7, color=pct_color_1, ha='left', alpha=0.9)
+        ax.text(2.3, y_pos, f"{int(pct_1)}", 
+                fontsize=8, color=pct_color_1, ha='left', fontweight='bold')
         
         # Jugador 2
         if p2 is not None:
             val_2 = p2.get(metric, 0)
-            pct_2 = p2.get(f"{metric}_pct", 50)
+            pct_2 = p2.get(pct_col, 0)
             
-            if 0 < val_2 < 0.01:
-                val_str_2 = f"{val_2:.3f}"
-            elif val_2 < 1:
+            # Si es NaN, usar 0
+            if pd.isna(pct_2):
+                pct_2 = 0
+            
+            # Formateo valor
+            if pd.isna(val_2):
+                val_str_2 = "0.0"
+            elif 0 < val_2 < 1:
                 val_str_2 = f"{val_2:.2f}"
-            else:
+            elif val_2 < 10:
                 val_str_2 = f"{val_2:.1f}"
-            
-            if pd.notna(pct_2):
-                pct_color_2 = '#4CAF50' if pct_2 > 85 else '#F44336' if pct_2 < 15 else 'white'
             else:
-                pct_color_2 = 'grey'
-                pct_2 = '-'
+                val_str_2 = f"{int(val_2)}"
+            
+            # Color percentil
+            if pct_2 > 85:
+                pct_color_2 = '#4CAF50'  # Verde
+            elif pct_2 < 15:
+                pct_color_2 = '#F44336'  # Rojo
+            else:
+                pct_color_2 = 'white'
             
             ax.text(5.7, y_pos, val_str_2, fontsize=8, color='white', ha='right')
-            ax.text(6.3, y_pos, f"({int(pct_2) if pct_2 != '-' else '-'})", 
-                    fontsize=7, color=pct_color_2, ha='left', alpha=0.9)
+            ax.text(6.3, y_pos, f"{int(pct_2)}", 
+                    fontsize=8, color=pct_color_2, ha='left', fontweight='bold')
     
     # Footer
     ax.text(5 if p2 is not None else 2, 0.5, "Percentiles vs dataset", 
