@@ -25,6 +25,9 @@ except ImportError:
     from mplsoccer import Radar
     USE_SOCCERPLOTS = False
 
+# Color de fondo más claro para mejor visibilidad con colores oscuros
+BACKGROUND_COLOR = '#4A4A4A'
+
 def create_player_radar(df_data, 
                        player_1_id,
                        metrics,
@@ -41,6 +44,7 @@ def create_player_radar(df_data,
                        use_swarm=True,
                        team_logos=None):
     
+    # negative_metrics ya no se usa pero se mantiene por compatibilidad
     if negative_metrics is None:
         negative_metrics = []
     
@@ -62,50 +66,13 @@ def create_player_radar(df_data,
     
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                           colors, radar_title, radar_description, negative_metrics, 
-                           save_path, show_plot, team_logos)
+                           colors, save_path, show_plot)
     else:
         _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                                 colors, radar_title, radar_description, save_path, 
-                                 show_plot, team_logos)
-
-def _add_player_info(fig, player_data, colors, position_idx, team_logos):
-    """Unified player info and logo handling"""
-    logo_x = 0.03 if position_idx == 0 else 0.40
-    text_x = 0.11 if position_idx == 0 else 0.48
-    color = colors[position_idx]
-    
-    if team_logos and player_data['team'] in team_logos:
-        try:
-            logo = Image.open(team_logos[player_data['team']])
-            logo_ax = fig.add_axes([logo_x, 0.920, 0.08, 0.06])
-            logo_ax.imshow(logo)
-            logo_ax.axis('off')
-        except:
-            pass
-    
-    fig.text(text_x, 0.963, player_data['player_name'], fontweight="bold", fontsize=14, color=color)
-    fig.text(text_x, 0.941, player_data['team'], fontweight="bold", fontsize=12, color='w')
-    fig.text(text_x, 0.919, f"{player_data['league']} {player_data['season']}", fontweight="bold", fontsize=12, color='w')
-    
-    minutes = int(player_data.get('minutes_played', 0))
-    matches = int(player_data.get('matches_played', 0))
-    fig.text(text_x, 0.897, f"{minutes} mins | {matches} matches", fontsize=10, color='w', alpha=0.8)
-
-def _add_title_footer(fig, radar_title, radar_description):
-    """Unified title and footer handling"""
-    title_x = 0.835
-    fig.text(title_x, 0.963, radar_title, fontweight="bold", fontsize=12, color='w', ha='left')
-    
-    wrapped_desc = "\n".join(textwrap.wrap(radar_description, 40))
-    fig.text(title_x, 0.945, wrapped_desc, fontweight="regular", fontsize=8, color='w', ha='left', va='top')
-    
-    fig.text(0.5, 0.05, "Created by Jaime Oriol", 
-             fontstyle="italic", ha="center", fontsize=9, color="white")
+                                 colors, save_path, show_plot)
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                       colors, radar_title, radar_description, negative_metrics, 
-                       save_path, show_plot, team_logos):
+                       colors, save_path, show_plot):
     
     comparison_df = df_data[['unique_player_id'] + metrics].copy()
     
@@ -116,7 +83,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     comparison_df = comparison_df.sort_values('Primary Player')
     
-    path_eff = [path_effects.Stroke(linewidth=2, foreground='#313332'), path_effects.Normal()]
+    path_eff = [path_effects.Stroke(linewidth=2, foreground=BACKGROUND_COLOR), path_effects.Normal()]
     
     theta_mid = np.radians(np.linspace(0, 360, 10+1))[:-1] + np.pi/2
     theta_mid = [x if x < 2*np.pi else x - 2*np.pi for x in theta_mid]
@@ -126,24 +93,26 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
-    fig = plt.figure(constrained_layout=False, figsize=(9, 11), facecolor='#313332')
+    # MANTENER LA ALTURA ORIGINAL para que esté alineado con la tabla
+    fig = plt.figure(constrained_layout=False, figsize=(9, 11), facecolor=BACKGROUND_COLOR)
     
     theta = np.linspace(0, 2*np.pi, 100)
+    # Mantener la posición original del radar (no subirlo)
     radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
-    radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1)
+    radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1.2)
     for r in [0.3425, 0.5150, 0.6875, 0.86]:
-        radar_ax.plot(theta, theta*0 + r, color='grey', lw=1, alpha=0.3)
+        radar_ax.plot(theta, theta*0 + r, color='grey', lw=1, alpha=0.4)
     radar_ax.axis('off')
     
     ax_mins, ax_maxs = [], []
     
     for idx, metric in enumerate(metrics):
         fig_save, ax_save = plt.subplots(figsize=(4.5, 1.5))
-        fig_save.set_facecolor('#313332')
+        fig_save.set_facecolor(BACKGROUND_COLOR)
         fig_save.patch.set_alpha(0)
         
         sns.swarmplot(x=comparison_df[metric], y=[""]*len(comparison_df), 
-                     color='grey', edgecolor='w', size=4.5, zorder=1)
+                     color='grey', edgecolor='w', size=5, zorder=1)
         
         ax_save.legend([], [], frameon=False)
         ax_save.patch.set_alpha(0)
@@ -154,13 +123,10 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         ax_save.spines['left'].set_color(None)
         ax_save.set_xlabel("")
         ax_save.tick_params(left=False, bottom=True, axis='both', which='major', 
-                           labelsize=8, zorder=10, pad=0, colors='w')
+                           labelsize=9, zorder=10, pad=0, colors='w')
         
         rotation = 180 if theta_mid[idx] >= np.pi/2 and theta_mid[idx] <= 3*np.pi/2 else 0
         plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation)
-        
-        if metric in negative_metrics:
-            ax_save.invert_xaxis()
         
         ax_mins.append(ax_save.get_xlim()[0])
         ax_maxs.append(ax_save.get_xlim()[1])
@@ -191,7 +157,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         text_rotation_delta = 90 if theta_mid[idx] >= np.pi else -90
         radar_ax.text(theta_mid[idx], 0.92, metric_titles[idx], 
                      ha="center", va="center", fontweight="bold", 
-                     fontsize=10, color='w',
+                     fontsize=11, color='w',
                      rotation=text_rotation_delta + (180/np.pi) * theta_mid[idx])
         
         plt.close(fig_save)
@@ -200,10 +166,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_ax.set_rmax(1)
     
-    _add_player_info(fig, player_1_data, colors, 0, team_logos)
-    if player_2_data is not None:
-        _add_player_info(fig, player_2_data, colors, 1, team_logos)
-    
+    # Mantener la posición original del pizza
     pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
@@ -227,20 +190,22 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         'bottom': 5,
         'kwargs_params': dict(fontsize=0, color='None'),
         'kwargs_values': dict(fontsize=0, color='None'),
-        'kwargs_slices': dict(facecolor=colors[0], alpha=0.3, edgecolor='#313332', linewidth=1, zorder=1),
+        'kwargs_slices': dict(facecolor=colors[0], alpha=0.35, edgecolor=BACKGROUND_COLOR, linewidth=1, zorder=1),
         'ax': pizza_ax
     }
     
     if radar_values_p2:
         kwargs['compare_values'] = radar_values_p2
         kwargs['kwargs_compare_values'] = dict(fontsize=0, color='None')
-        kwargs['kwargs_compare'] = dict(facecolor=colors[1], alpha=0.3, edgecolor='#313332', linewidth=1, zorder=3)
+        kwargs['kwargs_compare'] = dict(facecolor=colors[1], alpha=0.35, edgecolor=BACKGROUND_COLOR, linewidth=1, zorder=3)
     
     radar_object.make_pizza(**kwargs)
     
-    _add_title_footer(fig, radar_title, radar_description)
+    # Footer con mayor tamaño y peso
+    fig.text(0.5, 0.05, "Created by Jaime Oriol | Football Decoded", 
+             fontstyle="italic", ha="center", fontsize=11, color="white", weight='bold')
     
-    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='#313332')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
         plt.show()
     else:
@@ -252,10 +217,10 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
             os.remove(temp_file)
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                             colors, radar_title, radar_description, save_path, 
-                             show_plot, team_logos):
+                             colors, save_path, show_plot):
     
-    fig = plt.figure(figsize=(9, 10), facecolor='#313332')
+    # MANTENER LA ALTURA ORIGINAL para alineación
+    fig = plt.figure(figsize=(9, 10), facecolor=BACKGROUND_COLOR)
     
     percentile_levels = [1, 14, 26, 38, 50, 62, 74, 86, 99]
     percentile_values_all = []
@@ -265,6 +230,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         percentiles = np.percentile(metric_data, percentile_levels)
         percentile_values_all.append(percentiles)
     
+    # Mantener la posición original (no subir el radar)
     ax = fig.add_subplot(111, projection='polar', position=[0.09, 0.10, 0.82, 0.75])
     
     num_vars = len(metrics)
@@ -273,15 +239,15 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
-    ax.set_facecolor('#313332')
+    ax.set_facecolor(BACKGROUND_COLOR)
     
     ring_positions = np.linspace(0.17, 0.86, 9)
     for i, pos in enumerate(ring_positions):
-        color, alpha = ('white', 1.0) if i == 0 else ('grey', 0.3)
-        ax.plot(angles, [pos]*len(angles), color=color, linewidth=1, alpha=alpha)
+        color, alpha = ('white', 1.0) if i == 0 else ('grey', 0.4)
+        ax.plot(angles, [pos]*len(angles), color=color, linewidth=1.2 if i == 0 else 1, alpha=alpha)
     
     for angle in angles[:-1]:
-        ax.plot([angle, angle], [0, 0.86], color='grey', linewidth=0.5, alpha=0.3)
+        ax.plot([angle, angle], [0, 0.86], color='grey', linewidth=0.5, alpha=0.4)
     
     for metric_idx, percentiles in enumerate(percentile_values_all):
         angle = angles[metric_idx]
@@ -296,8 +262,8 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             else:
                 label = f'{int(percentile_val)}'
             
-            ax.text(angle, ring_pos, label, ha='center', va='center', size=7, color='white', weight='normal',
-                   bbox=dict(boxstyle='round,pad=0.15', facecolor='#313332', edgecolor='none', alpha=0.9))
+            ax.text(angle, ring_pos, label, ha='center', va='center', size=8, color='white', weight='normal',
+                   bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR, edgecolor='none', alpha=0.9))
     
     def get_percentile_position(value, percentiles):
         if value <= percentiles[0]:
@@ -320,17 +286,17 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     player_1_positions += player_1_positions[:1]
     
     if player_2_data is None:
-        ax.plot(angles, player_1_positions, color=colors[0], linewidth=3)
+        ax.plot(angles, player_1_positions, color=colors[0], linewidth=3.5)
         
         for i in range(len(angles) - 1):
             angle_slice = [angles[i], angles[i + 1]]
             values_slice = [player_1_positions[i], player_1_positions[i + 1]]
             color_idx = i % 2
             ax.fill(angle_slice + [0, 0], values_slice + [0, 0], 
-                   color=colors[color_idx], alpha=0.4, edgecolor=colors[0], linewidth=1)
+                   color=colors[color_idx], alpha=0.45, edgecolor=colors[0], linewidth=1)
     else:
-        ax.plot(angles, player_1_positions, color=colors[0], linewidth=2.5)
-        ax.fill(angles, player_1_positions, color=colors[0], alpha=0.3)
+        ax.plot(angles, player_1_positions, color=colors[0], linewidth=3)
+        ax.fill(angles, player_1_positions, color=colors[0], alpha=0.35)
     
     if player_2_data is not None:
         player_2_positions = []
@@ -340,11 +306,11 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             player_2_positions.append(pos)
         player_2_positions += player_2_positions[:1]
         
-        ax.plot(angles, player_2_positions, color=colors[1], linewidth=2.5)
-        ax.fill(angles, player_2_positions, color=colors[1], alpha=0.3)
+        ax.plot(angles, player_2_positions, color=colors[1], linewidth=3)
+        ax.fill(angles, player_2_positions, color=colors[1], alpha=0.35)
     
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(metric_titles, size=10, weight='bold', color='white')
+    ax.set_xticklabels(metric_titles, size=11, weight='bold', color='white')
     ax.tick_params(axis='x', pad=1)
     
     ax.set_ylim(0, 0.95)
@@ -352,13 +318,11 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     ax.grid(False)
     ax.spines['polar'].set_visible(False)
     
-    _add_player_info(fig, player_1_data, colors, 0, team_logos)
-    if player_2_data is not None:
-        _add_player_info(fig, player_2_data, colors, 1, team_logos)
+    # Footer con mayor tamaño y peso
+    fig.text(0.5, 0.05, "Created by Jaime Oriol | Football Decoded", 
+             fontstyle="italic", ha="center", fontsize=11, color="white", weight='bold')
     
-    _add_title_footer(fig, radar_title, radar_description)
-    
-    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='#313332')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
         plt.show()
     else:
