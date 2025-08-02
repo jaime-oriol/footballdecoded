@@ -43,49 +43,48 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     if player_2_id is not None:
         p2 = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
     
-    # Configuración de la figura - ANCHO AUMENTADO PARA MEJOR ESPACIADO
-    fig_width = 9.0 if p2 is not None else 8.0
+    # Configuración de la figura - ANCHO REDUCIDO
+    fig_width = 7.5 if p2 is not None else 6.5
     fig = plt.figure(figsize=(fig_width, 7.5), facecolor=BACKGROUND_COLOR)
     ax = fig.add_subplot(111)
     ax.set_facecolor(BACKGROUND_COLOR)
-    ax.set_xlim(0, 10)
+    ax.set_xlim(0, 8.5)  # LÍMITE REDUCIDO
     ax.set_ylim(0, 14)
     ax.axis('off')
     
-    # === SECCIÓN HEADER - MANTENER Y ORIGINAL ===
-    y_start = 13.5  # Posición Y original
+    # === SECCIÓN HEADER ===
+    y_start = 13.5
     
     # Posiciones X ajustadas para alinear con las columnas de valores
     if p2 is not None:
         # Comparación
-        logo1_x = 3.4
-        text1_x = 4.2
-        p1_value_x = 4.6
-        p1_pct_x = 5.0
-        
-        logo2_x = 5.8
-        text2_x = 6.6
-        p2_value_x = 7.0
-        p2_pct_x = 7.4
-    else:
-        # Individual - MÁS ESPACIADO
-        logo1_x = 3.4
+        logo1_x = 3.85
         text1_x = 4.1
         p1_value_x = 4.6
         p1_pct_x = 5.0
+        
+        logo2_x = 6.45
+        text2_x = 6.5
+        p2_value_x = 7.0
+        p2_pct_x = 7.4
+    else:
+        # Individual
+        logo1_x = 4.35
+        text1_x = 4.0
+        p1_value_x = 4.6
+        p1_pct_x = 5.0
     
-    # Jugador 1 - Logo en posición Y original
+    # Jugador 1 - Logo
     if team_logos and p1['team'] in team_logos:
         try:
             logo = Image.open(team_logos[p1['team']])
-            # Logo más abajo para centrarlo con el nombre
             logo_ax = fig.add_axes([logo1_x/10, (y_start-0.8)/14, 0.08, 0.08])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
             pass
     
-    # Nombre y liga en posición Y original
+    # Nombre y liga
     ax.text(text1_x, y_start, p1['player_name'], 
             fontweight='bold', fontsize=13, color=team_colors[0], ha='left', va='center')
     ax.text(text1_x, y_start - 0.4, f"{p1['league']} {p1['season']}", 
@@ -110,14 +109,14 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     
     # Línea separadora header
     y_line = y_start - 0.7
-    line_end = 10 if p2 is not None else 7.5
+    line_end = 8.5 if p2 is not None else 6.5  # LÍNEA MÁS CORTA
     ax.plot([0.5, line_end], [y_line, y_line], 
             color='grey', linewidth=0.5, alpha=0.6)
     
     # === SECCIÓN CONTEXTO (Minutos y Partidos) ===
     y_context = y_start - 1.2
     
-    # Minutes - ALINEADO CON LAS COLUMNAS DE VALORES
+    # Minutes
     ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', weight='bold')
     min1 = int(p1.get('minutes_played', 0))
     ax.text(p1_value_x, y_context, f"{min1}", fontsize=10, color='white', ha='right', weight='bold')
@@ -149,7 +148,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         
         # Fondo alternado para mejor legibilidad
         if idx % 2 == 0:
-            rect_width = 10 if p2 is not None else 7.5
+            rect_width = 8.5 if p2 is not None else 6.5  # RECTÁNGULO MÁS CORTO
             rect = Rectangle((0.5, y_pos - 0.4), 
                            rect_width, 0.8, 
                            facecolor='white', alpha=0.05)
@@ -226,19 +225,18 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
                     fontsize=10, color=pct_color_2, ha='left', fontweight='bold', va='center')
     
     # === FOOTER COMO ÚLTIMA FILA DE LA TABLA ===
-    # Posición del footer exactamente una fila debajo de la última métrica
     footer_y = y_metrics - (len(metrics) * row_height)
     footer_x = 3.75 if p2 is not None else 3.25
     
-    # Fondo para el footer si corresponde (como una fila más)
-    if len(metrics) % 2 == 1:  # Si el número de métricas es impar, el footer tendría fondo
-        rect_width = 10 if p2 is not None else 7.5
+    # Fondo para el footer si corresponde
+    if len(metrics) % 2 == 1:
+        rect_width = 8.5 if p2 is not None else 6.5  # RECTÁNGULO MÁS CORTO
         rect = Rectangle((0.5, footer_y - 0.4), 
                        rect_width, 0.8, 
                        facecolor='white', alpha=0.05)
         ax.add_patch(rect)
     
-    # Footer centrado en la tabla, alineado como una fila más
+    # Footer centrado en la tabla
     ax.text(footer_x, footer_y, footer_text, 
             fontsize=11, color='white', alpha=0.8, ha='center', style='italic', weight='bold', va='center')
     
