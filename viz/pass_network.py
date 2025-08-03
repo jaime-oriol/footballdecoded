@@ -13,21 +13,17 @@ warnings.filterwarnings('ignore')
 
 def calculate_node_size(total_passes: int, max_passes: int, threshold: int = 20) -> float:
     """Calculate individual node size with very gradual scaling."""
-    # Tamaños más pequeños con escalado muy moderado
-    min_size = 5   # Tamaño mínimo muy pequeño
-    max_size = 30  # Tamaño máximo reducido
+    min_size = 5   
+    max_size = 30  
     
-    # Escalado lineal muy gradual - solo 25 puntos de diferencia en total
     if total_passes <= 5:
         return min_size
     if total_passes >= 100:
         return max_size
     
-    # Escalado muy suave y gradual
-    # Solo 0.26 puntos de incremento por cada pase adicional
-    size_range = max_size - min_size  # 25 puntos total
-    pass_range = 100 - 5             # 95 pases de rango
-    increment_per_pass = size_range / pass_range  # 0.26 por pase
+    size_range = max_size - min_size  
+    pass_range = 100 - 5             
+    increment_per_pass = size_range / pass_range  
     
     return min_size + (total_passes - 5) * increment_per_pass
 
@@ -41,15 +37,18 @@ def calculate_line_width(pass_count: int, min_connections: int, max_connections:
     
     normalized = (pass_count - min_connections) / (max_connections - min_connections)
     curved = normalized ** 0.6
-    return 0.5 + curved * (4.5 - 0.5)  # Entre 0.5 y 4.5
+    return 0.5 + curved * (4.5 - 0.5)
 
-def get_node_radius(node_size: float) -> float:
-    """Convert node size to radius for calculations."""
-    return np.sqrt(node_size / np.pi) * 0.15
+def get_node_radius(marker_size: float) -> float:
+    """Convert marker size to radius using map.py formula adapted to pass_network scale."""
+    # En pass_network: scatter usa s=marker_size**2, asi que el area visual es marker_size^2
+    # Aplicamos la formula de map.py pero adaptada a nuestra escala
+    visual_area = marker_size**2  # Area real en scatter
+    return np.sqrt(visual_area / np.pi) * 0.105  # Formula exacta de map.py
 
 def calculate_connection_points(x1: float, y1: float, x2: float, y2: float, 
                               r1: float, r2: float, pass_count: int) -> tuple:
-    """Calculate connection start and end points avoiding node overlap."""
+    """Calculate connection points using EXACT map.py logic."""
     dx, dy = x2 - x1, y2 - y1
     length = np.sqrt(dx**2 + dy**2)
     
@@ -57,19 +56,65 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
         return x1, y1, x2, y2
     
     ux, uy = dx / length, dy / length
+    combined_radius = r1 + r2
+    min_safe_distance = combined_radius * 1.1
     
-    # Offset perpendicular para evitar superposición
-    perp_x, perp_y = -uy, ux
-    offset = 0.5 * (1 + pass_count / 50)
+    # Usar el mismo base_offset que map.py (inferido de los resultados visuales)
+    base_offset = 0.8  # Valor típico usado en map.py
     
-    # Puntos de inicio y fin evitando nodos
-    start_x = x1 + r1 * ux + perp_x * offset
-    start_y = y1 + r1 * uy + perp_y * offset
-    
-    end_x = x2 - r2 * ux + perp_x * offset
-    end_y = y2 - r2 * uy + perp_y * offset
+    if length < min_safe_distance:
+        perp_x, perp_y = -uy, ux
+        offset = base_offset * (1 + pass_count / 50)
+        
+        start_x = x1 + r1 * ux * 1.1 + perp_x * offset
+        start_y = y1 + r1 * uy * 1.1 + perp_y * offset
+        
+        reduced_margin = r2 + 0.5
+        end_x = x2 - reduced_margin * ux + perp_x * offset
+        end_y = y2 - reduced_margin * uy + perp_y * offset
+        
+        if np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2) < 1.0:
+            start_x = x1 + r1 * ux + perp_x * offset
+            start_y = y1 + r1 * uy + perp_y * offset
+            end_x = x2 - 1.5 * ux + perp_x * offset 
+            end_y = y2 - 1.5 * uy + perp_y * offset  
+            
+    else:
+        perp_x, perp_y = -uy, ux
+        offset = base_offset * (1 + pass_count / 50)
+        
+        start_x = x1 + r1 * ux + perp_x * offset
+        start_y = y1 + r1 * uy + perp_y * offset
+        
+        name_margin = r2 + 1
+        end_x = x2 - name_margin * ux + perp_x * offset
+        end_y = y2 - name_margin * uy + perp_y * offset
     
     return start_x, start_y, end_x, end_y
+
+def draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end_y: float,
+                         color: str, line_width: float):
+    """Draw directional arrow using EXACT map.py logic."""
+    dx, dy = end_x - start_x, end_y - start_y
+    length = np.sqrt(dx**2 + dy**2)
+    
+    if length == 0:
+        return
+    
+    ux, uy = dx / length, dy / length
+    px, py = -uy, ux
+    
+    size = max(0.6, line_width * 0.25)
+    extension = size * 0.125
+    tip_x = end_x + extension * ux
+    tip_y = end_y + extension * uy
+    
+    origin_x = tip_x - size * 1.0 * ux + size * 0.7 * px
+    origin_y = tip_y - size * 1.0 * uy + size * 0.7 * py
+    
+    ax.plot([tip_x, origin_x], [tip_y, origin_y], 
+           color=color, linewidth=max(1.8, line_width * 0.7), 
+           alpha=1.0, solid_capstyle='round', zorder=100)
 
 def optimize_name(full_name: str) -> str:
     """Use first initial + surname, including particles like 'de', 'van', etc."""
@@ -79,25 +124,19 @@ def optimize_name(full_name: str) -> str:
     full_name = full_name.strip()
     name_parts = full_name.split()
     
-    # Si solo hay una palabra, usarla completa
     if len(name_parts) == 1:
         return name_parts[0]
     
-    # Inicial del primer nombre
     first_initial = name_parts[0][0].upper()
-    
-    # Partículas comunes en apellidos
     particles = ['de', 'del', 'da', 'dos', 'van', 'von', 'le', 'la', 'du', 'di', 'el']
     
-    # Empezar con el apellido principal (último elemento)
     surname_parts = [name_parts[-1]]
     
-    # Mirar hacia atrás para incluir partículas
-    for i in range(len(name_parts) - 2, 0, -1):  # Empezar desde -2 y parar en 1 (no incluir el primer nombre)
+    for i in range(len(name_parts) - 2, 0, -1):
         if name_parts[i].lower() in particles:
             surname_parts.insert(0, name_parts[i])
         else:
-            break  # Parar en la primera palabra que no sea partícula
+            break
     
     surname = ' '.join(surname_parts)
     
@@ -158,7 +197,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     for i, team in enumerate(teams):
         # Dibujar pitch
         pitch = VerticalPitch(pitch_type='opta', line_color='#7c7c7c', goal_type='box',
-                             linewidth=0.5, pad_bottom=5)
+                             linewidth=0.5, pad_bottom=3)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
         
         # Líneas punteadas
@@ -220,9 +259,9 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             # USAR passes_completed directamente del CSV
             num_passes = int(player_data.iloc[0]['passes_completed'])
             
-            # Calcular tamaño basado en pases completados
+            # Calcular tamaño y radio usando lógica exacta de map.py
             marker_size = calculate_node_size(num_passes, max_passes_team)
-            node_radius = get_node_radius(marker_size**2)
+            node_radius = get_node_radius(marker_size)  # Formula exacta de map.py
             
             player_stats[player_name] = {
                 'x': x, 'y': y, 
@@ -232,7 +271,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                 'xthreat': player['avg_xthreat']
             }
         
-        # SISTEMA AVANZADO: Dibujar conexiones con gradiente
+        # SISTEMA AVANZADO: Dibujar conexiones con gradiente usando lógica map.py
         valid_connections = team_connections[team_connections['connection_strength'] >= min_passes].copy()
         
         if not valid_connections.empty:
@@ -253,7 +292,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                 num_passes = conn['connection_strength']
                 pass_value = conn.get('avg_xthreat', 0)
                 
-                # Calcular puntos de conexión evitando nodos
+                # USAR LÓGICA EXACTA DE MAP.PY para calcular puntos
                 start_x, start_y, end_x, end_y = calculate_connection_points(
                     source['x'], source['y'], target['x'], target['y'],
                     source['radius'], target['radius'], num_passes
@@ -262,35 +301,25 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                 line_width = calculate_line_width(num_passes, min_conn, max_conn, min_passes)
                 edge_color = node_cmap(xthreat_norm(pass_value))
                 
-                # Crear gradiente con LineCollection
-                num_points = 50
+                # Crear gradiente con LineCollection EXACTO como map.py
+                num_points = 75  # Mismo valor que map.py
                 x_points = np.linspace(start_x, end_x, num_points)
                 y_points = np.linspace(start_y, end_y, num_points)
                 
                 points = np.array([x_points, y_points]).T.reshape(-1, 1, 2)
                 segments = np.concatenate([points[:-1], points[1:]], axis=1)
                 
-                alphas = np.linspace(0.3, 0.9, len(segments))
+                # Usar mismo rango de alphas que map.py
+                alphas = np.linspace(0.1, 1.0, len(segments))
                 rgb = mcolors.to_rgb(edge_color)
                 colors_with_alpha = [(rgb[0], rgb[1], rgb[2], alpha) for alpha in alphas]
                 
                 lc = LineCollection(segments, colors=colors_with_alpha, 
-                                   linewidths=line_width, capstyle='round', zorder=2)
+                                   linewidths=line_width, capstyle='round', zorder=1)  # Mismo zorder que map.py
                 ax[i].add_collection(lc)
                 
-                # Dibujar flecha mejorada al final
-                dx, dy = end_x - start_x, end_y - start_y
-                length = np.sqrt(dx**2 + dy**2)
-                if length > 0:
-                    ux, uy = dx / length, dy / length
-                    arrow_size = max(0.8, line_width * 0.3)
-                    tip_x = end_x + arrow_size * 0.2 * ux
-                    tip_y = end_y + arrow_size * 0.2 * uy
-                    
-                    ax[i].plot([tip_x, end_x - arrow_size * ux], 
-                              [tip_y, end_y - arrow_size * uy],
-                              color=edge_color, linewidth=max(1.5, line_width * 0.8),
-                              alpha=0.9, solid_capstyle='round', zorder=100)
+                # Dibujar flecha con lógica EXACTA de map.py
+                draw_connection_arrow(ax[i], start_x, start_y, end_x, end_y, edge_color, line_width)
         
         # SISTEMA AVANZADO: Dibujar nodos con transparencia y tamaño dinámico
         for player_name, stats in player_stats.items():
@@ -362,23 +391,23 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             fontsize=6, font=font)
     
     # LEYENDA VISUAL
-    x0 = 190
-    y0 = 280
+    x0 = 225
+    y0 = 250
     dx = 60
     dy = 120
     shift_x = 70
     
-    x1 = 700
-    x2 = 1350
-    y2 = 340
+    x1 = 740
+    x2 = 1400
+    y2 = 310
     shift_x2 = 70
     radius = 20
     
-    x3 = 1800
+    x3 = 1840
     shift_x3 = 100
     
-    x4 = 1020
-    y4 = 180
+    x4 = 960
+    y4 = 100
     
     style = ArrowStyle('->', head_length=5, head_width=3)
     
@@ -409,7 +438,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     circle8 = Circle(xy=(x3+4*shift_x3, y2), radius=radius*2, color=colors_legend[4])
     
     # Flecha horizontal
-    arrow9 = FancyArrowPatch((x4, y4), (x4+350, y4), lw=1, arrowstyle=style, color='black')
+    arrow9 = FancyArrowPatch((x4, y4), (x4+550, y4), lw=1, arrowstyle=style, color='black')
     
     # Agregar elementos
     fig.patches.extend([arrow1, arrow2, arrow3, arrow4, arrow5, arrow6, arrow7, arrow8,
