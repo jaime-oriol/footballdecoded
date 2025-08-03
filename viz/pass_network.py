@@ -28,16 +28,17 @@ def calculate_node_size(total_passes: int, max_passes: int, threshold: int = 20)
     return min_size + (total_passes - 5) * increment_per_pass
 
 def calculate_line_width(pass_count: int, min_connections: int, max_connections: int, min_required: int = 5) -> float:
-    """Calculate line width with smooth scaling."""
+    """Calculate line width matching legend values."""
     if pass_count < min_required:
         return 0.0
     
-    if max_connections == min_connections:
-        return 2.0
-    
-    normalized = (pass_count - min_connections) / (max_connections - min_connections)
-    curved = normalized ** 0.6
-    return 0.5 + curved * (4.5 - 0.5)
+    # Usar los mismos valores que la leyenda
+    if pass_count <= 7:
+        return 0.5  # Como arrow1 en leyenda
+    elif pass_count <= 13:
+        return 1.5  # Como arrow2 en leyenda
+    else:
+        return 2.5  # Como arrow3 en leyenda
 
 def get_node_radius(marker_size: float) -> float:
     """Convert marker size to radius using corrected scaling."""
