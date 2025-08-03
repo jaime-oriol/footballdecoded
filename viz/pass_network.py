@@ -40,15 +40,14 @@ def calculate_line_width(pass_count: int, min_connections: int, max_connections:
     return 0.5 + curved * (4.5 - 0.5)
 
 def get_node_radius(marker_size: float) -> float:
-    """Convert marker size to radius using map.py formula adapted to pass_network scale."""
-    # En pass_network: scatter usa s=marker_size**2, asi que el area visual es marker_size^2
-    # Aplicamos la formula de map.py pero adaptada a nuestra escala
-    visual_area = marker_size**2  # Area real en scatter
-    return np.sqrt(visual_area / np.pi) * 0.105  # Formula exacta de map.py
+    """Convert marker size to radius using corrected scaling."""
+    visual_area = marker_size**2
+    # Factor aumentado para reflejar el tamaño visual real
+    return np.sqrt(visual_area / np.pi) * 0.28  # Aumentado de 0.105 a 0.28
 
 def calculate_connection_points(x1: float, y1: float, x2: float, y2: float, 
                               r1: float, r2: float, pass_count: int) -> tuple:
-    """Calculate connection points using EXACT map.py logic."""
+    """Calculate connection points with proper margins."""
     dx, dy = x2 - x1, y2 - y1
     length = np.sqrt(dx**2 + dy**2)
     
@@ -59,8 +58,7 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
     combined_radius = r1 + r2
     min_safe_distance = combined_radius * 1.1
     
-    # Usar el mismo base_offset que map.py (inferido de los resultados visuales)
-    base_offset = 0.8  # Valor típico usado en map.py
+    base_offset = 0.8
     
     if length < min_safe_distance:
         perp_x, perp_y = -uy, ux
@@ -69,15 +67,16 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
         start_x = x1 + r1 * ux * 1.1 + perp_x * offset
         start_y = y1 + r1 * uy * 1.1 + perp_y * offset
         
-        reduced_margin = r2 + 0.5
+        # Margen aumentado para nodos cercanos
+        reduced_margin = r2 + 2.5  # Aumentado de 0.5 a 2.5
         end_x = x2 - reduced_margin * ux + perp_x * offset
         end_y = y2 - reduced_margin * uy + perp_y * offset
         
         if np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2) < 1.0:
             start_x = x1 + r1 * ux + perp_x * offset
             start_y = y1 + r1 * uy + perp_y * offset
-            end_x = x2 - 1.5 * ux + perp_x * offset 
-            end_y = y2 - 1.5 * uy + perp_y * offset  
+            end_x = x2 - 3.0 * ux + perp_x * offset  # Aumentado de 1.5 a 3.0
+            end_y = y2 - 3.0 * uy + perp_y * offset  
             
     else:
         perp_x, perp_y = -uy, ux
@@ -86,7 +85,8 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
         start_x = x1 + r1 * ux + perp_x * offset
         start_y = y1 + r1 * uy + perp_y * offset
         
-        name_margin = r2 + 1
+        # Margen significativamente aumentado
+        name_margin = r2 + 2.5  # Aumentado de 1 a 3.5
         end_x = x2 - name_margin * ux + perp_x * offset
         end_y = y2 - name_margin * uy + perp_y * offset
     
@@ -94,7 +94,7 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
 
 def draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end_y: float,
                          color: str, line_width: float):
-    """Draw directional arrow using EXACT map.py logic."""
+    """Draw directional arrow with adjusted positioning."""
     dx, dy = end_x - start_x, end_y - start_y
     length = np.sqrt(dx**2 + dy**2)
     
@@ -105,7 +105,8 @@ def draw_connection_arrow(ax, start_x: float, start_y: float, end_x: float, end_
     px, py = -uy, ux
     
     size = max(0.6, line_width * 0.25)
-    extension = size * 0.125
+    # Reducir extensión para que la punta no sobresalga
+    extension = size * 0.05  # Reducido de 0.125 a 0.05
     tip_x = end_x + extension * ux
     tip_y = end_y + extension * uy
     
@@ -191,7 +192,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     # Normalización global de xThreat
     xthreat_norm = Normalize(vmin=min_player_value, vmax=max_player_value)
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
-        '#E15A82', '#EEA934', '#F1CA56', '#DCED69', '#7FF7A8', '#5AE1AC', '#11C0A1'
+    '#5568B8', '#8AAAE5', '#ADD8E6', '#F5DEB3', '#FFA07A', '#FF6B6B', '#D2001F'
     ])
     
     for i, team in enumerate(teams):
