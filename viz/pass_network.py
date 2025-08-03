@@ -378,7 +378,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
     
     # Línea 3: Liga, temporada y fecha
-    fig.text(x=0.5, y=0.87, s=f"{league} | Season {season} | {match_date}",
+    fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
     # Créditos
