@@ -12,8 +12,8 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-BACKGROUND_COLOR = '#4A4A4A'
-PITCH_COLOR = '#4A4A4A' 
+BACKGROUND_COLOR = '#313332'
+PITCH_COLOR = '#313332' 
 
 def calculate_node_size(total_passes: int, max_passes: int, threshold: int = 20) -> float:
     """Calculate individual node size with very gradual scaling."""
@@ -46,7 +46,7 @@ def calculate_line_width(pass_count: int, min_connections: int, max_connections:
 def get_node_radius(marker_size: float) -> float:
     """Convert marker size to radius using corrected scaling."""
     visual_area = marker_size**2
-    return np.sqrt(visual_area / np.pi) * 0.28
+    return np.sqrt(visual_area / np.pi) * 0.32
 
 def calculate_connection_points(x1: float, y1: float, x2: float, y2: float, 
                               r1: float, r2: float, pass_count: int) -> tuple:
@@ -206,32 +206,33 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
     player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
     
-    # Colores más brillantes para mejor contraste
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
-        '#6B8CFF', '#8FC3FF', '#A8E6CF', '#FFE4AD', '#FFB347', '#FF7F7F', '#FF3B3B'
+        'deepskyblue',    # Azul
+        'cyan',           # Azul claro
+        'lawngreen',      # Verde
+        'yellow',         # Amarillo
+        'gold',           # Dorado/naranja
+        'lightpink',      # Rosa/rojo claro
+        'tomato'          # Rojo
     ])
-    
     for i, team in enumerate(teams):
         ax[i].set_facecolor(BACKGROUND_COLOR)
         
         pitch = VerticalPitch(pitch_type='opta', 
                              pitch_color=PITCH_COLOR,
-                             line_color='#B0B0B0',
-                             goal_type='box',
-                             linewidth=0.8, 
+                             line_color='white',
+                             linewidth=1, 
                              pad_bottom=3)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
-        
-        # SIN LÍNEAS PUNTEADAS - REMOVIDAS
         
         # Flecha Attack
         head_length = 0.3
         head_width = 0.05
         ax[i].annotate(xy=(102, 58), xytext=(102, 43), zorder=2, text='',
                       ha='center', arrowprops=dict(arrowstyle=f'->, head_length={head_length}, head_width={head_width}',
-                      color='#B0B0B0', lw=0.7))
+                      color='white', lw=0.7))
         ax[i].annotate(xy=(104, 48), zorder=2, text='Attack', ha='center',
-                      color='#B0B0B0', rotation=90, size=6)
+                      color='white', rotation=90, size=6)
         
         # Texto minutos
         ax[i].annotate(xy=(50, -5), zorder=2, text='Passes from minutes 1 to 90',
@@ -327,7 +328,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             
             node_color = node_cmap(player_norm(pass_value))
             
-            ax[i].scatter(x, y, s=marker_size**2, c=node_color, alpha=0.8,
+            ax[i].scatter(x, y, s=marker_size**2, c=node_color, alpha=0.3,
                          edgecolors=node_color, linewidth=2, zorder=5)
             
             ax[i].scatter(x, y, s=(marker_size+1)**2, color='white', 
@@ -350,13 +351,13 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
     
     # Línea 2: Equipos con resultado y logos
-    result_y = 0.885
+    result_y = 0.9
     
     # Logo equipo local
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.24, result_y-0.01, 0.055, 0.055])
+            logo_ax = fig.add_axes([0.175, result_y-0.045, 0.135, 0.135])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -366,7 +367,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.71, result_y-0.01, 0.055, 0.055])
+            logo_ax = fig.add_axes([0.71, result_y-0.045, 0.135, 0.135])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -377,7 +378,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
     
     # Línea 3: Liga, temporada y fecha
-    fig.text(x=0.5, y=0.86, s=f"{league} | Season {season} | {match_date}",
+    fig.text(x=0.5, y=0.87, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
     # Créditos
@@ -450,9 +451,6 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     circle2 = Circle(xy=(x2+shift_x2, y2), radius=radius*1.5, edgecolor='white', fill=False)
     circle3 = Circle(xy=(x2+2.3*shift_x2, y2), radius=radius*2, edgecolor='white', fill=False)
     
-    # Círculos de colores (MODIFICADOS CON ESTILO DEL GRÁFICO)
-    # Necesitamos hacer esto de manera diferente ya que los patches no soportan transparencia múltiple
-    # Primero los círculos con transparencia
     for idx, (x_pos, color) in enumerate([
         (x3, colors_legend[0]),
         (x3+shift_x3, colors_legend[1]),
@@ -462,7 +460,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     ]):
         # Círculo interior con alpha
         inner_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
-                            color=color, alpha=0.8, zorder=10)
+                            color=color, alpha=0.3, zorder=10)
         fig.patches.append(inner_circle)
         
         # Círculo exterior blanco con transparencia (halo)
