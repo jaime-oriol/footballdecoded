@@ -48,7 +48,7 @@ def extract_match_complete(ws_id: int, us_id: int, league: str, season: str,
     events = _add_box_entries(events)
     events = _add_pass_outcomes(events)
     events = _add_action_classifications(events)
-    events = _add_zone_classification(events)  # Añadir zone_id
+    events = _add_zone_classification(events)
     events = _merge_shot_xg(events, us_data.get('shots', pd.DataFrame()))
     
     # Generate convex hulls for spatial analysis
@@ -399,6 +399,7 @@ def _add_action_classifications(events: pd.DataFrame) -> pd.DataFrame:
         ] = 'Defensive'
     
     return events
+
 def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame:
     """Enhanced xG merging with better matching"""
     if us_shots.empty:
@@ -492,114 +493,6 @@ def _create_convex_hull(events_df: pd.DataFrame, team_name: str) -> Dict:
     except:
         return None
 
-def _aggregate_players(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced player aggregation with all new metrics"""
-    players = []
-    
-    for (player, team), player_events in events.groupby(['player', 'team']):
-        if pd.isna(player):
-            continue
-            
-        minutes = player_events['minute'].max() - player_events['minute'].min()
-        
-        # Basic counts
-        total_actions = len(player_events)
-        offensive_actions = len(player_events[player_events['action_type'] == 'Offensive'])
-        defensive_actions = len(player_events[player_events['action_type'] == 'Defensive'])
-        
-        # Passing metrics
-        passes = player_events[player_events['event_type'] == 'Pass']
-        progressive_passes = len(player_events[
-            (player_events['event_type'] == 'Pass') & 
-            (player_events['is_progressive'] == True)
-        ])
-        box_entries = player_events['is_box_entry'].sum()
-        
-        # Carrying metrics
-        carries = player_events[player_events['event_type'] == 'Carry']
-        progressive_carries = len(player_events[
-            (player_events['event_type'] == 'Carry') & 
-            (player_events['is_progressive'] == True)
-        ])
-        
-        # Advanced metrics
-        pre_assists = player_events['is_pre_assist'].sum()
-        xthreat_total = player_events['xthreat_gen'].sum()
-        
-        # Pass outcomes
-        pass_outcomes = passes['pass_outcome'].value_counts().to_dict()
-        
-        players.append({
-            'player': player,
-            'team': team,
-            'minutes': minutes,
-            'total_actions': total_actions,
-            'offensive_actions': offensive_actions,
-            'defensive_actions': defensive_actions,
-            'passes_attempted': len(passes),
-            'passes_completed': len(passes[passes['outcome_type'] == 'Successful']),
-            'progressive_passes': progressive_passes,
-            'box_entries': box_entries,
-            'carries': len(carries),
-            'progressive_carries': progressive_carries,
-            'pre_assists': pre_assists,
-            'xthreat_total': xthreat_total,
-            'avg_x': player_events['x'].mean(),
-            'avg_y': player_events['y'].mean(),
-            'passes_to_goal': pass_outcomes.get('Goal', 0),
-            'passes_to_shot': pass_outcomes.get('Shot', 0),
-            'key_passes': pass_outcomes.get('Key Pass', 0)
-        })
-    
-    return pd.DataFrame(players)
-
-def _aggregate_zones(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced zone aggregation with 18-zone system"""
-    def get_zone(x, y):
-        # 18 zones: 6x3 grid
-        if x < 16.67:
-            zone_x = 0
-        elif x < 33.33:
-            zone_x = 1
-        elif x < 50:
-            zone_x = 2
-        elif x < 66.67:
-            zone_x = 3
-        elif x < 83.33:
-            zone_x = 4
-        else:
-            zone_x = 5
-        
-        if y < 33.33:
-            zone_y = 0
-        elif y < 66.67:
-            zone_y = 1
-        else:
-            zone_y = 2
-        
-        return zone_x * 3 + zone_y + 1
-    
-    events['zone_id'] = events.apply(lambda r: get_zone(r['x'], r['y']), axis=1)
-    
-    zones = []
-    for (team, zone_id), zone_events in events.groupby(['team', 'zone_id']):
-        offensive_events = len(zone_events[zone_events['action_type'] == 'Offensive'])
-        defensive_events = len(zone_events[zone_events['action_type'] == 'Defensive'])
-        
-        zones.append({
-            'team': team,
-            'zone_id': zone_id,
-            'events_count': len(zone_events),
-            'offensive_events': offensive_events,
-            'defensive_events': defensive_events,
-            'xthreat_total': zone_events['xthreat_gen'].sum(),
-            'progressive_actions': len(zone_events[zone_events['is_progressive'] == True]),
-            'box_entries': zone_events['is_box_entry'].sum(),
-            'possession_pct': len(zone_events) / len(events[events['team'] == team]) * 100
-        })
-    
-    return pd.DataFrame(zones)
-
 def _generate_validation_csvs(events: pd.DataFrame, hull_data: pd.DataFrame, 
                             home_team: str, away_team: str, match_date: str, 
                             league: str, season: str):
@@ -633,8 +526,6 @@ def _generate_validation_csvs(events: pd.DataFrame, hull_data: pd.DataFrame,
     info_df.to_csv(os.path.join(base_dir, 'match_info.csv'), index=False)
     print(f"5. match_info.csv: {len(info_df)} info records")
     
-    print(f"\n✅ 5 optimized visualization CSVs saved to: {base_dir}")
-
 def _build_player_network_optimized(events: pd.DataFrame) -> pd.DataFrame:
     """Optimized player network for perfect visualizations"""
     network_data = []
@@ -686,7 +577,8 @@ def _build_player_network_optimized(events: pd.DataFrame) -> pd.DataFrame:
                 'total_actions': len(player_events),
                 'minutes_active': round(player_events['minute'].max() - player_events['minute'].min(), 1),
                 'position_variance_x': round(player_events['x'].std(), 2),
-                'position_variance_y': round(player_events['y'].std(), 2)
+                'position_variance_y': round(player_events['y'].std(), 2),
+                'xthreat_total': round(player_events['xthreat_gen'].sum(), 4)  # ← AÑADIDO
             })
     
     return pd.DataFrame(network_data)
@@ -822,6 +714,7 @@ def _build_match_aggregates_optimized(events: pd.DataFrame) -> pd.DataFrame:
         all_data.append(zone_data)
     
     return pd.DataFrame(all_data)
+
 def _build_spatial_analysis_optimized(events: pd.DataFrame, hull_data: pd.DataFrame) -> pd.DataFrame:
     """Optimized spatial analysis with processable coordinates"""
     spatial_data = []
@@ -1074,318 +967,5 @@ def _build_match_info_optimized(events: pd.DataFrame, home_team: str, away_team:
             'team': None,
             'numeric_value': float(metric_value)
         })
-    
-    return pd.DataFrame(info_data)
-    """Enhanced player aggregation for match_aggregates.csv"""
-    players = []
-    
-    for (player, team), player_events in events.groupby(['player', 'team']):
-        if pd.isna(player):
-            continue
-            
-        # Time metrics
-        minutes = player_events['minute'].max() - player_events['minute'].min()
-        
-        # Action counts
-        total_actions = len(player_events)
-        offensive_actions = len(player_events[player_events['action_type'] == 'Offensive'])
-        defensive_actions = len(player_events[player_events['action_type'] == 'Defensive'])
-        
-        # Passing metrics
-        passes = player_events[player_events['event_type'] == 'Pass']
-        passes_completed = len(passes[passes['outcome_type'] == 'Successful'])
-        progressive_passes = player_events['is_progressive'].sum()
-        
-        # Advanced metrics
-        xthreat_total = player_events['xthreat_gen'].sum()
-        box_entries = player_events['is_box_entry'].sum()
-        pre_assists = player_events['is_pre_assist'].sum()
-        
-        # Positional data
-        avg_x = player_events['x'].mean()
-        avg_y = player_events['y'].mean()
-        
-        # Pass outcomes
-        pass_outcomes = passes['pass_outcome'].value_counts().to_dict()
-        
-        players.append({
-            'entity_id': player,
-            'entity_name': player,
-            'team': team,
-            'minutes': minutes,
-            'total_actions': total_actions,
-            'offensive_actions': offensive_actions,
-            'defensive_actions': defensive_actions,
-            'passes_attempted': len(passes),
-            'passes_completed': passes_completed,
-            'pass_completion_pct': passes_completed / len(passes) * 100 if len(passes) > 0 else 0,
-            'progressive_passes': progressive_passes,
-            'box_entries': box_entries,
-            'pre_assists': pre_assists,
-            'xthreat_total': xthreat_total,
-            'xthreat_per_action': xthreat_total / total_actions if total_actions > 0 else 0,
-            'avg_x': avg_x,
-            'avg_y': avg_y,
-            'passes_to_goal': pass_outcomes.get('Goal', 0),
-            'passes_to_shot': pass_outcomes.get('Shot', 0),
-            'key_passes': pass_outcomes.get('Key Pass', 0),
-            'carries': len(player_events[player_events['event_type'] == 'Carry']),
-            'progressive_carries': len(player_events[
-                (player_events['event_type'] == 'Carry') & 
-                (player_events['is_progressive'] == True)
-            ])
-        })
-    
-    return pd.DataFrame(players)
-
-def _aggregate_by_zone(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced zone aggregation for match_aggregates.csv"""
-    def get_zone_name(zone_id):
-        # Convert zone_id to descriptive name
-        zone_names = {
-            1: 'Def_Left', 2: 'Def_Center', 3: 'Def_Right',
-            4: 'DefMid_Left', 5: 'DefMid_Center', 6: 'DefMid_Right',
-            7: 'Mid_Left', 8: 'Mid_Center', 9: 'Mid_Right',
-            10: 'AttMid_Left', 11: 'AttMid_Center', 12: 'AttMid_Right',
-            13: 'Att_Left', 14: 'Att_Center', 15: 'Att_Right',
-            16: 'FinalThird_Left', 17: 'FinalThird_Center', 18: 'FinalThird_Right'
-        }
-        return zone_names.get(zone_id, f'Zone_{zone_id}')
-    
-    zones = []
-    for (team, zone_id), zone_events in events.groupby(['team', 'zone_id']):
-        # Action counts
-        total_actions = len(zone_events)
-        offensive_actions = len(zone_events[zone_events['action_type'] == 'Offensive'])
-        defensive_actions = len(zone_events[zone_events['action_type'] == 'Defensive'])
-        
-        # Advanced metrics
-        xthreat_total = zone_events['xthreat_gen'].sum()
-        progressive_actions = zone_events['is_progressive'].sum()
-        box_entries = zone_events['is_box_entry'].sum()
-        
-        # Possession metrics
-        team_total_actions = len(events[events['team'] == team])
-        possession_pct = total_actions / team_total_actions * 100
-        
-        zones.append({
-            'entity_id': f'{team}_{zone_id}',
-            'entity_name': get_zone_name(zone_id),
-            'team': team,
-            'zone_id': zone_id,
-            'total_actions': total_actions,
-            'offensive_actions': offensive_actions,
-            'defensive_actions': defensive_actions,
-            'xthreat_total': xthreat_total,
-            'xthreat_per_action': xthreat_total / total_actions if total_actions > 0 else 0,
-            'progressive_actions': progressive_actions,
-            'box_entries': box_entries,
-            'possession_pct': possession_pct,
-            'avg_x': zone_events['x'].mean(),
-            'avg_y': zone_events['y'].mean(),
-            'passes_attempted': len(zone_events[zone_events['event_type'] == 'Pass']),
-            'passes_completed': len(zone_events[
-                (zone_events['event_type'] == 'Pass') & 
-                (zone_events['outcome_type'] == 'Successful')
-            ])
-        })
-    
-    return pd.DataFrame(zones)
-
-def _build_spatial_analysis(events: pd.DataFrame, hull_data: pd.DataFrame) -> pd.DataFrame:
-    """Build spatial analysis data combining hulls and pressure maps"""
-    spatial_data = []
-    
-    # Add hull data
-    for _, hull in hull_data.iterrows():
-        spatial_data.append({
-            'analysis_type': 'convex_hull',
-            'team': hull['team'],
-            'metric_name': 'team_hull',
-            'x_coords': hull['hull_points_x'],
-            'y_coords': hull['hull_points_y'],
-            'area': hull['hull_area'],
-            'perimeter': hull['hull_perimeter'],
-            'center_x': hull['center_x'],
-            'center_y': hull['center_y'],
-            'events_count': hull['events_count']
-        })
-    
-    # Add pressure maps (simplified as zone-based pressure)
-    for team in events['team'].unique():
-        team_events = events[events['team'] == team]
-        
-        for zone_id in range(1, 19):  # 18 zones
-            zone_events = team_events[team_events['zone_id'] == zone_id]
-            
-            if len(zone_events) > 0:
-                # Calculate pressure metrics
-                pressure_intensity = len(zone_events) / len(team_events)
-                avg_xthreat = zone_events['xthreat_gen'].mean()
-                
-                spatial_data.append({
-                    'analysis_type': 'pressure_map',
-                    'team': team,
-                    'metric_name': f'zone_{zone_id}_pressure',
-                    'zone_id': zone_id,
-                    'pressure_intensity': pressure_intensity,
-                    'avg_xthreat': avg_xthreat,
-                    'events_count': len(zone_events),
-                    'avg_x': zone_events['x'].mean(),
-                    'avg_y': zone_events['y'].mean(),
-                    'progressive_actions': zone_events['is_progressive'].sum()
-                })
-    
-    # Add control territorial analysis
-    for team in events['team'].unique():
-        team_events = events[events['team'] == team]
-        
-        # Territorial control by thirds
-        def_third = len(team_events[team_events['x'] < 33.33])
-        mid_third = len(team_events[(team_events['x'] >= 33.33) & (team_events['x'] < 66.67)])
-        att_third = len(team_events[team_events['x'] >= 66.67])
-        
-        total_team_events = len(team_events)
-        
-        for third, count, third_name in [(def_third, def_third, 'defensive'), 
-                                        (mid_third, mid_third, 'middle'), 
-                                        (att_third, att_third, 'attacking')]:
-            spatial_data.append({
-                'analysis_type': 'territorial_control',
-                'team': team,
-                'metric_name': f'{third_name}_third_control',
-                'control_percentage': count / total_team_events * 100 if total_team_events > 0 else 0,
-                'events_count': count,
-                'xthreat_total': team_events[
-                    (team_events['x'] >= (0 if third_name == 'defensive' else 33.33 if third_name == 'middle' else 66.67)) &
-                    (team_events['x'] < (33.33 if third_name == 'defensive' else 66.67 if third_name == 'middle' else 100))
-                ]['xthreat_gen'].sum()
-            })
-    
-    return pd.DataFrame(spatial_data)
-
-def _build_match_info(events: pd.DataFrame, home_team: str, away_team: str, 
-                     match_date: str, league: str, season: str) -> pd.DataFrame:
-    """Build match info with metadata, lineups, and conditions"""
-    info_data = []
-    
-    # Basic match info
-    info_data.append({
-        'info_type': 'match_metadata',
-        'key': 'home_team',
-        'value': home_team,
-        'category': 'teams'
-    })
-    
-    info_data.append({
-        'info_type': 'match_metadata',
-        'key': 'away_team',
-        'value': away_team,
-        'category': 'teams'
-    })
-    
-    info_data.append({
-        'info_type': 'match_metadata',
-        'key': 'match_date',
-        'value': match_date,
-        'category': 'datetime'
-    })
-    
-    info_data.append({
-        'info_type': 'match_metadata',
-        'key': 'league',
-        'value': league,
-        'category': 'competition'
-    })
-    
-    info_data.append({
-        'info_type': 'match_metadata',
-        'key': 'season',
-        'value': season,
-        'category': 'competition'
-    })
-    
-    # Match statistics
-    total_events = len(events)
-    info_data.append({
-        'info_type': 'match_stats',
-        'key': 'total_events',
-        'value': str(total_events),
-        'category': 'statistics'
-    })
-    
-    # Team-specific stats
-    for team in [home_team, away_team]:
-        team_events = events[events['team'] == team]
-        
-        info_data.extend([
-            {
-                'info_type': 'team_stats',
-                'key': f'{team}_total_events',
-                'value': str(len(team_events)),
-                'category': 'team_statistics',
-                'team': team
-            },
-            {
-                'info_type': 'team_stats',
-                'key': f'{team}_possession_pct',
-                'value': str(round(len(team_events) / total_events * 100, 1)),
-                'category': 'team_statistics',
-                'team': team
-            },
-            {
-                'info_type': 'team_stats',
-                'key': f'{team}_xthreat_total',
-                'value': str(round(team_events['xthreat_gen'].sum(), 3)),
-                'category': 'team_statistics',
-                'team': team
-            }
-        ])
-    
-    # Lineups (players who participated)
-    for team in [home_team, away_team]:
-        team_players = events[events['team'] == team]['player'].dropna().unique()
-        
-        for i, player in enumerate(team_players, 1):
-            player_events = events[(events['team'] == team) & (events['player'] == player)]
-            first_action = player_events['minute'].min()
-            last_action = player_events['minute'].max()
-            
-            info_data.append({
-                'info_type': 'lineup',
-                'key': f'player_{i}',
-                'value': player,
-                'category': 'lineup',
-                'team': team,
-                'first_action_minute': first_action,
-                'last_action_minute': last_action,
-                'total_actions': len(player_events)
-            })
-    
-    # Match conditions/characteristics
-    periods = events.get('period', pd.Series()).dropna().unique()
-    info_data.append({
-        'info_type': 'match_conditions',
-        'key': 'periods_played',
-        'value': str(list(periods)),
-        'category': 'conditions'
-    })
-    
-    # Data quality metrics
-    missing_coords = len(events[(events['x'].isna()) | (events['y'].isna())])
-    info_data.append({
-        'info_type': 'data_quality',
-        'key': 'events_missing_coordinates',
-        'value': str(missing_coords),
-        'category': 'quality'
-    })
-    
-    events_with_xthreat = len(events[events['xthreat_gen'] > 0])
-    info_data.append({
-        'info_type': 'data_quality',
-        'key': 'events_with_xthreat',
-        'value': str(events_with_xthreat),
-        'category': 'quality'
-    })
     
     return pd.DataFrame(info_data)
