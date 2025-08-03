@@ -1,19 +1,18 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from mplsoccer.pitch import Pitch
+from mplsoccer.pitch import VerticalPitch
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.collections import LineCollection
 from matplotlib.patches import FancyArrowPatch, Circle, ArrowStyle
 import matplotlib.colors as mcolors
-import matplotlib.patheffects as path_effects
 from PIL import Image
 import warnings
 warnings.filterwarnings('ignore')
 
 def plot_pass_network(network_csv_path, info_csv_path, 
                      home_logo_path=None, away_logo_path=None, 
-                     figsize=(16, 20), save_path=None):
+                     figsize=(6, 6), save_path=None):
     
     # Leer datos
     network_df = pd.read_csv(network_csv_path)
@@ -26,12 +25,12 @@ def plot_pass_network(network_csv_path, info_csv_path,
     league = info_df[info_df['info_key'] == 'league']['info_value'].iloc[0]
     season = info_df[info_df['info_key'] == 'season']['info_value'].iloc[0]
     
-    # Extraer resultado
-    home_goals = int(info_df[(info_df['info_key'] == 'goals') & (info_df['team'] == home_team)]['numeric_value'].iloc[0])
-    away_goals = int(info_df[(info_df['info_key'] == 'goals') & (info_df['team'] == away_team)]['numeric_value'].iloc[0])
-    
     positions_df = network_df[network_df['record_type'] == 'position'].copy()
     connections_df = network_df[network_df['record_type'] == 'connection'].copy()
+    
+    # TRANSFORMACIÓN CORRECTA: Para vertical, Y del CSV -> X del pitch, X del CSV -> Y del pitch
+    positions_df['x_pitch'] = positions_df['avg_y_start']
+    positions_df['y_pitch'] = positions_df['avg_x_start']
     
     # Colormap del notebook
     nodes_cmap = LinearSegmentedColormap.from_list("", [
@@ -63,64 +62,9 @@ def plot_pass_network(network_csv_path, info_csv_path,
         else:
             return new_value
     
-    def get_node_radius(node_size):
-        return np.sqrt(node_size / np.pi) * 0.105
-    
-    def calculate_connection_points(x1, y1, x2, y2, r1, r2, pass_count):
-        dx, dy = x2 - x1, y2 - y1
-        length = np.sqrt(dx**2 + dy**2)
-        
-        if length == 0:
-            return x1, y1, x2, y2
-        
-        ux, uy = dx / length, dy / length
-        combined_radius = r1 + r2
-        min_safe_distance = combined_radius * 1.1
-        
-        base_offset = 0.3
-        perp_x, perp_y = -uy, ux
-        offset = base_offset * (1 + pass_count / 50)
-        
-        if length < min_safe_distance:
-            start_x = x1 + r1 * ux * 1.1 + perp_x * offset
-            start_y = y1 + r1 * uy * 1.1 + perp_y * offset
-            reduced_margin = r2 + 0.5
-            end_x = x2 - reduced_margin * ux + perp_x * offset
-            end_y = y2 - reduced_margin * uy + perp_y * offset
-        else:
-            start_x = x1 + r1 * ux + perp_x * offset
-            start_y = y1 + r1 * uy + perp_y * offset
-            name_margin = r2 + 1
-            end_x = x2 - name_margin * ux + perp_x * offset
-            end_y = y2 - name_margin * uy + perp_y * offset
-        
-        return start_x, start_y, end_x, end_y
-    
-    def draw_connection_arrow(ax, start_x, start_y, end_x, end_y, color, line_width, alpha):
-        dx, dy = end_x - start_x, end_y - start_y
-        length = np.sqrt(dx**2 + dy**2)
-        
-        if length == 0:
-            return
-        
-        ux, uy = dx / length, dy / length
-        px, py = -uy, ux
-        
-        size = max(0.6, line_width * 0.25)
-        extension = size * 0.125
-        tip_x = end_x + extension * ux
-        tip_y = end_y + extension * uy
-        
-        origin_x = tip_x - size * 1.0 * ux + size * 0.7 * px
-        origin_y = tip_y - size * 1.0 * uy + size * 0.7 * py
-        
-        ax.plot([tip_x, origin_x], [tip_y, origin_y], 
-               color=color, linewidth=max(1.8, line_width * 0.7), 
-               alpha=1.0, solid_capstyle='round', zorder=100)
-    
-    # Setup figura con fondo gris
-    fig, axes = plt.subplots(2, 1, figsize=figsize, facecolor='#313332')
-    fig.patch.set_facecolor('#313332')
+    # Setup figura
+    plt.style.use('fivethirtyeight')
+    fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400)
     
     teams = [home_team, away_team]
     
@@ -132,12 +76,47 @@ def plot_pass_network(network_csv_path, info_csv_path,
             all_xthreat_values.extend(team_positions['avg_xthreat'].values)
     
     xthreat_norm = Normalize(vmin=min_player_value, vmax=max_player_value)
+    node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
+        '#E15A82', '#EEA934', '#F1CA56', '#DCED69', '#7FF7A8', '#5AE1AC', '#11C0A1'
+    ])
     
-    # Dibujar cada equipo
-    for i, (ax, team) in enumerate(zip(axes, teams)):
-        # Crear pitch horizontal
-        pitch = Pitch(pitch_type='opta', pitch_color='#313332', line_color='white', linewidth=2)
-        pitch.draw(ax=ax)
+    for i, team in enumerate(teams):
+        # Dibujar pitch
+        pitch = VerticalPitch(pitch_type='opta', line_color='#7c7c7c', goal_type='box',
+                             linewidth=0.5, pad_bottom=10)
+        pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
+        
+        # Líneas punteadas
+        ax[i].plot([21, 21], [ax[i].get_ylim()[0]+19, ax[i].get_ylim()[1]-19], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        ax[i].plot([78.8, 78.8], [ax[i].get_ylim()[0]+19, ax[i].get_ylim()[1]-19], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        ax[i].plot([36.8, 36.8], [ax[i].get_ylim()[0]+8.5, ax[i].get_ylim()[1]-8.5], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        ax[i].plot([63.2, 63.2], [ax[i].get_ylim()[0]+8.5, ax[i].get_ylim()[1]-8.5], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        
+        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [83, 83], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [67, 67], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [17, 17], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [33, 33], 
+                   ls=':', dashes=(1, 3), color='gray', lw=0.4)
+        
+        # Flecha Attack
+        head_length = 0.3
+        head_width = 0.05
+        ax[i].annotate(xy=(102, 58), xytext=(102, 43), zorder=2, text='',
+                      ha='center', arrowprops=dict(arrowstyle=f'->, head_length={head_length}, head_width={head_width}',
+                      color='#7c7c7c', lw=0.5))
+        ax[i].annotate(xy=(104, 48), zorder=2, text='Attack', ha='center',
+                      color='#7c7c7c', rotation=90, size=5)
+        
+        # Texto minutos
+        ax[i].annotate(xy=(50, -5), zorder=2, text='Passes from minutes 1 to 90',
+                      ha='center', color='#7c7c7c', size=6)
         
         team_positions = positions_df[positions_df['team'] == team].copy()
         team_connections = connections_df[connections_df['team'] == team].copy()
@@ -147,174 +126,195 @@ def plot_pass_network(network_csv_path, info_csv_path,
         
         # Preparar datos de jugadores
         player_stats = {}
-        for _, player in team_positions.iterrows():
-            num_passes = player['total_actions']
-            marker_size = change_range(num_passes, (min_player_count, max_player_count), (min_node_size, max_node_size))
-            player_stats[player['source_player']] = {'marker_size': marker_size}
         
-        # Dibujar conexiones con gradiente
+        # Dibujar conexiones
         valid_connections = team_connections[team_connections['connection_strength'] >= min_passes].copy()
         
         for _, conn in valid_connections.iterrows():
+            # Buscar posiciones usando source_player
             source_pos = team_positions[team_positions['source_player'] == conn['source_player']]
             target_pos = team_positions[team_positions['source_player'] == conn['target_player']]
             
             if source_pos.empty or target_pos.empty:
                 continue
             
-            x1 = source_pos.iloc[0]['avg_x_start']
-            y1 = source_pos.iloc[0]['avg_y_start']
-            x2 = target_pos.iloc[0]['avg_x_start']
-            y2 = target_pos.iloc[0]['avg_y_start']
-            
-            source_radius = get_node_radius(player_stats[conn['source_player']]['marker_size'])
-            target_radius = get_node_radius(player_stats[conn['target_player']]['marker_size'])
-            
-            start_x, start_y, end_x, end_y = calculate_connection_points(
-                x1, y1, x2, y2, source_radius, target_radius, conn['connection_strength']
-            )
+            # Usar coordenadas transformadas
+            x1 = source_pos.iloc[0]['x_pitch']
+            y1 = source_pos.iloc[0]['y_pitch'] 
+            x2 = target_pos.iloc[0]['x_pitch']
+            y2 = target_pos.iloc[0]['y_pitch']
             
             num_passes = conn['connection_strength']
             pass_value = conn.get('avg_xthreat', 0)
             
             line_width = change_range(num_passes, (min_pair_count, max_pair_count), (min_edge_width, max_edge_width))
-            edge_color = nodes_cmap(xthreat_norm(pass_value))
+            alpha = change_range(pass_value, (min_pair_value, max_pair_value), (0.4, 1))
             
-            # Gradiente
-            num_points = 75
-            x_points = np.linspace(start_x, end_x, num_points)
-            y_points = np.linspace(start_y, end_y, num_points)
+            edge_color = node_cmap(xthreat_norm(pass_value))
             
-            points = np.array([x_points, y_points]).T.reshape(-1, 1, 2)
-            segments = np.concatenate([points[:-1], points[1:]], axis=1)
+            # Calcular shifts
+            dx = x2 - x1
+            dy = y2 - y1
+            rel = 68/105
+            shift_x = 2
+            shift_y = shift_x * rel
             
-            alphas = np.linspace(0.1, 1.0, len(segments))
-            rgb = mcolors.to_rgb(edge_color)
-            colors_with_alpha = [(rgb[0], rgb[1], rgb[2], alpha) for alpha in alphas]
+            slope = abs(dy * 105/100 / (dx * 68/100)) if dx != 0 else float('inf')
             
-            lc = LineCollection(segments, colors=colors_with_alpha, linewidths=line_width,
-                               capstyle='round', zorder=1)
-            ax.add_collection(lc)
-            
-            draw_connection_arrow(ax, start_x, start_y, end_x, end_y, edge_color, line_width, 1.0)
+            # Dibujar flecha con offset correcto
+            if slope > 0.5:
+                if dy > 0:
+                    ax[i].annotate("", xy=(x2+shift_x, y2), xytext=(x1+shift_x, y1), zorder=2,
+                            arrowprops=dict(arrowstyle=f'->, head_length={head_length}, head_width={head_width}',
+                                          color=tuple([alpha if n == 3 else c for n, c in enumerate(edge_color)]),
+                                          lw=line_width,
+                                          shrinkB=5))
+                else:
+                    ax[i].annotate("", xy=(x2-shift_x, y2), xytext=(x1-shift_x, y1), zorder=2,
+                            arrowprops=dict(arrowstyle=f'->, head_length={head_length}, head_width={head_width}',
+                                          color=tuple([alpha if n == 3 else c for n, c in enumerate(edge_color)]),
+                                          lw=line_width,
+                                          shrinkB=5))
+            else:
+                if dx > 0:
+                    ax[i].annotate("", xy=(x2, y2-shift_y), xytext=(x1, y1-shift_y), zorder=2,
+                            arrowprops=dict(arrowstyle=f'->, head_length={head_length}, head_width={head_width}',
+                                          color=tuple([alpha if n == 3 else c for n, c in enumerate(edge_color)]),
+                                          lw=line_width,
+                                          shrinkB=5))
+                else:
+                    ax[i].annotate("", xy=(x2, y2+shift_y), xytext=(x1, y1+shift_y), zorder=2,
+                            arrowprops=dict(arrowstyle=f'->, head_length={head_length}, head_width={head_width}',
+                                          color=tuple([alpha if n == 3 else c for n, c in enumerate(edge_color)]),
+                                          lw=line_width,
+                                          shrinkB=5))
         
-        # Dibujar nodos semitransparentes
+        # Dibujar nodos
         for _, player in team_positions.iterrows():
-            x = player['avg_x_start']
-            y = player['avg_y_start']
+            x = player['x_pitch']
+            y = player['y_pitch']
+            
             num_passes = player['total_actions']
             pass_value = player['avg_xthreat']
             
             marker_size = change_range(num_passes, (min_player_count, max_player_count), (min_node_size, max_node_size))
-            node_color = nodes_cmap(xthreat_norm(pass_value))
+            node_color = node_cmap(xthreat_norm(pass_value))
             
-            # Nodo con alpha=0.5
-            ax.scatter(x, y, s=marker_size*15, c=[node_color], alpha=0.5,
-                      edgecolors=node_color, linewidth=4, zorder=10)
+            ax[i].plot(x, y, '.', color=node_color, markersize=marker_size, zorder=5)
+            ax[i].plot(x, y, '.', markersize=marker_size+2, zorder=4, color='white')
             
-            # Nombre centrado en el nodo
+            # Guardar marker_size para las conexiones
+            player_stats[player['source_player']] = {'marker_size': marker_size}
+            
+            # Nombre
             name = player['source_player']
-            display_name = ' '.join(name.split()[-2:]) if len(name) > 15 else name
-            
-            ax.text(x, y, display_name, ha='center', va='center',
-                   color='white', fontsize=10, fontweight='bold',
-                   path_effects=[
-                       path_effects.Stroke(linewidth=3, foreground='black'),
-                       path_effects.Normal()
-                   ], zorder=15)
-        
-        # Nombre del equipo y logo en esquina superior izquierda
-        ax.text(2, 96, team, fontsize=16, fontweight='bold', color='white', va='top')
-        
-        if (i == 0 and home_logo_path) or (i == 1 and away_logo_path):
-            logo_path = home_logo_path if i == 0 else away_logo_path
-            try:
-                logo = Image.open(logo_path)
-                logo_ax = fig.add_axes([0.05 if i == 0 else 0.05, 
-                                       0.745 - i*0.375, 0.08, 0.08])
-                logo_ax.imshow(logo)
-                logo_ax.axis('off')
-            except:
-                pass
+            var_ = ' '.join(name.split(' ')[1:]) if len(name.split(' ')) > 1 else name
+            ax[i].annotate(var_, xy=(x, y+5 if y > 48 else y-5), ha="center", va="center",
+                          zorder=7, fontsize=5, color='black', font='serif', weight='heavy')
     
-    # Título con resultado
-    fig.suptitle(f"{home_team} {home_goals} - {away_goals} {away_team}", 
-                fontsize=20, fontweight='bold', color='white', y=0.98)
-    fig.text(0.5, 0.95, f"{league} | {season} | {match_date}",
-            ha='center', fontsize=14, color='white')
+    # Títulos
+    font = 'serif'
+    fig.text(x=0.5, y=.90, s=f"Passing network for {home_team} vs {away_team}",
+            weight='bold', va="bottom", ha="center", fontsize=10, font=font)
     
-    # Leyenda
-    legend_y = 0.08
-    font = 'Arial'
+    fig.text(x=0.25, y=.855, s=home_team, weight='bold', va="bottom", ha="center",
+            fontsize=8, font=font)
+    fig.text(x=0.73, y=.855, s=away_team, weight='bold', va="bottom", ha="center",
+            fontsize=8, font=font)
     
-    # Textos de leyenda
-    fig.text(0.14, legend_y + 0.05, "Pass count between", ha="center", fontsize=10, font=font, color='white')
-    fig.text(0.38, legend_y + 0.05, "Pass value between (xT)", ha="center", fontsize=10, font=font, color='white')
-    fig.text(0.61, legend_y + 0.05, "Player pass count", ha="center", fontsize=10, font=font, color='white')
-    fig.text(0.84, legend_y + 0.05, "Player pass value (xT)", ha="center", fontsize=10, font=font, color='white')
-    
-    fig.text(0.13, legend_y, "5 to 16+", ha="center", fontsize=8, font=font, color='white')
-    fig.text(0.37, legend_y, "0 to 0.09+", ha="center", fontsize=8, font=font, color='white')
-    fig.text(0.61, legend_y, "1 to 88+", ha="center", fontsize=8, font=font, color='white')
-    fig.text(0.84, legend_y, "0.01 to 0.36+", ha="center", fontsize=8, font=font, color='white')
-    
-    fig.text(0.41, legend_y - 0.02, "Low", ha="center", fontsize=9, font=font, color='white')
-    fig.text(0.6, legend_y - 0.02, "High", ha="center", fontsize=9, font=font, color='white')
-    
-    # ELEMENTOS VISUALES DE LA LEYENDA
-    # Coordenadas normalizadas para la leyenda
-    ax_legend = fig.add_axes([0.05, 0.01, 0.9, 0.12], frameon=False)
-    ax_legend.set_xlim(0, 1)
-    ax_legend.set_ylim(0, 1)
-    ax_legend.axis('off')
-    
-    # Flechas de grosor
-    x0, y0 = 0.09, 0.2
-    dx, dy = 0.03, 0.4
-    shift = 0.02
-    
-    for i, lw in enumerate([0.5, 1.5, 2.5]):
-        ax_legend.arrow(x0 + i*shift, y0, dx, dy, head_width=0.01, head_length=0.05,
-                       fc='white', ec='white', linewidth=lw, alpha=0.8)
-    
-    # Flechas de colores
-    x1 = 0.28
-    colors_legend = [nodes_cmap(i/4) for i in range(5)]
-    
-    for i, color in enumerate(colors_legend):
-        ax_legend.arrow(x1 + i*shift*1.5, y0, dx, dy, head_width=0.01, head_length=0.05,
-                       fc=color, ec=color, linewidth=2.5, alpha=0.8)
-    
-    # Círculos de tamaño
-    x2 = 0.57
-    y2 = 0.5
-    sizes = [0.01, 0.015, 0.02]
-    
-    for i, size in enumerate(sizes):
-        circle = plt.Circle((x2 + i*0.04, y2), size, color='white', fill=False, linewidth=2)
-        ax_legend.add_patch(circle)
-    
-    # Círculos de colores
-    x3 = 0.78
-    for i, color in enumerate(colors_legend[:5]):
-        circle = plt.Circle((x3 + i*0.04, y2), 0.02, color=color, alpha=0.8)
-        ax_legend.add_patch(circle)
-    
-    # Flecha Low -> High
-    ax_legend.arrow(0.45, 0.15, 0.1, 0, head_width=0.05, head_length=0.02,
-                   fc='white', ec='white', linewidth=1.5)
+    fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
+            va="bottom", ha="center", fontsize=6, font=font)
     
     # Créditos
-    fig.text(0.95, 0.005, "Football Decoded", ha="right", fontsize=12, 
-            font=font, color='white', weight='bold')
-    fig.text(0.05, 0.005, "Created by Jaime Oriol", ha="left", fontsize=9, 
-            font=font, color='white', style='italic')
+    fig.text(x=0.87, y=-0.0, s="Football Decoded", va="bottom", ha="center", 
+            weight='bold', fontsize=12, font=font, color='black')
+    fig.text(x=0.1, y=-0.0, s="Created by Jaime Oriol", va="bottom", ha="center", 
+            weight='bold', fontsize=6, font=font, color='black')
+    
+    # Textos de leyenda
+    fig.text(x=0.14, y=.14, s="Pass count between", va="bottom", ha="center",
+            fontsize=6, font=font)
+    fig.text(x=0.38, y=.14, s="Pass value between (xT)", va="bottom", ha="center",
+            fontsize=6, font=font)
+    fig.text(x=0.61, y=.14, s="Player pass count", va="bottom", ha="center",
+            fontsize=6, font=font)
+    fig.text(x=0.84, y=.14, s="Player pass value (xT)", va="bottom", ha="center",
+            fontsize=6, font=font)
+    
+    fig.text(x=0.13, y=0.07, s="5 to 16+", va="bottom", ha="center",
+            fontsize=5, font=font, color='black')
+    fig.text(x=0.37, y=0.07, s="0 to 0.09+", va="bottom", ha="center",
+            fontsize=5, font=font, color='black')
+    fig.text(x=0.61, y=0.07, s="1 to 88+", va="bottom", ha="center",
+            fontsize=5, font=font, color='black')
+    fig.text(x=0.84, y=0.07, s="0.01 to 0.36+", va="bottom", ha="center",
+            fontsize=5, font=font, color='black')
+    
+    fig.text(x=0.41, y=.038, s="Low", va="bottom", ha="center",
+            fontsize=6, font=font)
+    fig.text(x=0.6, y=.038, s="High", va="bottom", ha="center",
+            fontsize=6, font=font)
+    
+    # LEYENDA VISUAL
+    # Coordenadas absolutas del notebook
+    x0 = 190
+    y0 = 280
+    dx = 60
+    dy = 120
+    shift_x = 70
+    
+    x1 = 700
+    x2 = 1350
+    y2 = 340
+    shift_x2 = 70
+    radius = 20
+    
+    x3 = 1800
+    shift_x3 = 100
+    
+    x4 = 1020
+    y4 = 180
+    
+    style = ArrowStyle('->', head_length=5, head_width=3)
+    
+    # Flechas de grosor para pass count
+    arrow1 = FancyArrowPatch((x0, y0), (x0+dx, y0+dy), lw=0.5, arrowstyle=style, color='black')
+    arrow2 = FancyArrowPatch((x0+shift_x, y0), (x0+dx+shift_x, y0+dy), lw=1.5, arrowstyle=style, color='black')
+    arrow3 = FancyArrowPatch((x0+2*shift_x, y0), (x0+dx+2*shift_x, y0+dy), lw=2.5, arrowstyle=style, color='black')
+    
+    # Flechas de colores para xT
+    colors_legend = [node_cmap(i/4) for i in range(5)]
+    
+    arrow4 = FancyArrowPatch((x1, y0), (x1+dx, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[0])
+    arrow5 = FancyArrowPatch((x1+shift_x, y0), (x1+dx+shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[1])
+    arrow6 = FancyArrowPatch((x1+2*shift_x, y0), (x1+dx+2*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[2])
+    arrow7 = FancyArrowPatch((x1+3*shift_x, y0), (x1+dx+3*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[3])
+    arrow8 = FancyArrowPatch((x1+4*shift_x, y0), (x1+dx+4*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[4])
+    
+    # Círculos de tamaño
+    circle1 = Circle(xy=(x2, y2), radius=radius, edgecolor='black', fill=False)
+    circle2 = Circle(xy=(x2+shift_x2, y2), radius=radius*1.5, edgecolor='black', fill=False)
+    circle3 = Circle(xy=(x2+2.3*shift_x2, y2), radius=radius*2, edgecolor='black', fill=False)
+    
+    # Círculos de colores
+    circle4 = Circle(xy=(x3, y2), radius=radius*2, color=colors_legend[0])
+    circle5 = Circle(xy=(x3+shift_x3, y2), radius=radius*2, color=colors_legend[1])
+    circle6 = Circle(xy=(x3+2*shift_x3, y2), radius=radius*2, color=colors_legend[2])
+    circle7 = Circle(xy=(x3+3*shift_x3, y2), radius=radius*2, color=colors_legend[3])
+    circle8 = Circle(xy=(x3+4*shift_x3, y2), radius=radius*2, color=colors_legend[4])
+    
+    # Flecha horizontal Low -> High
+    arrow9 = FancyArrowPatch((x4, y4), (x4+350, y4), lw=1, arrowstyle=style, color='black')
+    
+    # Agregar todos los elementos
+    fig.patches.extend([arrow1, arrow2, arrow3, arrow4, arrow5, arrow6, arrow7, arrow8,
+                       circle1, circle2, circle3, circle4, circle5, circle6, circle7, circle8, arrow9])
     
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.15, top=0.93, hspace=0.05)
+    plt.subplots_adjust(wspace=0.1, hspace=0, bottom=0.1)
     
     if save_path:
-        fig.savefig(save_path, dpi=400, bbox_inches='tight', facecolor='#313332')
+        fig.savefig(save_path, bbox_inches='tight', dpi=400)
         print(f"Visualización guardada en: {save_path}")
     
     return fig
