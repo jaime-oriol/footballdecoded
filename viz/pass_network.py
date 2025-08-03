@@ -378,11 +378,11 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     fig.text(x=0.84, y=.14, s="Player pass value (xT)", va="bottom", ha="center",
             fontsize=6, font=font)
     
-    fig.text(x=0.13, y=0.07, s="5 to 16+", va="bottom", ha="center",
+    fig.text(x=0.13, y=0.07, s="5 to 13+", va="bottom", ha="center",
             fontsize=5, font=font, color='black')
     fig.text(x=0.37, y=0.07, s="0 to 0.09+", va="bottom", ha="center",
             fontsize=5, font=font, color='black')
-    fig.text(x=0.61, y=0.07, s="1 to 88+", va="bottom", ha="center",
+    fig.text(x=0.61, y=0.07, s="5 to 100+", va="bottom", ha="center",
             fontsize=5, font=font, color='black')
     fig.text(x=0.84, y=0.07, s="0.01 to 0.36+", va="bottom", ha="center",
             fontsize=5, font=font, color='black')
