@@ -69,16 +69,10 @@ def get_node_radius(marker_size: float) -> float:
 def calculate_connection_points(x1: float, y1: float, x2: float, y2: float, 
                               r1: float, r2: float, pass_count: int) -> tuple:
     """
-    FUNCIÓN COMPLEJA: Calcula puntos de inicio/fin de conexiones evitando solapamiento con nodos.
-    
-    PARÁMETROS VISUALES MODIFICABLES:
-    - base_offset: separación base de la línea respecto al centro
-    - combined_radius: factor de seguridad para evitar solapamientos
-    - name_margin: margen para evitar solapar con nombres de jugadores
-    
-    Maneja dos casos:
-    1. Jugadores cerca: usa offset perpendicular mayor
-    2. Jugadores lejos: usa offset menor y márgenes por nombres
+    Calcula puntos de inicio/fin con comportamiento mejorado.
+    - Sale desde el EXTREMO del nodo origen (no dentro)
+    - Termina ANTES del nodo destino (sin penetrar)
+    - Offset mínimo para separar flechas paralelas
     """
     dx, dy = x2 - x1, y2 - y1
     length = np.sqrt(dx**2 + dy**2)
@@ -88,41 +82,40 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
     
     # Vector unitario y perpendicular
     ux, uy = dx / length, dy / length
+    perp_x, perp_y = -uy, ux
+    
+    # Distancia para considerar solapamiento
     combined_radius = r1 + r2
-    min_safe_distance = combined_radius * 1.1
+    min_safe_distance = combined_radius * 1.2
     
-    base_offset = 0.8  # MODIFICAR: separación de la línea del centro
-    
+    # CASO 1: Nodos superpuestos o muy cerca
     if length < min_safe_distance:
-        # CASO 1: Jugadores muy cerca - usar offset mayor
-        perp_x, perp_y = -uy, ux
-        offset = base_offset * (1 + pass_count / 50)
+        # Mayor offset para nodos cercanos
+        offset = 1.0 * (1 + pass_count / 50)
         
-        start_x = x1 + r1 * ux * 1.1 + perp_x * offset
-        start_y = y1 + r1 * uy * 1.1 + perp_y * offset
+        # Salir desde más lejos del centro (1.2x el radio)
+        start_x = x1 + r1 * 1.2 * ux + perp_x * offset
+        start_y = y1 + r1 * 1.2 * uy + perp_y * offset
         
-        reduced_margin = r2 + 2.5
-        end_x = x2 - reduced_margin * ux + perp_x * offset
-        end_y = y2 - reduced_margin * uy + perp_y * offset
+        # Terminar con mayor separación
+        end_margin = r2 + 2.5
+        end_x = x2 - end_margin * ux + perp_x * offset
+        end_y = y2 - end_margin * uy + perp_y * offset
         
-        # Verificación de distancia mínima
-        if np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2) < 1.0:
-            start_x = x1 + r1 * ux + perp_x * offset
-            start_y = y1 + r1 * uy + perp_y * offset
-            end_x = x2 - 3.0 * ux + perp_x * offset
-            end_y = y2 - 3.0 * uy + perp_y * offset
-            
+    # CASO 2: Comportamiento normal
     else:
-        # CASO 2: Jugadores separados - usar margen por nombres
-        perp_x, perp_y = -uy, ux
-        offset = base_offset * (1 + pass_count / 50)
+        # Offset mínimo de 0.5 para separar flechas paralelas
+        min_offset = 0.75
+        offset = min_offset + 0.2 * (pass_count / 100)
         
-        start_x = x1 + r1 * ux + perp_x * offset
-        start_y = y1 + r1 * uy + perp_y * offset
+        # CLAVE 1: Salir desde el EXTREMO del nodo (1.15x radio)
+        start_x = x1 + r1 * 1.2 * ux + perp_x * offset
+        start_y = y1 + r1 * 1.2 * uy + perp_y * offset
         
-        name_margin = r2 + 3.0  # MODIFICAR: margen para evitar nombres
-        end_x = x2 - name_margin * ux + perp_x * offset
-        end_y = y2 - name_margin * uy + perp_y * offset
+        # CLAVE 2: Terminar ANTES del nodo (2.2 unidades)
+        end_margin = r2 + 2.4
+        end_x = x2 - end_margin * ux + perp_x * offset
+        end_y = y2 - end_margin * uy + perp_y * offset
     
     return start_x, start_y, end_x, end_y
 
@@ -406,8 +399,8 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     arrow_ax.set_xlim(0, 1)
     arrow_ax.set_ylim(0, 1)
     arrow_ax.axis("off")
-    arrow_ax.arrow(0.6, 0.45, 0, 0.3, color="w", width=0.001, head_width=0.1, head_length=0.02)
-    arrow_ax.text(0.4, 0.6, "Direction of play", ha="center", va="center", fontsize=7, font = 'serif', color="w", fontweight="regular", rotation=90)
+    arrow_ax.arrow(0.55, 0.45, 0, 0.3, color="w", width=0.001, head_width=0.1, head_length=0.02)
+    arrow_ax.text(0.35, 0.6, "Direction of play", ha="center", va="center", fontsize=7, font = 'serif', color="w", fontweight="regular", rotation=90)
     
     # === TEXTOS Y TÍTULOS ===
     # Texto explicativo
