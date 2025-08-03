@@ -222,7 +222,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                              pitch_color=PITCH_COLOR,
                              line_color='white',
                              linewidth=1, 
-                             pad_bottom=3)
+                             pad_bottom=4)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
         
         # Flecha Attack
@@ -235,8 +235,9 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                       color='white', rotation=90, size=6)
         
         # Texto minutos
-        ax[i].annotate(xy=(50, -5), zorder=2, text='Passes from minutes 1 to 90',
+        ax[i].annotate(xy=(50, -2.5), zorder=2, text='Passes from minutes 1 to 90.',
                       ha='center', color='white', size=7)
+        
         
         team_positions = positions_df[positions_df['team'] == team].copy()
         team_connections = connections_df[connections_df['team'] == team].copy()
