@@ -145,7 +145,7 @@ def optimize_name(full_name: str) -> str:
 
 def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                      home_logo_path=None, away_logo_path=None, 
-                     figsize=(6, 6), save_path=None):
+                     figsize=(6, 6), save_path=None):  # Cambio en figsize
     
     # Leer datos
     network_df = pd.read_csv(network_csv_path)
@@ -206,8 +206,9 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
     player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
     
+    # Colores más brillantes para mejor contraste
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
-    '#5568B8', '#8AAAE5', '#ADD8E6', '#F5DEB3', '#FFA07A', '#FF6B6B', '#D2001F'
+        '#6B8CFF', '#8FC3FF', '#A8E6CF', '#FFE4AD', '#FFB347', '#FF7F7F', '#FF3B3B'
     ])
     
     for i, team in enumerate(teams):
@@ -221,24 +222,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                              pad_bottom=3)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
         
-        # Líneas punteadas
-        ax[i].plot([21, 21], [ax[i].get_ylim()[0]+19, ax[i].get_ylim()[1]-19], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        ax[i].plot([78.8, 78.8], [ax[i].get_ylim()[0]+19, ax[i].get_ylim()[1]-19], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        ax[i].plot([36.8, 36.8], [ax[i].get_ylim()[0]+8.5, ax[i].get_ylim()[1]-8.5], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        ax[i].plot([63.2, 63.2], [ax[i].get_ylim()[0]+8.5, ax[i].get_ylim()[1]-8.5], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        
-        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [83, 83], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [67, 67], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [17, 17], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
-        ax[i].plot([ax[i].get_xlim()[0]-4, ax[i].get_xlim()[1]+4], [33, 33], 
-                   ls=':', dashes=(1, 3), color='#909090', lw=0.6)
+        # SIN LÍNEAS PUNTEADAS - REMOVIDAS
         
         # Flecha Attack
         head_length = 0.3
@@ -461,23 +445,42 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     arrow7 = FancyArrowPatch((x1+3*shift_x, y0), (x1+dx+3*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[3])
     arrow8 = FancyArrowPatch((x1+4*shift_x, y0), (x1+dx+4*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[4])
     
-    # Círculos de tamaño
+    # Círculos de tamaño (SE MANTIENEN IGUAL)
     circle1 = Circle(xy=(x2, y2), radius=radius, edgecolor='white', fill=False)
     circle2 = Circle(xy=(x2+shift_x2, y2), radius=radius*1.5, edgecolor='white', fill=False)
     circle3 = Circle(xy=(x2+2.3*shift_x2, y2), radius=radius*2, edgecolor='white', fill=False)
     
-    # Círculos de colores
-    circle4 = Circle(xy=(x3, y2), radius=radius*2, color=colors_legend[0])
-    circle5 = Circle(xy=(x3+shift_x3, y2), radius=radius*2, color=colors_legend[1])
-    circle6 = Circle(xy=(x3+2*shift_x3, y2), radius=radius*2, color=colors_legend[2])
-    circle7 = Circle(xy=(x3+3*shift_x3, y2), radius=radius*2, color=colors_legend[3])
-    circle8 = Circle(xy=(x3+4*shift_x3, y2), radius=radius*2, color=colors_legend[4])
+    # Círculos de colores (MODIFICADOS CON ESTILO DEL GRÁFICO)
+    # Necesitamos hacer esto de manera diferente ya que los patches no soportan transparencia múltiple
+    # Primero los círculos con transparencia
+    for idx, (x_pos, color) in enumerate([
+        (x3, colors_legend[0]),
+        (x3+shift_x3, colors_legend[1]),
+        (x3+2*shift_x3, colors_legend[2]),
+        (x3+3*shift_x3, colors_legend[3]),
+        (x3+4*shift_x3, colors_legend[4])
+    ]):
+        # Círculo interior con alpha
+        inner_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
+                            color=color, alpha=0.8, zorder=10)
+        fig.patches.append(inner_circle)
+        
+        # Círculo exterior blanco con transparencia (halo)
+        outer_circle = Circle(xy=(x_pos, y2), radius=radius*2.1, 
+                            color='white', alpha=0.3, zorder=9)
+        fig.patches.append(outer_circle)
+        
+        # Borde
+        border_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
+                             color=color, fill=False, linewidth=2, zorder=11)
+        fig.patches.append(border_circle)
     
     # Flecha horizontal
     arrow9 = FancyArrowPatch((x4, y4), (x4+550, y4), lw=1, arrowstyle=style, color='white')
     
+    # Agregar solo las flechas y círculos de tamaño
     fig.patches.extend([arrow1, arrow2, arrow3, arrow4, arrow5, arrow6, arrow7, arrow8,
-                       circle1, circle2, circle3, circle4, circle5, circle6, circle7, circle8, arrow9])
+                       circle1, circle2, circle3, arrow9])
     
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.1, hspace=0, bottom=0.1)
