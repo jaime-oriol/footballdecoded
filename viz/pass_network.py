@@ -158,7 +158,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     for i, team in enumerate(teams):
         # Dibujar pitch
         pitch = VerticalPitch(pitch_type='opta', line_color='#7c7c7c', goal_type='box',
-                             linewidth=0.5, pad_bottom=10)
+                             linewidth=0.5, pad_bottom=5)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
         
         # Líneas punteadas
