@@ -87,7 +87,7 @@ def calculate_connection_points(x1: float, y1: float, x2: float, y2: float,
         start_x = x1 + r1 * ux + perp_x * offset
         start_y = y1 + r1 * uy + perp_y * offset
         
-        name_margin = r2 + 2.5
+        name_margin = r2 + 3.0
         end_x = x2 - name_margin * ux + perp_x * offset
         end_y = y2 - name_margin * uy + perp_y * offset
     
