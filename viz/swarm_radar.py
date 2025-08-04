@@ -246,7 +246,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     radius_circles = [3, 5.5, 8, 10.5, 13, 15.5, 18, 20.5]
     for i, rad in enumerate(radius_circles):
         if i == 0:  # Círculo interior
-            color, lw, alpha = 'white', 1.2, 1.0
+            continue
         elif i == len(radius_circles)-1:  # Círculo exterior
             color, lw, alpha = 'white', 1.2, 1.0
         else:  # Círculos intermedios
@@ -279,14 +279,21 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         y_end = 20.5 * np.cos(angle)
         ax.plot([0, x_end], [0, y_end], color='grey', linewidth=0.5, alpha=0.4)
     
-    # 7 valores en círculos (radios más pequeños)
+    # 7 valores en círculos - CORREGIDO PARA USAR MISMOS RANGES QUE EL POLÍGONO
     range_radius = [4.25, 6.75, 9.25, 11.75, 14.25, 16.75, 19.25]
-    range_percentiles = [1, 15, 30, 50, 70, 85, 99]
     
-    for rad_idx, (rad, perc) in enumerate(zip(range_radius, range_percentiles)):
+    for rad_idx, rad in enumerate(range_radius):
         for i, (angle, metric) in enumerate(zip(angles, reordered_metrics)):
-            metric_data = df_data[metric].dropna()
-            val = np.percentile(metric_data, perc)
+            min_val, max_val = ranges[i]
+            
+            # Calcular valor usando divisiones lineales del rango del polígono
+            range_total = max_val - min_val
+            if range_total == 0:
+                val = min_val
+            else:
+                # Convertir radio a posición en el rango [0, 1]
+                rad_normalized = (rad - 3) / (20.5 - 3)  # 3 es radio mínimo, 20.5 máximo
+                val = min_val + rad_normalized * range_total
             
             x = rad * np.sin(angle)
             y = rad * np.cos(angle)
@@ -330,10 +337,17 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     
     if player_2_data is None:
         # Solo un jugador - alternar colores por ANILLOS dentro del polígono
+        # EMPEZAR CON colors[1] en el centro
         
         # Primero crear el polígono base del jugador
         polygon_1 = Polygon(vertices_1, fc='none', alpha=1.0, zorder=1)
         ax.add_patch(polygon_1)
+        
+        # RELLENAR EL CÍRCULO CENTRAL
+        central_circle = plt.Circle(xy=(0, 0), radius=radius_circles[0], 
+                                fc=colors[0], ec='none', alpha=0.45, zorder=2)
+        central_circle.set_clip_path(polygon_1)
+        ax.add_patch(central_circle)
         
         # Crear anillos alternados SOLO dentro del polígono del jugador
         theta = np.linspace(0, 2*np.pi, 100)
@@ -342,8 +356,8 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             inner_radius = radius_circles[i]
             outer_radius = radius_circles[i+1]
             
-            # Alternar colores por anillo
-            color_idx = i % 2
+            # Alternar colores por anillo - EMPEZAR CON colors[1]
+            color_idx = (i + 1) % 2  # Cambiado para empezar con colors[1]
             
             # Crear anillo como diferencia entre dos círculos
             x_outer = outer_radius * np.cos(theta)
