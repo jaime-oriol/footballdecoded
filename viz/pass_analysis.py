@@ -142,8 +142,9 @@ def format_player_initials(full_name):
 # PASS FLOW VISUALIZATION
 # ====================================================================
 
-def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_logo_path=None, save_path=None):
-    """Visualización de flujo de pases con estética unificada."""
+def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFFFFF'], 
+                  away_colors=['#004D98', '#A50044'], home_logo_path=None, away_logo_path=None, save_path=None):
+    """Visualización de flujo de pases con colores de equipo."""
     # Cargar datos
     events_df = pd.read_csv(events_csv_path)
     info_df = pd.read_csv(info_csv_path)
@@ -221,12 +222,16 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
     add_pitch_zones(ax[0])
     add_pitch_zones(ax[1])
     
-    # Colormaps
-    home_cmap, away_cmap = plt.cm.Oranges, plt.cm.Blues
+    # CORRECCIÓN: Home team siempre a la izquierda (ax[0])
+    team_list = [home_team, away_team]
+    team_colors = [home_colors, away_colors]  # Home izquierda, Away derecha
+    
+    # Crear colormaps dinámicos
+    home_cmap = mcolors.LinearSegmentedColormap.from_list("home", [home_colors[0], home_colors[1]])
+    away_cmap = mcolors.LinearSegmentedColormap.from_list("away", [away_colors[0], away_colors[1]])
     cmaps = [home_cmap, away_cmap]
     
     # Dibujar flujos
-    team_list = [home_team, away_team]
     for idx, team in enumerate(team_list):
         team_connections = zone_popularity[team]
         
@@ -237,14 +242,18 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
             start_x, start_y = get_zone_center(start_zone)
             end_x, end_y = get_zone_center(end_zone)
             
+            # CORRECCIÓN: Intercambiar coordenadas para pitch vertical (TANTO líneas como puntos)
+            start_x, start_y = start_y, start_x
+            end_x, end_y = end_y, end_x
+            
             color_intensity = min(1.0, max(0.1, count / 15.0))
             color = cmaps[idx](color_intensity)
             
-            # Dibujar línea
-            if idx == 0:
+            # CORRECCIÓN: Dibujar líneas también con coordenadas intercambiadas
+            if idx == 0:  # Home team
                 pitch1.lines(start_x, start_y, end_x, end_y, lw=10, comet=True,
                            ax=ax[idx], color=color, transparent=True, alpha=0.3, zorder=count)
-            else:
+            else:  # Away team
                 pitch2.lines(start_x, start_y, end_x, end_y, lw=10, comet=True,
                            ax=ax[idx], color=color, transparent=True, alpha=0.3, zorder=count)
             
@@ -252,18 +261,18 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
     
     font = 'serif'
     
-    # TÍTULOS CORREGIDOS - Usar mismas coordenadas que Pass Hull
+    # Títulos
     fig.text(x=0.5, y=.93, s="Pass Flow",
             weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
     
-    result_y = 0.91  # CAMBIO: era 0.9
+    result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
             weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
     
-    fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",  # CAMBIO: era 0.875
+    fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
-    fig.text(x=0.5, y=0.87, s="Most Frequent Inter-zone Passes", ha='center',  # CAMBIO: era 0.84
+    fig.text(x=0.5, y=0.87, s="Most Frequent Inter-zone Passes", ha='center',
             fontweight="regular", fontsize=12, color='w', family=font)
     
     # Logos
@@ -293,7 +302,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
     arrow_ax.arrow(0.65, 0.2, 0, 0.58, color="w", width=0.001, head_width=0.1, head_length=0.02)
     arrow_ax.text(0.495, 0.48, "Direction of play", ha="center", va="center", fontsize=10, color="w", fontweight="regular", rotation=90, family=font)
     
-    # Leyendas
+    # Leyendas con colores dinámicos
     legend_ax_1 = fig.add_axes([0.055, 0.07, 0.4, 0.09])
     legend_ax_1.set_xlim([0, 8])
     legend_ax_1.set_ylim([-0.5, 1])
@@ -310,7 +319,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
         xpos = idx / 1.4 + 1.5
         
         color_intensity = min(1.0, max(0.1, pass_count / 15.0))
-        text_color = '#313332' if pass_count <= 3 else 'w'
+        text_color =  '#000000'
         
         color_1 = home_cmap(color_intensity)
         legend_ax_1.scatter(xpos, ypos, marker='H', s=550, color=color_1, edgecolors='w', lw=0.5)
@@ -347,7 +356,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
 # ====================================================================
 
 def calculate_player_hull(player_events, min_events=5):
-    """Calcula convex hull para un jugador."""
+    """Calcula convex hull para un jugador usando percentiles 25%-75% (50% central)."""
     if len(player_events) < min_events:
         return None
     
@@ -357,14 +366,22 @@ def calculate_player_hull(player_events, min_events=5):
         return None
     
     try:
-        # Filtrar outliers (1 std dev)
-        center_x, center_y = coordinates[:, 0].mean(), coordinates[:, 1].mean()
-        distances = np.sqrt((coordinates[:, 0] - center_x)**2 + (coordinates[:, 1] - center_y)**2)
-        std_dist = distances.std()
+        # CORRECCIÓN: Usar percentiles 25%-75% para 50% central (más conservador)
+        x_coords = coordinates[:, 0]
+        y_coords = coordinates[:, 1]
         
-        mask = distances <= std_dist
+        # Calcular percentiles 25% y 75% para mantener 50% central
+        x_low, x_high = np.percentile(x_coords, [25, 75])
+        y_low, y_high = np.percentile(y_coords, [25, 75])
+        
+        # Filtrar puntos dentro del 50% central
+        mask = (
+            (x_coords >= x_low) & (x_coords <= x_high) &
+            (y_coords >= y_low) & (y_coords <= y_high)
+        )
         filtered_coords = coordinates[mask]
         
+        # Si quedan muy pocos puntos, usar todos
         if len(filtered_coords) < 3:
             filtered_coords = coordinates
         
@@ -383,11 +400,14 @@ def calculate_player_hull(player_events, min_events=5):
     except:
         return None
 
-def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_logo_path=None, save_path=None):
-    """Visualización de hulls de jugadores con estética unificada."""
+def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path, 
+                  home_colors=['#E23237', '#FFFFFF'], away_colors=['#004D98', '#A50044'],
+                  home_logo_path=None, away_logo_path=None, save_path=None):
+    """Visualización de hulls de jugadores con colores de equipo."""
     # Cargar datos
     events_df = pd.read_csv(events_csv_path)
     info_df = pd.read_csv(info_csv_path)
+    aggregates_df = pd.read_csv(aggregates_csv_path)
     
     # Filtrar eventos con coordenadas
     valid_events = events_df.dropna(subset=['x', 'y', 'player']).copy()
@@ -431,61 +451,74 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     pitch1.draw(ax=ax[0])
     pitch2.draw(ax=ax[1])
     
-    # Colores para jugadores
-    colors = ['tomato', 'gold', 'lawngreen', 'deepskyblue', 'violet', 'cyan', 'yellow', 'lightpink', 'orange', 'lime', 'magenta']
-    
+    # CORRECCIÓN: Home team siempre a la izquierda
     team_list = [home_team, away_team]
+    team_colors = [home_colors, away_colors]
     
     # Calcular TODOS los hulls primero para ranking global
     all_player_hulls = []
     
-    for team in team_list:
+    for idx, team in enumerate(team_list):
         team_events = valid_events[valid_events['team'] == team]
         players = team_events['player'].unique()
         
-        for player in players:
+        # Alternar colores del equipo entre jugadores
+        for i, player in enumerate(players):
             player_events = team_events[team_events['player'] == player]
             hull_data = calculate_player_hull(player_events)
             
             if hull_data:
+                # Alternar entre los dos colores del equipo
+                color = team_colors[idx][i % 2]
+                
                 hull_data['player'] = player
                 hull_data['team'] = team
+                hull_data['color'] = color
                 all_player_hulls.append(hull_data)
     
     # Ranking global (no por equipo)
     all_player_hulls.sort(key=lambda x: x['area'], reverse=True)
-    top_3_global = all_player_hulls[:3]
     
     for idx, team in enumerate(team_list):
         team_hulls = [h for h in all_player_hulls if h['team'] == team]
         
         # Dibujar hulls
-        for i, hull_data in enumerate(team_hulls):
+        for hull_data in team_hulls:
             player = hull_data['player']
             hull_points = hull_data['hull_points']
             centroid_x, centroid_y = hull_data['centroid_x'], hull_data['centroid_y']
+            color = hull_data['color']
             
-            color = colors[i % len(colors)]
+            # CORRECCIÓN: Intercambiar coordenadas para pitch vertical
+            hull_points_display = np.column_stack([hull_points[:, 1], hull_points[:, 0]])
+            centroid_display_x, centroid_display_y = centroid_y, centroid_x
             
             # Dibujar hull
-            ax[idx].scatter(hull_points[:, 1], hull_points[:, 0], color=color, s=20, alpha=0.3, zorder=2)
+            ax[idx].scatter(hull_points_display[:, 0], hull_points_display[:, 1], 
+                          color=color, s=20, alpha=0.3, zorder=2)
             
             # Polygon
             from matplotlib.patches import Polygon
-            poly = Polygon([(p[1], p[0]) for p in hull_points], facecolor=color, alpha=0.2, zorder=1)
+            poly = Polygon(hull_points_display, facecolor=color, alpha=0.2, 
+                         capstyle='round', zorder=1)
             ax[idx].add_patch(poly)
             
-            poly_edge = Polygon([(p[1], p[0]) for p in hull_points], facecolor='none', edgecolor=color, alpha=0.3, zorder=1)
+            poly_edge = Polygon(hull_points_display, facecolor='none', 
+                              edgecolor=color, alpha=0.3, capstyle='round', zorder=1)
             ax[idx].add_patch(poly_edge)
             
             # Centro del jugador usando centroide del hull
-            ax[idx].scatter(centroid_y, centroid_x, marker='H', color=color, alpha=0.6, s=400, zorder=3)
-            ax[idx].scatter(centroid_y, centroid_x, marker='H', edgecolor=color, facecolor='none', alpha=1, lw=2, s=400, zorder=3)
+            ax[idx].scatter(centroid_display_x, centroid_display_y, marker='H', 
+                          color=color, alpha=0.6, s=400, zorder=3)
+            ax[idx].scatter(centroid_display_x, centroid_display_y, marker='H', 
+                          edgecolor=color, facecolor='none', alpha=1, lw=2, s=400, zorder=3)
             
             # Iniciales
             initials = format_player_initials(player)
-            text_color = 'w' if color not in ['snow', 'white', 'yellow', 'cyan', 'lime'] else 'k'
-            ax[idx].text(centroid_y, centroid_x, initials, fontsize=8, fontweight='bold', va='center', ha='center', color=text_color, zorder=4, family='serif')
+            text_color = 'k' if color in ['#FFFFFF', '#FFFF00', '#00FFFF', '#90EE90'] else 'w'
+            ax[idx].text(centroid_display_x, centroid_display_y, initials, 
+                        fontsize=8, fontweight='bold', va='center', ha='center', 
+                        color=text_color, zorder=4, family='serif')
     
     font = 'serif'
     
@@ -500,7 +533,8 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
-    fig.text(x=0.5, y=0.85, s="Variation in start position of player passes. Central 75%\nof passes shown per player, represented by a shaded region", ha='center', 
+    # CORRECCIÓN: Cambiar texto a 50% (más preciso con percentiles 25-75)
+    fig.text(x=0.5, y=0.85, s="Variation in start position of player passes. Central 50%\nof passes shown per player, represented by a shaded region", ha='center', 
             fontweight="regular", fontsize=10, color='w', family=font)
     
     # Logos
@@ -540,8 +574,8 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     legend_ax.set_ylim(0, 1)
     legend_ax.axis('off')
     
-    # Texto central
-    ranking_text = "Top players by area of\nregion containing central\n75% passes shown (as % of total\npitch area)"
+    # CORRECCIÓN: Actualizar texto a 50%
+    ranking_text = "Top players by area of\nregion containing central\n50% passes shown (as % of total\npitch area)"
     legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=9, color='w', family=font)
     
     # Líneas de conexión (como el original)
@@ -565,7 +599,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
         legend_ax.text(7.8, y_pos, f"{player_surname}", ha='left', va='center', fontsize=10, color='w', family=font)
         legend_ax.text(9.65, y_pos, f"{area_pct:.1f}%", ha='right', va='center', fontsize=10, color='w', family=font)
     
-    # FOOTER AÑADIDO - idéntico a Pass Flow
+    # Footer
     fig.text(0.87, 0.05, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
     fig.text(0.1, 0.05, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
     
