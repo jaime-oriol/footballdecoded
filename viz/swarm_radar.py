@@ -219,7 +219,6 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                              colors, save_path, show_plot):
     
-    # MANTENER LA ALTURA ORIGINAL para alineación
     fig = plt.figure(figsize=(9, 10), facecolor=BACKGROUND_COLOR)
     
     percentile_levels = [1, 14, 26, 38, 50, 62, 74, 86, 99]
@@ -230,25 +229,30 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         percentiles = np.percentile(metric_data, percentile_levels)
         percentile_values_all.append(percentiles)
     
-    # Mantener la posición original (no subir el radar)
     ax = fig.add_subplot(111, projection='polar', position=[0.09, 0.10, 0.82, 0.75])
     
     num_vars = len(metrics)
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-    angles += angles[:1]
+    angles = (np.linspace(0, 2 * np.pi, num_vars, endpoint=False) + np.pi/2).tolist()
+    angles += angles[:1]  # Cerrar el polígono
+    
+    # Para anillos circulares
+    angles_fine = np.linspace(0, 2 * np.pi, 200)
     
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
     ax.set_facecolor(BACKGROUND_COLOR)
     
+    # Anillos circulares
     ring_positions = np.linspace(0.17, 0.86, 9)
     for i, pos in enumerate(ring_positions):
         color, alpha = ('white', 1.0) if i == 0 else ('grey', 0.4)
-        ax.plot(angles, [pos]*len(angles), color=color, linewidth=1.2 if i == 0 else 1, alpha=alpha)
+        ax.plot(angles_fine, [pos]*len(angles_fine), color=color, linewidth=1.2 if i == 0 else 1, alpha=alpha)
     
+    # Líneas radiales
     for angle in angles[:-1]:
         ax.plot([angle, angle], [0, 0.86], color='grey', linewidth=0.5, alpha=0.4)
     
+    # Valores en los anillos
     for metric_idx, percentiles in enumerate(percentile_values_all):
         angle = angles[metric_idx]
         
@@ -278,16 +282,19 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         
         return ring_positions[-1]
     
+    # Datos del jugador 1 - LÍNEAS RECTAS
     player_1_positions = []
     for metric, percentiles in zip(metrics, percentile_values_all):
         val = player_1_data[metric]
         pos = get_percentile_position(val, percentiles)
         player_1_positions.append(pos)
-    player_1_positions += player_1_positions[:1]
+    player_1_positions += player_1_positions[:1]  # Cerrar el polígono
     
     if player_2_data is None:
+        # Solo un jugador - líneas rectas con colores alternados
         ax.plot(angles, player_1_positions, color=colors[0], linewidth=3.5)
         
+        # Llenar con colores alternados por sectores
         for i in range(len(angles) - 1):
             angle_slice = [angles[i], angles[i + 1]]
             values_slice = [player_1_positions[i], player_1_positions[i + 1]]
@@ -295,10 +302,11 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             ax.fill(angle_slice + [0, 0], values_slice + [0, 0], 
                    color=colors[color_idx], alpha=0.45, edgecolor=colors[0], linewidth=1)
     else:
+        # Dos jugadores - líneas rectas
         ax.plot(angles, player_1_positions, color=colors[0], linewidth=3)
         ax.fill(angles, player_1_positions, color=colors[0], alpha=0.35)
-    
-    if player_2_data is not None:
+        
+        # Datos del jugador 2
         player_2_positions = []
         for metric, percentiles in zip(metrics, percentile_values_all):
             val = player_2_data[metric]
@@ -309,16 +317,25 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         ax.plot(angles, player_2_positions, color=colors[1], linewidth=3)
         ax.fill(angles, player_2_positions, color=colors[1], alpha=0.35)
     
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(metric_titles, size=11, weight='bold', color='white')
-    ax.tick_params(axis='x', pad=1)
+    # Etiquetas con rotación correcta
+    label_padding = 1.08  # Distancia desde el anillo exterior
+    for angle, title in zip(angles[:-1], metric_titles):
+        # Calcular rotación del texto
+        text_rotation_delta = 90 if angle >= np.pi else -90
+        rotation = text_rotation_delta + np.rad2deg(angle)
+        
+        # Colocar texto con rotación
+        ax.text(angle, 0.86 * label_padding, title, 
+               ha='center', va='center', size=11, weight='bold', color='white',
+               rotation=rotation)
     
-    ax.set_ylim(0, 0.95)
+    ax.set_ylim(0, 1.0)
     ax.set_yticks([])
+    ax.set_xticks([])  # Quitar xticks por defecto
     ax.grid(False)
     ax.spines['polar'].set_visible(False)
     
-    # Footer con mayor tamaño y peso
+    # Footer
     fig.text(0.5, 0.05, "Created by Jaime Oriol | Football Decoded", 
              fontstyle="italic", ha="center", fontsize=11, color="white", weight='bold')
     
