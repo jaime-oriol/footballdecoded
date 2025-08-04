@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.patheffects as path_effects
+from matplotlib.patches import Polygon
 from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
 from mpl_toolkits.axes_grid1 import Divider
@@ -219,125 +220,178 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                              colors, save_path, show_plot):
     
-    fig = plt.figure(figsize=(9, 10), facecolor=BACKGROUND_COLOR)
+    # Usar la misma lógica de ordenamiento que el swarm radar
+    reordered_metrics = [metrics[0]] + list(reversed(metrics[1:]))
+    reordered_titles = [metric_titles[0]] + list(reversed(metric_titles[1:]))
     
-    percentile_levels = [1, 14, 26, 38, 50, 62, 74, 86, 99]
-    percentile_values_all = []
-    
-    for metric in metrics:
+    # Calcular percentiles para ranges
+    ranges = []
+    for metric in reordered_metrics:
         metric_data = df_data[metric].dropna()
-        percentiles = np.percentile(metric_data, percentile_levels)
-        percentile_values_all.append(percentiles)
+        min_val = np.percentile(metric_data, 1)
+        max_val = np.percentile(metric_data, 99)
+        ranges.append((min_val, max_val))
     
-    ax = fig.add_subplot(111, projection='polar', position=[0.09, 0.10, 0.82, 0.75])
-    
-    num_vars = len(metrics)
-    angles = (np.linspace(0, 2 * np.pi, num_vars, endpoint=False) + np.pi/2).tolist()
-    angles += angles[:1]  # Cerrar el polígono
-    
-    # Para anillos circulares
-    angles_fine = np.linspace(0, 2 * np.pi, 200)
-    
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
+    # Configuración visual - más pequeño
+    fig, ax = plt.subplots(figsize=(9, 10), facecolor=BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
+    ax.set_aspect('equal')
+    ax.set(xlim=(-22, 22), ylim=(-23, 25))  # Más pequeño
     
-    # Anillos circulares
-    ring_positions = np.linspace(0.17, 0.86, 9)
-    for i, pos in enumerate(ring_positions):
-        color, alpha = ('white', 1.0) if i == 0 else ('grey', 0.4)
-        ax.plot(angles_fine, [pos]*len(angles_fine), color=color, linewidth=1.2 if i == 0 else 1, alpha=alpha)
+    # Valores del jugador
+    player_1_values = [player_1_data[m] for m in reordered_metrics]
+    player_2_values = [player_2_data[m] for m in reordered_metrics] if player_2_data is not None else None
     
-    # Líneas radiales
-    for angle in angles[:-1]:
-        ax.plot([angle, angle], [0, 0.86], color='grey', linewidth=0.5, alpha=0.4)
+    # 8 círculos concéntricos (más pequeños)
+    radius_circles = [3, 5.5, 8, 10.5, 13, 15.5, 18, 20.5]
+    for i, rad in enumerate(radius_circles):
+        if i == 0:  # Círculo interior
+            color, lw, alpha = 'white', 1.2, 1.0
+        elif i == len(radius_circles)-1:  # Círculo exterior
+            color, lw, alpha = 'white', 1.2, 1.0
+        else:  # Círculos intermedios
+            color, lw, alpha = 'grey', 1, 0.4
+            
+        circle = plt.Circle(xy=(0, 0), radius=rad, fc='none', ec=color, lw=lw, alpha=alpha)
+        ax.add_patch(circle)
     
-    # Valores en los anillos
-    for metric_idx, percentiles in enumerate(percentile_values_all):
-        angle = angles[metric_idx]
+    # Coordenadas para labels
+    n_params = len(reordered_metrics)
+    angles = np.linspace(0, 2*np.pi, n_params, endpoint=False)
+    
+    # Labels de métricas (más cerca)
+    label_radius = 22
+    for i, (angle, title) in enumerate(zip(angles, reordered_titles)):
+        x = label_radius * np.sin(angle)
+        y = label_radius * np.cos(angle)
         
-        for ring_idx, (ring_pos, percentile_val) in enumerate(zip(ring_positions, percentiles)):
-            if percentile_val < 0.01:
-                label = f'{percentile_val:.3f}'
-            elif percentile_val < 1:
-                label = f'{percentile_val:.2f}'
-            elif percentile_val < 10:
-                label = f'{percentile_val:.1f}'
+        # Rotación del texto
+        rot_deg = -np.rad2deg(angle)
+        if y < 0:
+            rot_deg += 180
+            
+        ax.text(x, y, title, rotation=rot_deg, ha='center', va='center',
+                fontsize=11, fontweight='bold', color='white')
+    
+    # Líneas radiales (más cortas)
+    for angle in angles:
+        x_end = 20.5 * np.sin(angle)
+        y_end = 20.5 * np.cos(angle)
+        ax.plot([0, x_end], [0, y_end], color='grey', linewidth=0.5, alpha=0.4)
+    
+    # 7 valores en círculos (radios más pequeños)
+    range_radius = [4.25, 6.75, 9.25, 11.75, 14.25, 16.75, 19.25]
+    range_percentiles = [1, 15, 30, 50, 70, 85, 99]
+    
+    for rad_idx, (rad, perc) in enumerate(zip(range_radius, range_percentiles)):
+        for i, (angle, metric) in enumerate(zip(angles, reordered_metrics)):
+            metric_data = df_data[metric].dropna()
+            val = np.percentile(metric_data, perc)
+            
+            x = rad * np.sin(angle)
+            y = rad * np.cos(angle)
+            
+            # Formatear valor
+            if val < 0.01:
+                label = f'{val:.3f}'
+            elif val < 1:
+                label = f'{val:.2f}'
+            elif val < 10:
+                label = f'{val:.1f}'
             else:
-                label = f'{int(percentile_val)}'
+                label = f'{int(val)}'
             
-            ax.text(angle, ring_pos, label, ha='center', va='center', size=8, color='white', weight='normal',
-                   bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR, edgecolor='none', alpha=0.9))
+            ax.text(x, y, label, ha='center', va='center', size=8, color='white',
+                   bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR, 
+                           edgecolor='none', alpha=0.9))
     
-    def get_percentile_position(value, percentiles):
-        if value <= percentiles[0]:
-            return ring_positions[0]
-        if value >= percentiles[-1]:
-            return ring_positions[-1]
+    # Función para convertir valor a coordenada (rango más pequeño)
+    def get_radar_coordinates(values, ranges):
+        vertices = []
+        for i, (value, (min_val, max_val)) in enumerate(zip(values, ranges)):
+            # Normalizar valor al rango 3-20.5
+            if max_val == min_val:
+                norm_value = 11.75  # Punto medio
+            else:
+                norm_value = 3 + (value - min_val) / (max_val - min_val) * 17.5
             
-        for i in range(len(percentiles) - 1):
-            if percentiles[i] <= value <= percentiles[i + 1]:
-                fraction = (value - percentiles[i]) / (percentiles[i + 1] - percentiles[i])
-                return ring_positions[i] + fraction * (ring_positions[i + 1] - ring_positions[i])
+            # Limitar al rango de círculos
+            norm_value = max(3, min(20.5, norm_value))
+            
+            angle = angles[i]
+            x = norm_value * np.sin(angle)
+            y = norm_value * np.cos(angle)
+            vertices.append([x, y])
         
-        return ring_positions[-1]
+        return vertices
     
-    # Datos del jugador 1 - LÍNEAS RECTAS
-    player_1_positions = []
-    for metric, percentiles in zip(metrics, percentile_values_all):
-        val = player_1_data[metric]
-        pos = get_percentile_position(val, percentiles)
-        player_1_positions.append(pos)
-    player_1_positions += player_1_positions[:1]  # Cerrar el polígono
+    # Polígono jugador 1
+    vertices_1 = get_radar_coordinates(player_1_values, ranges)
     
     if player_2_data is None:
-        # Solo un jugador - líneas rectas con colores alternados
-        ax.plot(angles, player_1_positions, color=colors[0], linewidth=3.5)
+        # Solo un jugador - alternar colores por ANILLOS dentro del polígono
         
-        # Llenar con colores alternados por sectores
-        for i in range(len(angles) - 1):
-            angle_slice = [angles[i], angles[i + 1]]
-            values_slice = [player_1_positions[i], player_1_positions[i + 1]]
+        # Primero crear el polígono base del jugador
+        polygon_1 = Polygon(vertices_1, fc='none', alpha=1.0, zorder=1)
+        ax.add_patch(polygon_1)
+        
+        # Crear anillos alternados SOLO dentro del polígono del jugador
+        theta = np.linspace(0, 2*np.pi, 100)
+        
+        for i in range(len(radius_circles)-1):
+            inner_radius = radius_circles[i]
+            outer_radius = radius_circles[i+1]
+            
+            # Alternar colores por anillo
             color_idx = i % 2
-            ax.fill(angle_slice + [0, 0], values_slice + [0, 0], 
-                   color=colors[color_idx], alpha=0.45, edgecolor=colors[0], linewidth=1)
+            
+            # Crear anillo como diferencia entre dos círculos
+            x_outer = outer_radius * np.cos(theta)
+            y_outer = outer_radius * np.sin(theta)
+            x_inner = inner_radius * np.cos(theta)
+            y_inner = inner_radius * np.sin(theta)
+            
+            # Crear el anillo
+            ring_vertices = list(zip(x_outer, y_outer)) + list(zip(x_inner[::-1], y_inner[::-1]))
+            ring_polygon = Polygon(ring_vertices, fc=colors[color_idx], alpha=0.45, zorder=2)
+            
+            # Limitar el anillo al área del polígono del jugador
+            ring_polygon.set_clip_path(polygon_1)
+            ax.add_patch(ring_polygon)
+        
+        # Contorno del jugador encima
+        vertices_1_closed = vertices_1 + [vertices_1[0]]
+        x_coords_1 = [v[0] for v in vertices_1_closed]
+        y_coords_1 = [v[1] for v in vertices_1_closed]
+        ax.plot(x_coords_1, y_coords_1, color=colors[0], linewidth=3, zorder=10)
+        
     else:
-        # Dos jugadores - líneas rectas
-        ax.plot(angles, player_1_positions, color=colors[0], linewidth=3)
-        ax.fill(angles, player_1_positions, color=colors[0], alpha=0.35)
+        # Dos jugadores - colores sólidos
+        polygon_1 = Polygon(vertices_1, fc=colors[0], alpha=0.35, zorder=2)
+        ax.add_patch(polygon_1)
         
-        # Datos del jugador 2
-        player_2_positions = []
-        for metric, percentiles in zip(metrics, percentile_values_all):
-            val = player_2_data[metric]
-            pos = get_percentile_position(val, percentiles)
-            player_2_positions.append(pos)
-        player_2_positions += player_2_positions[:1]
+        # Contorno jugador 1
+        vertices_1_closed = vertices_1 + [vertices_1[0]]
+        x_coords_1 = [v[0] for v in vertices_1_closed]
+        y_coords_1 = [v[1] for v in vertices_1_closed]
+        ax.plot(x_coords_1, y_coords_1, color=colors[0], linewidth=3, zorder=3)
         
-        ax.plot(angles, player_2_positions, color=colors[1], linewidth=3)
-        ax.fill(angles, player_2_positions, color=colors[1], alpha=0.35)
-    
-    # Etiquetas con rotación correcta
-    label_padding = 1.08  # Distancia desde el anillo exterior
-    for angle, title in zip(angles[:-1], metric_titles):
-        # Calcular rotación del texto
-        text_rotation_delta = 90 if angle >= np.pi else -90
-        rotation = text_rotation_delta + np.rad2deg(angle)
+        # Polígono jugador 2
+        vertices_2 = get_radar_coordinates(player_2_values, ranges)
+        polygon_2 = Polygon(vertices_2, fc=colors[1], alpha=0.35, zorder=2)
+        ax.add_patch(polygon_2)
         
-        # Colocar texto con rotación
-        ax.text(angle, 0.86 * label_padding, title, 
-               ha='center', va='center', size=11, weight='bold', color='white',
-               rotation=rotation)
+        # Contorno jugador 2
+        vertices_2_closed = vertices_2 + [vertices_2[0]]
+        x_coords_2 = [v[0] for v in vertices_2_closed]
+        y_coords_2 = [v[1] for v in vertices_2_closed]
+        ax.plot(x_coords_2, y_coords_2, color=colors[1], linewidth=3, zorder=3)
     
-    ax.set_ylim(0, 1.0)
-    ax.set_yticks([])
-    ax.set_xticks([])  # Quitar xticks por defecto
-    ax.grid(False)
-    ax.spines['polar'].set_visible(False)
+    # Footer (mantener misma posición)
+    ax.text(0, -25, "Created by Jaime Oriol | Football Decoded", 
+            ha='center', fontsize=11, color='white', weight='bold', style='italic')
     
-    # Footer
-    fig.text(0.5, 0.05, "Created by Jaime Oriol | Football Decoded", 
-             fontstyle="italic", ha="center", fontsize=11, color="white", weight='bold')
+    ax.axis('off')
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
