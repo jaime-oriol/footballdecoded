@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, FancyArrowPatch, ArrowStyle
 import matplotlib.patheffects as path_effects
 import matplotlib.colors as mcolors
 from matplotlib.colors import Normalize
@@ -11,13 +11,15 @@ import os
 
 BACKGROUND_COLOR = '#313332'
 
+# Dimensiones fijas basadas en swarm actual
+SWARM_TOTAL_SIZE = (4945, 2755)
+SWARM_RADAR_SIZE = (2625, 2755) 
+SWARM_TABLE_SIZE = (2320, 2755)
+
 def create_stats_table(df_data, player_1_id, metrics, metric_titles, 
                       player_2_id=None, team_colors=None, 
                       save_path='stats_table.png', show_plot=True,
                       team_logos=None, footer_text='Percentiles vs dataset'):
-    """
-    Crea tabla de estadísticas con estilo visual unificado con pass_network.
-    """
     
     if team_colors is None:
         team_colors = ['#FF6B6B', '#4ECDC4']
@@ -33,7 +35,6 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     if player_2_id is not None:
         p2 = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
     
-    # Layout unificado - siempre usar dimensiones de 2 jugadores
     fig = plt.figure(figsize=(7.5, 8.5), facecolor=BACKGROUND_COLOR)
     ax = fig.add_subplot(111)
     ax.set_facecolor(BACKGROUND_COLOR)
@@ -41,17 +42,17 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.set_ylim(0, 15)
     ax.axis('off')
     
-    # Posiciones fijas para layout unificado
+    # Posiciones datos jugadores (movidas a la izquierda)
     y_start = 14.5
-    logo1_x = 3.65  # Movido a la izquierda
-    text1_x = 3.9   # Movido a la izquierda
-    p1_value_x = 4.4  # Movido a la izquierda
-    p1_pct_x = 4.8    # Movido a la izquierda
+    logo1_x = 3.35
+    text1_x = 3.6
+    p1_value_x = 4.1
+    p1_pct_x = 4.5
     
-    logo2_x = 6.45
-    text2_x = 6.5
-    p2_value_x = 7.0
-    p2_pct_x = 7.4
+    logo2_x = 6.15
+    text2_x = 6.2
+    p2_value_x = 6.7
+    p2_pct_x = 7.1
     
     # Header Jugador 1
     if team_logos and p1['team'] in team_logos:
@@ -68,7 +69,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.text(text1_x, y_start - 0.4, f"{p1['league']} {p1['season']}", 
             fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='serif')
     
-    # Header Jugador 2 si existe
+    # Header Jugador 2
     if p2 is not None:
         if team_logos and p2['team'] in team_logos:
             try:
@@ -84,11 +85,10 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         ax.text(text2_x, y_start - 0.4, f"{p2['league']} {p2['season']}", 
                 fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='serif')
     
-    # Línea separadora header
     y_line = y_start - 0.7
     ax.plot([0.5, 8.5], [y_line, y_line], color='grey', linewidth=0.5, alpha=0.6)
     
-    # Contexto (Minutos y Partidos)
+    # Contexto
     y_context = y_start - 1.2
     
     ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', weight='bold', family='serif')
@@ -147,7 +147,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         ax.text(p1_pct_x, y_pos, f"{int(pct_1)}", 
                 fontsize=10, color=pct_color_1, ha='left', fontweight='bold', va='center', family='serif')
         
-        # Jugador 2 si existe
+        # Jugador 2
         if p2 is not None:
             val_2 = p2.get(metric, 0)
             pct_2 = p2.get(pct_col, 0)
@@ -171,7 +171,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
             ax.text(p2_pct_x, y_pos, f"{int(pct_2)}", 
                     fontsize=10, color=pct_color_2, ha='left', fontweight='bold', va='center', family='serif')
     
-    # Footer alineado con títulos de métricas
+    # Footer
     footer_y = y_metrics - (len(metrics) * row_height)
     
     if len(metrics) % 2 == 1:
@@ -179,9 +179,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         ax.add_patch(rect)
     
     ax.text(0.7, footer_y, footer_text, 
-            fontsize=10, color='white', alpha=0.8, ha='left', style='italic', weight='bold', va='center', family='serif')
+            fontsize=10, color='white', ha='left', style='italic', weight='bold', va='center', family='serif')
     
-    # Leyenda de percentiles alineada con títulos
+    # Leyenda de percentiles (movida a la derecha)
     legend_y = footer_y - 0.8
     
     intervals = [(0, 20), (21, 40), (41, 60), (61, 80), (81, 100)]
@@ -190,13 +190,26 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     spacing = 0.8
     
     for i, ((low, high), color) in enumerate(zip(intervals, interval_colors)):
-        x_pos = 0.7 + i * spacing
+        x_pos = 1.0 + i * spacing
         
         ax.plot([x_pos - 0.25, x_pos + 0.25], [legend_y, legend_y], 
                 color=color, linewidth=3, solid_capstyle='round')
         
         ax.text(x_pos, legend_y - 0.3, f"{low}-{high}", 
                 fontsize=8, color='white', ha='center', va='center', family='serif')
+    
+    # LOW → HIGH con flecha
+    arrow_y = legend_y - 0.8
+    arrow_start_x = 1.2
+    arrow_end_x = 4.0
+    
+    ax.annotate('', xy=(arrow_end_x, arrow_y), xytext=(arrow_start_x, arrow_y),
+                arrowprops=dict(arrowstyle='->', color='white', lw=1))
+    
+    ax.text(arrow_start_x - 0.1, arrow_y, 'LOW', fontsize=8, color='white', 
+            ha='right', va='center', family='serif')
+    ax.text(arrow_end_x + 0.1, arrow_y, 'HIGH', fontsize=8, color='white', 
+            ha='left', va='center', family='serif')
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
@@ -210,22 +223,20 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
 
 def combine_radar_and_table(radar_path, table_path, output_path='combined_visualization.png'):
     """
-    Combina radar y tabla horizontalmente manteniendo proporciones.
+    Combina radar y tabla con dimensiones fijas basadas en swarm.
     """
     
     radar_img = Image.open(radar_path)
     table_img = Image.open(table_path)
     
-    r_w, r_h = radar_img.size
-    t_w, t_h = table_img.size
+    # Forzar dimensiones exactas del swarm
+    radar_resized = radar_img.resize(SWARM_RADAR_SIZE, Image.Resampling.LANCZOS)
+    table_resized = table_img.resize(SWARM_TABLE_SIZE, Image.Resampling.LANCZOS)
     
-    scale = r_h / t_h
-    new_t_w = int(t_w * scale)
-    table_resized = table_img.resize((new_t_w, r_h), Image.Resampling.LANCZOS)
-    
-    combined = Image.new('RGB', (r_w + new_t_w, r_h), color=BACKGROUND_COLOR)
-    combined.paste(radar_img, (0, 0))
-    combined.paste(table_resized, (r_w, 0))
+    # Canvas fijo
+    combined = Image.new('RGB', SWARM_TOTAL_SIZE, color=BACKGROUND_COLOR)
+    combined.paste(radar_resized, (0, 0))
+    combined.paste(table_resized, (2625, 0))
     
     combined.save(output_path, dpi=(300, 300))
     
