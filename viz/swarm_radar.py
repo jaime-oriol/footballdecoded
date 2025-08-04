@@ -26,8 +26,8 @@ except ImportError:
     from mplsoccer import Radar
     USE_SOCCERPLOTS = False
 
-# Color de fondo más claro para mejor visibilidad con colores oscuros
-BACKGROUND_COLOR = '#4A4A4A'
+# Consistente con pass_network y stats_table
+BACKGROUND_COLOR = '#313332'
 
 def create_player_radar(df_data, 
                        player_1_id,
@@ -51,8 +51,6 @@ def create_player_radar(df_data,
     
     if len(metrics) != 10 or len(metric_titles) != 10:
         raise ValueError("Must provide exactly 10 metrics and 10 titles")
-    
-    plt.rcParams['font.family'] = 'sans-serif'
     
     # Unified color system - team_colors priority
     if team_colors is None:
@@ -124,10 +122,10 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         ax_save.spines['left'].set_color(None)
         ax_save.set_xlabel("")
         ax_save.tick_params(left=False, bottom=True, axis='both', which='major', 
-                           labelsize=9, zorder=10, pad=0, colors='w')
+                           labelsize=8, zorder=10, pad=0, colors='w')  # Reducido de 9 a 8
         
         rotation = 180 if theta_mid[idx] >= np.pi/2 and theta_mid[idx] <= 3*np.pi/2 else 0
-        plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation)
+        plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation, family='serif')  # Añadido family='serif'
         
         ax_mins.append(ax_save.get_xlim()[0])
         ax_maxs.append(ax_save.get_xlim()[1])
@@ -158,7 +156,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         text_rotation_delta = 90 if theta_mid[idx] >= np.pi else -90
         radar_ax.text(theta_mid[idx], 0.92, metric_titles[idx], 
                      ha="center", va="center", fontweight="bold", 
-                     fontsize=11, color='w',
+                     fontsize=10, color='w', family='serif',  # Añadido family='serif'
                      rotation=text_rotation_delta + (180/np.pi) * theta_mid[idx])
         
         plt.close(fig_save)
@@ -202,9 +200,11 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_object.make_pizza(**kwargs)
     
-    # Footer con mayor tamaño y peso
-    fig.text(0.5, 0.05, "Created by Jaime Oriol | Football Decoded", 
-             fontstyle="italic", ha="center", fontsize=11, color="white", weight='bold')
+    # Footer con jerarquía consistente con pass_network y stats_table
+    fig.text(0.87, 0.115, "Football Decoded", ha="center", fontsize=14, color="white", 
+             weight='bold', family='serif')  # Como en pass_network
+    fig.text(0.1, 0.115, "Created by Jaime Oriol", ha="center", fontsize=10, color="white", 
+             weight='bold', family='serif')  # Como en pass_network
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
@@ -260,7 +260,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     angles = np.linspace(0, 2*np.pi, n_params, endpoint=False)
     
     # Labels de métricas (más cerca)
-    label_radius = 22
+    label_radius = 21.5
     for i, (angle, title) in enumerate(zip(angles, reordered_titles)):
         x = label_radius * np.sin(angle)
         y = label_radius * np.cos(angle)
@@ -271,7 +271,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             rot_deg += 180
             
         ax.text(x, y, title, rotation=rot_deg, ha='center', va='center',
-                fontsize=11, fontweight='bold', color='white')
+                fontsize=10, fontweight='bold', color='white', family='serif')  # Añadido family='serif'
     
     # Líneas radiales (más cortas)
     for angle in angles:
@@ -308,9 +308,9 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             else:
                 label = f'{int(val)}'
             
-            ax.text(x, y, label, ha='center', va='center', size=8, color='white',
+            ax.text(x, y, label, ha='center', va='center', size=7, color='white',  # Reducido de 8 a 7
                    bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR, 
-                           edgecolor='none', alpha=0.9))
+                           edgecolor='none', alpha=0.9), family='serif')  # Añadido family='serif'
     
     # Función para convertir valor a coordenada (rango más pequeño)
     def get_radar_coordinates(values, ranges):
@@ -401,9 +401,11 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         y_coords_2 = [v[1] for v in vertices_2_closed]
         ax.plot(x_coords_2, y_coords_2, color=colors[1], linewidth=3, zorder=3)
     
-    # Footer (mantener misma posición)
-    ax.text(0, -25, "Created by Jaime Oriol | Football Decoded", 
-            ha='center', fontsize=11, color='white', weight='bold', style='italic')
+    # Footer con jerarquía consistente
+    ax.text(18, -21.5, "Football Decoded", ha='center', fontsize=14, color='white', 
+            weight='bold', family='serif')  # Posición derecha como pass_network
+    ax.text(-18, -21.5, "Created by Jaime Oriol", ha='center', fontsize=10, color='white', 
+            weight='bold', family='serif')  # Posición izquierda como pass_network
     
     ax.axis('off')
     
