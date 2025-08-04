@@ -498,21 +498,21 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     fig.text(x=0.5, y=.93, s="Pass Hull",
             weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
     
-    result_y = 0.9
+    result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
             weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
     
-    fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
+    fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
-    fig.text(x=0.5, y=0.84, s="Variation in start position of player passes. Central 75%\nof passes shown per player, represented by a shaded region", ha='center', 
-            fontweight="regular", fontsize=11, color='w', family=font)
+    fig.text(x=0.5, y=0.85, s="Variation in start position of player passes. Central 75%\nof passes shown per player, represented by a shaded region", ha='center', 
+            fontweight="regular", fontsize=10, color='w', family=font)
     
     # FIX: Logos siguiendo pass_network.py exactamente
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.175, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.27, result_y-0.035, 0.09, 0.09])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -521,7 +521,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.71, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.65, result_y-0.035, 0.09, 0.09])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -535,22 +535,40 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     arrow_ax.arrow(0.65, 0.2, 0, 0.58, color="w", width=0.001, head_width=0.1, head_length=0.02)
     arrow_ax.text(0.495, 0.48, "Direction of play", ha="center", va="center", fontsize=10, color="w", fontweight="regular", rotation=90, family=font)
     
-    # FIX: Ranking global único (no doble)
-    ranking_text = "Top players by area of\nregion containing central\n75% passes shown (total\npitch area)"
+    # Ranking por equipos (layout doble como original)
+    home_hulls = [h for h in all_player_hulls if h['team'] == home_team][:3]
+    away_hulls = [h for h in all_player_hulls if h['team'] == away_team][:3]
     
-    fig.text(0.5, 0.15, ranking_text, ha='center', va='top', fontsize=8, color='w', family=font)
+    # Crear axes para la leyenda con líneas
+    legend_ax = fig.add_axes([0.05, 0.05, 0.9, 0.12])
+    legend_ax.set_xlim(0, 10)
+    legend_ax.set_ylim(0, 1)
+    legend_ax.axis('off')
     
-    for rank, hull_data in enumerate(top_3_global):
-        player = hull_data['player']
+    # Texto central
+    ranking_text = "Top players by area of\nregion containing central\n75% passes shown (as % of total\npitch area)"
+    legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=8, color='w', family=font)
+    
+    # Líneas de conexión (como el original)
+    legend_ax.arrow(3.6, 0.5, -0.75, 0, color='w', width=0.005, head_width=0.03, head_length=0.1)
+    legend_ax.arrow(6.4, 0.5, 0.75, 0, color='w', width=0.005, head_width=0.03, head_length=0.1)
+    
+    # Rankings por equipo (alineación exacta)
+    for i, hull_data in enumerate(home_hulls):
+        player_surname = hull_data['player'].split()[-1]
         area_pct = (hull_data['area'] / 10000) * 100
-        
-        rank_y = 0.08 - (rank * 0.02)
-        fig.text(0.5, rank_y, f"{rank+1}.  {player.split()[-1]:<12} {area_pct:.1f}%", 
-                 ha='center', va='center', fontsize=8, color='w', family=font)
+        y_pos = 0.6 - (i * 0.12)
+        legend_ax.text(0.5, y_pos, f"{i+1}.", ha='left', va='center', fontsize=10, color='w', family=font)
+        legend_ax.text(0.8, y_pos, f"{player_surname}", ha='left', va='center', fontsize=10, color='w', family=font)
+        legend_ax.text(2.65, y_pos, f"{area_pct:.1f}%", ha='right', va='center', fontsize=10, color='w', family=font)
     
-    # Créditos
-    fig.text(0.87, -0.0, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=12, family=font, color='white')
-    fig.text(0.1, -0.0, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=6, family=font, color='white')
+    for i, hull_data in enumerate(away_hulls):
+        player_surname = hull_data['player'].split()[-1]
+        area_pct = (hull_data['area'] / 10000) * 100
+        y_pos = 0.6 - (i * 0.12)
+        legend_ax.text(7.5, y_pos, f"{i+1}.", ha='left', va='center', fontsize=10, color='w', family=font)
+        legend_ax.text(7.8, y_pos, f"{player_surname}", ha='left', va='center', fontsize=10, color='w', family=font)
+        legend_ax.text(9.65, y_pos, f"{area_pct:.1f}%", ha='right', va='center', fontsize=10, color='w', family=font)
     
     plt.tight_layout()
     
