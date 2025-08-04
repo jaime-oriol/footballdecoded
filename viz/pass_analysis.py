@@ -235,9 +235,8 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
             end_zone, count = most_common
             
             start_x, start_y = get_zone_center(start_zone)
-            end_x, end_y = get_zone_center(end_zone)  # FIX: Usar centro de zona correctamente
+            end_x, end_y = get_zone_center(end_zone)
             
-            # FIX: Normalización correcta de colores
             color_intensity = min(1.0, max(0.1, count / 15.0))
             color = cmaps[idx](color_intensity)
             
@@ -249,30 +248,29 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
                 pitch2.lines(start_x, start_y, end_x, end_y, lw=10, comet=True,
                            ax=ax[idx], color=color, transparent=True, alpha=0.3, zorder=count)
             
-            # FIX: Usar coordenadas de centro de zona para puntos
             ax[idx].scatter(end_x, end_y, s=100, c=[color], zorder=count)
     
     font = 'serif'
     
-    # FIX: Títulos siguiendo estructura pass_network.py
+    # TÍTULOS CORREGIDOS - Usar mismas coordenadas que Pass Hull
     fig.text(x=0.5, y=.93, s="Pass Flow",
             weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
     
-    result_y = 0.9
+    result_y = 0.91  # CAMBIO: era 0.9
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
             weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
     
-    fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
+    fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",  # CAMBIO: era 0.875
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
-    fig.text(x=0.5, y=0.84, s="Most Frequent Inter-zone Passes", ha='center', 
-            fontweight="regular", fontsize=13.5, color='w', family=font)
+    fig.text(x=0.5, y=0.87, s="Most Frequent Inter-zone Passes", ha='center',  # CAMBIO: era 0.84
+            fontweight="regular", fontsize=12, color='w', family=font)
     
-    # FIX: Logos siguiendo pass_network.py exactamente
+    # Logos
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.175, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.27, result_y-0.035, 0.09, 0.09])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -281,7 +279,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.71, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.65, result_y-0.035, 0.09, 0.09])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -306,13 +304,11 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
     legend_ax_2.set_ylim([-0.5, 1])
     legend_ax_2.axis("off")
     
-    # FIX: Leyenda corregida
     legend_values = [1, 3, 5, 7, 9, 11, 13, 15]
     for idx, pass_count in enumerate(legend_values):
-        ypos = 0.38 if idx % 2 == 0 else 0.62
+        ypos = 0.32 if idx % 2 == 0 else 0.56
         xpos = idx / 1.4 + 1.5
         
-        # FIX: Color normalizado correctamente
         color_intensity = min(1.0, max(0.1, pass_count / 15.0))
         text_color = '#313332' if pass_count <= 3 else 'w'
         
@@ -324,19 +320,19 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_logo_path=None, away_log
         legend_ax_2.scatter(xpos, ypos, marker='H', s=550, color=color_2, edgecolors='w', lw=0.5)
         legend_ax_2.text(xpos, ypos, pass_count, color=text_color, ha="center", va="center", fontsize=9, family=font)
     
-    legend_ax_1.text(4, -0.2, "Pass Count", color='w', ha="center", va="center", fontsize=9, family=font)
-    legend_ax_2.text(4, -0.2, "Pass Count", color='w', ha="center", va="center", fontsize=9, family=font)
+    legend_ax_1.text(4, -0.25, "Pass Count", color='w', ha="center", va="center", fontsize=9, family=font)
+    legend_ax_2.text(4, -0.25, "Pass Count", color='w', ha="center", va="center", fontsize=9, family=font)
     
     # Stats footer
     home_total = len(passes_df[passes_df['team'] == home_team])
     away_total = len(passes_df[passes_df['team'] == away_team])
     
-    fig.text(0.5, 0.02, f"Total passes: {home_team} {home_total} | {away_team} {away_total}", 
+    fig.text(0.5, 0.055, f"Total passes: {home_team} {home_total} | {away_team} {away_total}", 
              ha='center', va='center', color='white', fontsize=9, family=font)
     
     # Créditos
-    fig.text(0.87, -0.0, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=12, family=font, color='white')
-    fig.text(0.1, -0.0, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=6, family=font, color='white')
+    fig.text(0.87, 0.03, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
+    fig.text(0.1, 0.03, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
     
     plt.tight_layout()
     
@@ -375,15 +371,14 @@ def calculate_player_hull(player_events, min_events=5):
         hull = ConvexHull(filtered_coords)
         hull_points = filtered_coords[hull.vertices]
         
-        # FIX: Usar centroide del hull, no media de puntos
         hull_centroid_x = hull_points[:, 0].mean()
         hull_centroid_y = hull_points[:, 1].mean()
         
         return {
             'hull_points': hull_points,
             'area': hull.volume,
-            'centroid_x': hull_centroid_x,  # FIX: Centroide real
-            'centroid_y': hull_centroid_y   # FIX: Centroide real
+            'centroid_x': hull_centroid_x,
+            'centroid_y': hull_centroid_y
         }
     except:
         return None
@@ -441,7 +436,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     
     team_list = [home_team, away_team]
     
-    # FIX: Calcular TODOS los hulls primero para ranking global
+    # Calcular TODOS los hulls primero para ranking global
     all_player_hulls = []
     
     for team in team_list:
@@ -457,7 +452,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
                 hull_data['team'] = team
                 all_player_hulls.append(hull_data)
     
-    # FIX: Ranking global (no por equipo)
+    # Ranking global (no por equipo)
     all_player_hulls.sort(key=lambda x: x['area'], reverse=True)
     top_3_global = all_player_hulls[:3]
     
@@ -468,7 +463,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
         for i, hull_data in enumerate(team_hulls):
             player = hull_data['player']
             hull_points = hull_data['hull_points']
-            centroid_x, centroid_y = hull_data['centroid_x'], hull_data['centroid_y']  # FIX: Usar centroide
+            centroid_x, centroid_y = hull_data['centroid_x'], hull_data['centroid_y']
             
             color = colors[i % len(colors)]
             
@@ -483,7 +478,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
             poly_edge = Polygon([(p[1], p[0]) for p in hull_points], facecolor='none', edgecolor=color, alpha=0.3, zorder=1)
             ax[idx].add_patch(poly_edge)
             
-            # FIX: Centro del jugador usando centroide del hull
+            # Centro del jugador usando centroide del hull
             ax[idx].scatter(centroid_y, centroid_x, marker='H', color=color, alpha=0.6, s=400, zorder=3)
             ax[idx].scatter(centroid_y, centroid_x, marker='H', edgecolor=color, facecolor='none', alpha=1, lw=2, s=400, zorder=3)
             
@@ -494,7 +489,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     
     font = 'serif'
     
-    # FIX: Títulos siguiendo estructura pass_network.py
+    # Títulos
     fig.text(x=0.5, y=.93, s="Pass Hull",
             weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
     
@@ -508,7 +503,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     fig.text(x=0.5, y=0.85, s="Variation in start position of player passes. Central 75%\nof passes shown per player, represented by a shaded region", ha='center', 
             fontweight="regular", fontsize=10, color='w', family=font)
     
-    # FIX: Logos siguiendo pass_network.py exactamente
+    # Logos
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
@@ -535,7 +530,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     arrow_ax.arrow(0.65, 0.2, 0, 0.58, color="w", width=0.001, head_width=0.1, head_length=0.02)
     arrow_ax.text(0.495, 0.48, "Direction of play", ha="center", va="center", fontsize=10, color="w", fontweight="regular", rotation=90, family=font)
     
-    # Ranking por equipos (layout doble como original)
+    # Rankings por equipos (layout doble como original)
     home_hulls = [h for h in all_player_hulls if h['team'] == home_team][:3]
     away_hulls = [h for h in all_player_hulls if h['team'] == away_team][:3]
     
@@ -547,7 +542,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
     
     # Texto central
     ranking_text = "Top players by area of\nregion containing central\n75% passes shown (as % of total\npitch area)"
-    legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=8, color='w', family=font)
+    legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=9, color='w', family=font)
     
     # Líneas de conexión (como el original)
     legend_ax.arrow(3.6, 0.5, -0.75, 0, color='w', width=0.005, head_width=0.03, head_length=0.1)
@@ -569,6 +564,10 @@ def plot_pass_hull(events_csv_path, info_csv_path, home_logo_path=None, away_log
         legend_ax.text(7.5, y_pos, f"{i+1}.", ha='left', va='center', fontsize=10, color='w', family=font)
         legend_ax.text(7.8, y_pos, f"{player_surname}", ha='left', va='center', fontsize=10, color='w', family=font)
         legend_ax.text(9.65, y_pos, f"{area_pct:.1f}%", ha='right', va='center', fontsize=10, color='w', family=font)
+    
+    # FOOTER AÑADIDO - idéntico a Pass Flow
+    fig.text(0.87, 0.05, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
+    fig.text(0.1, 0.05, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
     
     plt.tight_layout()
     
