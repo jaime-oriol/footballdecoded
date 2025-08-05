@@ -1,14 +1,19 @@
-# shot_report_viz.py
+# shot_map_report.py
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 from mplsoccer.pitch import VerticalPitch
 from PIL import Image
 
+# Configuración visual unificada
+BACKGROUND_COLOR = '#313332'
+PITCH_COLOR = '#313332'
+
 def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season='2024-2025'):
     """
-    Create dual-pitch shot report visualization.
+    Create dual-pitch shot report visualization with unified aesthetics.
     
     Args:
         csv_path: Path to shots CSV file
@@ -16,6 +21,15 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
         away_logo_path: Path to away team logo (PNG with transparency)
         season: Season string
     """
+    # Font unificado
+    font = 'serif'
+    
+    # Colormap unificado
+    node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
+        'deepskyblue', 'cyan', 'lawngreen', 'yellow', 
+        'gold', 'lightpink', 'tomato'
+    ])
+    
     # Read data
     shots_df = pd.read_csv(csv_path)
     
@@ -72,12 +86,12 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     # Plot setup
     mpl.rcParams.update({'xtick.color': 'w', 'ytick.color': 'w'})
     
-    pitch = VerticalPitch(half=True, pitch_color='#313332', line_color='white', 
+    pitch = VerticalPitch(half=True, pitch_color=PITCH_COLOR, line_color='white', 
                           linewidth=1, pitch_type='opta')
     fig, ax = pitch.grid(nrows=1, ncols=2, title_height=0.03, grid_height=0.51, 
                          endnote_height=0, axis=False)
     fig.set_size_inches(12, 7)
-    fig.set_facecolor('#313332')
+    fig.set_facecolor(BACKGROUND_COLOR)
     
     # Set limits
     for i in range(2):
@@ -98,46 +112,46 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
             else:
                 marker, s, s_delta = 'h', 300, 150
             
-            # Style based on result
-            if shot['is_goal']:
-                lw, alpha, edge, fontweight, zorder = 1.5, 1, 'w', 'bold', 4
+            # Style based on result usando 'type' field
+            if shot['type'] == 'Goal':
+                lw, alpha, edge, fontweight, zorder = 2, 1, 'w', 'bold', 4
                 s -= 25
                 edge_g = 'lime' if shot['xg'] <= 0.05 else 'w'
-            else:
-                if shot.get('is_blocked', False):
-                    lw, alpha, edge, fontweight, zorder = 0.5, 1, 'darkgrey', 'regular', 1
-                else:
-                    lw, alpha, edge, fontweight, zorder = 1.5, 1, 'darkgrey', 'regular', 2
+            elif shot['type'] == 'SavedShot':
+                lw, alpha, edge, fontweight, zorder = 2.0, 1, 'grey', 'regular', 2
+                edge_g = 'w'
+            else:  # MissedShots
+                lw, alpha, edge, fontweight, zorder = 0.5, 0.7, 'darkgrey', 'regular', 1
                 edge_g = 'w'
                 if shot['xg'] >= 0.6:
                     edge = 'crimson'
-                    lw = 2 if shot.get('is_blocked', False) else lw
             
-            textcolor = 'k' if shot['xg'] >= 0.7 else 'w'
+            # Iniciales siempre en negro
+            textcolor = 'k'
             
             # Convert coordinates
             x = shot['x']  # Already 0-100
             y = 100 - shot['y']  # Flip Y
             
-            # Plot shot
+            # Plot shot usando colormap unificado (0 a 1)
             p1 = ax['pitch'][pitch_num].scatter(
                 y, x, marker=marker, s=s, alpha=alpha, c=shot['xg'], 
-                lw=lw, edgecolors=edge, vmin=-0.04, vmax=1, 
-                cmap=plt.cm.inferno, zorder=zorder
+                lw=lw, edgecolors=edge, vmin=-0.04, vmax=1.0, 
+                cmap=node_cmap, zorder=zorder
             )
             
             # Double outline for goals
-            if shot['is_goal']:
+            if shot['type'] == 'Goal':
                 ax['pitch'][pitch_num].scatter(
                     y, x, marker=marker, s=s + s_delta, alpha=1, 
-                    c='#313332', edgecolors=edge_g, zorder=zorder - 1
+                    c=PITCH_COLOR, edgecolors=edge_g, zorder=zorder - 1
                 )
             
             # Player initials
             ax['pitch'][pitch_num].text(
                 y, x - 0.1, shot['initials'], color=textcolor, 
                 fontsize=7, ha='center', va='center', 
-                fontweight=fontweight, zorder=zorder
+                fontweight=fontweight, zorder=zorder, fontfamily=font
             )
         
         return p1 if len(shots_df) > 0 else None
@@ -155,87 +169,95 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
         return f"{value:.2f}" if is_float else str(value)
     
     # Home stats
-    fig.text(0.07, 0.27, "Shots:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.07, 0.241, "xG/shot:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.17, 0.27, "Goals/shot:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.17, 0.24, "xG Performance:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.34, 0.27, "L. xG Goal:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.34, 0.24, "H. xG Miss:", fontweight="bold", fontsize=10, color='w')
+    fig.text(0.07, 0.27, "Shots:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.07, 0.241, "xG/shot:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.17, 0.27, "Goals/shot:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.17, 0.24, "xG Performance:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.34, 0.27, "L. xG Goal:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.34, 0.24, "H. xG Miss:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
     
-    fig.text(0.13, 0.27, format_stat(h_stats['shots'], False), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.13, 0.24, format_stat(h_stats['xg_per_shot']), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.287, 0.27, format_stat(h_stats['goal_per_shot']), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.285, 0.24, format_stat(h_stats['xg_perf'], sign=True), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.42, 0.27, format_stat(h_stats['low_xg_goal']), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.42, 0.24, format_stat(h_stats['high_xg_miss']), fontweight="regular", fontsize=10, color='w')
+    fig.text(0.13, 0.27, format_stat(h_stats['shots'], False), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.13, 0.24, format_stat(h_stats['xg_per_shot']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.287, 0.27, format_stat(h_stats['goal_per_shot']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.285, 0.24, format_stat(h_stats['xg_perf'], sign=True), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.42, 0.27, format_stat(h_stats['low_xg_goal']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.42, 0.24, format_stat(h_stats['high_xg_miss']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
     
     # Away stats
-    fig.text(0.554, 0.27, "Shots:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.554, 0.241, "xG/shot:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.654, 0.27, "Goals/shot:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.654, 0.24, "xG Performance:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.824, 0.27, "L. xG Goal:", fontweight="bold", fontsize=10, color='w')
-    fig.text(0.824, 0.24, "H. xG Miss:", fontweight="bold", fontsize=10, color='w')
+    fig.text(0.554, 0.27, "Shots:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.554, 0.241, "xG/shot:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.654, 0.27, "Goals/shot:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.654, 0.24, "xG Performance:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.824, 0.27, "L. xG Goal:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.824, 0.24, "H. xG Miss:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
     
-    fig.text(0.614, 0.27, format_stat(a_stats['shots'], False), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.614, 0.24, format_stat(a_stats['xg_per_shot']), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.771, 0.27, format_stat(a_stats['goal_per_shot']), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.769, 0.24, format_stat(a_stats['xg_perf'], sign=True), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.904, 0.27, format_stat(a_stats['low_xg_goal']), fontweight="regular", fontsize=10, color='w')
-    fig.text(0.904, 0.24, format_stat(a_stats['high_xg_miss']), fontweight="regular", fontsize=10, color='w')
+    fig.text(0.614, 0.27, format_stat(a_stats['shots'], False), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.614, 0.24, format_stat(a_stats['xg_per_shot']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.771, 0.27, format_stat(a_stats['goal_per_shot']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.769, 0.24, format_stat(a_stats['xg_perf'], sign=True), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.904, 0.27, format_stat(a_stats['low_xg_goal']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.904, 0.24, format_stat(a_stats['high_xg_miss']), fontweight="regular", fontsize=10, color='w', fontfamily=font)
     
-    # Colorbar
+    # Colorbar con colormap unificado (0 a 1)
     if p1:
         cb_ax = fig.add_axes([0.57, 0.152, 0.35, 0.03])
         cbar = fig.colorbar(p1, cax=cb_ax, orientation='horizontal')
         cbar.outline.set_edgecolor('w')
         cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
     
-    # Legend
+    # Legend con lógica de campo exacta
     legend_ax = fig.add_axes([0.055, 0.065, 0.5, 0.14])
     legend_ax.axis("off")
     legend_ax.set_xlim([0, 5])
     legend_ax.set_ylim([0, 1])
     
+    # Color verde unificado para columna izquierda
+    legend_green = node_cmap(0.3)
+    
     # Marker types
-    legend_ax.scatter(0.2, 0.8, marker='h', s=300, c='#313332', edgecolors='w')
-    legend_ax.scatter(0.2, 0.5, marker='o', s=250, c='#313332', edgecolors='w')
-    legend_ax.scatter(0.2, 0.2, marker='s', s=150, c='#313332', edgecolors='w')
-    legend_ax.text(0.37, 0.74, "Foot", color="w")
-    legend_ax.text(0.37, 0.44, "Header", color="w")
-    legend_ax.text(0.37, 0.14, "Set-Piece", color="w")
+    legend_ax.scatter(0.2, 0.8, marker='h', s=300, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.scatter(0.2, 0.5, marker='o', s=250, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.scatter(0.2, 0.2, marker='s', s=150, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(0.37, 0.74, "Foot", color="w", fontfamily=font)
+    legend_ax.text(0.37, 0.44, "Header", color="w", fontfamily=font)
+    legend_ax.text(0.37, 0.14, "Set-Piece", color="w", fontfamily=font)
     
-    # Result types
-    legend_ax.scatter(1.3, 0.8, marker='h', s=250, c='indigo', edgecolors='w', lw=1.5, zorder=2)
-    legend_ax.scatter(1.3, 0.8, marker='h', s=400, c='#313332', edgecolors='w', zorder=1)
-    legend_ax.scatter(1.3, 0.5, marker='h', s=300, c='indigo', edgecolors='darkgrey', lw=1.5, alpha=1)
-    legend_ax.scatter(1.3, 0.2, marker='h', s=300, c='indigo', edgecolors='darkgrey', lw=0.5, alpha=1)
-    legend_ax.text(1.47, 0.74, "Goal", color="w")
-    legend_ax.text(1.47, 0.44, "Saved or Woodwork", color="w")
-    legend_ax.text(1.47, 0.14, "Missed or Blocked", color="w")
+    # Result types - reflejan lógica exacta del campo
+    # Goal: verde + borde blanco + lw=2 + double outline
+    legend_ax.scatter(1.3, 0.8, marker='h', s=250, c=legend_green, edgecolors='w', lw=2, zorder=2)
+    legend_ax.scatter(1.3, 0.8, marker='h', s=400, c=PITCH_COLOR, edgecolors='w', zorder=1)
+    # Saved: verde + borde gris + lw=1.5
+    legend_ax.scatter(1.3, 0.5, marker='h', s=300, c=legend_green, edgecolors='grey', lw=2, alpha=1)
+    # Missed: verde + borde darkgrey + lw=0.5  
+    legend_ax.scatter(1.3, 0.2, marker='h', s=300, c=legend_green, edgecolors='darkgrey', lw=0.5, alpha=0.7)
+    legend_ax.text(1.47, 0.74, "Goal", color="w", fontfamily=font)
+    legend_ax.text(1.47, 0.44, "Saved", color="w", fontfamily=font)
+    legend_ax.text(1.47, 0.14, "Missed or Blocked", color="w", fontfamily=font)
     
-    # Special cases
-    legend_ax.scatter(3, 0.8, marker='h', s=300, c='darkslategrey', edgecolors='w', lw=1.5, alpha=1)
-    legend_ax.scatter(3, 0.5, marker='h', s=250, c='indigo', edgecolors='w', lw=1.5, zorder=2)
-    legend_ax.scatter(3, 0.5, marker='h', s=400, c='#313332', edgecolors='lime', zorder=1)
-    legend_ax.scatter(3, 0.2, marker='h', s=300, c='y', edgecolors='crimson', lw=1.5, alpha=1)
-    legend_ax.text(3.17, 0.74, "Own Goal", color="w")
-    legend_ax.text(3.17, 0.44, "Low xG (<0.05) Goal", color="w")
-    legend_ax.text(3.17, 0.14, "High xG (>0.60) Miss", color="w")
+    # Special cases con colores corregidos
+    legend_ax.scatter(3, 0.8, marker='h', s=300, c=node_cmap(0.2), edgecolors='w', lw=1.5, alpha=1)
+    # Low xG Goal con double outline: azul + blanco + rojo
+    legend_ax.scatter(3, 0.5, marker='h', s=250, c=node_cmap(0.0), edgecolors='w', lw=1.5, zorder=2)
+    legend_ax.scatter(3, 0.5, marker='h', s=400, c='red', edgecolors='red', zorder=1)
+    # High xG Miss: colormap alto + borde negro
+    legend_ax.scatter(3, 0.2, marker='h', s=300, c=node_cmap(0.9), edgecolors='black', lw=1.5, alpha=1)
+    legend_ax.text(3.17, 0.74, "Own Goal", color="w", fontfamily=font)
+    legend_ax.text(3.17, 0.44, "Low xG (<0.05) Goal", color="w", fontfamily=font)
+    legend_ax.text(3.17, 0.14, "High xG (>0.60) Miss", color="w", fontfamily=font)
     
     # Title
-    league = "La Liga"  # Extract from path if needed
+    league = "ESP-La Liga"  # Extract from path if needed
     title_text = f"{league} - {season}"
     subtitle_text = f"{home_team} {h_stats['goals']}-{a_stats['goals']} {away_team}"
     subsubtitle_text = f"Expected Goals: {h_stats['xg']:.2f} - {a_stats['xg']:.2f}"
     
-    fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=20, color='w')
-    fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="bold", fontsize=18, color='w')
-    fig.text(0.5, 0.79, subsubtitle_text, ha='center', fontweight="regular", fontsize=14, color='w')
+    fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=20, color='w', fontfamily=font)
+    fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="bold", fontsize=18, color='w', fontfamily=font)
+    fig.text(0.5, 0.79, subsubtitle_text, ha='center', fontweight="regular", fontsize=14, color='w', fontfamily=font)
     
     # Logos
     if home_logo_path:
-        ax_logo = fig.add_axes([0.175, 0.783, 0.15, 0.15])
+        ax_logo = fig.add_axes([0.195, 0.75, 0.2, 0.2])
         ax_logo.axis("off")
         try:
             img = Image.open(home_logo_path)
@@ -244,13 +266,17 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
             pass
     
     if away_logo_path:
-        ax_logo = fig.add_axes([0.665, 0.783, 0.15, 0.15])
+        ax_logo = fig.add_axes([0.61, 0.75, 0.2, 0.2])
         ax_logo.axis("off")
         try:
             img = Image.open(away_logo_path)
             ax_logo.imshow(img)
         except:
             pass
+    
+    # Footer unificado
+    fig.text(0.05, 0.02, "Created by Jaime Oriol", fontweight='bold', fontsize=10, color="white", fontfamily=font)
+    fig.text(0.8, 0.02, "Football Decoded", fontweight='bold', fontsize=14, color="white", fontfamily=font)
     
     plt.tight_layout()
     return fig
