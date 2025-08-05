@@ -271,13 +271,13 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
     fig.text(x=0.5, y=0.87, s="Most Frequent Inter-zone Passes", ha='center',
-            fontweight="regular", fontsize=12, color='w', family=font)
+            fontweight="regular", fontsize=10, color='w', family=font)
     
     # Logos
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.27, result_y-0.035, 0.09, 0.09])
+            logo_ax = fig.add_axes([0.23, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -286,7 +286,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.65, result_y-0.035, 0.09, 0.09])
+            logo_ax = fig.add_axes([0.65, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -604,17 +604,17 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
             weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
     
-    fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
+    fig.text(x=0.5, y=0.895, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
-    fig.text(x=0.5, y=0.85, s="Variation in start position of player passes. Central 50%\nof passes shown per player, represented by a shaded region", ha='center', 
-            fontweight="regular", fontsize=10, color='w', family=font)
+    fig.text(x=0.5, y=0.85, s="Variation in start position of player passes.\nCentral 50% of passes shown per player,\nrepresented by a shaded region", ha='center', 
+            fontweight="regular", fontsize=8, color='w', family=font)
     
     # Logos
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.27, result_y-0.035, 0.09, 0.09])
+            logo_ax = fig.add_axes([0.23, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -623,7 +623,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.65, result_y-0.035, 0.09, 0.09])
+            logo_ax = fig.add_axes([0.65, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -647,7 +647,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     legend_ax.set_ylim(0, 1)
     legend_ax.axis('off')
     
-    ranking_text = "Top players by area of\nregion containing central\n50% passes shown (as % of total\npitch area)"
+    ranking_text = "Top players by area of\nregion containing central\n50% passes shown \n(as % of total pitch area)"
     legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=9, color='w', family=font)
     
     # Líneas de conexión
