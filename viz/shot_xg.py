@@ -1,184 +1,212 @@
 # shot_xg_viz.py
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.colors as mcolors
+from matplotlib.colors import Normalize
 from mplsoccer.pitch import VerticalPitch
 from PIL import Image
-import requests
-from io import BytesIO
+import os
 
-def plot_shot_xg(csv_path, filter_by='all', logo_path=None, season='2024-2025'):
+# Configuración visual global
+BACKGROUND_COLOR = '#313332'
+PITCH_COLOR = '#313332'
+
+def plot_shot_xg(csv_path, filter_by='all', logo_path=None, season='2024-2025', 
+                 home_logo_path=None, away_logo_path=None):
     """
     Plot xG visualization from shot data CSV.
     
     Args:
         csv_path: Path to shots CSV file
         filter_by: 'all', team name, or player name
-        logo_path: Path to logo image (e.g., 'viz/images/barcelona.png')
+        logo_path: Path to logo image
         season: Season string for subtitle
     """
     # Read data
     shots_df = pd.read_csv(csv_path)
     
-    # Filter shots and handle long names
-    display_name = filter_by
+    # Setup colormap
+    node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
+        'deepskyblue', 'cyan', 'lawngreen', 'yellow', 
+        'gold', 'lightpink', 'tomato'
+    ])
+    
+    # Get competition/teams info
+    teams = shots_df['team'].unique()
+    comp_name = f"{teams[0]} vs {teams[1]}" if len(teams) == 2 else teams[0]
+    
+    # Filter logic - IGUAL QUE ORIGINAL
+    comp_selected = 0
     if filter_by.lower() == 'all':
         selected_shots = shots_df
-        title_text = "Expected Goals"
+        comp_selected = 1
     elif filter_by in shots_df['team'].values:
         selected_shots = shots_df[shots_df['team'] == filter_by]
-        title_text = f"{filter_by} Expected Goals"
+        comp_selected = 0
     elif filter_by in shots_df['player'].values:
         selected_shots = shots_df[shots_df['player'] == filter_by]
-        # Check name length and use only last name if too long
-        if len(filter_by) > 15:
-            display_name = filter_by.split()[-1]
-        title_text = f"{display_name} Expected Goals"
+        comp_selected = 0
     else:
         return print(f"No data found for: {filter_by}")
     
-    # Separate by type
-    ground_shots = selected_shots[selected_shots['body_part'] != 'Head']
-    ground_goals = ground_shots[ground_shots['is_goal'] == True]
-    headers = selected_shots[selected_shots['body_part'] == 'Head']
-    headed_goals = headers[headers['is_goal'] == True]
+    # Convert data format
+    selected_shots = selected_shots.copy()
+    selected_shots['header_tag'] = (selected_shots['body_part'] == 'Head').astype(int)
+    selected_shots['goal'] = selected_shots['is_goal'].astype(int)
+    
+    # Convert coordinates to yards
+    selected_shots['x_yards'] = selected_shots['x'] * 0.6  # 0-100 to 0-60 yards
+    selected_shots['c_yards'] = (selected_shots['y'] - 50) * 0.8  # 0-100 to -40 to 40 yards
+    
+    # Separate dataframes
+    selected_ground_shots = selected_shots[selected_shots['header_tag']==0]
+    selected_ground_goals = selected_ground_shots[selected_ground_shots['goal']==1]
+    selected_headers = selected_shots[selected_shots['header_tag']==1]
+    selected_headed_goals = selected_headers[selected_headers['goal']==1]
     
     # Find extremes
-    goals = selected_shots[selected_shots['is_goal'] == True]
-    misses = selected_shots[selected_shots['is_goal'] == False]
-    lowest_xg_goal = goals.nsmallest(1, 'xg') if not goals.empty else pd.DataFrame()
-    highest_xg_miss = misses.nlargest(1, 'xg') if not misses.empty else pd.DataFrame()
+    lowest_xg_goal = selected_shots[selected_shots['goal']==1].sort_values('xg').head(1)
+    highest_xg_miss = selected_shots[selected_shots['goal']==0].sort_values('xg', ascending=False).head(1)
     
-    # Plot setup
-    mpl.rcParams.update({'xtick.color': 'white', 'ytick.color': 'white',
-                         'xtick.labelsize': 10, 'ytick.labelsize': 10})
+    # Plot setup - EXACTAMENTE IGUAL
+    mpl.rcParams['xtick.color'] = "white"
+    mpl.rcParams['ytick.color'] = "white"
+    mpl.rcParams['xtick.labelsize'] = 10
+    mpl.rcParams['ytick.labelsize'] = 10
     
-    pitch = VerticalPitch(half=True, pitch_color='#313332', line_color='white', linewidth=1)
-    fig, ax = pitch.grid(nrows=1, ncols=1, title_height=0.03, grid_height=0.7,
-                         endnote_height=0.05, axis=False)
+    pitch = VerticalPitch(half=True, pitch_color=PITCH_COLOR, line_color='white', linewidth=1, stripe=False)
+    fig, ax = pitch.grid(nrows=1, ncols=1, title_height=0.03, grid_height=0.7, endnote_height=0.05, axis=False)
     fig.set_size_inches(9, 7)
-    fig.set_facecolor('#313332')
-    
-    # Convert coordinates from percentage to pitch coordinates
-    def convert_coords(x, y):
-        pitch_x = y * 0.8
-        pitch_y = 60 + (x * 0.6)
-        return pitch_x, pitch_y
+    fig.set_facecolor(BACKGROUND_COLOR)
     
     # Plot ground shots
-    if not ground_shots.empty:
-        coords = ground_shots.apply(lambda r: convert_coords(r['x'], r['y']), axis=1)
-        px = [c[0] for c in coords]
-        py = [c[1] for c in coords]
-        ax['pitch'].scatter(px, py, marker='h', s=200, alpha=0.2, c=ground_shots['xg'].values,
-                            edgecolors='w', vmin=-0.04, vmax=0.4, cmap=plt.cm.inferno, zorder=2)
+    if not selected_ground_shots.empty:
+        ax['pitch'].scatter(80/2 + selected_ground_shots['c_yards'], 120 - selected_ground_shots['x_yards'], 
+                           marker='h', s=200, alpha=0.2, c=selected_ground_shots['xg'], 
+                           edgecolors='w', vmin=-0.04, vmax=0.4, cmap=node_cmap, zorder=2)
     
-    if not ground_goals.empty:
-        coords = ground_goals.apply(lambda r: convert_coords(r['x'], r['y']), axis=1)
-        px = [c[0] for c in coords]
-        py = [c[1] for c in coords]
-        p1 = ax['pitch'].scatter(px, py, marker='h', s=200, c=ground_goals['xg'].values,
-                                 edgecolors='w', lw=2, vmin=-0.04, vmax=0.4, cmap=plt.cm.inferno, zorder=2)
+    if not selected_ground_goals.empty:
+        p1 = ax['pitch'].scatter(80/2 + selected_ground_goals['c_yards'], 120 - selected_ground_goals['x_yards'], 
+                                marker='h', s=200, c=selected_ground_goals['xg'], 
+                                edgecolors='w', lw=2, vmin=-0.04, vmax=0.4, cmap=node_cmap, zorder=2)
     
     # Plot headers
-    if not headers.empty:
-        coords = headers.apply(lambda r: convert_coords(r['x'], r['y']), axis=1)
-        px = [c[0] for c in coords]
-        py = [c[1] for c in coords]
-        ax['pitch'].scatter(px, py, marker='o', s=200, alpha=0.2, c=headers['xg'].values,
-                            edgecolors='w', vmin=-0.04, vmax=0.4, cmap=plt.cm.inferno, zorder=2)
+    if not selected_headers.empty:
+        ax['pitch'].scatter(80/2 + selected_headers['c_yards'], 120 - selected_headers['x_yards'], 
+                           marker='o', s=200, alpha=0.2, c=selected_headers['xg'], 
+                           edgecolors='w', vmin=-0.04, vmax=0.4, cmap=node_cmap, zorder=2)
     
-    if not headed_goals.empty:
-        coords = headed_goals.apply(lambda r: convert_coords(r['x'], r['y']), axis=1)
-        px = [c[0] for c in coords]
-        py = [c[1] for c in coords]
-        ax['pitch'].scatter(px, py, marker='o', s=200, c=headed_goals['xg'].values,
-                            edgecolors='w', lw=2, vmin=-0.04, vmax=0.4, cmap=plt.cm.inferno, zorder=2)
+    if not selected_headed_goals.empty:
+        ax['pitch'].scatter(80/2 + selected_headed_goals['c_yards'], 120 - selected_headed_goals['x_yards'], 
+                           marker='o', s=200, c=selected_headed_goals['xg'], 
+                           edgecolors='w', lw=2, vmin=-0.04, vmax=0.4, cmap=node_cmap, zorder=2)
+    
+    ax['pitch'].set_ylim([59.9, 125])
     
     # Plot extremes
-    if not lowest_xg_goal.empty:
-        px, py = convert_coords(lowest_xg_goal['x'].iloc[0], lowest_xg_goal['y'].iloc[0])
-        marker = 'o' if lowest_xg_goal['body_part'].iloc[0] == 'Head' else 'h'
-        ax['pitch'].scatter(px, py, marker=marker, s=200, c='g', edgecolors='w', lw=2.5, zorder=3)
-    
     if not highest_xg_miss.empty:
-        px, py = convert_coords(highest_xg_miss['x'].iloc[0], highest_xg_miss['y'].iloc[0])
-        marker = 'o' if highest_xg_miss['body_part'].iloc[0] == 'Head' else 'h'
-        ax['pitch'].scatter(px, py, marker=marker, s=200, c='r', edgecolors='grey', lw=2.5, zorder=3)
+        highxg_marker = 'o' if highest_xg_miss['header_tag'].iloc[0]==1 else 'h'
+        ax['pitch'].scatter(80/2 + highest_xg_miss['c_yards'].iloc[0], 120 - highest_xg_miss['x_yards'].iloc[0], 
+                           marker=highxg_marker, s=200, c='r', edgecolors='grey', 
+                           lw=2.5, vmin=-0.04, vmax=0.4, cmap=node_cmap, zorder=3)
     
-    # Colorbar
+    if not lowest_xg_goal.empty:
+        lowxg_marker = 'o' if lowest_xg_goal['header_tag'].iloc[0]==1 else 'h'
+        ax['pitch'].scatter(80/2 + lowest_xg_goal['c_yards'].iloc[0], 120 - lowest_xg_goal['x_yards'].iloc[0], 
+                           marker=lowxg_marker, s=200, c='g', edgecolors='w', 
+                           lw=2.5, vmin=-0.04, vmax=0.4, cmap=node_cmap, zorder=3)
+    
+    # Colorbar - MISMA POSICIÓN
     if 'p1' in locals():
         cb_ax = fig.add_axes([0.53, 0.107, 0.35, 0.03])
         cbar = fig.colorbar(p1, cax=cb_ax, orientation='horizontal')
         cbar.outline.set_edgecolor('w')
-        cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
+        cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5, family='serif')
     
-    # Legend
+    # Legend - EXACTAMENTE IGUAL
     legend_ax = fig.add_axes([0.075, 0.07, 0.5, 0.08])
     legend_ax.axis("off")
-    legend_ax.set_xlim([0, 5])
-    legend_ax.set_ylim([0, 1])
+    plt.xlim([0, 5])
+    plt.ylim([0, 1])
     
-    legend_items = [
-        (0.2, 0.7, 'h', '#313332', 'w', 1, "Foot", 0.35, 0.61),
-        (0.2, 0.2, 'o', '#313332', 'w', 1, "Header", 0.35, 0.11),
-        (1.3, 0.7, 'h', 'purple', 'w', 2, "Goal", 1.45, 0.61),
-        (1.3, 0.2, 'h', 'purple', 'w', 0.2, "No Goal", 1.465, 0.11),
-        (2.4, 0.7, 'h', 'g', 'w', 2.5, "Lowest xG Goal", 2.55, 0.61),
-        (2.4, 0.2, 'h', 'r', 'grey', 2.5, "Highest xG Miss", 2.565, 0.11)
-    ]
+    legend_ax.scatter(0.2, 0.7, marker='h', s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.scatter(0.2, 0.2, marker='o', s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(0.35, 0.61, "Foot", color="w", family='serif')
+    legend_ax.text(0.35, 0.11, "Header", color="w", family='serif')
     
-    for x, y, mark, col, edge, lw, txt, tx, ty in legend_items:
-        alpha = 0.2 if lw == 0.2 else 1
-        lw = 1 if lw == 0.2 else lw
-        legend_ax.scatter(x, y, marker=mark, s=200, c=col, edgecolors=edge, lw=lw, alpha=alpha)
-        legend_ax.text(tx, ty, txt, color="w")
+    # Usar color del medio del colormap en lugar de purple
+    mid_color = node_cmap(0.5)
+    legend_ax.scatter(1.3, 0.7, marker='h', s=200, c=mid_color, edgecolors='w', lw=2)
+    legend_ax.scatter(1.3, 0.2, marker='h', alpha=0.2, s=200, c=mid_color, edgecolors='w')
+    legend_ax.text(1.45, 0.61, "Goal", color="w", family='serif')
+    legend_ax.text(1.465, 0.11, "No Goal", color="w", family='serif')
     
-    # Title and subtitle
-    teams = shots_df['team'].unique()
-    subtitle_text = f"{teams[0]} vs {teams[1]}" if len(teams) == 2 else teams[0]
+    legend_ax.scatter(2.4, 0.7, marker='h', s=200, c='g', edgecolors='w', lw=2.5)
+    legend_ax.scatter(2.4, 0.2, marker='h', s=200, c='r', edgecolors='grey', lw=2.5)
+    legend_ax.text(2.55, 0.61, "Lowest xG Goal", color="w", family='serif')
+    legend_ax.text(2.565, 0.11, "Highest xG Miss", color="w", family='serif')
     
-    fig.text(0.18, 0.92, title_text, fontweight="bold", fontsize=16, color='w')
-    fig.text(0.18, 0.883, subtitle_text, fontweight="regular", fontsize=14, color='w')
-    fig.text(0.18, 0.852, season, fontweight="regular", fontsize=10, color='w')
+    # Title text - POSICIÓN IZQUIERDA
+    subtitle_text = comp_name
+    subsubtitle_text = season
     
-    # Stats
-    shots_count = len(selected_shots)
+    if comp_selected == 1:
+        title_text = "Expected Goals"
+    elif comp_selected == 0:
+        title_text = f"{filter_by} Expected Goals"
+    
+    fig.text(0.18, 0.92, title_text, fontweight="bold", fontsize=16, color='w', family='serif')
+    fig.text(0.18, 0.883, subtitle_text, fontweight="regular", fontsize=14, color='w', family='serif')
+    fig.text(0.18, 0.852, subsubtitle_text, fontweight="regular", fontsize=10, color='w', family='serif')
+    
+    # Stats - MISMAS POSICIONES
+    if selected_shots['goal'].sum() - selected_shots['xg'].sum() > 0:
+        sign = '+'
+    else:
+        sign = ''
+    
+    fig.text(0.65, 0.925, "Shots:", fontweight="bold", fontsize=10, color='w', family='serif')
+    fig.text(0.65, 0.9, "xG:", fontweight="bold", fontsize=10, color='w', family='serif')
+    fig.text(0.65, 0.875, "Goals:", fontweight="bold", fontsize=10, color='w', family='serif')
+    fig.text(0.65, 0.85, "xG Perf:", fontweight="bold", fontsize=10, color='w', family='serif')
+    
+    fig.text(0.73, 0.925, f"{int(selected_shots.count()[0])}", fontweight="regular", fontsize=10, color='w', family='serif')
+    fig.text(0.73, 0.9, f"{round(selected_shots['xg'].sum(), 1)}", fontweight="regular", fontsize=10, color='w', family='serif')
+    fig.text(0.73, 0.875, f"{int(selected_shots['goal'].sum())}", fontweight="regular", fontsize=10, color='w', family='serif')
+    
+    # Evitar división por cero
     xg_sum = selected_shots['xg'].sum()
-    goals_sum = selected_shots['is_goal'].sum()
-    xg_perf = goals_sum - xg_sum
-    sign = '+' if xg_perf > 0 else ''
+    if xg_sum > 0:
+        perf_pct = int(round(100*(selected_shots['goal'].sum()-xg_sum)/xg_sum, 0))
+    else:
+        perf_pct = 0
+    fig.text(0.73, 0.85, f"{sign}{perf_pct}%", fontweight="regular", fontsize=10, color='w', family='serif')
     
-    stats_left = [
-        ("Shots:", shots_count, 0.925),
-        ("xG:", f"{xg_sum:.1f}", 0.9),
-        ("Goals:", goals_sum, 0.875),
-        ("xG Perf:", f"{sign}{int(100*xg_perf/xg_sum if xg_sum > 0 else 0)}%", 0.85)
-    ]
+    fig.text(0.79, 0.927, "xG/shot:", fontweight="bold", fontsize=10, color='w', family='serif')
+    fig.text(0.79, 0.9, "Goal/shot:", fontweight="bold", fontsize=10, color='w', family='serif')
+    fig.text(0.79, 0.875, "L xG Goal:", fontweight="bold", fontsize=10, color='w', family='serif')
+    fig.text(0.79, 0.85, "H xG Miss:", fontweight="bold", fontsize=10, color='w', family='serif')
     
-    stats_right = [
-        ("xG/shot:", f"{xg_sum/shots_count:.2f}" if shots_count > 0 else "0.00", 0.925),
-        ("Goal/shot:", f"{goals_sum/shots_count:.2f}" if shots_count > 0 else "0.00", 0.9),
-        ("L xG Goal:", f"{lowest_xg_goal['xg'].iloc[0]:.2f}" if not lowest_xg_goal.empty else "N/A", 0.875),
-        ("H xG Miss:", f"{highest_xg_miss['xg'].iloc[0]:.2f}" if not highest_xg_miss.empty else "N/A", 0.85)
-    ]
+    shot_count = selected_shots.count()[0]
+    fig.text(0.89, 0.925, f"{round(selected_shots['xg'].sum()/shot_count, 2)}", fontweight="regular", fontsize=10, color='w', family='serif')
+    fig.text(0.89, 0.9, f"{round(selected_shots['goal'].sum()/shot_count, 2)}", fontweight="regular", fontsize=10, color='w', family='serif')
+    fig.text(0.89, 0.875, f"{round(lowest_xg_goal['xg'].iloc[0], 2)}" if not lowest_xg_goal.empty else "N/A", fontweight="regular", fontsize=10, color='w', family='serif')
+    fig.text(0.89, 0.85, f"{round(highest_xg_miss['xg'].iloc[0], 2)}" if not highest_xg_miss.empty else "N/A", fontweight="regular", fontsize=10, color='w', family='serif')
     
-    for label, value, y in stats_left:
-        fig.text(0.65, y, label, fontweight="bold", fontsize=10, color='w')
-        fig.text(0.73, y, str(value), fontweight="regular", fontsize=10, color='w')
+    # Footer - Adaptado
+    fig.text(0.5, 0.02, "Created by Jaime Oriol. Football Decoded",
+             fontstyle="italic", ha="center", fontsize=9, color="white", family='serif')
     
-    for label, value, y in stats_right:
-        fig.text(0.79, y, label, fontweight="bold", fontsize=10, color='w')
-        fig.text(0.89, y, str(value), fontweight="regular", fontsize=10, color='w')
-    
-    # Logo
+    # Logo - MISMA POSICIÓN Y TAMAÑO
     if logo_path:
-        ax_logo = fig.add_axes([0.02, 0.8, 0.2, 0.2])
-        ax_logo.axis("off")
+        ax = fig.add_axes([0.02, 0.8, 0.2, 0.2])
+        ax.axis("off")
         try:
             img = Image.open(logo_path)
-            ax_logo.imshow(img)
+            ax.imshow(img)
         except:
             pass
     
