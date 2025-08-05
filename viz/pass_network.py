@@ -164,6 +164,10 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     info_df = pd.read_csv(info_csv_path)
     aggregates_df = pd.read_csv(aggregates_csv_path)
     
+    # AÑADIDO: Cargar events para cálculo correcto de xT per pass
+    events_csv_path = os.path.join(os.path.dirname(network_csv_path), 'match_events.csv')
+    events_df = pd.read_csv(events_csv_path)
+    
     # Extraer metadata del partido
     home_team = info_df[info_df['info_key'] == 'home_team']['info_value'].iloc[0]
     away_team = info_df[info_df['info_key'] == 'away_team']['info_value'].iloc[0]
@@ -193,7 +197,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     min_connection_xt = -0.1
     max_connection_xt = 0.2
     min_player_xt = 0.0
-    max_player_xt = 0.05
+    max_player_xt = 0.08  # Ajustado para xT per pass
     min_passes = 6
 
     # Configurar figura
@@ -247,7 +251,15 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                 continue
                 
             num_passes = int(player_data.iloc[0]['passes_completed'])
-            xthreat_per_action = float(player_data.iloc[0]['xthreat_per_action'])
+            
+            # CORREGIDO: Cálculo correcto de xT per pass usando match_events.csv
+            player_passes = events_df[
+                (events_df['player'] == player_name) & 
+                (events_df['event_type'] == 'Pass') &
+                (events_df['outcome_type'] == 'Successful')
+            ]
+            
+            xthreat_per_pass = player_passes['xthreat_gen'].sum() / max(1, len(player_passes))
             
             marker_size = calculate_node_size(num_passes, max_passes_team)
             node_radius = get_node_radius(marker_size)
@@ -257,7 +269,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                 'radius': node_radius, 
                 'marker_size': marker_size,
                 'passes': num_passes,
-                'xthreat_per_action': xthreat_per_action
+                'xthreat_per_pass': xthreat_per_pass
             }
         
         # Dibujar conexiones
@@ -312,7 +324,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
         for player_name, stats in player_stats.items():
             x, y = stats['x'], stats['y']
             marker_size = stats['marker_size']
-            pass_value = stats['xthreat_per_action']
+            pass_value = stats['xthreat_per_pass']
             
             node_color = node_cmap(player_norm(pass_value))
                         
@@ -393,7 +405,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             fontsize=6, font=font, color='white')
     fig.text(x=0.61, y=.14, s="Player pass count", va="bottom", ha="center",
             fontsize=6, font=font, color='white')
-    fig.text(x=0.84, y=.14, s="Player value per action (xT)", va="bottom", ha="center",
+    fig.text(x=0.84, y=.14, s="Player value per pass (xT)", va="bottom", ha="center",
             fontsize=6, font=font, color='white')
     
     # Valores de leyenda
@@ -403,7 +415,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             fontsize=5, font=font, color='white')
     fig.text(x=0.61, y=0.07, s="5 to 100+", va="bottom", ha="center",
             fontsize=5, font=font, color='white')
-    fig.text(x=0.84, y=0.07, s="0 to 0.05+", va="bottom", ha="center",
+    fig.text(x=0.84, y=0.07, s="0 to 0.08+", va="bottom", ha="center",
             fontsize=5, font=font, color='white')
     
     # Indicadores de escala
