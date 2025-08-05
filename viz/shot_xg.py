@@ -87,39 +87,39 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     if not selected_ground_shots.empty:
         ax['pitch'].scatter(selected_ground_shots['y'], selected_ground_shots['x'], 
                            marker='h', s=200, alpha=0.2, c=selected_ground_shots['xg'], 
-                           edgecolors='w', vmin=-0.04, vmax=0.5, cmap=node_cmap, zorder=2)
+                           edgecolors='w', vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
     # Goles de pie - opacos
     if not selected_ground_goals.empty:
         p1 = ax['pitch'].scatter(selected_ground_goals['y'], selected_ground_goals['x'], 
                                 marker='h', s=200, c=selected_ground_goals['xg'], 
-                                edgecolors='w', lw=2, vmin=-0.04, vmax=0.5, cmap=node_cmap, zorder=2)
+                                edgecolors='w', lw=2, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
     # Headers (no gol) - transparentes
     if not selected_headers.empty:
         ax['pitch'].scatter(selected_headers['y'], selected_headers['x'], 
                            marker='o', s=200, alpha=0.2, c=selected_headers['xg'], 
-                           edgecolors='w', vmin=-0.04, vmax=0.5, cmap=node_cmap, zorder=2)
+                           edgecolors='w', vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
     # Goles de cabeza - opacos
     if not selected_headed_goals.empty:
         ax['pitch'].scatter(selected_headed_goals['y'], selected_headed_goals['x'], 
                            marker='o', s=200, c=selected_headed_goals['xg'], 
-                           edgecolors='w', lw=2, vmin=-0.04, vmax=0.5, cmap=node_cmap, zorder=2)
+                           edgecolors='w', lw=2, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
     # Highlights: Mayor xG fallado (color máximo del cmap)
     if not highest_xg_miss.empty:
         highxg_marker = 'o' if highest_xg_miss['header_tag'].iloc[0]==1 else 'h'
         ax['pitch'].scatter(highest_xg_miss['y'].iloc[0], highest_xg_miss['x'].iloc[0], 
                            marker=highxg_marker, s=200, c=node_cmap(1.0), edgecolors='grey', 
-                           lw=2.5, vmin=-0.04, vmax=0.5, cmap=node_cmap, zorder=3)
+                           lw=2.5, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=3)
     
     # Highlights: Menor xG convertido (color mínimo del cmap)
     if not lowest_xg_goal.empty:
         lowxg_marker = 'o' if lowest_xg_goal['header_tag'].iloc[0]==1 else 'h'
         ax['pitch'].scatter(lowest_xg_goal['y'].iloc[0], lowest_xg_goal['x'].iloc[0], 
                            marker=lowxg_marker, s=200, c=node_cmap(0.0), edgecolors='w', 
-                           lw=2.5, vmin=-0.04, vmax=0.5, cmap=node_cmap, zorder=3)
+                           lw=2.5, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=3)
     
     # Colorbar horizontal
     if 'p1' in locals():
