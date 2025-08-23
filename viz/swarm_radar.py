@@ -1,3 +1,49 @@
+"""
+FootballDecoded Swarm Radar Visualization Module
+================================================
+
+Advanced radar chart system with integrated distribution context (swarm plots).
+Creates sophisticated player comparison visualizations combining radar charts
+with statistical distribution context.
+
+Key Features:
+- Dual visualization modes: Swarm Radar (with distribution context) and Traditional Radar
+- 10-metric radar system with dynamic metric reordering for visual balance
+- Integrated swarm plots showing metric distribution across dataset
+- Advanced color alternation system for single-player analysis
+- Comprehensive statistical context with percentile positioning
+- Professional sports analytics aesthetics with FootballDecoded branding
+
+Swarm Radar System:
+- Distribution Context: Swarm plots show where each metric value sits within dataset
+- Radar Integration: Individual floating axes for each metric with custom positioning
+- Color Psychology: Alternating ring colors for single-player depth analysis
+- Mathematical Precision: Polar coordinate system with precise angular positioning
+
+Traditional Radar System:
+- Clean geometric design with percentile-based scaling
+- Ring-based alternating colors for single-player analysis  
+- Solid color comparison for dual-player mode
+- Professional concentric circle grid system
+
+Technical Implementation:
+- PyPizza integration for professional radar visualization
+- Floating axes system for swarm plot integration
+- Affine transformations for precise metric positioning
+- Advanced color management with mathematical alternation patterns
+- Temporary file management for component integration
+
+Visual Design:
+- Unified FootballDecoded design language
+- Professional sports broadcast aesthetics
+- Mathematical precision in layout and positioning
+- Brand consistency with logo and typography integration
+
+Author: Jaime Oriol
+Created: 2025 - FootballDecoded Project
+Specialization: Advanced radar charts with statistical context
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,8 +72,8 @@ except ImportError:
     from mplsoccer import Radar
     USE_SOCCERPLOTS = False
 
-# Consistente con pass_network y stats_table
-BACKGROUND_COLOR = '#313332'
+# Visual configuration consistent with FootballDecoded standards
+BACKGROUND_COLOR = '#313332'  # Professional dark theme across all modules
 
 def create_player_radar(df_data, 
                        player_1_id,
@@ -44,25 +90,71 @@ def create_player_radar(df_data,
                        show_plot=True,
                        use_swarm=True,
                        team_logos=None):
+    """
+    Create advanced radar chart visualization with optional distribution context.
     
-    # negative_metrics ya no se usa pero se mantiene por compatibilidad
+    Generates sophisticated radar charts with two distinct modes:
+    1. Swarm Radar: Integrates distribution context via swarm plots around radar
+    2. Traditional Radar: Clean geometric radar with advanced color systems
+    
+    Features:
+    - 10-metric radar system with mathematical precision
+    - Dynamic metric reordering for visual balance
+    - Single vs dual-player comparison modes
+    - Advanced color alternation for single-player depth
+    - Professional statistical visualization standards
+    - Integrated FootballDecoded branding system
+    
+    Args:
+        df_data: DataFrame with player statistics and dataset context
+        player_1_id: Primary player unique identifier
+        metrics: List of 10 statistical metric column names
+        metric_titles: List of 10 display titles for metrics
+        player_2_id: Optional secondary player for comparison
+        player_1_color: Primary player color (overridden by team_colors)
+        player_2_color: Secondary player color (overridden by team_colors)
+        team_colors: Optional team-based color scheme [primary, secondary] per player
+        radar_title: Visualization title (unused but kept for compatibility)
+        radar_description: Description text (unused but kept for compatibility)
+        negative_metrics: Legacy parameter (unused but kept for compatibility)
+        save_path: Output file path for saved visualization
+        show_plot: Whether to display the plot
+        use_swarm: True for Swarm Radar, False for Traditional Radar
+        team_logos: Team logo integration (unused but kept for compatibility)
+        
+    Returns:
+        None (saves visualization to specified path)
+        
+    Raises:
+        ValueError: If metrics count != 10 or metric_titles count != 10
+        
+    Note:
+        Requires exactly 10 metrics for proper radar geometry
+        Swarm mode requires seaborn for distribution visualization
+        Uses temporary files for component integration in swarm mode
+    """
+    
+    # Legacy parameter maintained for backward compatibility
     if negative_metrics is None:
         negative_metrics = []
     
+    # Validate radar geometry requirements
     if len(metrics) != 10 or len(metric_titles) != 10:
         raise ValueError("Must provide exactly 10 metrics and 10 titles")
     
-    # Unified color system - team_colors priority
+    # Unified color system with team_colors taking priority
     if team_colors is None:
-        colors = [player_1_color, player_2_color]
+        colors = [player_1_color, player_2_color]  # Fallback to individual colors
     else:
-        colors = team_colors
+        colors = team_colors  # Use team-based color scheme
     
+    # Extract player data from dataset
     player_1_data = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]
     player_2_data = None
     if player_2_id:
         player_2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
     
+    # Route to appropriate visualization mode
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                            colors, save_path, show_plot)
@@ -72,6 +164,30 @@ def create_player_radar(df_data,
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                        colors, save_path, show_plot):
+    """
+    Create advanced swarm radar with integrated distribution context.
+    
+    Combines traditional radar visualization with swarm plots showing
+    statistical distribution context for each metric. Uses sophisticated
+    floating axes system for precise positioning.
+    
+    Technical Implementation:
+    - Individual swarm plots for each metric positioned around radar
+    - Floating axes with affine transformations for precise positioning
+    - Dynamic metric reordering (first metric + reversed remainder)
+    - Integrated PyPizza radar with swarm distribution context
+    - Temporary file management for component integration
+    
+    Args:
+        df_data: Complete dataset for distribution context
+        player_1_data: Primary player statistics
+        player_2_data: Optional secondary player statistics
+        metrics: List of metric column names
+        metric_titles: List of display titles
+        colors: Color scheme for players
+        save_path: Output file path
+        show_plot: Display flag
+    """
     
     comparison_df = df_data[['unique_player_id'] + metrics].copy()
     
@@ -96,7 +212,8 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     fig = plt.figure(constrained_layout=False, figsize=(9, 11), facecolor=BACKGROUND_COLOR)
     
     theta = np.linspace(0, 2*np.pi, 100)
-    # Mantener la posición original del radar (no subirlo)
+    # RADAR BASE: Central polar axis for background circles and radial lines
+    # Position maintained for alignment with swarm distribution plots
     radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1.2)
     for r in [0.3425, 0.5150, 0.6875, 0.86]:
@@ -165,7 +282,8 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_ax.set_rmax(1)
     
-    # Mantener la posición original del pizza
+    # PIZZA RADAR: PyPizza integration axis for statistical radar overlay
+    # Positioned to align with swarm plots and maintain visual balance
     pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
@@ -200,11 +318,11 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_object.make_pizza(**kwargs)
     
-    # Footer con jerarquía consistente con pass_network y stats_table
+    # UNIFIED FOOTER: Consistent FootballDecoded branding hierarchy
     fig.text(0.87, 0.115, "Football Decoded", ha="center", fontsize=14, color="white", 
-             weight='bold', family='serif')  # Como en pass_network
+             weight='bold', family='serif')  # Primary brand position
     fig.text(0.1, 0.115, "Created by Jaime Oriol", ha="center", fontsize=10, color="white", 
-             weight='bold', family='serif')  # Como en pass_network
+             weight='bold', family='serif')  # Creator attribution position
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
@@ -219,6 +337,38 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                              colors, save_path, show_plot):
+    """
+    Create traditional geometric radar chart with advanced color systems.
+    
+    Generates clean geometric radar visualization with sophisticated
+    color management for single vs dual-player scenarios.
+    
+    Single Player Mode:
+    - Ring-based alternating color pattern for visual depth
+    - Mathematical color alternation starting with secondary color
+    - Comprehensive value labeling on concentric circles
+    
+    Dual Player Mode:
+    - Solid color overlay system for clear comparison
+    - Clean geometric polygons with team-based colors
+    - Professional sports analytics presentation
+    
+    Technical Implementation:
+    - Percentile-based range calculation (1st-99th percentile)
+    - 8 concentric circles with mathematical spacing
+    - Precise angular positioning for 10-metric system
+    - Advanced polygon clipping for ring-based coloring
+    
+    Args:
+        df_data: Complete dataset for range calculation
+        player_1_data: Primary player statistics
+        player_2_data: Optional secondary player statistics
+        metrics: List of metric column names
+        metric_titles: List of display titles
+        colors: Color scheme for players
+        save_path: Output file path
+        show_plot: Display flag
+    """
     
     # Usar la misma lógica de ordenamiento que el swarm radar
     reordered_metrics = [metrics[0]] + list(reversed(metrics[1:]))
@@ -401,11 +551,11 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         y_coords_2 = [v[1] for v in vertices_2_closed]
         ax.plot(x_coords_2, y_coords_2, color=colors[1], linewidth=3, zorder=3)
     
-    # Footer con jerarquía consistente
+    # UNIFIED FOOTER: Consistent brand positioning across modules
     ax.text(18, -21.5, "Football Decoded", ha='center', fontsize=14, color='white', 
-            weight='bold', family='serif')  # Posición derecha como pass_network
+            weight='bold', family='serif')  # Primary brand - right position
     ax.text(-18, -21.5, "Created by Jaime Oriol", ha='center', fontsize=10, color='white', 
-            weight='bold', family='serif')  # Posición izquierda como pass_network
+            weight='bold', family='serif')  # Creator attribution - left position
     
     ax.axis('off')
     

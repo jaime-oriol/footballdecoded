@@ -1,5 +1,45 @@
 # shot_map_report.py
 
+"""
+FootballDecoded Shot Map Report Visualization Module
+====================================================
+
+Comprehensive shot analysis visualization system for dual-team comparison.
+Creates professional shot maps with integrated statistics and xG analysis.
+
+Key Features:
+- Dual-pitch shot comparison (side-by-side teams)
+- Comprehensive shot marker system (foot, header, set-piece)
+- Result-based styling (goal, saved, missed/blocked)
+- xG color coding with unified colormap
+- Advanced legend system with shot type classification
+- Statistical integration with match context
+- Special case highlighting (low xG goals, high xG misses)
+
+Shot Classification System:
+- Marker Types: Hexagon (foot), Circle (header), Square (set-piece)
+- Result Styling: Goals (white outline + double border), Saves (grey outline), Misses (dark grey, reduced opacity)
+- Special Cases: Low xG goals (lime secondary border), High xG misses (crimson outline)
+- xG Color Mapping: 0.0-1.0 scale using unified node colormap
+
+Technical Implementation:
+- Half-pitch visualization for goal-focused analysis
+- Coordinate transformation (Opta to matplotlib)
+- Player initials extraction and positioning
+- Statistical calculation and formatting
+- Logo integration and metadata display
+
+Visual Design:
+- Consistent with FootballDecoded design language
+- Professional sports broadcast aesthetics
+- Clear statistical hierarchy and data visualization
+- Comprehensive legend for shot interpretation
+
+Author: Jaime Oriol
+Created: 2025 - FootballDecoded Project
+Coordinate System: Half-pitch Opta (attacking direction)
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl

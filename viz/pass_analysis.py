@@ -1,3 +1,33 @@
+"""
+FootballDecoded Pass Analysis Visualization Module
+==================================================
+
+Specialized visualization module for pass flow and spatial analysis. Creates two main visualizations:
+1. Pass Flow Analysis - Inter-zone pass frequency and patterns
+2. Pass Hull Analysis - Player positioning and spatial distribution
+
+Key Features:
+- Custom 19-zone system (jdp_custom) for tactical analysis
+- Inter-zone pass flow visualization with dynamic coloring
+- Convex hull generation for player positioning analysis
+- Color alternation system for visual clarity
+- Unified visual design with FootballDecoded branding
+
+Coordinate Systems:
+- Opta coordinates (0-100 x 0-100) for data processing
+- Custom coordinate transformations for visualization
+- Zone-based analysis using percentage-based boundaries
+
+Visual Design:
+- Consistent background color (#313332)
+- Team-specific color schemes
+- Logo integration and match metadata display
+- Professional sports visualization standards
+
+Author: Jaime Oriol
+Created: 2025 - FootballDecoded Project
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,16 +41,38 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-# Configuración visual global
-BACKGROUND_COLOR = '#313332'
-PITCH_COLOR = '#313332'
+# Global visual configuration - unified with other FootballDecoded modules
+BACKGROUND_COLOR = '#313332'  # Dark background for professional appearance
+PITCH_COLOR = '#313332'       # Matching pitch color for seamless integration
 
 # ====================================================================
 # UTILIDADES COMUNES
 # ====================================================================
 
 def get_zone_jdp_custom(x, y):
-    """Sistema de zonas jdp_custom (19 zonas)."""
+    """
+    Custom 19-zone tactical classification system.
+    
+    Divides the field into 19 tactical zones based on penalty box boundaries
+    and strategic field areas. More granular than standard 18-zone systems.
+    
+    Zone Layout:
+    - Penalty boxes: Zones 0-2 (defensive), 16-18 (attacking)
+    - Central areas: Zones 3-15 with varying tactical importance
+    - Width divisions based on box_y_ratio (21.1%)
+    - Length divisions based on box_x_ratio (17%)
+    
+    Args:
+        x: Horizontal coordinate (0-100, Opta system)
+        y: Vertical coordinate (0-100, Opta system)
+        
+    Returns:
+        Zone ID (0-18) or np.nan for invalid coordinates
+        
+    Note:
+        Uses penalty box ratios for realistic tactical boundaries
+        Zone numbering follows strategic importance patterns
+    """
     if pd.isna(x) or pd.isna(y):
         return np.nan
     
@@ -144,7 +196,37 @@ def format_player_initials(full_name):
 
 def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFFFFF'], 
                   away_colors=['#004D98', '#A50044'], home_logo_path=None, away_logo_path=None, save_path=None):
-    """Visualización de flujo de pases con colores de equipo."""
+    """
+    Create pass flow visualization showing inter-zone pass patterns.
+    
+    Generates dual-pitch visualization showing the most frequent pass
+    connections between tactical zones for both teams. Uses dynamic
+    coloring based on pass frequency and team colors.
+    
+    Features:
+    - 19-zone tactical system for granular analysis
+    - Most frequent inter-zone connections only
+    - Dynamic line thickness based on pass frequency
+    - Team-specific color schemes with intensity scaling
+    - Integrated team logos and match metadata
+    
+    Args:
+        events_csv_path: Path to match_events.csv file
+        info_csv_path: Path to match_info.csv file
+        home_colors: [primary, secondary] colors for home team
+        away_colors: [primary, secondary] colors for away team
+        home_logo_path: Optional path to home team logo
+        away_logo_path: Optional path to away team logo
+        save_path: Optional path to save the visualization
+        
+    Returns:
+        matplotlib Figure object or None if no valid data
+        
+    Note:
+        Filters out self-passes (same zone connections)
+        Uses comet-style arrows for directional flow indication
+        Color intensity scales with pass frequency (max 15 passes)
+    """
     # Cargar datos
     events_df = pd.read_csv(events_csv_path)
     info_df = pd.read_csv(info_csv_path)
@@ -354,7 +436,36 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
 # ====================================================================
 
 def calculate_player_hull(player_events, min_events=5):
-    """Calcula convex hull para un jugador usando percentiles 25%-75% (50% central)."""
+    """
+    Calculate convex hull for player's central positioning area.
+    
+    Uses percentile filtering to focus on the central 50% of player
+    positions, providing a more representative view of typical positioning
+    rather than being distorted by extreme outlier positions.
+    
+    Process:
+    1. Filter to valid coordinate pairs
+    2. Calculate 25th and 75th percentiles for X and Y
+    3. Keep only positions within central 50% range
+    4. Generate convex hull from filtered positions
+    5. Calculate geometric properties
+    
+    Args:
+        player_events: DataFrame with player's events
+        min_events: Minimum events required for hull calculation
+        
+    Returns:
+        Dictionary with hull data or None if insufficient data
+        
+    Fields returned:
+        - hull_points: Array of hull vertex coordinates
+        - area: Hull area coverage
+        - centroid_x/y: Hull geometric center
+        
+    Note:
+        Falls back to all positions if filtering leaves <3 points
+        Area calculation uses scipy.spatial.ConvexHull volume property
+    """
     if len(player_events) < min_events:
         return None
     
@@ -398,23 +509,51 @@ def calculate_player_hull(player_events, min_events=5):
         return None
 
 def assign_colors_by_proximity(all_player_hulls, team_colors):
-    """Asigna colores alternando para jugadores cercanos."""
-    # Crear matriz de distancias entre jugadores del mismo equipo
+    """
+    Assign colors to player hulls using proximity-based alternation.
+    
+    Implements intelligent color assignment to maximize visual distinction
+    between nearby players. Uses breadth-first search from central players
+    to ensure optimal color distribution.
+    
+    Algorithm:
+    1. Calculate distance matrix between all player centroids
+    2. Find most central player (closest to field center)
+    3. Use BFS to assign alternating colors to nearby players
+    4. Prioritize color balance within proximity threshold (30 units)
+    5. Fall back to global balance for isolated players
+    
+    Args:
+        all_player_hulls: List of hull dictionaries with team_idx
+        team_colors: List of [primary, secondary] colors per team
+        
+    Modifies:
+        Adds 'color' field to each hull dictionary in-place
+        
+    Note:
+        Processes each team separately to maintain team color schemes
+        Distance threshold of 30 units defines "nearby" players
+        Uses Euclidean distance in Opta coordinate system
+    """
+    # Process each team separately for color assignment
     for team_idx, team in enumerate(['home', 'away']):
+        # Filter to current team's hulls
         team_hulls = [h for h in all_player_hulls if h['team_idx'] == team_idx]
         
         if not team_hulls:
-            continue
+            continue  # Skip if no hulls for this team
             
-        # Calcular distancias entre centroides
+        # Calculate distance matrix between player centroids
         n_players = len(team_hulls)
-        distances = np.zeros((n_players, n_players))
+        distances = np.zeros((n_players, n_players))  # Symmetric distance matrix
         
+        # Populate distance matrix with Euclidean distances
         for i in range(n_players):
             for j in range(i+1, n_players):
+                # Calculate Euclidean distance between centroids
                 dist = np.sqrt((team_hulls[i]['centroid_x'] - team_hulls[j]['centroid_x'])**2 + 
                              (team_hulls[i]['centroid_y'] - team_hulls[j]['centroid_y'])**2)
-                distances[i, j] = distances[j, i] = dist
+                distances[i, j] = distances[j, i] = dist  # Symmetric assignment
         
         # Asignar colores empezando por el jugador más central
         colors_assigned = [-1] * n_players
@@ -480,7 +619,38 @@ def assign_colors_by_proximity(all_player_hulls, team_colors):
 def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path, 
                   home_colors=['#E23237', '#FFFFFF'], away_colors=['#004D98', '#A50044'],
                   home_logo_path=None, away_logo_path=None, save_path=None):
-    """Visualización de hulls de jugadores con colores de equipo."""
+    """
+    Create player positioning visualization using convex hulls.
+    
+    Generates dual-pitch visualization showing the central 50% of each
+    player's pass positions as convex hulls. Uses intelligent color
+    assignment to avoid visual confusion between nearby players.
+    
+    Features:
+    - Convex hulls for central 50% of pass positions
+    - Intelligent color alternation for visual clarity
+    - Player ranking by hull area coverage
+    - Proximity-based color assignment algorithm
+    - Team logos and comprehensive metadata display
+    
+    Args:
+        events_csv_path: Path to match_events.csv file
+        info_csv_path: Path to match_info.csv file  
+        aggregates_csv_path: Path to match_aggregates.csv file
+        home_colors: [primary, secondary] colors for home team
+        away_colors: [primary, secondary] colors for away team
+        home_logo_path: Optional path to home team logo
+        away_logo_path: Optional path to away team logo
+        save_path: Optional path to save the visualization
+        
+    Returns:
+        matplotlib Figure object or None if no valid data
+        
+    Note:
+        Requires minimum 5 events per player for hull calculation
+        Uses percentile filtering (25%-75%) for representative positioning
+        Rankings show top 3 players by area coverage per team
+    """
     # Cargar datos
     events_df = pd.read_csv(events_csv_path)
     info_df = pd.read_csv(info_csv_path)

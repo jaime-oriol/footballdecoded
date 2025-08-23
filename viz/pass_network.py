@@ -1,3 +1,37 @@
+"""
+FootballDecoded Pass Network Visualization Module
+=================================================
+
+Advanced pass network visualization system for tactical analysis. Creates sophisticated
+network diagrams showing player connections, positioning, and passing relationships.
+
+Key Features:
+- Dual-team pass network visualization with side-by-side comparison
+- Node sizing based on pass completion volume
+- Connection strength visualization with gradient transparency
+- xThreat-based color coding for pass value assessment  
+- Geometric arrow positioning to avoid node overlap
+- Player name formatting with particle handling
+- Comprehensive legend system with visual scaling guides
+
+Technical Implementation:
+- Advanced coordinate geometry for connection positioning
+- LineCollection with alpha gradients for visual depth
+- Regular grid interpolator for smooth xThreat calculation
+- Dynamic node radius calculation for overlap prevention
+- Multi-level legend system (thickness, color, size, value)
+
+Visual Design:
+- Unified colormap system across FootballDecoded modules
+- Professional sports visualization aesthetics
+- Team logo integration and match metadata display
+- Comprehensive scaling legends for data interpretation
+
+Author: Jaime Oriol
+Created: 2025 - FootballDecoded Project  
+Coordinate System: Opta (0-100) with vertical pitch orientation
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +51,31 @@ BACKGROUND_COLOR = '#313332'
 PITCH_COLOR = '#313332'
 
 def calculate_node_size(total_passes: int, max_passes: int, threshold: int = 20) -> float:
-    """Calcula tamaño del nodo basado en pases completados (5-30 puntos)."""
+    """
+    Calculate node size based on completed passes with logarithmic scaling.
+    
+    Uses adaptive scaling to ensure visual distinction between players
+    while maintaining readability. Prevents oversized nodes while
+    emphasizing high-volume passers.
+    
+    Scaling Logic:
+    - Minimum size: 5 points (low activity players)
+    - Maximum size: 30 points (high activity players)  
+    - Linear scaling between 5-100 completed passes
+    - Threshold cutoff prevents extreme node sizes
+    
+    Args:
+        total_passes: Player's completed pass count
+        max_passes: Maximum passes by any player (unused, kept for compatibility)
+        threshold: Minimum passes for size calculation (unused)
+        
+    Returns:
+        Node size in points (5.0 to 30.0)
+        
+    Note:
+        Size calculation is independent of team maximum for consistent scaling
+        Linear interpolation provides intuitive size-to-activity relationship
+    """
     min_size = 5
     max_size = 30
     
@@ -164,7 +222,8 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     info_df = pd.read_csv(info_csv_path)
     aggregates_df = pd.read_csv(aggregates_csv_path)
     
-    # AÑADIDO: Cargar events para cálculo correcto de xT per pass
+    # CORRECTED: Load events data for accurate xThreat per pass calculation
+    # This fixes the xThreat calculation that was using aggregated data
     events_csv_path = os.path.join(os.path.dirname(network_csv_path), 'match_events.csv')
     events_df = pd.read_csv(events_csv_path)
     
@@ -252,13 +311,15 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                 
             num_passes = int(player_data.iloc[0]['passes_completed'])
             
-            # CORREGIDO: Cálculo correcto de xT per pass usando match_events.csv
+            # CORRECTED: Accurate xThreat per pass using raw match events
+            # Previous calculation used aggregated data which was less precise
             player_passes = events_df[
                 (events_df['player'] == player_name) & 
                 (events_df['event_type'] == 'Pass') &
                 (events_df['outcome_type'] == 'Successful')
             ]
             
+            # Calculate true xThreat per pass from individual pass events
             xthreat_per_pass = player_passes['xthreat_gen'].sum() / max(1, len(player_passes))
             
             marker_size = calculate_node_size(num_passes, max_passes_team)

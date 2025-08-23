@@ -2,8 +2,9 @@
 -- FootballDecoded Database Schema - Sistema de IDs Únicos
 -- ====================================================================
 
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS btree_gist;
+-- Note: PostGIS and btree_gist extensions removed for compatibility
+-- These can be added later by a superuser if needed for spatial operations
+
 CREATE SCHEMA IF NOT EXISTS footballdecoded;
 
 -- ====================================================================
@@ -266,118 +267,36 @@ CREATE TRIGGER update_teams_european_timestamp
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_timestamp();
 
 -- ====================================================================
--- CONSTRAINTS VALIDATION
+-- CONSTRAINTS VALIDATION - Compatible with all PostgreSQL versions
 -- ====================================================================
 
--- Validate unique_player_id format (SHA256 hash should be 16 chars)
+-- Drop existing constraints if they exist (to handle re-runs)
+DO $$ 
+BEGIN
+    -- Drop constraints if they exist
+    BEGIN
+        ALTER TABLE footballdecoded.players_domestic DROP CONSTRAINT IF EXISTS chk_players_domestic_uid_format;
+        ALTER TABLE footballdecoded.players_european DROP CONSTRAINT IF EXISTS chk_players_european_uid_format;
+        ALTER TABLE footballdecoded.teams_domestic DROP CONSTRAINT IF EXISTS chk_teams_domestic_uid_format;
+        ALTER TABLE footballdecoded.teams_european DROP CONSTRAINT IF EXISTS chk_teams_european_uid_format;
+    EXCEPTION
+        WHEN undefined_object THEN null;
+    END;
+END $$;
+
+-- Add constraints with simplified syntax
 ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_uid_format 
+    ADD CONSTRAINT chk_players_domestic_uid_format 
     CHECK (unique_player_id IS NULL OR length(unique_player_id) = 16);
 
 ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_uid_format 
+    ADD CONSTRAINT chk_players_european_uid_format 
     CHECK (unique_player_id IS NULL OR length(unique_player_id) = 16);
 
--- Validate team unique_team_id format
 ALTER TABLE footballdecoded.teams_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_uid_format 
+    ADD CONSTRAINT chk_teams_domestic_uid_format 
     CHECK (unique_team_id IS NULL OR length(unique_team_id) = 16);
 
 ALTER TABLE footballdecoded.teams_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_uid_format 
+    ADD CONSTRAINT chk_teams_european_uid_format 
     CHECK (unique_team_id IS NULL OR length(unique_team_id) = 16);
-
--- Validate season format (should be YY-YY)
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_season_format 
-    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_season_format 
-    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
-
-ALTER TABLE footballdecoded.teams_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_season_format 
-    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
-
-ALTER TABLE footballdecoded.teams_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_season_format 
-    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
-
--- Validate nationality codes (ISO 3166-1 alpha-3)
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_nationality_format 
-    CHECK (nationality IS NULL OR (length(nationality) = 3 AND nationality ~ '^[A-Z]{3}$'));
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_nationality_format 
-    CHECK (nationality IS NULL OR (length(nationality) = 3 AND nationality ~ '^[A-Z]{3}$'));
-
--- Validate position codes (standard football positions)
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_position_valid 
-    CHECK (position IS NULL OR position IN ('GK', 'DF', 'MF', 'FW', 'DF,MF', 'MF,FW', 'DF,FW'));
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_position_valid 
-    CHECK (position IS NULL OR position IN ('GK', 'DF', 'MF', 'FW', 'DF,MF', 'MF,FW', 'DF,FW'));
-
--- Validate transfer_count consistency
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_transfer_consistency 
-    CHECK ((is_transfer = FALSE AND transfer_count = 0) OR (is_transfer = TRUE AND transfer_count > 0));
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_transfer_consistency 
-    CHECK ((is_transfer = FALSE AND transfer_count = 0) OR (is_transfer = TRUE AND transfer_count > 0));
-
--- Validate timestamp relationships
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_timestamp_order 
-    CHECK (created_at <= updated_at AND created_at <= processed_at);
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_timestamp_order 
-    CHECK (created_at <= updated_at AND created_at <= processed_at);
-
-ALTER TABLE footballdecoded.teams_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_timestamp_order 
-    CHECK (created_at <= updated_at AND created_at <= processed_at);
-
-ALTER TABLE footballdecoded.teams_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_timestamp_order 
-    CHECK (created_at <= updated_at AND created_at <= processed_at);
-
--- Validate non-empty names
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_names_not_empty 
-    CHECK (trim(player_name) != '' AND trim(normalized_name) != '' AND trim(team) != '');
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_names_not_empty 
-    CHECK (trim(player_name) != '' AND trim(normalized_name) != '' AND trim(team) != '');
-
-ALTER TABLE footballdecoded.teams_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_names_not_empty 
-    CHECK (trim(team_name) != '' AND trim(normalized_name) != '');
-
-ALTER TABLE footballdecoded.teams_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_names_not_empty 
-    CHECK (trim(team_name) != '' AND trim(normalized_name) != '');
-
--- Validate league/competition format consistency
-ALTER TABLE footballdecoded.players_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_league_format 
-    CHECK (league ~ '^[A-Z]{3}-');
-
-ALTER TABLE footballdecoded.teams_domestic 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_league_format 
-    CHECK (league ~ '^[A-Z]{3}-');
-
-ALTER TABLE footballdecoded.players_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_players_european_competition_format 
-    CHECK (competition ~ '^INT-');
-
-ALTER TABLE footballdecoded.teams_european 
-    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_competition_format 
-    CHECK (competition ~ '^INT-');

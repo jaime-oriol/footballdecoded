@@ -81,8 +81,8 @@ LOAD_CONFIG = {
     'massive_league_delay_minutes': 45,
     'massive_progress_save_interval': 50,
     'massive_connection_timeout_hours': 12,
-    'block_pause_min': 30,
-    'block_pause_max': 60,
+    'block_pause_min': 10,
+    'block_pause_max': 20,
     'progress_bar_width': 40,
     'line_width': 80,
     # Nuevas configuraciones de paralelismo y checkpoints
@@ -975,7 +975,7 @@ def main():
             comp_choice = int(input(f"\nSelect competition (1-{len(all_competitions)}): ").strip())
             if 1 <= comp_choice <= len(all_competitions):
                 selected_competition, _ = all_competitions[comp_choice - 1]
-                season = input("Enter season (e.g., 2024-25): ").strip()
+                season = input("Enter season (e.g., 24-25): ").strip()
                 
                 if season:
                     load_complete_competition(selected_competition, season)
@@ -987,7 +987,7 @@ def main():
             print("Invalid input")
     
     elif choice == "2":
-        season = input("Enter season for Block 1 load (e.g., 2024-25): ").strip()
+        season = input("Enter season for Block 1 load (e.g., 24-25): ").strip()
         if season:
             print(f"\nBLOCK 1 LOAD CONFIGURATION")
             print("═" * 50)
@@ -1005,7 +1005,7 @@ def main():
             confirm = input(f"Proceed with Block 1 load? (y/N): ").strip().lower()
             if confirm == 'y':
                 print(f"\nStarting Block 1 load for {season}...")
-                print("IMPORTANT: Random pauses between leagues (30-60 min)")
+                print("IMPORTANT: Random pauses between leagues (10-20 min)")
                 print()
                 
                 load_competition_block(BLOCK_1_COMPETITIONS, "Block 1", season)
@@ -1015,7 +1015,7 @@ def main():
             print("Invalid season format")
     
     elif choice == "3":
-        season = input("Enter season for Block 2 load (e.g., 2024-25): ").strip()
+        season = input("Enter season for Block 2 load (e.g., 24-25): ").strip()
         if season:
             print(f"\nBLOCK 2 LOAD CONFIGURATION")
             print("═" * 50)
@@ -1033,7 +1033,7 @@ def main():
             confirm = input(f"Proceed with Block 2 load? (y/N): ").strip().lower()
             if confirm == 'y':
                 print(f"\nStarting Block 2 load for {season}...")
-                print("IMPORTANT: Random pauses between leagues (30-60 min)")
+                print("IMPORTANT: Random pauses between leagues (10-20 min)")
                 print()
                 
                 load_competition_block(BLOCK_2_COMPETITIONS, "Block 2", season)

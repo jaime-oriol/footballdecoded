@@ -1,4 +1,35 @@
 #!/usr/bin/env python3
+"""
+FootballDecoded Match Data Processing Module
+===========================================
+
+Core module for comprehensive match event processing and enrichment. This module:
+1. Extracts and merges data from multiple sources (WhoScored, Understat)
+2. Enriches events with advanced metrics (xThreat, carries, progressive actions)
+3. Generates 5 optimized CSV files for visualization consumption
+4. Performs spatial analysis including convex hulls and zone classification
+
+The module follows the FootballDecoded pipeline:
+Extraction → Enrichment → Spatial Analysis → CSV Generation
+
+Key Features:
+- xThreat calculation using interpolated grid system
+- Carry detection with take-on tracking
+- Progressive action identification using FIFA criteria
+- 18-zone field classification system
+- Convex hull generation for team spatial analysis
+
+Output CSVs:
+1. match_events.csv - All enriched events
+2. player_network.csv - Pass connections and positions
+3. match_aggregates.csv - Player/team/zone statistics 
+4. spatial_analysis.csv - Spatial metrics and hull data
+5. match_info.csv - Match metadata and timeline
+
+Author: Jaime Oriol
+Created: 2025 - FootballDecoded Project
+Coordinate System: Opta (0-100 x 0-100)
+"""
 
 import pandas as pd
 import numpy as np
@@ -10,12 +41,20 @@ from scipy.interpolate import interp2d, RegularGridInterpolator
 from scipy.spatial import ConvexHull, Delaunay
 from shapely.geometry.polygon import Polygon
 
+# Add project root to path for wrapper imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (whoscored_extract_match_events, whoscored_extract_pass_network,
                      understat_extract_shot_events)
 from scrappers import Understat
 
-# xThreat grid
+# ====================================================================
+# xTHREAT GRID CONFIGURATION
+# ====================================================================
+
+# Pre-calculated xThreat grid (8x12) based on expected threat model
+# Values represent probability of scoring from each field position
+# Higher values = closer to goal, more threatening positions
+# Grid covers full field: rows = y-axis (0-100), cols = x-axis (0-100)
 XT_GRID = np.array([
     [0.00483, 0.00637, 0.00844, 0.01174, 0.01988, 0.02474, 0.03257, 0.03438, 0.02313, 0.01847, 0.01399, 0.00857],
     [0.00701, 0.00979, 0.01311, 0.01858, 0.02993, 0.04155, 0.05201, 0.05514, 0.04194, 0.02928, 0.02156, 0.01371],
@@ -27,34 +66,70 @@ XT_GRID = np.array([
     [0.08795, 0.11808, 0.17804, 0.26294, 0.37277, 0.5022, 0.68894, 0.81764, 0.5481, 0.39934, 0.29327, 0.18853]
 ])
 
+# ====================================================================
+# MAIN EXTRACTION FUNCTION
+# ====================================================================
+
 def extract_match_complete(ws_id: int, us_id: int, league: str, season: str,
                           home_team: str, away_team: str, match_date: str) -> Dict[str, pd.DataFrame]:
+    """
+    Complete match data extraction and processing pipeline.
+    
+    Orchestrates the full data processing workflow:
+    1. Extract raw data from WhoScored and Understat
+    2. Apply comprehensive event enrichment pipeline
+    3. Generate spatial analysis (convex hulls)
+    4. Export 5 optimized CSV files for visualization
+    
+    Args:
+        ws_id: WhoScored match ID
+        us_id: Understat match ID  
+        league: League identifier (e.g., 'ESP-La Liga')
+        season: Season format 'YY-YY' (e.g., '23-24')
+        home_team: Home team name
+        away_team: Away team name
+        match_date: Match date string
+        
+    Returns:
+        Dictionary with processing status and event count
+        
+    Note:
+        Generates CSV files in ./data/ directory:
+        - match_events.csv: All enriched events
+        - player_network.csv: Pass connections and positions  
+        - match_aggregates.csv: Statistical aggregations
+        - spatial_analysis.csv: Spatial metrics and hulls
+        - match_info.csv: Match metadata and timeline
+    """
     print(f"\nExtracting: {home_team} vs {away_team} ({match_date})")
     print("-" * 50)
     
+    # Extract raw data from both sources
     ws_data = _get_whoscored_data(ws_id, league, season)
     us_data = _get_understat_data(us_id, league, season)
     
+    # Get base events from WhoScored
     events = ws_data.get('events', pd.DataFrame())
     if events.empty:
         return {}
     
-    # PIPELINE COMPLETO DE ENRIQUECIMIENTO
-    events = _add_carries(events)
-    events = _add_xthreat(events)
-    events = _add_pre_assists(events)
-    events = _add_possession_chains(events)
-    events = _add_progressive_actions(events)
-    events = _add_box_entries(events)
-    events = _add_pass_outcomes(events)
-    events = _add_action_classifications(events)
-    events = _add_zone_classification(events)
-    events = _merge_shot_xg(events, us_data.get('shots', pd.DataFrame()))
+    # COMPLETE ENRICHMENT PIPELINE
+    # Each function adds new calculated fields while preserving existing data
+    events = _add_carries(events)                    # Ball carrying detection
+    events = _add_xthreat(events)                    # Expected threat calculation
+    events = _add_pre_assists(events)               # Pre-assist identification  
+    events = _add_possession_chains(events)         # Possession sequence tracking
+    events = _add_progressive_actions(events)       # Progressive pass/carry detection
+    events = _add_box_entries(events)              # Penalty box entry detection
+    events = _add_pass_outcomes(events)            # Pass outcome classification
+    events = _add_action_classifications(events)    # Offensive/defensive tagging
+    events = _add_zone_classification(events)       # 18-zone field classification
+    events = _merge_shot_xg(events, us_data.get('shots', pd.DataFrame()))  # xG integration
     
-    # Generate convex hulls for spatial analysis
+    # Generate spatial analysis data (team positioning)
     hull_data = _generate_team_hulls(events, home_team, away_team)
     
-    # Generate 5 validation CSVs as per plan
+    # Export optimized CSV files for visualization consumption
     _generate_validation_csvs(events, hull_data, home_team, away_team, match_date, league, season)
     
     # Summary
@@ -66,7 +141,27 @@ def extract_match_complete(ws_id: int, us_id: int, league: str, season: str,
     
     return {'status': 'complete', 'events_count': len(events)}
 
+# ====================================================================
+# DATA EXTRACTION FUNCTIONS
+# ====================================================================
+
 def _get_whoscored_data(match_id: int, league: str, season: str) -> Dict:
+    """
+    Extract match events from WhoScored.
+    
+    WhoScored provides comprehensive event data including:
+    - Ball actions with x,y coordinates (Opta system 0-100)
+    - Pass outcomes and player information
+    - Event timing and sequence data
+    
+    Args:
+        match_id: WhoScored match identifier
+        league: League code for URL construction
+        season: Season identifier
+        
+    Returns:
+        Dictionary with 'events' key containing DataFrame, or empty dict on failure
+    """
     try:
         events = whoscored_extract_match_events(match_id, league, season, verbose=False)
         if events.empty:
@@ -77,6 +172,22 @@ def _get_whoscored_data(match_id: int, league: str, season: str) -> Dict:
         return {}
 
 def _get_understat_data(match_id: int, league: str, season: str) -> Dict:
+    """
+    Extract shot data with xG values from Understat.
+    
+    Understat provides advanced shot metrics including:
+    - Expected Goals (xG) for each shot
+    - Shot coordinates and context
+    - Player and team mappings
+    
+    Args:
+        match_id: Understat match identifier
+        league: League identifier
+        season: Season identifier
+        
+    Returns:
+        Dictionary with 'shots' key containing xG-enhanced DataFrame
+    """
     try:
         understat = Understat(leagues=[league], seasons=[season])
         
@@ -100,20 +211,50 @@ def _get_understat_data(match_id: int, league: str, season: str) -> Dict:
     except Exception:
         return {}
 
+# ====================================================================
+# EVENT ENRICHMENT FUNCTIONS
+# ====================================================================
+
 def _add_carries(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced carry detection with take-on tracking"""
+    """
+    Detect ball carries between events and track successful take-ons.
+    
+    A carry is detected when:
+    1. Same team maintains possession between consecutive events
+    2. Time gap is 1-10 seconds
+    3. Distance moved is 3-60 units (Opta coordinates)
+    4. No intervening team change or failed actions
+    
+    Enhanced features:
+    - Counts successful take-ons during carry sequence
+    - Filters out failed challenges and fouls
+    - Creates new carry events with start/end coordinates
+    
+    Args:
+        events: DataFrame with match events
+        
+    Returns:
+        Enhanced DataFrame with carry events added
+        
+    Note:
+        Carry events get synthetic event_ids (original + 0.5)
+        Take-on count stored in 'take_ons_in_carry' field
+    """
+    # Sort events chronologically for sequence analysis
     events = events.sort_values(['minute', 'second']).reset_index(drop=True)
     carries = []
     
+    # Analyze each event pair for potential carries
     for idx in range(len(events) - 1):
         curr = events.iloc[idx]
         next_idx = idx + 1
-        take_ons = 0
+        take_ons = 0  # Counter for successful take-ons in sequence
         
+        # Look ahead for potential carry endpoint
         while next_idx < len(events):
             next_evt = events.iloc[next_idx]
             
-            # Count successful take-ons in sequence
+            # Count successful take-ons in sequence (part of carry)
             if (next_evt['team'] == curr['team'] and 
                 next_evt['event_type'] == 'TakeOn' and 
                 next_evt['outcome_type'] == 'Successful'):
@@ -121,47 +262,76 @@ def _add_carries(events: pd.DataFrame) -> pd.DataFrame:
                 next_idx += 1
                 continue
             
-            # Skip failed take-ons and fouls
+            # Skip failed take-ons and fouls (don't break carry sequence)
             if next_evt['event_type'] in ['TakeOn', 'Challenge', 'Foul']:
                 next_idx += 1
                 continue
                 
+            # End carry if possession changes teams
             if next_evt['team'] != curr['team']:
                 break
                 
+            # Check time constraints (1-10 second window)
             dt = (next_evt['minute'] - curr['minute']) * 60 + (next_evt.get('second', 0) - curr.get('second', 0))
             if dt < 1 or dt > 10:
                 break
                 
+            # Calculate movement distance (Euclidean in Opta coordinates)
             dx = abs(next_evt['x'] - curr.get('end_x', curr['x']))
             dy = abs(next_evt['y'] - curr.get('end_y', curr['y']))
             distance = np.sqrt(dx**2 + dy**2)
             
+            # Valid carry detected (reasonable distance threshold)
             if 3 <= distance <= 60:
                 carry = curr.copy()
-                carry['event_id'] = curr.get('event_id', idx) + 0.5
+                carry['event_id'] = curr.get('event_id', idx) + 0.5  # Synthetic ID
                 carry['type'] = 'Carry'
                 carry['event_type'] = 'Carry'
                 carry['outcome_type'] = 'Successful'
-                carry['x'] = curr.get('end_x', curr['x'])
+                carry['x'] = curr.get('end_x', curr['x'])          # Carry start position
                 carry['y'] = curr.get('end_y', curr['y'])
-                carry['end_x'] = next_evt['x']
+                carry['end_x'] = next_evt['x']                    # Carry end position
                 carry['end_y'] = next_evt['y']
-                carry['minute'] = (curr['minute'] + next_evt['minute']) / 2
+                carry['minute'] = (curr['minute'] + next_evt['minute']) / 2    # Average timing
                 carry['second'] = (curr.get('second', 0) + next_evt.get('second', 0)) / 2
-                carry['take_ons_in_carry'] = take_ons
+                carry['take_ons_in_carry'] = take_ons            # Enhanced metric
                 carries.append(carry)
             break
     
+    # Integrate detected carries into main event stream
     if carries:
         carries_df = pd.DataFrame(carries)
         events = pd.concat([events, carries_df], ignore_index=True)
-        events = events.sort_values(['minute', 'second']).reset_index(drop=True)
+        events = events.sort_values(['minute', 'second']).reset_index(drop=True)  # Re-sort chronologically
     
     return events
 
 def _add_xthreat(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced xThreat with interpolation"""
+    """
+    Calculate Expected Threat (xThreat) for ball-moving actions.
+    
+    xThreat measures the change in scoring probability from ball movement.
+    Uses interpolated grid to get precise values for any field position.
+    
+    Process:
+    1. Filter to successful passes and carries
+    2. Create interpolation function from pre-calculated grid
+    3. Calculate threat difference: end_position - start_position
+    4. Store both total change and positive generation only
+    
+    Args:
+        events: DataFrame with match events
+        
+    Returns:
+        DataFrame with added fields:
+        - xthreat: Net threat change (can be negative)
+        - xthreat_gen: Positive threat generation only
+        
+    Note:
+        Uses RegularGridInterpolator for smooth threat surface
+        Grid represents 8x12 zones covering full Opta field (0-100)
+    """
+    # Filter to ball-moving actions that change field position
     move_events = events[events['event_type'].isin(['Pass', 'Carry']) & 
                         (events['outcome_type'] == 'Successful')]
     
@@ -170,52 +340,80 @@ def _add_xthreat(events: pd.DataFrame) -> pd.DataFrame:
         events['xthreat_gen'] = 0.0
         return events
     
-    # Create interpolator
-    x = np.linspace(0, 100, 12)
-    y = np.linspace(0, 100, 8)
+    # Create smooth interpolation function from threat grid
+    x = np.linspace(0, 100, 12)  # X-axis discretization (12 zones)
+    y = np.linspace(0, 100, 8)   # Y-axis discretization (8 zones)
     f = RegularGridInterpolator((y, x), XT_GRID, method='linear', 
-                               bounds_error=False, fill_value=0)
+                               bounds_error=False, fill_value=0)  # Handle edge cases
     
+    # Initialize threat fields
     events['xthreat'] = 0.0
     events['xthreat_gen'] = 0.0
     
+    # Calculate threat change for each ball movement
     for idx in move_events.index:
-        x1, y1 = events.loc[idx, 'x'], events.loc[idx, 'y']
-        x2, y2 = events.loc[idx, 'end_x'], events.loc[idx, 'end_y']
+        x1, y1 = events.loc[idx, 'x'], events.loc[idx, 'y']          # Start position
+        x2, y2 = events.loc[idx, 'end_x'], events.loc[idx, 'end_y']  # End position
         
         if pd.notna(x1) and pd.notna(y1) and pd.notna(x2) and pd.notna(y2):
-            xt_start = float(f([y1, x1]))
+            # Get interpolated threat values for start and end positions
+            xt_start = float(f([y1, x1]))  # Note: y,x order for interpolator
             xt_end = float(f([y2, x2]))
-            xt_diff = xt_end - xt_start
+            xt_diff = xt_end - xt_start    # Net threat change
             
-            events.loc[idx, 'xthreat'] = xt_diff
-            events.loc[idx, 'xthreat_gen'] = max(0, xt_diff)
+            events.loc[idx, 'xthreat'] = xt_diff              # Can be negative (regression)
+            events.loc[idx, 'xthreat_gen'] = max(0, xt_diff)  # Only positive generation
     
     return events
 
 def _add_pre_assists(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced pre-assist detection"""
+    """
+    Identify pre-assists (passes to the player who makes the assist).
+    
+    A pre-assist is the pass immediately before an assist within the same:
+    - Team possession
+    - Period of play
+    - Tactical sequence
+    
+    Algorithm:
+    1. Find all assist events
+    2. For each assist, scan backwards chronologically
+    3. Find the pass that reached the assisting player
+    4. Mark that pass as a pre-assist
+    
+    Args:
+        events: DataFrame with match events
+        
+    Returns:
+        DataFrame with added 'is_pre_assist' boolean field
+        
+    Note:
+        Requires existing assist identification in the data
+        Looks for 'is_assist' field or similar markers
+    """
+    # Initialize pre-assist tracking
     events['is_pre_assist'] = False
     
-    # Find assists first
+    # Find all assist events as anchor points
     assist_events = events[events.get('is_assist', False) == True]
     
+    # Scan each assist for the preceding pass
     for idx, assist_event in assist_events.iterrows():
-        assister = assist_event['player']
+        assister = assist_event['player']       # Player who made the assist
         team = assist_event['team']
         period = assist_event.get('period', 'FirstHalf')
         
-        # Look backwards for the pass to the assister
+        # Scan backwards chronologically to find pre-assist
         scan_idx = idx - 1
         while scan_idx >= 0:
             prev_event = events.iloc[scan_idx]
             
-            # Same period and team
+            # Stop if we've left the same period or team
             if (prev_event.get('period', 'FirstHalf') != period or 
                 prev_event['team'] != team):
                 break
                 
-            # Check if this event led to the assister
+            # Found the pass that reached the assister
             if (prev_event['event_type'] == 'Pass' and 
                 prev_event['outcome_type'] == 'Successful' and
                 prev_event.get('next_player') == assister):
@@ -227,22 +425,50 @@ def _add_pre_assists(events: pd.DataFrame) -> pd.DataFrame:
     return events
 
 def _add_possession_chains(events: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced possession chain detection"""
+    """
+    Track possession chains and assign unique IDs to sequences.
+    
+    A possession chain is a sequence of events by the same team
+    interrupted by:
+    - Team change (loss of possession)
+    - Period change (half-time, etc.)
+    - Significant time gap
+    
+    Each possession gets:
+    - Unique sequential ID
+    - Team ownership
+    - Duration tracking
+    
+    Args:
+        events: DataFrame with match events
+        
+    Returns:
+        DataFrame with added fields:
+        - possession_id: Sequential possession identifier
+        - possession_team: Team controlling possession
+        
+    Note:
+        Possession ID increments on every team/period change
+        Useful for tactical analysis and flow visualization
+    """
+    # Initialize possession tracking fields
     events['possession_id'] = 0
     events['possession_team'] = None
     
     possession_id = 1
     current_team = None
     
+    # Process events chronologically
     for idx in range(len(events)):
         event = events.iloc[idx]
         
-        # New possession on team change or period change
+        # Start new possession on team change or period change
         if (event['team'] != current_team or 
             (idx > 0 and events.iloc[idx-1].get('period') != event.get('period'))):
             possession_id += 1
             current_team = event['team']
             
+        # Tag event with current possession info
         events.loc[idx, 'possession_id'] = possession_id
         events.loc[idx, 'possession_team'] = current_team
     
@@ -716,7 +942,22 @@ def _build_match_aggregates_optimized(events: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(all_data)
 
 def _build_spatial_analysis_optimized(events: pd.DataFrame, hull_data: pd.DataFrame) -> pd.DataFrame:
-    """Optimized spatial analysis with processable coordinates"""
+    """
+    Build spatial analysis data for territorial and positioning visualization.
+    
+    Creates four types of spatial analysis:
+    1. Convex Hulls: Team spatial footprint and compactness
+    2. Pressure Maps: Zone-based activity intensity (18 zones)
+    3. Territorial Control: Field third possession analysis
+    4. Flow Patterns: Pass direction and progression analysis
+    
+    Args:
+        events: Complete events DataFrame
+        hull_data: Team convex hull data
+        
+    Returns:
+        DataFrame with spatial analysis records by analysis_type
+    """
     spatial_data = []
     
     # 1. CONVEX HULLS - with JSON coordinates for easy visualization
@@ -858,7 +1099,27 @@ def _build_spatial_analysis_optimized(events: pd.DataFrame, hull_data: pd.DataFr
 
 def _build_match_info_optimized(events: pd.DataFrame, home_team: str, away_team: str, 
                                match_date: str, league: str, season: str) -> pd.DataFrame:
-    """Optimized match info for perfect context and metadata viz"""
+    """
+    Build match metadata and contextual information for visualization.
+    
+    Creates five information categories:
+    1. Match Metadata: Basic match information
+    2. Team Statistics: Performance comparisons
+    3. Player Participation: Lineup and activity data
+    4. Match Timeline: Key events chronologically
+    5. Data Quality: Validation and completeness metrics
+    
+    Args:
+        events: Complete events DataFrame
+        home_team: Home team name
+        away_team: Away team name
+        match_date: Match date string
+        league: League identifier
+        season: Season identifier
+        
+    Returns:
+        DataFrame with contextual data organized by info_category
+    """
     info_data = []
     
     # 1. BASIC MATCH METADATA

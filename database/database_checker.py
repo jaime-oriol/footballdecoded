@@ -319,8 +319,9 @@ def calculate_health_score(verbose: bool = True) -> int:
                 status = "CRITICAL"
                 color = "\033[91m"  # Red
             
-            print(f"├─ Health Score: {color}{score}/100{'\033[0m'}")
-            print(f"└─ Status: {color}{status}{'\033[0m'}")
+            reset_color = '\033[0m'
+            print(f"├─ Health Score: {color}{score}/100{reset_color}")
+            print(f"└─ Status: {color}{status}{reset_color}")
         
         print_footer()
         db.close()
