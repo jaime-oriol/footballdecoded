@@ -2,7 +2,7 @@
 
 ## Core Philosophy
 
-**Paso a paso, 1 a 1. Lento es el camino más rápido.**
+**Ve paso a paso, uno a uno. Despacio es el camino más rápido. Escribe siempre el código lo más compacto y conciso posible, y que cumpla exactamente lo pedido al 100%. Sin emojis ni florituras. Usa nombres claros y estándar. No introduzcas funcionalidades nuevas. Incluye solo comentarios útiles y necesarios.**
 
 ### Development Principles
 
