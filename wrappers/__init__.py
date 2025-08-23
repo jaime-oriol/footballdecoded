@@ -21,6 +21,12 @@ from .fbref_data import (
     extract_league_schedule as fbref_extract_league_schedule,
     export_to_csv as fbref_export_to_csv,
     
+    # Input validation functions
+    validate_inputs_with_suggestions as fbref_validate_inputs,
+    
+    # Cache management
+    clear_cache as fbref_clear_cache,
+    
     # Quick access functions
     get_player as fbref_get_player,
     get_team as fbref_get_team,
@@ -42,6 +48,14 @@ from .understat_data import (
     extract_shot_events as understat_extract_shot_events,
     merge_with_fbref as understat_merge_with_fbref,
     export_to_csv as understat_export_to_csv,
+    
+    # New automatic ID retrieval functions
+    get_match_ids as understat_get_match_ids,
+    search_player_id as understat_search_player_id,
+    search_team_id as understat_search_team_id,
+    
+    # Cache management
+    clear_cache as understat_clear_cache,
     
     # Quick access functions
     get_player as understat_get_player,
@@ -66,6 +80,14 @@ from .whoscored_data import (
     # Schedule and context functions
     extract_league_schedule as whoscored_extract_league_schedule,
     extract_missing_players as whoscored_extract_missing_players,
+    
+    # New automatic ID retrieval functions
+    get_match_ids as whoscored_get_match_ids,
+    search_player_id as whoscored_search_player_id,
+    search_team_id as whoscored_search_team_id,
+    
+    # Cache management
+    clear_cache as whoscored_clear_cache,
     
     # Export utilities
     export_to_csv as whoscored_export_to_csv,
@@ -93,6 +115,8 @@ __all__ = [
     "fbref_extract_match_events",
     "fbref_extract_league_schedule",
     "fbref_export_to_csv",
+    "fbref_validate_inputs",
+    "fbref_clear_cache",
     "fbref_get_player",
     "fbref_get_team",
     "fbref_get_players",
@@ -107,6 +131,10 @@ __all__ = [
     "understat_extract_shot_events",
     "understat_merge_with_fbref",
     "understat_export_to_csv",
+    "understat_get_match_ids",
+    "understat_search_player_id",
+    "understat_search_team_id",
+    "understat_clear_cache",
     "understat_get_player",
     "understat_get_team",
     "understat_get_players",
@@ -121,6 +149,10 @@ __all__ = [
     "whoscored_extract_field_occupation",
     "whoscored_extract_league_schedule",
     "whoscored_extract_missing_players",
+    "whoscored_get_match_ids",
+    "whoscored_search_player_id",
+    "whoscored_search_team_id",
+    "whoscored_clear_cache",
     "whoscored_export_to_csv",
     "whoscored_get_match_events",
     "whoscored_get_match_events_viz",

@@ -1,6 +1,43 @@
 # ====================================================================
 # FootballDecoded - WhoScored Optimized Spatial Data Extractor
 # ====================================================================
+"""
+WhoScored Wrapper especializado en datos espaciales y eventos de partido:
+
+DATOS ÚNICOS DE WHOSCORED (imposibles de obtener en FBref/Understat):
+- Coordenadas x,y EXACTAS de todos los eventos del partido
+- Qualifiers detallados: longball, cross, through ball, etc.
+- Redes de pases con posiciones promedio de jugadores
+- Mapas de calor de jugadores por zonas tácticas
+- Análisis de ocupación del campo por equipos
+- Secuencias de posesión con conexiones jugador-jugador
+
+ANÁLISIS ESPACIALES AVANZADOS:
+- extract_match_events(): TODOS los eventos con coordenadas
+- extract_pass_network(): Red completa de pases con posiciones
+- extract_player_heatmap(): Mapa de calor individual por zonas
+- extract_shot_map(): Mapa de disparos con ubicaciones exactas
+- extract_field_occupation(): Análisis de ocupación por zonas
+
+CARACTERÍSTICAS TÉCNICAS:
+- Sistema de caché optimizado para datos espaciales complejos
+- Procesamiento de eventos JavaScript en tiempo real
+- Clasificación automática de zonas tácticas del campo
+- Validación específica para match IDs de WhoScored
+- Exportación optimizada para herramientas de visualización
+
+USO TÍPICO:
+    from wrappers import whoscored_data
+    
+    # Todos los eventos espaciales de un partido
+    events = whoscored_data.get_match_events(1234567, "ESP-La Liga", "23-24")
+    
+    # Red de pases de un equipo
+    network = whoscored_data.get_pass_network(1234567, "Barcelona", "ESP-La Liga", "23-24")
+    
+    # Mapa de calor de jugador específico
+    heatmap = whoscored_data.get_player_heatmap(1234567, "Messi", "ESP-La Liga", "23-24")
+"""
 
 import sys
 import os
@@ -8,13 +45,144 @@ import pandas as pd
 import numpy as np
 import warnings
 import ast
+import pickle
+import hashlib
 from typing import Dict, List, Optional, Union
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import WhoScored
 
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# ====================================================================
+# INPUT VALIDATION SYSTEM
+# ====================================================================
+
+def _validate_match_inputs(match_id: int, league: str, season: str) -> bool:
+    """Validar entradas específicas de WhoScored."""
+    # Validar match_id
+    if not isinstance(match_id, int) or match_id <= 0:
+        raise ValueError("match_id must be a positive integer")
+    
+    # Validar league
+    if not league or not isinstance(league, str):
+        raise ValueError("league must be a non-empty string")
+    
+    # Validar season format (YY-YY)
+    if not season or not isinstance(season, str):
+        raise ValueError("season must be a string")
+    
+    season_parts = season.split('-')
+    if len(season_parts) != 2:
+        raise ValueError(f"season must be in YY-YY format, got '{season}'")
+    
+    try:
+        year1, year2 = int(season_parts[0]), int(season_parts[1])
+        if not (0 <= year1 <= 99 and 0 <= year2 <= 99):
+            raise ValueError(f"season years must be 00-99, got '{season}'")
+        if year2 != (year1 + 1) % 100:
+            raise ValueError(f"season must be consecutive years, got '{season}'")
+    except ValueError as e:
+        if "invalid literal" in str(e):
+            raise ValueError(f"season must contain valid numbers, got '{season}'")
+        raise
+    
+    return True
+
+def validate_match_inputs_with_suggestions(match_id: int, league: str, season: str) -> Dict[str, Any]:
+    """Validar entradas de match con sugerencias."""
+    result = {'valid': True, 'errors': [], 'suggestions': []}
+    
+    try:
+        _validate_match_inputs(match_id, league, season)
+    except ValueError as e:
+        result['valid'] = False
+        result['errors'].append(str(e))
+        
+        if 'match_id' in str(e):
+            result['suggestions'].append("Use a positive integer for match_id (e.g., 1234567)")
+        if 'season' in str(e) and 'format' in str(e):
+            result['suggestions'].append("Use season format like '23-24', '22-23', etc.")
+        if 'league' in str(e):
+            result['suggestions'].append("Valid leagues: ESP-La Liga, ENG-Premier League, etc.")
+    
+    return result
+
+# ====================================================================
+# INTELLIGENT CACHE SYSTEM
+# ====================================================================
+
+CACHE_DIR = Path.home() / ".footballdecoded_cache" / "whoscored"
+CACHE_EXPIRY_HOURS = 24
+
+def _ensure_cache_dir():
+    """Crear directorio de caché si no existe."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def _generate_cache_key(match_id: int, league: str, season: str, **kwargs) -> str:
+    """Generar clave única para cache."""
+    cache_data = f"{match_id}:{league}:{season}:{str(sorted(kwargs.items()))}"
+    return hashlib.md5(cache_data.encode()).hexdigest()
+
+def _get_cache_path(cache_key: str) -> Path:
+    """Obtener ruta completa del archivo de cache."""
+    return CACHE_DIR / f"{cache_key}.pkl"
+
+def _is_cache_valid(cache_path: Path) -> bool:
+    """Verificar si el cache es válido."""
+    if not cache_path.exists():
+        return False
+    
+    file_time = datetime.fromtimestamp(cache_path.stat().st_mtime)
+    expiry_time = datetime.now() - timedelta(hours=CACHE_EXPIRY_HOURS)
+    return file_time > expiry_time
+
+def _save_to_cache(data: Union[Dict, pd.DataFrame], cache_key: str):
+    """Guardar datos en cache."""
+    try:
+        _ensure_cache_dir()
+        cache_path = _get_cache_path(cache_key)
+        
+        cache_data = {
+            'data': data,
+            'timestamp': datetime.now(),
+            'cache_key': cache_key
+        }
+        
+        with open(cache_path, 'wb') as f:
+            pickle.dump(cache_data, f)
+            
+    except Exception as e:
+        print(f"Warning: Could not save to cache: {e}")
+
+def _load_from_cache(cache_key: str) -> Optional[Union[Dict, pd.DataFrame]]:
+    """Cargar datos del cache si existen y son válidos."""
+    try:
+        cache_path = _get_cache_path(cache_key)
+        
+        if not _is_cache_valid(cache_path):
+            return None
+            
+        with open(cache_path, 'rb') as f:
+            cache_data = pickle.load(f)
+            
+        return cache_data.get('data')
+        
+    except Exception as e:
+        print(f"Warning: Could not load from cache: {e}")
+        return None
+
+def clear_cache():
+    """Limpiar todo el cache de WhoScored."""
+    try:
+        if CACHE_DIR.exists():
+            for cache_file in CACHE_DIR.glob("*.pkl"):
+                cache_file.unlink()
+            print("WhoScored cache cleared successfully")
+    except Exception as e:
+        print(f"Error clearing cache: {e}")
 
 # ====================================================================
 # CORE ENGINE - SPATIAL EVENTS EXTRACTION
@@ -28,10 +196,11 @@ def extract_match_events(
     player_filter: Optional[str] = None,
     team_filter: Optional[str] = None,
     for_viz: bool = False,
-    verbose: bool = False
+    verbose: bool = False,
+    use_cache: bool = True
 ) -> pd.DataFrame:
     """
-    Extract ALL match events with complete spatial coordinates.
+    Extract ALL match events with complete spatial coordinates with cache.
     
     Core function - gets EVERYTHING FBref doesn't provide:
     - All events with x/y coordinates (start + end positions)
@@ -47,10 +216,38 @@ def extract_match_events(
         team_filter: Optional team name filter
         for_viz: If True, optimize for visualization tools
         verbose: Show extraction progress
+        use_cache: Usar sistema de cache (default: True)
         
     Returns:
         DataFrame with ALL spatial events and tactical context
     """
+    # Validar entradas
+    try:
+        _validate_match_inputs(match_id, league, season)
+    except ValueError as e:
+        print(f"WhoScored input validation failed: {e}")
+        validation_result = validate_match_inputs_with_suggestions(match_id, league, season)
+        if validation_result['suggestions']:
+            print("Suggestions:")
+            for suggestion in validation_result['suggestions']:
+                print(f"  - {suggestion}")
+        return pd.DataFrame()
+    
+    # Generar clave de cache
+    cache_key = _generate_cache_key(
+        match_id, league, season,
+        event_filter=event_filter, player_filter=player_filter,
+        team_filter=team_filter, for_viz=for_viz
+    )
+    
+    # Intentar cargar desde cache
+    if use_cache:
+        cached_data = _load_from_cache(cache_key)
+        if cached_data is not None:
+            if verbose:
+                print(f"Loading match {match_id} events from cache")
+            return cached_data
+    
     if verbose:
         print(f"Extracting spatial data from match {match_id}")
     
@@ -80,6 +277,10 @@ def extract_match_events(
             
             print(f"SUCCESS: {total_events} spatial events with coordinates")
             print(f"Players: {unique_players} | Event types: {event_types}")
+        
+        # Guardar en cache si está habilitado
+        if use_cache and not filtered_events.empty:
+            _save_to_cache(filtered_events, cache_key)
         
         return filtered_events
         
@@ -858,6 +1059,156 @@ def export_to_csv(
         print(f"Rows: {len(df)} | Columns: {len(df.columns)}")
         
         return full_filename
+
+
+# ====================================================================
+# AUTOMATIC ID RETRIEVAL FUNCTIONS
+# ====================================================================
+
+def get_match_ids(league: str, season: str, team_filter: Optional[str] = None) -> pd.DataFrame:
+    """
+    Extraer automáticamente IDs de partidos de WhoScored para una liga y temporada.
+    
+    Args:
+        league: Código de liga (e.g., 'ESP-La Liga', 'ENG-Premier League')
+        season: Temporada en formato YY-YY (e.g., '23-24')
+        team_filter: Filtro opcional por nombre de equipo
+        
+    Returns:
+        DataFrame con columnas: match_id, home_team, away_team, date
+        
+    Raises:
+        ValueError: Si la liga o temporada no son válidas
+        ConnectionError: Si falla la conexión con WhoScored
+    """
+    try:
+        from ..scrappers.whoscored import WhoScoredReader
+        
+        scraper = WhoScoredReader(league=league, season=season)
+        schedule_data = scraper.read_schedule()
+        
+        if schedule_data.empty:
+            print(f"No matches found for {league} {season}")
+            return pd.DataFrame()
+        
+        # Extraer match_ids y información básica
+        match_info = []
+        for _, match in schedule_data.iterrows():
+            if 'match_id' in match and pd.notna(match['match_id']):
+                match_info.append({
+                    'match_id': int(match['match_id']),
+                    'home_team': match.get('home_team', 'Unknown'),
+                    'away_team': match.get('away_team', 'Unknown'),
+                    'date': match.get('date', 'Unknown'),
+                    'league': league,
+                    'season': season
+                })
+        
+        result_df = pd.DataFrame(match_info)
+        
+        # Aplicar filtro de equipo si se especifica
+        if team_filter and not result_df.empty:
+            mask = (
+                result_df['home_team'].str.contains(team_filter, case=False, na=False, regex=False) |
+                result_df['away_team'].str.contains(team_filter, case=False, na=False, regex=False)
+            )
+            result_df = result_df[mask]
+        
+        print(f"Found {len(result_df)} matches for {league} {season}")
+        if team_filter:
+            print(f"Filtered by team: {team_filter}")
+            
+        return result_df.sort_values('date').reset_index(drop=True)
+        
+    except ImportError as e:
+        raise ConnectionError(f"Cannot import WhoScored scraper: {e}")
+    except Exception as e:
+        raise ConnectionError(f"Error retrieving match IDs from WhoScored: {e}")
+
+
+def search_player_id(player_name: str, match_id: int, league: str, season: str) -> Optional[Dict[str, Any]]:
+    """
+    Buscar automáticamente información de jugador en eventos de partido de WhoScored.
+    
+    Args:
+        player_name: Nombre del jugador a buscar
+        match_id: ID del partido donde buscar
+        league: Código de liga
+        season: Temporada en formato YY-YY
+        
+    Returns:
+        Dict con información del jugador encontrado, o None si no se encuentra
+    """
+    try:
+        # Extraer eventos del partido
+        match_events = extract_match_events(match_id, league, season, verbose=False)
+        
+        if match_events.empty:
+            return None
+        
+        # Buscar jugador en los eventos
+        player_events = match_events[
+            match_events['player'].str.contains(player_name, case=False, na=False, regex=False)
+        ]
+        
+        if not player_events.empty:
+            first_event = player_events.iloc[0]
+            return {
+                'player_name': first_event['player'],
+                'team': first_event['team'],
+                'match_id': match_id,
+                'league': league,
+                'season': season,
+                'found': True,
+                'total_events': len(player_events),
+                'whoscored_data_available': True
+            }
+        
+        return None
+        
+    except Exception as e:
+        print(f"Error searching for player {player_name}: {e}")
+        return None
+
+
+def search_team_id(team_name: str, league: str, season: str) -> Optional[Dict[str, Any]]:
+    """
+    Buscar automáticamente información de equipo en WhoScored schedule.
+    
+    Args:
+        team_name: Nombre del equipo a buscar
+        league: Código de liga
+        season: Temporada en formato YY-YY
+        
+    Returns:
+        Dict con información del equipo encontrado, o None si no se encuentra
+    """
+    try:
+        # Usar get_match_ids para obtener el schedule
+        schedule_data = get_match_ids(league, season, team_filter=team_name)
+        
+        if not schedule_data.empty:
+            # Obtener información del primer partido encontrado
+            first_match = schedule_data.iloc[0]
+            
+            # Determinar si es equipo local o visitante
+            is_home = team_name.lower() in first_match['home_team'].lower()
+            actual_team_name = first_match['home_team'] if is_home else first_match['away_team']
+            
+            return {
+                'team_name': actual_team_name,
+                'league': league,
+                'season': season,
+                'found': True,
+                'total_matches': len(schedule_data),
+                'whoscored_data_available': True
+            }
+        
+        return None
+        
+    except Exception as e:
+        print(f"Error searching for team {team_name}: {e}")
+        return None
 
 
 # ====================================================================

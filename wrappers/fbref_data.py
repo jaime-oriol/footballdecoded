@@ -1,18 +1,236 @@
 # ====================================================================
 # FootballDecoded - FBref Optimized Data Extractor
 # ====================================================================
+"""
+FBref Wrapper con funcionalidades avanzadas optimizadas:
+
+CARACTERÍSTICAS PRINCIPALES:
+- Sistema de caché inteligente con expiración automática
+- Procesamiento paralelo para extracciones múltiples 
+- Validación robusta de entradas con sugerencias
+- Barras de progreso para operaciones largas
+- Búsqueda automática de IDs de jugadores/equipos
+- Integración optimizada con Understat
+
+FUNCIONES PRINCIPALES:
+- extract_data(): Extracción unificada de stats FBref
+- extract_multiple(): Procesamiento paralelo de múltiples entidades
+- get_player()/get_team(): Acceso rápido con caché
+- get_players()/get_teams(): Procesamiento paralelo múltiple
+- clear_cache(): Limpieza de caché local
+
+USO TÍPICO:
+    from wrappers import fbref_data
+    
+    # Extracción individual con caché
+    player = fbref_data.get_player("Lionel Messi", "ESP-La Liga", "23-24")
+    
+    # Extracción múltiple con progreso
+    players = fbref_data.get_players(
+        ["Messi", "Benzema", "Lewandowski"], 
+        "ESP-La Liga", "23-24", show_progress=True
+    )
+"""
 
 import sys
 import os
 import pandas as pd
 import warnings
+import pickle
+import hashlib
+import time
 from typing import Dict, List, Optional, Union
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Try to import tqdm for progress bars, fallback to dummy if not available
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+    def tqdm(iterable, **kwargs):
+        return iterable
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import FBref
 
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# ====================================================================
+# INPUT VALIDATION SYSTEM
+# ====================================================================
+
+def _validate_inputs(entity_name: str, entity_type: str, league: str, season: str) -> bool:
+    """
+    Validar entradas de manera robusta.
+    
+    Args:
+        entity_name: Nombre de entidad (jugador/equipo)
+        entity_type: Tipo de entidad ('player' o 'team')
+        league: Código de liga
+        season: Temporada en formato YY-YY
+        
+    Returns:
+        True si las entradas son válidas
+        
+    Raises:
+        ValueError: Si alguna entrada no es válida
+    """
+    # Validar entity_name
+    if not entity_name or not isinstance(entity_name, str) or entity_name.strip() == "":
+        raise ValueError("entity_name must be a non-empty string")
+    
+    # Validar entity_type
+    valid_types = ['player', 'team']
+    if entity_type not in valid_types:
+        raise ValueError(f"entity_type must be one of {valid_types}, got '{entity_type}'")
+    
+    # Validar league format
+    if not league or not isinstance(league, str):
+        raise ValueError("league must be a non-empty string")
+    
+    # Validar season format (YY-YY)
+    if not season or not isinstance(season, str):
+        raise ValueError("season must be a string")
+    
+    # Verificar formato de temporada
+    season_parts = season.split('-')
+    if len(season_parts) != 2:
+        raise ValueError(f"season must be in YY-YY format, got '{season}'")
+    
+    try:
+        year1, year2 = int(season_parts[0]), int(season_parts[1])
+        if not (0 <= year1 <= 99 and 0 <= year2 <= 99):
+            raise ValueError(f"season years must be 00-99, got '{season}'")
+        if year2 != (year1 + 1) % 100:
+            raise ValueError(f"season must be consecutive years, got '{season}'")
+    except ValueError as e:
+        if "invalid literal" in str(e):
+            raise ValueError(f"season must contain valid numbers, got '{season}'")
+        raise
+    
+    return True
+
+def _validate_league_codes() -> Dict[str, str]:
+    """Obtener códigos de liga válidos para validación."""
+    valid_leagues = {
+        'ESP-La Liga': 'Spanish La Liga',
+        'ENG-Premier League': 'English Premier League', 
+        'ITA-Serie A': 'Italian Serie A',
+        'GER-Bundesliga': 'German Bundesliga',
+        'FRA-Ligue 1': 'French Ligue 1',
+        'INT-Champions League': 'Champions League',
+        'INT-Europa League': 'Europa League'
+    }
+    return valid_leagues
+
+def validate_inputs_with_suggestions(entity_name: str, entity_type: str, league: str, season: str) -> Dict[str, Any]:
+    """
+    Validar entradas con sugerencias de corrección.
+    
+    Returns:
+        Dict con 'valid', 'errors', 'suggestions'
+    """
+    result = {
+        'valid': True,
+        'errors': [],
+        'suggestions': []
+    }
+    
+    try:
+        _validate_inputs(entity_name, entity_type, league, season)
+    except ValueError as e:
+        result['valid'] = False
+        result['errors'].append(str(e))
+        
+        # Sugerencias específicas
+        if 'entity_type' in str(e):
+            result['suggestions'].append("Use 'player' or 'team' for entity_type")
+        
+        if 'season' in str(e) and 'format' in str(e):
+            result['suggestions'].append("Use season format like '23-24', '22-23', etc.")
+            
+        if 'league' in str(e):
+            valid_leagues = _validate_league_codes()
+            result['suggestions'].append(f"Valid leagues: {list(valid_leagues.keys())}")
+    
+    return result
+
+# ====================================================================
+# INTELLIGENT CACHE SYSTEM
+# ====================================================================
+
+CACHE_DIR = Path.home() / ".footballdecoded_cache" / "fbref"
+CACHE_EXPIRY_HOURS = 24  # Cache válido por 24 horas
+
+def _ensure_cache_dir():
+    """Crear directorio de caché si no existe."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def _generate_cache_key(entity_name: str, entity_type: str, league: str, season: str, **kwargs) -> str:
+    """Generar clave única para cache basada en parámetros."""
+    cache_data = f"{entity_name}:{entity_type}:{league}:{season}:{str(sorted(kwargs.items()))}"
+    return hashlib.md5(cache_data.encode()).hexdigest()
+
+def _get_cache_path(cache_key: str) -> Path:
+    """Obtener ruta completa del archivo de cache."""
+    return CACHE_DIR / f"{cache_key}.pkl"
+
+def _is_cache_valid(cache_path: Path) -> bool:
+    """Verificar si el cache es válido (no expirado)."""
+    if not cache_path.exists():
+        return False
+    
+    file_time = datetime.fromtimestamp(cache_path.stat().st_mtime)
+    expiry_time = datetime.now() - timedelta(hours=CACHE_EXPIRY_HOURS)
+    return file_time > expiry_time
+
+def _save_to_cache(data: Dict, cache_key: str):
+    """Guardar datos en cache."""
+    try:
+        _ensure_cache_dir()
+        cache_path = _get_cache_path(cache_key)
+        
+        cache_data = {
+            'data': data,
+            'timestamp': datetime.now(),
+            'cache_key': cache_key
+        }
+        
+        with open(cache_path, 'wb') as f:
+            pickle.dump(cache_data, f)
+            
+    except Exception as e:
+        print(f"Warning: Could not save to cache: {e}")
+
+def _load_from_cache(cache_key: str) -> Optional[Dict]:
+    """Cargar datos del cache si existen y son válidos."""
+    try:
+        cache_path = _get_cache_path(cache_key)
+        
+        if not _is_cache_valid(cache_path):
+            return None
+            
+        with open(cache_path, 'rb') as f:
+            cache_data = pickle.load(f)
+            
+        return cache_data.get('data')
+        
+    except Exception as e:
+        print(f"Warning: Could not load from cache: {e}")
+        return None
+
+def clear_cache():
+    """Limpiar todo el cache de FBref."""
+    try:
+        if CACHE_DIR.exists():
+            for cache_file in CACHE_DIR.glob("*.pkl"):
+                cache_file.unlink()
+            print("FBref cache cleared successfully")
+    except Exception as e:
+        print(f"Error clearing cache: {e}")
 
 # ====================================================================
 # CORE ENGINE - UNIFIED EXTRACTION
@@ -24,10 +242,11 @@ def extract_data(
     league: str,
     season: str,
     match_id: Optional[str] = None,
-    include_opponent_stats: bool = False
+    include_opponent_stats: bool = False,
+    use_cache: bool = True
 ) -> Optional[Dict]:
     """
-    Motor de extracción unificado para jugadores y equipos.
+    Motor de extracción unificado para jugadores y equipos con cache inteligente.
     
     Args:
         entity_name: Nombre del jugador o equipo
@@ -36,10 +255,36 @@ def extract_data(
         season: ID de temporada
         match_id: ID de partido opcional para datos específicos del partido
         include_opponent_stats: Incluir estadísticas del oponente (solo equipos)
+        use_cache: Usar sistema de cache (default: True)
         
     Returns:
         Dict con todas las estadísticas FBref disponibles
     """
+    # Validar entradas
+    try:
+        _validate_inputs(entity_name, entity_type, league, season)
+    except ValueError as e:
+        print(f"Input validation failed: {e}")
+        validation_result = validate_inputs_with_suggestions(entity_name, entity_type, league, season)
+        if validation_result['suggestions']:
+            print("Suggestions:")
+            for suggestion in validation_result['suggestions']:
+                print(f"  - {suggestion}")
+        return None
+    
+    # Generar clave de cache
+    cache_key = _generate_cache_key(
+        entity_name, entity_type, league, season,
+        match_id=match_id, include_opponent_stats=include_opponent_stats
+    )
+    
+    # Intentar cargar desde cache si está habilitado
+    if use_cache:
+        cached_data = _load_from_cache(cache_key)
+        if cached_data:
+            print(f"Loading {entity_name} from cache")
+            return cached_data
+    
     try:
         fbref = FBref(leagues=[league], seasons=[season])
         
@@ -92,6 +337,10 @@ def extract_data(
         final_data = {**basic_info, **extracted_data}
         standardized_data = _apply_stat_mapping(final_data)
         
+        # Guardar en cache si está habilitado
+        if use_cache and standardized_data:
+            _save_to_cache(standardized_data, cache_key)
+        
         return standardized_data
         
     except Exception:
@@ -108,10 +357,13 @@ def extract_multiple(
     league: str,
     season: str,
     match_id: Optional[str] = None,
-    include_opponent_stats: bool = False
+    include_opponent_stats: bool = False,
+    max_workers: int = 3,
+    show_progress: bool = True,
+    use_cache: bool = True
 ) -> pd.DataFrame:
     """
-    Extraer múltiples entidades de manera eficiente.
+    Extraer múltiples entidades con procesamiento optimizado en paralelo.
     
     Args:
         entities: Lista de nombres de entidades
@@ -120,19 +372,63 @@ def extract_multiple(
         season: Identificador de temporada
         match_id: ID de partido opcional
         include_opponent_stats: Incluir estadísticas del oponente (solo equipos)
+        max_workers: Número máximo de hilos paralelos (default: 3)
+        show_progress: Mostrar barra de progreso (default: True)
+        use_cache: Usar sistema de cache (default: True)
         
     Returns:
         DataFrame con estadísticas de todas las entidades
     """
+    if not entities:
+        return pd.DataFrame()
+    
+    def extract_single_entity(entity_name: str) -> Optional[Dict]:
+        """Extract single entity with rate limiting."""
+        try:
+            # Add small delay between requests to respect rate limits
+            time.sleep(0.5)
+            return extract_data(
+                entity_name, entity_type, league, season, 
+                match_id, include_opponent_stats, use_cache=use_cache
+            )
+        except Exception as e:
+            if show_progress:
+                print(f"Error extracting {entity_name}: {e}")
+            return None
+    
     all_data = []
     
-    for entity_name in entities:
-        entity_data = extract_data(
-            entity_name, entity_type, league, season, match_id, include_opponent_stats
-        )
+    # Use ThreadPoolExecutor for parallel processing
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_entity = {
+            executor.submit(extract_single_entity, entity): entity 
+            for entity in entities
+        }
         
-        if entity_data:
-            all_data.append(entity_data)
+        # Process completed tasks with progress bar
+        if show_progress and TQDM_AVAILABLE:
+            futures = tqdm(as_completed(future_to_entity), total=len(entities), 
+                          desc=f"Extracting {entity_type}s")
+        else:
+            futures = as_completed(future_to_entity)
+            if show_progress:
+                print(f"Processing {len(entities)} {entity_type}s...")
+        
+        for future in futures:
+            entity_name = future_to_entity[future]
+            try:
+                entity_data = future.result()
+                if entity_data:
+                    all_data.append(entity_data)
+            except Exception as e:
+                if show_progress:
+                    print(f"Failed to extract {entity_name}: {e}")
+    
+    if show_progress:
+        success_count = len(all_data)
+        total_count = len(entities)
+        print(f"Successfully extracted {success_count}/{total_count} {entity_type}s")
     
     df = pd.DataFrame(all_data) if all_data else pd.DataFrame()
     return _standardize_dataframe(df, entity_type)
@@ -439,21 +735,21 @@ def export_to_csv(data: Union[Dict, pd.DataFrame], filename: str, include_timest
 # QUICK ACCESS FUNCTIONS - SIMPLIFIED API
 # ====================================================================
 
-def get_player(player_name: str, league: str, season: str) -> Optional[Dict]:
+def get_player(player_name: str, league: str, season: str, use_cache: bool = True) -> Optional[Dict]:
     """Extracción rápida de estadísticas de temporada de jugador."""
-    return extract_data(player_name, 'player', league, season)
+    return extract_data(player_name, 'player', league, season, use_cache=use_cache)
 
-def get_team(team_name: str, league: str, season: str) -> Optional[Dict]:
+def get_team(team_name: str, league: str, season: str, use_cache: bool = True) -> Optional[Dict]:
     """Extracción rápida de estadísticas de temporada de equipo."""
-    return extract_data(team_name, 'team', league, season)
+    return extract_data(team_name, 'team', league, season, use_cache=use_cache)
 
-def get_players(players: List[str], league: str, season: str) -> pd.DataFrame:
-    """Extracción rápida de múltiples jugadores."""
-    return extract_multiple(players, 'player', league, season)
+def get_players(players: List[str], league: str, season: str, max_workers: int = 3, show_progress: bool = True) -> pd.DataFrame:
+    """Extracción rápida de múltiples jugadores con procesamiento paralelo."""
+    return extract_multiple(players, 'player', league, season, max_workers=max_workers, show_progress=show_progress)
 
-def get_teams(teams: List[str], league: str, season: str) -> pd.DataFrame:
-    """Extracción rápida de múltiples equipos."""
-    return extract_multiple(teams, 'team', league, season)
+def get_teams(teams: List[str], league: str, season: str, max_workers: int = 3, show_progress: bool = True) -> pd.DataFrame:
+    """Extracción rápida de múltiples equipos con procesamiento paralelo."""
+    return extract_multiple(teams, 'team', league, season, max_workers=max_workers, show_progress=show_progress)
 
 def get_league_players(league: str, season: str, team: Optional[str] = None) -> pd.DataFrame:
     """Lista rápida de jugadores de liga."""
