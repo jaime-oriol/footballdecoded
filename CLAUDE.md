@@ -289,31 +289,6 @@ python database/data_loader.py
 # 7. Check status
 ```
 
-### Automation Hooks (.claude/settings.json)
-
-Configure automatic formatting and validation:
-
-```json
-{
-  "hooks": [
-    {
-      "matcher": "Edit|Write",
-      "hooks": [{
-        "type": "command",
-        "command": "poetry run black $CLAUDE_FILE_PATHS"
-      }]
-    },
-    {
-      "matcher": "Edit",
-      "hooks": [{
-        "type": "command", 
-        "command": "poetry run mypy $CLAUDE_FILE_PATHS || echo 'Type check warnings'"
-      }]
-    }
-  ]
-}
-```
-
 ## Git Workflow
 
 ### Branch Strategy
@@ -355,13 +330,7 @@ git rebase origin/main  # Preferred over merge for cleaner history
 # 4. Push to remote
 git push origin feature/add-new-visualization
 
-# 5. Create Pull Request
-# - Use PR template
-# - Link related issues
-# - Add reviewers
-# - Wait for CI checks
-
-# 6. After approval and merge
+# 5. After approval and merge
 git checkout main
 git pull origin main
 git branch -d feature/add-new-visualization  # Delete local branch
@@ -391,30 +360,6 @@ git commit -m "docs: update wrappers API documentation"
 git commit -m "refactor(viz): simplify pass network calculation"
 ```
 
-### Pull Request Guidelines
-
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Performance improvement
-
-## Testing
-- [ ] Tests pass locally
-- [ ] New tests added (if applicable)
-- [ ] Manual testing completed
-
-## Checklist
-- [ ] Code follows project style
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] No new warnings
-```
-
 ### Merge Strategy
 
 - **Squash and merge**: For feature branches with multiple small commits
@@ -424,7 +369,6 @@ Brief description of changes
 ### Protected Branch Rules
 
 Main branch protection:
-- Require pull request reviews (at least 1)
 - Dismiss stale reviews on new commits
 - Require status checks to pass
 - No direct pushes to main
@@ -445,25 +389,6 @@ claude --dangerously-skip-permissions
 /clear
 ```
 
-### GitHub Integration
-
-Install GitHub app for automated PR reviews:
-
-```bash
-/install-github-app
-```
-
-Configure concise PR reviews by creating `claude-code-review.yml`:
-
-```yaml
-# claude-code-review.yml
-direct_prompt: |
-  Please review this pull request and look for bugs and security issues. 
-  Only report on bugs and potential vulnerabilities you find. Be concise.
-```
-
-This configuration prevents verbose comments on style and naming conventions, focusing only on actual bugs and security issues.
-
 ### Best Practices
 
 **File Operations**
@@ -476,23 +401,6 @@ This configuration prevents verbose comments on style and naming conventions, fo
 - Escape to stop Claude (not Control+C)
 - Escape twice to see message history
 - Up arrow to navigate previous commands
-
-**Custom Commands**
-
-Create project-specific commands in `.claude/commands/`:
-
-```bash
-# .claude/commands/viz.md
-Create a visualization for: $ARGUMENTS
-
-Requirements:
-- Use existing viz module structure
-- Follow FootballDecoded style guide
-- Include proper type hints
-- Generate example notebook
-```
-
-Usage: `/viz pass network for Barcelona match`
 
 ### Project Context (CLAUDE.md)
 
@@ -534,13 +442,6 @@ Each record includes:
 - Process entire leagues before moving to next
 - Implement random delays between requests
 - Maximum 10 retries for failed requests
-
-### Caching Strategy
-
-- File-based caching in `~/soccerdata/data/`
-- 24-hour cache for completed seasons
-- No cache for current season data
-- Manual cache invalidation available
 
 ### Database Optimization
 

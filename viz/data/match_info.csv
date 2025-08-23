@@ -1,91 +1,97 @@
 info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
-match_metadata,match_id,Athletic Club_vs_Barcelona_2024-08-24,,,,,,,,
-match_metadata,home_team,Athletic Club,,,,,,,,
+match_metadata,match_id,Mallorca_vs_Barcelona_2025-08-16,,,,,,,,
+match_metadata,home_team,Mallorca,,,,,,,,
 match_metadata,away_team,Barcelona,,,,,,,,
-match_metadata,match_date,2024-08-24,,,,,,,,
+match_metadata,match_date,2025-08-16,,,,,,,,
 match_metadata,league,ESP-La Liga,,,,,,,,
-match_metadata,season,2024-25,,,,,,,,
-match_metadata,total_events,1810,,,,,,,,
+match_metadata,season,2025-26,,,,,,,,
+match_metadata,total_events,1601,,,,,,,,
 match_metadata,match_duration_minutes,94,,,,,,,,
-team_stats,total_events,569,Athletic Club,569.0,,,,,,
-team_stats,possession_pct,31.4,Athletic Club,31.4,,,,,,
-team_stats,passes_attempted,244,Athletic Club,244.0,,,,,,
-team_stats,passes_completed,186,Athletic Club,186.0,,,,,,
-team_stats,pass_accuracy,76.2,Athletic Club,76.2,,,,,,
-team_stats,xthreat_total,8.676,Athletic Club,8.676,,,,,,
-team_stats,progressive_actions,56,Athletic Club,56.0,,,,,,
-team_stats,box_entries,15,Athletic Club,15.0,,,,,,
-team_stats,shots,9,Athletic Club,9.0,,,,,,
-team_stats,xg_total,0.72,Athletic Club,0.72,,,,,,
-team_stats,total_events,1241,Barcelona,1241.0,,,,,,
-team_stats,possession_pct,68.6,Barcelona,68.6,,,,,,
-team_stats,passes_attempted,754,Barcelona,754.0,,,,,,
-team_stats,passes_completed,686,Barcelona,686.0,,,,,,
-team_stats,pass_accuracy,91.0,Barcelona,91.0,,,,,,
-team_stats,xthreat_total,28.762,Barcelona,28.762,,,,,,
-team_stats,progressive_actions,55,Barcelona,55.0,,,,,,
-team_stats,box_entries,8,Barcelona,8.0,,,,,,
-team_stats,shots,13,Barcelona,13.0,,,,,,
-team_stats,xg_total,3.41,Barcelona,3.41,,,,,,
-player_participation,player_activity,Unai Gómez,Athletic Club,28.0,0.0,61.0,61.0,,,
-player_participation,player_activity,Unai Simón,Athletic Club,42.0,0.0,93.0,93.0,,,
-player_participation,player_activity,Maroan Sannadi,Athletic Club,45.0,0.0,89.0,89.0,,,
-player_participation,player_activity,Óscar De Marcos,Athletic Club,54.0,0.0,88.0,88.0,,,
-player_participation,player_activity,Alex Berenguer,Athletic Club,47.0,0.0,86.0,86.0,,,
-player_participation,player_activity,Yuri Berchiche,Athletic Club,65.0,0.0,89.0,89.0,,,
-player_participation,player_activity,Nico Williams,Athletic Club,61.0,0.0,79.0,79.0,,,
-player_participation,player_activity,Mikel Jauregizar,Athletic Club,58.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Unai Núñez,Athletic Club,31.0,1.0,61.0,60.0,,,
-player_participation,player_activity,Íñigo Ruíz de Galarreta,Athletic Club,41.0,3.0,61.0,58.0,,,
-player_participation,player_activity,Aitor Paredes,Athletic Club,38.0,7.0,84.0,77.0,,,
-player_participation,player_activity,Beñat Prados,Athletic Club,24.0,61.0,86.0,25.0,,,
-player_participation,player_activity,Oihan Sancet,Athletic Club,12.0,61.0,86.0,25.0,,,
-player_participation,player_activity,Dani Vivian,Athletic Club,9.0,61.0,78.0,17.0,,,
-player_participation,player_activity,Iñaki Williams,Athletic Club,3.0,79.0,89.0,10.0,,,
-player_participation,player_activity,Íñigo Lekue,Athletic Club,3.0,88.0,89.0,1.0,,,
-player_participation,player_activity,Pau Cubarsí,Barcelona,86.0,0.0,85.0,85.0,,,
-player_participation,player_activity,Alejandro Balde,Barcelona,110.0,0.0,80.0,80.0,,,
-player_participation,player_activity,Iñaki Peña,Barcelona,80.0,0.0,89.0,89.0,,,
-player_participation,player_activity,Ronald Araújo,Barcelona,120.0,0.0,63.0,63.0,,,
-player_participation,player_activity,Pedri,Barcelona,178.0,0.0,80.0,80.0,,,
-player_participation,player_activity,Eric García,Barcelona,140.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Lamine Yamal,Barcelona,95.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Gavi,Barcelona,160.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Robert Lewandowski,Barcelona,26.0,1.0,88.0,87.0,,,
-player_participation,player_activity,Fermín López,Barcelona,91.0,2.0,86.0,84.0,,,
-player_participation,player_activity,Raphinha,Barcelona,45.0,5.0,63.0,58.0,,,
-player_participation,player_activity,Andreas Christensen,Barcelona,45.0,63.0,85.0,22.0,,,
-player_participation,player_activity,Dani Olmo,Barcelona,31.0,63.0,93.0,30.0,,,
-player_participation,player_activity,Gerard Martín,Barcelona,8.0,80.0,89.0,9.0,,,
-player_participation,player_activity,Frenkie de Jong,Barcelona,17.0,80.0,89.0,9.0,,,
-player_participation,player_activity,Pau Víctor,Barcelona,1.0,88.0,88.0,0.0,,,
-timeline,key_event,Goal - Robert Lewandowski,Barcelona,13.0,,,,Goal,13.0,FirstHalf
-timeline,key_event,Goal - Robert Lewandowski,Barcelona,17.0,,,,Goal,17.0,FirstHalf
-timeline,key_event,SubstitutionOff - Íñigo Ruíz de Galarreta,Athletic Club,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Beñat Prados,Athletic Club,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Unai Gómez,Athletic Club,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Oihan Sancet,Athletic Club,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Unai Núñez,Athletic Club,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Dani Vivian,Athletic Club,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Ronald Araújo,Barcelona,63.0,,,,SubstitutionOff,63.0,SecondHalf
-timeline,key_event,SubstitutionOn - Andreas Christensen,Barcelona,63.0,,,,SubstitutionOn,63.0,SecondHalf
-timeline,key_event,SubstitutionOff - Raphinha,Barcelona,63.0,,,,SubstitutionOff,63.0,SecondHalf
-timeline,key_event,SubstitutionOn - Dani Olmo,Barcelona,63.0,,,,SubstitutionOn,63.0,SecondHalf
-timeline,key_event,Card - Yuri Berchiche,Athletic Club,74.0,,,,Card,74.0,SecondHalf
-timeline,key_event,SubstitutionOff - Nico Williams,Athletic Club,79.0,,,,SubstitutionOff,79.0,SecondHalf
-timeline,key_event,SubstitutionOn - Iñaki Williams,Athletic Club,79.0,,,,SubstitutionOn,79.0,SecondHalf
-timeline,key_event,SubstitutionOff - Alejandro Balde,Barcelona,80.0,,,,SubstitutionOff,80.0,SecondHalf
-timeline,key_event,SubstitutionOn - Gerard Martín,Barcelona,80.0,,,,SubstitutionOn,80.0,SecondHalf
-timeline,key_event,SubstitutionOff - Pedri,Barcelona,80.0,,,,SubstitutionOff,80.0,SecondHalf
-timeline,key_event,SubstitutionOn - Frenkie de Jong,Barcelona,80.0,,,,SubstitutionOn,80.0,SecondHalf
-timeline,key_event,SubstitutionOff - Óscar De Marcos,Athletic Club,88.0,,,,SubstitutionOff,88.0,SecondHalf
-timeline,key_event,SubstitutionOn - Íñigo Lekue,Athletic Club,88.0,,,,SubstitutionOn,88.0,SecondHalf
-timeline,key_event,SubstitutionOff - Robert Lewandowski,Barcelona,88.0,,,,SubstitutionOff,88.0,SecondHalf
-timeline,key_event,SubstitutionOn - Pau Víctor,Barcelona,88.0,,,,SubstitutionOn,88.0,SecondHalf
-timeline,key_event,Goal - Dani Olmo,Barcelona,93.0,,,,Goal,93.0,SecondHalf
-data_quality,events_with_coordinates,1810,,1810.0,,,,,,
-data_quality,events_with_xthreat,603,,603.0,,,,,,
-data_quality,events_with_outcome,1810,,1810.0,,,,,,
-data_quality,successful_events,1551,,1551.0,,,,,,
+team_stats,total_events,539,Mallorca,539.0,,,,,,
+team_stats,possession_pct,33.7,Mallorca,33.7,,,,,,
+team_stats,passes_attempted,254,Mallorca,254.0,,,,,,
+team_stats,passes_completed,173,Mallorca,173.0,,,,,,
+team_stats,pass_accuracy,68.1,Mallorca,68.1,,,,,,
+team_stats,xthreat_total,6.188,Mallorca,6.188,,,,,,
+team_stats,progressive_actions,34,Mallorca,34.0,,,,,,
+team_stats,box_entries,7,Mallorca,7.0,,,,,,
+team_stats,shots,4,Mallorca,4.0,,,,,,
+team_stats,xg_total,0.0,Mallorca,0.0,,,,,,
+team_stats,total_events,1062,Barcelona,1062.0,,,,,,
+team_stats,possession_pct,66.3,Barcelona,66.3,,,,,,
+team_stats,passes_attempted,596,Barcelona,596.0,,,,,,
+team_stats,passes_completed,525,Barcelona,525.0,,,,,,
+team_stats,pass_accuracy,88.1,Barcelona,88.1,,,,,,
+team_stats,xthreat_total,27.111,Barcelona,27.111,,,,,,
+team_stats,progressive_actions,79,Barcelona,79.0,,,,,,
+team_stats,box_entries,27,Barcelona,27.0,,,,,,
+team_stats,shots,24,Barcelona,24.0,,,,,,
+team_stats,xg_total,0.0,Barcelona,0.0,,,,,,
+player_participation,player_activity,Sergi Darder,Mallorca,34.0,0.0,82.0,82.0,,,
+player_participation,player_activity,Manu Morlanes,Mallorca,34.0,0.0,32.0,32.0,,,
+player_participation,player_activity,Antonio Raíllo,Mallorca,51.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Johan Mojica,Mallorca,67.0,0.0,90.0,90.0,,,
+player_participation,player_activity,Pablo Torre,Mallorca,26.0,0.0,49.0,49.0,,,
+player_participation,player_activity,Antonio Sánchez,Mallorca,46.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Martin Valjent,Mallorca,51.0,0.0,82.0,82.0,,,
+player_participation,player_activity,Mateu Morey,Mallorca,42.0,0.0,51.0,51.0,,,
+player_participation,player_activity,Leo Román,Mallorca,62.0,0.0,92.0,92.0,,,
+player_participation,player_activity,Vedat Muriqi,Mallorca,14.0,1.0,38.0,37.0,,,
+player_participation,player_activity,Takuma Asano,Mallorca,13.0,3.0,51.0,48.0,,,
+player_participation,player_activity,Dani Rodríguez,Mallorca,40.0,45.0,93.0,48.0,,,
+player_participation,player_activity,Omar Mascarell,Mallorca,18.0,45.0,83.0,38.0,,,
+player_participation,player_activity,Mateo Joseph,Mallorca,20.0,45.0,93.0,48.0,,,
+player_participation,player_activity,Jan Salas,Mallorca,12.0,82.0,91.0,9.0,,,
+player_participation,player_activity,Toni Lato,Mallorca,1.0,90.0,90.0,0.0,,,
+player_participation,player_activity,Eric García,Barcelona,102.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Ferran Torres,Barcelona,31.0,0.0,68.0,68.0,,,
+player_participation,player_activity,Ronald Araujo,Barcelona,89.0,0.0,88.0,88.0,,,
+player_participation,player_activity,Pau Cubarsí,Barcelona,90.0,0.0,68.0,68.0,,,
+player_participation,player_activity,Alejandro Balde,Barcelona,64.0,1.0,67.0,66.0,,,
+player_participation,player_activity,Raphinha,Barcelona,63.0,1.0,76.0,75.0,,,
+player_participation,player_activity,Joan García,Barcelona,41.0,1.0,88.0,87.0,,,
+player_participation,player_activity,Frenkie de Jong,Barcelona,122.0,1.0,93.0,92.0,,,
+player_participation,player_activity,Lamine Yamal,Barcelona,98.0,1.0,93.0,92.0,,,
+player_participation,player_activity,Pedri,Barcelona,148.0,2.0,93.0,91.0,,,
+player_participation,player_activity,Fermín López,Barcelona,43.0,3.0,48.0,45.0,,,
+player_participation,player_activity,Dani Olmo,Barcelona,51.0,45.0,93.0,48.0,,,
+player_participation,player_activity,Jofre Torrents,Barcelona,38.0,67.0,93.0,26.0,,,
+player_participation,player_activity,Gavi,Barcelona,32.0,68.0,93.0,25.0,,,
+player_participation,player_activity,Marcus Rashford,Barcelona,21.0,68.0,90.0,22.0,,,
+player_participation,player_activity,Jules Koundé,Barcelona,22.0,76.0,93.0,17.0,,,
+timeline,key_event,Goal - Raphinha,Barcelona,6.0,,,,Goal,6.0,FirstHalf
+timeline,key_event,Card - Mateu Morey,Mallorca,8.0,,,,Card,8.0,FirstHalf
+timeline,key_event,Goal - Ferran Torres,Barcelona,22.0,,,,Goal,22.0,FirstHalf
+timeline,key_event,Card - Manu Morlanes,Mallorca,23.0,,,,Card,23.0,FirstHalf
+timeline,key_event,Card - nan,Mallorca,24.0,,,,Card,24.0,FirstHalf
+timeline,key_event,Card - Manu Morlanes,Mallorca,32.0,,,,Card,32.0,FirstHalf
+timeline,key_event,Card - Vedat Muriqi,Mallorca,38.0,,,,Card,38.0,FirstHalf
+timeline,key_event,Card - Pablo Torre,Mallorca,41.0,,,,Card,41.0,FirstHalf
+timeline,key_event,SubstitutionOff - Fermín López,Barcelona,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Dani Olmo,Barcelona,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Pablo Torre,Mallorca,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Dani Rodríguez,Mallorca,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Mateu Morey,Mallorca,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Omar Mascarell,Mallorca,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Takuma Asano,Mallorca,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Mateo Joseph,Mallorca,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,Card - Raphinha,Barcelona,51.0,,,,Card,51.0,FirstHalf
+timeline,key_event,SubstitutionOff - Alejandro Balde,Barcelona,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Jofre Torrents,Barcelona,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Pau Cubarsí,Barcelona,68.0,,,,SubstitutionOff,68.0,SecondHalf
+timeline,key_event,SubstitutionOn - Gavi,Barcelona,68.0,,,,SubstitutionOn,68.0,SecondHalf
+timeline,key_event,SubstitutionOff - Ferran Torres,Barcelona,68.0,,,,SubstitutionOff,68.0,SecondHalf
+timeline,key_event,SubstitutionOn - Marcus Rashford,Barcelona,68.0,,,,SubstitutionOn,68.0,SecondHalf
+timeline,key_event,SubstitutionOff - Raphinha,Barcelona,76.0,,,,SubstitutionOff,76.0,SecondHalf
+timeline,key_event,SubstitutionOn - Jules Koundé,Barcelona,76.0,,,,SubstitutionOn,76.0,SecondHalf
+timeline,key_event,SubstitutionOff - Sergi Darder,Mallorca,82.0,,,,SubstitutionOff,82.0,SecondHalf
+timeline,key_event,SubstitutionOn - Jan Salas,Mallorca,82.0,,,,SubstitutionOn,82.0,SecondHalf
+timeline,key_event,SubstitutionOff - Johan Mojica,Mallorca,90.0,,,,SubstitutionOff,90.0,SecondHalf
+timeline,key_event,SubstitutionOn - Toni Lato,Mallorca,90.0,,,,SubstitutionOn,90.0,SecondHalf
+timeline,key_event,Goal - Lamine Yamal,Barcelona,93.0,,,,Goal,93.0,SecondHalf
+data_quality,events_with_coordinates,1601,,1601.0,,,,,,
+data_quality,events_with_xthreat,469,,469.0,,,,,,
+data_quality,events_with_outcome,1601,,1601.0,,,,,,
+data_quality,successful_events,1320,,1320.0,,,,,,
 data_quality,unique_players,32,,32.0,,,,,,
 data_quality,periods_played,4,,4.0,,,,,,
