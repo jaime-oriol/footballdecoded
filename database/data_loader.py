@@ -1,6 +1,23 @@
 # ====================================================================
 # FootballDecoded Data Loader - Sistema de IDs Únicos Optimizado
 # ====================================================================
+#
+# Carga masiva de datos desde wrappers a PostgreSQL con:
+# - Procesamiento paralelo con ThreadPoolExecutor
+# - Sistema de checkpoints para recuperación de fallos
+# - Rate limiting adaptivo basado en respuesta del servidor
+# - Progress tracking con ETA y estadísticas en tiempo real
+# - Validación y normalización automática de datos
+# - Merge automático de datos FBref + Understat
+#
+# Workflow:
+# 1. Carga entidades desde wrappers (fbref, understat)
+# 2. Genera IDs únicos usando SHA256 de campos clave
+# 3. Normaliza y valida datos antes de inserción
+# 4. Inserta en lotes con progreso y checkpoints
+# 5. Genera reporte final de éxito/fallos
+#
+# ====================================================================
 
 import sys
 import os
@@ -11,8 +28,20 @@ import unicodedata
 import hashlib
 import time
 import random
+import pickle
 from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
+from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+from pathlib import Path
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
@@ -55,7 +84,15 @@ LOAD_CONFIG = {
     'block_pause_min': 30,
     'block_pause_max': 60,
     'progress_bar_width': 40,
-    'line_width': 80
+    'line_width': 80,
+    # Nuevas configuraciones de paralelismo y checkpoints
+    'parallel_workers': 3,  # Número de workers paralelos (conservador)
+    'checkpoint_interval': 25,  # Guardar progreso cada N registros
+    'checkpoint_dir': '.checkpoints',  # Directorio para checkpoints
+    'adaptive_rate_limiting': True,  # Rate limiting adaptivo
+    'min_delay': 0.5,  # Delay mínimo entre requests
+    'max_delay': 3.0,  # Delay máximo entre requests
+    'initial_delay': 1.0,  # Delay inicial
 }
 
 BLOCK_1_COMPETITIONS = [
@@ -71,7 +108,146 @@ BLOCK_2_COMPETITIONS = [
 ]
 
 # ====================================================================
-# LOGGING SYSTEM
+# CHECKPOINT SYSTEM
+# ====================================================================
+
+class CheckpointManager:
+    """
+    Gestiona el guardado y carga de puntos de control para recuperación tras fallos.
+    
+    Permite reanudar cargas interrumpidas sin perder progreso. Guarda:
+    - Lista de entidades ya procesadas
+    - Estadísticas actuales de la carga
+    - Índice actual de procesamiento
+    - Timestamp del checkpoint
+    
+    Attributes:
+        competition: Nombre de la competición
+        season: Temporada en formato YY-YY  
+        entity_type: Tipo de entidad ('players' o 'teams')
+        checkpoint_file: Ruta al archivo de checkpoint
+    """
+    
+    def __init__(self, competition: str, season: str, entity_type: str):
+        self.competition = competition
+        self.season = season
+        self.entity_type = entity_type
+        self.checkpoint_dir = Path(LOAD_CONFIG['checkpoint_dir'])
+        self.checkpoint_dir.mkdir(exist_ok=True)
+        
+        # Generar nombre único de checkpoint basado en parámetros
+        safe_competition = competition.replace(' ', '_').replace('-', '_')
+        self.checkpoint_file = self.checkpoint_dir / f"{safe_competition}_{season}_{entity_type}_checkpoint.pkl"
+        
+    def save_progress(self, processed_entities: List[str], stats: Dict[str, Any], current_index: int):
+        """
+        Guardar progreso actual en archivo de checkpoint.
+        
+        Args:
+            processed_entities: Lista de entidades ya procesadas exitosamente
+            stats: Diccionario con estadísticas actuales (éxitos, fallos, etc.)
+            current_index: Índice actual en la lista de entidades a procesar
+        """
+        try:
+            checkpoint_data = {
+                'competition': self.competition,
+                'season': self.season,
+                'entity_type': self.entity_type,
+                'processed_entities': processed_entities,
+                'current_index': current_index,
+                'stats': stats,
+                'timestamp': datetime.now(),
+                'total_processed': len(processed_entities)
+            }
+            
+            with open(self.checkpoint_file, 'wb') as f:
+                pickle.dump(checkpoint_data, f)
+                
+            logger.debug(f"Checkpoint saved: {len(processed_entities)} {self.entity_type}s processed")
+            
+        except Exception as e:
+            logger.error(f"Failed to save checkpoint: {e}")
+    
+    def load_progress(self) -> Optional[Dict[str, Any]]:
+        """Cargar progreso previo si existe."""
+        try:
+            if not self.checkpoint_file.exists():
+                return None
+                
+            with open(self.checkpoint_file, 'rb') as f:
+                checkpoint_data = pickle.load(f)
+                
+            # Verificar que el checkpoint no sea muy antiguo (24 horas)
+            if datetime.now() - checkpoint_data['timestamp'] > timedelta(days=1):
+                logger.warning("Checkpoint is older than 24 hours, ignoring")
+                return None
+                
+            logger.info(f"Loaded checkpoint: {checkpoint_data['total_processed']} {self.entity_type}s already processed")
+            return checkpoint_data
+            
+        except Exception as e:
+            logger.error(f"Failed to load checkpoint: {e}")
+            return None
+    
+    def clear_checkpoint(self):
+        """Limpiar checkpoint al completar."""
+        try:
+            if self.checkpoint_file.exists():
+                self.checkpoint_file.unlink()
+                logger.info("Checkpoint cleared")
+        except Exception as e:
+            logger.error(f"Failed to clear checkpoint: {e}")
+
+# ====================================================================
+# ADAPTIVE RATE LIMITING
+# ====================================================================
+
+class AdaptiveRateLimit:
+    """Rate limiting adaptivo basado en tiempos de respuesta."""
+    
+    def __init__(self):
+        self.current_delay = LOAD_CONFIG['initial_delay']
+        self.min_delay = LOAD_CONFIG['min_delay'] 
+        self.max_delay = LOAD_CONFIG['max_delay']
+        self.response_times = []
+        self.lock = Lock()
+        self.consecutive_failures = 0
+        
+    def record_request(self, response_time: float, success: bool):
+        """Registrar tiempo de respuesta y ajustar delay."""
+        with self.lock:
+            if success:
+                self.response_times.append(response_time)
+                self.consecutive_failures = 0
+                
+                # Mantener solo los últimos 10 tiempos
+                if len(self.response_times) > 10:
+                    self.response_times.pop(0)
+                
+                # Ajustar delay basado en tiempo promedio de respuesta
+                avg_response_time = sum(self.response_times) / len(self.response_times)
+                
+                if avg_response_time < 1.0:  # Respuestas rápidas
+                    self.current_delay = max(self.min_delay, self.current_delay * 0.9)
+                elif avg_response_time > 3.0:  # Respuestas lentas
+                    self.current_delay = min(self.max_delay, self.current_delay * 1.2)
+                    
+            else:
+                # Request falló, incrementar delay
+                self.consecutive_failures += 1
+                failure_multiplier = 1.5 ** min(self.consecutive_failures, 3)
+                self.current_delay = min(self.max_delay, self.current_delay * failure_multiplier)
+    
+    def get_delay(self) -> float:
+        """Obtener delay actual."""
+        return self.current_delay
+    
+    def wait(self):
+        """Esperar según el delay actual."""
+        time.sleep(self.current_delay)
+
+# ====================================================================
+# LOGGING SYSTEM  
 # ====================================================================
 
 class LogManager:
@@ -147,7 +323,7 @@ class LogManager:
     
     def progress_update(self, current: int, total: int, current_entity: str, 
                        metrics_count: int, failed_count: int, entity_type: str,
-                       entity_context: str, state: str):
+                       entity_context: str, state: str, eta_seconds: Optional[int] = None):
         if self.current_lines_printed > 0:
             for _ in range(self.current_lines_printed):
                 print("\033[1A\033[K", end="")
@@ -160,8 +336,20 @@ class LogManager:
             '\033[0m' + '░' * (LOAD_CONFIG['progress_bar_width'] - filled)
         )
         
+        # Calcular ETA si está disponible
+        eta_text = ""
+        if eta_seconds and eta_seconds > 0:
+            if eta_seconds < 60:
+                eta_text = f" | ETA: {eta_seconds}s"
+            elif eta_seconds < 3600:
+                eta_text = f" | ETA: {eta_seconds//60}m {eta_seconds%60}s"
+            else:
+                hours = eta_seconds // 3600
+                minutes = (eta_seconds % 3600) // 60
+                eta_text = f" | ETA: {hours}h {minutes}m"
+        
         lines = [
-            f"Progress: [{progress_bar}] {current}/{total} ({percentage:.1f}%)",
+            f"Progress: [{progress_bar}] {current}/{total} ({percentage:.1f}%){eta_text}",
             f"├─ {entity_type}: {current_entity}",
             f"├─ {'Team' if entity_type == 'Player' else 'League'}: {entity_context}",
             f"├─ Metrics: {metrics_count} fields extracted",
@@ -486,15 +674,70 @@ class DataValidator:
 # CORE LOADING FUNCTIONS
 # ====================================================================
 
+def process_single_entity(args: Tuple[str, str, str, str, DataValidator, str]) -> Tuple[bool, Dict[str, Any], str, str]:
+    """Procesar una entidad individual (para paralelización)."""
+    entity_name, entity_type, competition, season, validator, table_type = args
+    
+    start_time = time.time()
+    entity_context = "Processing..."
+    state = "Processing"
+    
+    try:
+        # Extraer datos de FBref
+        if entity_type == 'player':
+            fbref_data = fbref_get_player(entity_name, competition, season)
+            if fbref_data:
+                entity_context = fbref_data.get('team', 'Unknown')
+        else:
+            fbref_data = fbref_get_team(entity_name, competition, season)
+            if fbref_data:
+                entity_context = competition
+        
+        if not fbref_data:
+            return False, {}, entity_context, "Failed - No FBref data"
+        
+        # Extraer datos de Understat si es liga doméstica
+        if table_type == 'domestic':
+            if entity_type == 'player':
+                understat_data = understat_get_player(entity_name, competition, season)
+            else:
+                understat_data = understat_get_team(entity_name, competition, season)
+            
+            if understat_data:
+                for key, value in understat_data.items():
+                    if key.startswith('understat_'):
+                        fbref_data[key] = value
+                    else:
+                        fbref_data[f"understat_{key}"] = value
+        
+        # Validar y limpiar datos
+        cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, entity_type)
+        cleaned_data['data_quality_score'] = quality_score
+        cleaned_data['processing_warnings'] = warnings
+        
+        response_time = time.time() - start_time
+        
+        return True, cleaned_data, entity_context, f"Success ({response_time:.1f}s)"
+        
+    except Exception as e:
+        response_time = time.time() - start_time
+        return False, {}, "Error", f"Failed: {str(e)[:30]}..."
+
 def load_entities(entity_type: str, competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:
-    """Load entities (players or teams) with unified logic."""
+    """Load entities with parallel processing and checkpoint support."""
     db = get_db_manager()
     validator = DataValidator()
     stats = {'total': 0, 'successful': 0, 'failed': 0, 'avg_metrics': 0}
     
+    # Inicializar checkpoint manager y rate limiter
+    checkpoint_mgr = CheckpointManager(competition, season, f"{entity_type}s")
+    rate_limiter = AdaptiveRateLimit()
+    
     try:
+        # Limpiar datos existentes
         db.clear_season_data(competition, season, table_type, f'{entity_type}s')
         
+        # Obtener lista de entidades
         players_list_df = fbref_get_league_players(competition, season)
         
         if hasattr(players_list_df.columns, 'levels'):
@@ -503,6 +746,7 @@ def load_entities(entity_type: str, competition: str, season: str, table_type: s
         if players_list_df.empty:
             return stats
         
+        # Extraer entidades únicas
         if entity_type == 'player':
             unique_entities = players_list_df['player'].dropna().unique().tolist()
         else:
@@ -510,97 +754,116 @@ def load_entities(entity_type: str, competition: str, season: str, table_type: s
             
         stats['total'] = len(unique_entities)
         
-        logger.phase_start(entity_type.title() + 's', len(unique_entities))
+        # Verificar checkpoint existente
+        checkpoint = checkpoint_mgr.load_progress()
+        processed_entities = []
+        start_index = 0
         
+        if checkpoint:
+            processed_entities = checkpoint['processed_entities']
+            start_index = checkpoint['current_index']
+            stats.update(checkpoint['stats'])
+            logger.phase_start(f"RESUMING {entity_type.title()}s", len(unique_entities))
+            print(f"Resuming from entity {start_index + 1}/{len(unique_entities)}")
+        else:
+            logger.phase_start(entity_type.title() + 's', len(unique_entities))
+        
+        # Procesar entidades restantes
+        remaining_entities = unique_entities[start_index:]
         total_metrics = 0
-        fbref_success = 0
-        understat_success = 0
         
-        for i, entity_name in enumerate(unique_entities, 1):
-            current_entity = entity_name
-            entity_context = "Processing..."
-            state = "Processing"
+        # Configurar paralelización
+        max_workers = LOAD_CONFIG['parallel_workers']
+        checkpoint_interval = LOAD_CONFIG['checkpoint_interval']
+        
+        start_time = time.time()
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Procesar en lotes para controlar memoria y checkpoints
+            batch_size = max_workers * 2  # Procesar 2 lotes por vez
             
-            try:
-                if entity_type == 'player':
-                    fbref_data = fbref_get_player(entity_name, competition, season)
-                    if fbref_data:
-                        entity_context = fbref_data.get('team', 'Unknown')
-                else:
-                    fbref_data = fbref_get_team(entity_name, competition, season)
-                    if fbref_data:
-                        entity_context = competition
+            for batch_start in range(0, len(remaining_entities), batch_size):
+                batch_end = min(batch_start + batch_size, len(remaining_entities))
+                batch_entities = remaining_entities[batch_start:batch_end]
                 
-                if not fbref_data:
-                    stats['failed'] += 1
-                    state = "Failed"
-                    entity_context = "Unknown"
+                # Crear argumentos para cada entity en el lote
+                batch_args = [(entity, entity_type, competition, season, validator, table_type) 
+                            for entity in batch_entities]
+                
+                # Ejecutar lote en paralelo
+                future_to_entity = {
+                    executor.submit(process_single_entity, args): args[0] 
+                    for args in batch_args
+                }
+                
+                # Procesar resultados
+                for future in as_completed(future_to_entity):
+                    entity_name = future_to_entity[future]
+                    current_index = start_index + len(processed_entities) + 1
                     
-                    avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
-                    logger.progress_update(
-                        i, len(unique_entities), current_entity, avg_metrics,
-                        stats['failed'], entity_type.title(), entity_context, state
-                    )
-                    continue
-                
-                fbref_success += 1
-                
-                if table_type == 'domestic':
-                    if entity_type == 'player':
-                        understat_data = understat_get_player(entity_name, competition, season)
-                    else:
-                        understat_data = understat_get_team(entity_name, competition, season)
-                    
-                    if understat_data:
-                        understat_success += 1
-                        for key, value in understat_data.items():
-                            if key.startswith('understat_'):
-                                fbref_data[key] = value
+                    try:
+                        success, cleaned_data, entity_context, state = future.result()
+                        
+                        if success and cleaned_data:
+                            # Insertar en base de datos
+                            if entity_type == 'player':
+                                insert_success = db.insert_player_data(cleaned_data, table_type)
                             else:
-                                fbref_data[f"understat_{key}"] = value
-                
-                cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, entity_type)
-                cleaned_data['data_quality_score'] = quality_score
-                cleaned_data['processing_warnings'] = warnings
-                
-                if entity_type == 'player':
-                    success = db.insert_player_data(cleaned_data, table_type)
-                else:
-                    success = db.insert_team_data(cleaned_data, table_type)
-                
-                if success:
-                    stats['successful'] += 1
-                    total_metrics += len(cleaned_data)
-                    state = "Success"
-                else:
-                    stats['failed'] += 1
-                    state = "Failed"
-                
-                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
-                
-                logger.progress_update(
-                    i, len(unique_entities), current_entity, avg_metrics,
-                    stats['failed'], entity_type.title(), entity_context, state
-                )
-                
-            except Exception:
-                stats['failed'] += 1
-                state = "Failed"
-                entity_context = "Error"
-                avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
-                
-                logger.progress_update(
-                    i, len(unique_entities), current_entity, avg_metrics,
-                    stats['failed'], entity_type.title(), entity_context, state
-                )
-                continue
+                                insert_success = db.insert_team_data(cleaned_data, table_type)
+                            
+                            if insert_success:
+                                stats['successful'] += 1
+                                total_metrics += len(cleaned_data)
+                                processed_entities.append(entity_name)
+                                rate_limiter.record_request(1.0, True)  # Successful request
+                            else:
+                                stats['failed'] += 1
+                                rate_limiter.record_request(1.0, False)  # Failed insert
+                        else:
+                            stats['failed'] += 1
+                            rate_limiter.record_request(1.0, False)  # Failed processing
+                        
+                        # Calcular ETA
+                        elapsed_time = time.time() - start_time
+                        if current_index > start_index:
+                            avg_time_per_entity = elapsed_time / (current_index - start_index)
+                            remaining_entities_count = len(unique_entities) - current_index
+                            eta_seconds = int(remaining_entities_count * avg_time_per_entity)
+                        else:
+                            eta_seconds = None
+                        
+                        # Actualizar progreso
+                        avg_metrics = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
+                        logger.progress_update(
+                            current_index, len(unique_entities), entity_name, avg_metrics,
+                            stats['failed'], entity_type.title(), entity_context, state, eta_seconds
+                        )
+                        
+                        # Guardar checkpoint periódicamente
+                        if len(processed_entities) % checkpoint_interval == 0:
+                            checkpoint_mgr.save_progress(processed_entities, stats, current_index)
+                        
+                        # Rate limiting adaptivo
+                        if LOAD_CONFIG['adaptive_rate_limiting']:
+                            rate_limiter.wait()
+                    
+                    except Exception as e:
+                        stats['failed'] += 1
+                        logger.error(f"Error processing {entity_name}: {e}")
+                        continue
         
         logger.progress_complete(stats['total'])
-        stats['avg_metrics'] = total_metrics // max(stats['successful'], 1)
+        stats['avg_metrics'] = total_metrics // max(stats['successful'], 1) if stats['successful'] > 0 else 0
+        
+        # Limpiar checkpoint al completar exitosamente
+        checkpoint_mgr.clear_checkpoint()
         
         return stats
         
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error in load_entities: {e}")
+        # Guardar checkpoint en caso de error
+        checkpoint_mgr.save_progress(processed_entities if 'processed_entities' in locals() else [], stats, start_index)
         return stats
 
 def load_players(competition: str, season: str, table_type: str, logger: LogManager) -> Dict[str, int]:

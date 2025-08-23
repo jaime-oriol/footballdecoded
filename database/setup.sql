@@ -104,9 +104,10 @@ ALTER TABLE footballdecoded.teams_domestic ADD COLUMN IF NOT EXISTS unique_team_
 ALTER TABLE footballdecoded.teams_european ADD COLUMN IF NOT EXISTS unique_team_id VARCHAR(16);
 
 -- ====================================================================
--- INDEXES
+-- OPTIMIZED INDEXES
 -- ====================================================================
 
+-- Unique indexes for data integrity
 CREATE UNIQUE INDEX IF NOT EXISTS idx_players_domestic_unique 
     ON footballdecoded.players_domestic(unique_player_id, league, season, team)
     WHERE unique_player_id IS NOT NULL;
@@ -123,6 +124,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_teams_european_unique
     ON footballdecoded.teams_european(unique_team_id, competition, season)
     WHERE unique_team_id IS NOT NULL;
 
+-- Query performance indexes
 CREATE INDEX IF NOT EXISTS idx_players_domestic_league_season 
     ON footballdecoded.players_domestic(league, season);
 
@@ -134,6 +136,102 @@ CREATE INDEX IF NOT EXISTS idx_teams_domestic_league_season
 
 CREATE INDEX IF NOT EXISTS idx_teams_european_competition_season 
     ON footballdecoded.teams_european(competition, season);
+
+-- Player name search indexes
+CREATE INDEX IF NOT EXISTS idx_players_domestic_names 
+    ON footballdecoded.players_domestic(normalized_name, player_name);
+
+CREATE INDEX IF NOT EXISTS idx_players_european_names 
+    ON footballdecoded.players_european(normalized_name, player_name);
+
+-- Team name search indexes
+CREATE INDEX IF NOT EXISTS idx_teams_domestic_names 
+    ON footballdecoded.teams_domestic(normalized_name, team_name);
+
+CREATE INDEX IF NOT EXISTS idx_teams_european_names 
+    ON footballdecoded.teams_european(normalized_name, team_name);
+
+-- Position and age filtering indexes
+CREATE INDEX IF NOT EXISTS idx_players_domestic_position_age 
+    ON footballdecoded.players_domestic(position, age) 
+    WHERE position IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_players_european_position_age 
+    ON footballdecoded.players_european(position, age) 
+    WHERE position IS NOT NULL;
+
+-- Nationality filtering indexes
+CREATE INDEX IF NOT EXISTS idx_players_domestic_nationality 
+    ON footballdecoded.players_domestic(nationality) 
+    WHERE nationality IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_players_european_nationality 
+    ON footballdecoded.players_european(nationality) 
+    WHERE nationality IS NOT NULL;
+
+-- Data quality monitoring indexes
+CREATE INDEX IF NOT EXISTS idx_players_domestic_quality 
+    ON footballdecoded.players_domestic(data_quality_score, processing_warnings) 
+    WHERE data_quality_score < 1.0;
+
+CREATE INDEX IF NOT EXISTS idx_players_european_quality 
+    ON footballdecoded.players_european(data_quality_score, processing_warnings) 
+    WHERE data_quality_score < 1.0;
+
+CREATE INDEX IF NOT EXISTS idx_teams_domestic_quality 
+    ON footballdecoded.teams_domestic(data_quality_score, processing_warnings) 
+    WHERE data_quality_score < 1.0;
+
+CREATE INDEX IF NOT EXISTS idx_teams_european_quality 
+    ON footballdecoded.teams_european(data_quality_score, processing_warnings) 
+    WHERE data_quality_score < 1.0;
+
+-- Transfer analysis indexes
+CREATE INDEX IF NOT EXISTS idx_players_domestic_transfers 
+    ON footballdecoded.players_domestic(is_transfer, transfer_count, teams_played) 
+    WHERE is_transfer = TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_players_european_transfers 
+    ON footballdecoded.players_european(is_transfer, transfer_count, teams_played) 
+    WHERE is_transfer = TRUE;
+
+-- Timestamp indexes for data management
+CREATE INDEX IF NOT EXISTS idx_players_domestic_timestamps 
+    ON footballdecoded.players_domestic(created_at, updated_at, processed_at);
+
+CREATE INDEX IF NOT EXISTS idx_players_european_timestamps 
+    ON footballdecoded.players_european(created_at, updated_at, processed_at);
+
+CREATE INDEX IF NOT EXISTS idx_teams_domestic_timestamps 
+    ON footballdecoded.teams_domestic(created_at, updated_at, processed_at);
+
+CREATE INDEX IF NOT EXISTS idx_teams_european_timestamps 
+    ON footballdecoded.teams_european(created_at, updated_at, processed_at);
+
+-- JSONB indexes for metrics queries
+CREATE INDEX IF NOT EXISTS idx_players_domestic_fbref_metrics 
+    ON footballdecoded.players_domestic USING GIN (fbref_metrics) 
+    WHERE fbref_metrics IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_players_domestic_understat_metrics 
+    ON footballdecoded.players_domestic USING GIN (understat_metrics) 
+    WHERE understat_metrics IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_players_european_fbref_metrics 
+    ON footballdecoded.players_european USING GIN (fbref_metrics) 
+    WHERE fbref_metrics IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_teams_domestic_fbref_metrics 
+    ON footballdecoded.teams_domestic USING GIN (fbref_metrics) 
+    WHERE fbref_metrics IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_teams_domestic_understat_metrics 
+    ON footballdecoded.teams_domestic USING GIN (understat_metrics) 
+    WHERE understat_metrics IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_teams_european_fbref_metrics 
+    ON footballdecoded.teams_european USING GIN (fbref_metrics) 
+    WHERE fbref_metrics IS NOT NULL;
 
 -- ====================================================================
 -- TRIGGERS - SIMPLE VERSION
@@ -166,3 +264,120 @@ DROP TRIGGER IF EXISTS update_teams_european_timestamp ON footballdecoded.teams_
 CREATE TRIGGER update_teams_european_timestamp 
     BEFORE UPDATE ON footballdecoded.teams_european 
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_timestamp();
+
+-- ====================================================================
+-- CONSTRAINTS VALIDATION
+-- ====================================================================
+
+-- Validate unique_player_id format (SHA256 hash should be 16 chars)
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_uid_format 
+    CHECK (unique_player_id IS NULL OR length(unique_player_id) = 16);
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_uid_format 
+    CHECK (unique_player_id IS NULL OR length(unique_player_id) = 16);
+
+-- Validate team unique_team_id format
+ALTER TABLE footballdecoded.teams_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_uid_format 
+    CHECK (unique_team_id IS NULL OR length(unique_team_id) = 16);
+
+ALTER TABLE footballdecoded.teams_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_uid_format 
+    CHECK (unique_team_id IS NULL OR length(unique_team_id) = 16);
+
+-- Validate season format (should be YY-YY)
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_season_format 
+    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_season_format 
+    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
+
+ALTER TABLE footballdecoded.teams_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_season_format 
+    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
+
+ALTER TABLE footballdecoded.teams_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_season_format 
+    CHECK (season ~ '^[0-9]{2}-[0-9]{2}$');
+
+-- Validate nationality codes (ISO 3166-1 alpha-3)
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_nationality_format 
+    CHECK (nationality IS NULL OR (length(nationality) = 3 AND nationality ~ '^[A-Z]{3}$'));
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_nationality_format 
+    CHECK (nationality IS NULL OR (length(nationality) = 3 AND nationality ~ '^[A-Z]{3}$'));
+
+-- Validate position codes (standard football positions)
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_position_valid 
+    CHECK (position IS NULL OR position IN ('GK', 'DF', 'MF', 'FW', 'DF,MF', 'MF,FW', 'DF,FW'));
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_position_valid 
+    CHECK (position IS NULL OR position IN ('GK', 'DF', 'MF', 'FW', 'DF,MF', 'MF,FW', 'DF,FW'));
+
+-- Validate transfer_count consistency
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_transfer_consistency 
+    CHECK ((is_transfer = FALSE AND transfer_count = 0) OR (is_transfer = TRUE AND transfer_count > 0));
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_transfer_consistency 
+    CHECK ((is_transfer = FALSE AND transfer_count = 0) OR (is_transfer = TRUE AND transfer_count > 0));
+
+-- Validate timestamp relationships
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_timestamp_order 
+    CHECK (created_at <= updated_at AND created_at <= processed_at);
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_timestamp_order 
+    CHECK (created_at <= updated_at AND created_at <= processed_at);
+
+ALTER TABLE footballdecoded.teams_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_timestamp_order 
+    CHECK (created_at <= updated_at AND created_at <= processed_at);
+
+ALTER TABLE footballdecoded.teams_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_timestamp_order 
+    CHECK (created_at <= updated_at AND created_at <= processed_at);
+
+-- Validate non-empty names
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_names_not_empty 
+    CHECK (trim(player_name) != '' AND trim(normalized_name) != '' AND trim(team) != '');
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_names_not_empty 
+    CHECK (trim(player_name) != '' AND trim(normalized_name) != '' AND trim(team) != '');
+
+ALTER TABLE footballdecoded.teams_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_names_not_empty 
+    CHECK (trim(team_name) != '' AND trim(normalized_name) != '');
+
+ALTER TABLE footballdecoded.teams_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_names_not_empty 
+    CHECK (trim(team_name) != '' AND trim(normalized_name) != '');
+
+-- Validate league/competition format consistency
+ALTER TABLE footballdecoded.players_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_domestic_league_format 
+    CHECK (league ~ '^[A-Z]{3}-');
+
+ALTER TABLE footballdecoded.teams_domestic 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_domestic_league_format 
+    CHECK (league ~ '^[A-Z]{3}-');
+
+ALTER TABLE footballdecoded.players_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_players_european_competition_format 
+    CHECK (competition ~ '^INT-');
+
+ALTER TABLE footballdecoded.teams_european 
+    ADD CONSTRAINT IF NOT EXISTS chk_teams_european_competition_format 
+    CHECK (competition ~ '^INT-');

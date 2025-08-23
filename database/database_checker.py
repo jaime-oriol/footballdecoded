@@ -1,14 +1,38 @@
 # ====================================================================
-# FootballDecoded Database Status Checker - Sistema de IDs Únicos
+# FootballDecoded Database Status Checker
+# ====================================================================
+#
+# Sistema completo de monitoreo y diagnóstico para PostgreSQL:
+# - Status detallado de tablas con conteos y estadísticas
+# - Detección automática de problemas de datos
+# - Health scoring de 0-100 para evaluar estado general
+# - Cleanup automático de datos corruptos y duplicados
+# - Análisis de integridad de IDs únicos y transferencias
+# - Múltiples modos de ejecución vía CLI
+#
+# Uso:
+#   python database_checker.py                 # Status completo
+#   python database_checker.py --quick         # Status rápido
+#   python database_checker.py --problems      # Solo detección de problemas
+#   python database_checker.py --health        # Solo health score
+#   python database_checker.py --cleanup       # Limpiar datos automáticamente
+#   python database_checker.py --full          # Análisis completo
+#
 # ====================================================================
 
 import sys
 import os
 import pandas as pd
-from typing import Dict
+import logging
+from typing import Dict, List, Tuple
+from sqlalchemy import text
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database.connection import get_db_manager
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ====================================================================
 # CONSISTENT VISUAL FORMATTING
@@ -29,6 +53,414 @@ def print_section(title: str):
 def print_footer():
     """Consistent footer formatting."""
     print("═" * LINE_WIDTH)
+
+# ====================================================================
+# PROBLEM DETECTION AND HEALTH SCORING
+# ====================================================================
+
+def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
+    """
+    Detectar problemas específicos en los datos con sugerencias de reparación.
+    
+    Analiza todas las tablas en busca de:
+    - Problemas críticos: duplicados, IDs corruptos, datos faltantes críticos
+    - Advertencias: calidad baja, problemas menores de formato
+    - Info: estadísticas y observaciones generales
+    
+    Args:
+        verbose: Si mostrar output detallado durante el análisis
+        
+    Returns:
+        Dict con problemas categorizados por severidad ('critical', 'warning', 'info')
+    """
+    if verbose:
+        print_header("🔍 Detección de Problemas en Datos")
+    
+    db = get_db_manager()
+    problems = {
+        'critical': [],
+        'warning': [],
+        'info': []
+    }
+    
+    try:
+        # 1. Detectar IDs duplicados dentro de la misma liga/temporada/equipo
+        if verbose:
+            print_section("CRITICAL ISSUES:")
+        
+        duplicate_queries = {
+            'players_domestic': """
+                SELECT unique_player_id, player_name, league, season, team, COUNT(*) as count 
+                FROM footballdecoded.players_domestic 
+                GROUP BY unique_player_id, league, season, team 
+                HAVING COUNT(*) > 1
+            """,
+            'players_european': """
+                SELECT unique_player_id, player_name, competition, season, team, COUNT(*) as count 
+                FROM footballdecoded.players_european 
+                GROUP BY unique_player_id, competition, season, team 
+                HAVING COUNT(*) > 1
+            """,
+            'teams_domestic': """
+                SELECT unique_team_id, team_name, league, season, COUNT(*) as count 
+                FROM footballdecoded.teams_domestic 
+                GROUP BY unique_team_id, league, season 
+                HAVING COUNT(*) > 1
+            """,
+            'teams_european': """
+                SELECT unique_team_id, team_name, competition, season, COUNT(*) as count 
+                FROM footballdecoded.teams_european 
+                GROUP BY unique_team_id, competition, season 
+                HAVING COUNT(*) > 1
+            """
+        }
+        
+        for table_name, query in duplicate_queries.items():
+            duplicates = pd.read_sql(query, db.engine)
+            if not duplicates.empty:
+                problem = {
+                    'table': table_name,
+                    'issue': 'Duplicate records',
+                    'count': len(duplicates),
+                    'description': f"{len(duplicates)} duplicate records found",
+                    'fix_query': f"-- Clean duplicates for {table_name}\\nDELETE FROM footballdecoded.{table_name} WHERE id NOT IN (SELECT MIN(id) FROM footballdecoded.{table_name} GROUP BY unique_{'player' if 'player' in table_name else 'team'}_id, {'competition' if 'european' in table_name else 'league'}, season{', team' if 'player' in table_name else ''});"
+                }
+                problems['critical'].append(problem)
+                if verbose:
+                    print(f"├─ CRITICAL: {problem['description']} in {table_name}")
+        
+        # 2. Detectar valores fuera de rango
+        if verbose:
+            print_section("WARNING ISSUES:")
+        
+        range_check_queries = {
+            'players_domestic_age': "SELECT COUNT(*) as count FROM footballdecoded.players_domestic WHERE age < 15 OR age > 50",
+            'players_european_age': "SELECT COUNT(*) as count FROM footballdecoded.players_european WHERE age < 15 OR age > 50",
+            'players_domestic_birth_year': "SELECT COUNT(*) as count FROM footballdecoded.players_domestic WHERE birth_year < 1970 OR birth_year > 2010",
+            'players_european_birth_year': "SELECT COUNT(*) as count FROM footballdecoded.players_european WHERE birth_year < 1970 OR birth_year > 2010"
+        }
+        
+        for check_name, query in range_check_queries.items():
+            result = pd.read_sql(query, db.engine)
+            invalid_count = result.iloc[0]['count']
+            if invalid_count > 0:
+                table_name, field = check_name.rsplit('_', 1)
+                problem = {
+                    'table': table_name,
+                    'issue': f'Invalid {field} values',
+                    'count': invalid_count,
+                    'description': f"{invalid_count} records with invalid {field}",
+                    'fix_query': f"UPDATE footballdecoded.{table_name} SET {field} = NULL WHERE {field} < {'15' if field == 'age' else '1970'} OR {field} > {'50' if field == 'age' else '2010'};"
+                }
+                problems['warning'].append(problem)
+                if verbose:
+                    print(f"├─ WARNING: {problem['description']} in {table_name}")
+        
+        # 3. Detectar registros sin métricas
+        if verbose:
+            print_section("INFO ISSUES:")
+        
+        empty_metrics_queries = {
+            'players_domestic': "SELECT COUNT(*) as count FROM footballdecoded.players_domestic WHERE fbref_metrics IS NULL OR fbref_metrics = '{}'",
+            'players_european': "SELECT COUNT(*) as count FROM footballdecoded.players_european WHERE fbref_metrics IS NULL OR fbref_metrics = '{}'",
+            'teams_domestic': "SELECT COUNT(*) as count FROM footballdecoded.teams_domestic WHERE fbref_metrics IS NULL OR fbref_metrics = '{}'",
+            'teams_european': "SELECT COUNT(*) as count FROM footballdecoded.teams_european WHERE fbref_metrics IS NULL OR fbref_metrics = '{}'"
+        }
+        
+        for table_name, query in empty_metrics_queries.items():
+            result = pd.read_sql(query, db.engine)
+            empty_count = result.iloc[0]['count']
+            if empty_count > 0:
+                problem = {
+                    'table': table_name,
+                    'issue': 'Empty metrics',
+                    'count': empty_count,
+                    'description': f"{empty_count} records with empty FBref metrics",
+                    'fix_query': f"DELETE FROM footballdecoded.{table_name} WHERE fbref_metrics IS NULL OR fbref_metrics = '{{}}';"
+                }
+                problems['info'].append(problem)
+                if verbose:
+                    print(f"├─ INFO: {problem['description']} in {table_name}")
+        
+        if verbose:
+            print_section("DETECTION SUMMARY:")
+            total_problems = len(problems['critical']) + len(problems['warning']) + len(problems['info'])
+            if total_problems == 0:
+                print("└─ No problems detected! Database is healthy.")
+            else:
+                print(f"├─ Critical issues: {len(problems['critical'])}")
+                print(f"├─ Warning issues: {len(problems['warning'])}")
+                print(f"├─ Info issues: {len(problems['info'])}")
+                print(f"└─ Total problems: {total_problems}")
+        
+        print_footer()
+        db.close()
+        return problems
+        
+    except Exception as e:
+        logger.error(f"Error detecting problems: {e}")
+        db.close()
+        return problems
+
+def calculate_health_score(verbose: bool = True) -> int:
+    """
+    Calcular puntuación de salud de la base de datos (0-100).
+    
+    El score se calcula empezando desde 100 y deduciendo puntos por:
+    - Problemas críticos: -10 puntos cada uno (máximo -50)
+    - Problemas warning: -5 puntos cada uno (máximo -30)  
+    - Problemas info: -2 puntos cada uno (máximo -20)
+    - Calidad de datos baja: hasta -20 puntos adicionales
+    
+    Args:
+        verbose: Si mostrar detalles del cálculo
+        
+    Returns:
+        int: Score de 0-100 (100 = perfecto, 0 = crítico)
+    """
+    if verbose:
+        print_header("💚 Health Score de Base de Datos")
+    
+    db = get_db_manager()
+    score = 100
+    deductions = []
+    
+    try:
+        # Obtener estadísticas básicas
+        tables = ['players_domestic', 'players_european', 'teams_domestic', 'teams_european']
+        total_records = 0
+        
+        for table in tables:
+            try:
+                count = pd.read_sql(f"SELECT COUNT(*) as count FROM footballdecoded.{table}", db.engine)
+                total_records += count.iloc[0]['count']
+            except:
+                continue
+        
+        if total_records == 0:
+            if verbose:
+                print("└─ Database is empty")
+            return 0
+        
+        # Detectar problemas y calcular puntuaciones
+        problems = detect_data_problems(verbose=False)
+        
+        # Deducciones por problemas críticos
+        if problems['critical']:
+            critical_deduction = min(50, len(problems['critical']) * 10)
+            score -= critical_deduction
+            deductions.append(f"Critical issues: -{critical_deduction} points")
+        
+        # Deducciones por warnings
+        if problems['warning']:
+            warning_deduction = min(30, len(problems['warning']) * 5)
+            score -= warning_deduction
+            deductions.append(f"Warning issues: -{warning_deduction} points")
+        
+        # Deducciones por problemas informativos
+        if problems['info']:
+            info_deduction = min(20, len(problems['info']) * 2)
+            score -= info_deduction
+            deductions.append(f"Info issues: -{info_deduction} points")
+        
+        # Bonificación por volumen de datos
+        if total_records > 10000:
+            score += 5  # Bonus for large dataset
+            deductions.append(f"Large dataset bonus: +5 points")
+        
+        # Verificar calidad promedio de datos
+        try:
+            avg_quality_query = """
+                SELECT AVG(data_quality_score) as avg_score 
+                FROM (
+                    SELECT data_quality_score FROM footballdecoded.players_domestic 
+                    WHERE data_quality_score IS NOT NULL
+                    UNION ALL
+                    SELECT data_quality_score FROM footballdecoded.players_european 
+                    WHERE data_quality_score IS NOT NULL
+                    UNION ALL
+                    SELECT data_quality_score FROM footballdecoded.teams_domestic 
+                    WHERE data_quality_score IS NOT NULL
+                    UNION ALL
+                    SELECT data_quality_score FROM footballdecoded.teams_european 
+                    WHERE data_quality_score IS NOT NULL
+                ) as all_scores
+            """
+            avg_quality = pd.read_sql(avg_quality_query, db.engine)
+            if not avg_quality.empty and avg_quality.iloc[0]['avg_score'] is not None:
+                quality_score = avg_quality.iloc[0]['avg_score']
+                if quality_score < 0.7:
+                    quality_deduction = int((0.7 - quality_score) * 50)
+                    score -= quality_deduction
+                    deductions.append(f"Low data quality: -{quality_deduction} points")
+        except:
+            pass
+        
+        # Asegurar que el score esté entre 0 y 100
+        score = max(0, min(100, score))
+        
+        if verbose:
+            print_section("HEALTH CALCULATION:")
+            print("Base score: 100 points")
+            for deduction in deductions:
+                print(f"├─ {deduction}")
+            
+            print_section("FINAL SCORE:")
+            if score >= 90:
+                status = "EXCELLENT"
+                color = "\033[92m"  # Green
+            elif score >= 70:
+                status = "GOOD"
+                color = "\033[93m"  # Yellow
+            elif score >= 50:
+                status = "NEEDS ATTENTION"
+                color = "\033[91m"  # Red
+            else:
+                status = "CRITICAL"
+                color = "\033[91m"  # Red
+            
+            print(f"├─ Health Score: {color}{score}/100{'\033[0m'}")
+            print(f"└─ Status: {color}{status}{'\033[0m'}")
+        
+        print_footer()
+        db.close()
+        return score
+        
+    except Exception as e:
+        logger.error(f"Error calculating health score: {e}")
+        db.close()
+        return 0
+
+def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[str, int]:
+    """Limpiar automáticamente problemas detectados en la base de datos."""
+    if verbose:
+        mode_text = "DRY RUN" if dry_run else "LIVE RUN"
+        print_header(f"Database Auto Cleanup - {mode_text}")
+    
+    db = get_db_manager()
+    cleanup_stats = {
+        'duplicates_removed': 0,
+        'invalid_records_cleaned': 0,
+        'empty_records_removed': 0
+    }
+    
+    try:
+        # Detectar problemas primero
+        problems = detect_data_problems(verbose=False)
+        
+        if verbose:
+            total_issues = len(problems['critical']) + len(problems['warning']) + len(problems['info'])
+            if total_issues == 0:
+                print("└─ No issues found. Database is clean!")
+                print_footer()
+                return cleanup_stats
+            
+            print_section("CLEANUP ACTIONS:")
+            if dry_run:
+                print("├─ Running in DRY RUN mode - no changes will be made")
+                print("├─ Run with dry_run=False to apply fixes")
+        
+        # 1. Limpiar duplicados críticos
+        for problem in problems['critical']:
+            if problem['issue'] == 'Duplicate records':
+                if verbose:
+                    print(f"├─ FIXING: {problem['description']} in {problem['table']}")
+                
+                if not dry_run:
+                    try:
+                        with db.engine.begin() as conn:
+                            # Query más segura para limpiar duplicados
+                            if 'player' in problem['table']:
+                                league_field = 'competition' if 'european' in problem['table'] else 'league'
+                                query = f"""
+                                DELETE FROM footballdecoded.{problem['table']} 
+                                WHERE id NOT IN (
+                                    SELECT MIN(id) FROM footballdecoded.{problem['table']} 
+                                    GROUP BY unique_player_id, {league_field}, season, team
+                                )
+                                """
+                            else:  # teams
+                                league_field = 'competition' if 'european' in problem['table'] else 'league'
+                                query = f"""
+                                DELETE FROM footballdecoded.{problem['table']} 
+                                WHERE id NOT IN (
+                                    SELECT MIN(id) FROM footballdecoded.{problem['table']} 
+                                    GROUP BY unique_team_id, {league_field}, season
+                                )
+                                """
+                            
+                            result = conn.execute(text(query))
+                            cleanup_stats['duplicates_removed'] += result.rowcount
+                            
+                    except Exception as e:
+                        logger.error(f"Error cleaning duplicates in {problem['table']}: {e}")
+        
+        # 2. Limpiar valores fuera de rango
+        for problem in problems['warning']:
+            if 'Invalid' in problem['issue']:
+                if verbose:
+                    print(f"├─ FIXING: {problem['description']} in {problem['table']}")
+                
+                if not dry_run:
+                    try:
+                        with db.engine.begin() as conn:
+                            if 'age' in problem['issue']:
+                                query = f"UPDATE footballdecoded.{problem['table']} SET age = NULL WHERE age < 15 OR age > 50"
+                            else:  # birth_year
+                                query = f"UPDATE footballdecoded.{problem['table']} SET birth_year = NULL WHERE birth_year < 1970 OR birth_year > 2010"
+                            
+                            result = conn.execute(text(query))
+                            cleanup_stats['invalid_records_cleaned'] += result.rowcount
+                            
+                    except Exception as e:
+                        logger.error(f"Error cleaning invalid values in {problem['table']}: {e}")
+        
+        # 3. Limpiar registros vacíos
+        for problem in problems['info']:
+            if problem['issue'] == 'Empty metrics':
+                if verbose:
+                    print(f"├─ FIXING: {problem['description']} in {problem['table']}")
+                
+                if not dry_run:
+                    try:
+                        with db.engine.begin() as conn:
+                            query = f"DELETE FROM footballdecoded.{problem['table']} WHERE fbref_metrics IS NULL OR fbref_metrics = '{{}}'"
+                            result = conn.execute(text(query))
+                            cleanup_stats['empty_records_removed'] += result.rowcount
+                            
+                    except Exception as e:
+                        logger.error(f"Error cleaning empty records in {problem['table']}: {e}")
+        
+        if verbose:
+            print_section("CLEANUP SUMMARY:")
+            if dry_run:
+                print("├─ DRY RUN completed - no changes made")
+                print("├─ Issues detected:")
+                print(f"│  ├─ Duplicates to remove: {sum(p['count'] for p in problems['critical'] if p['issue'] == 'Duplicate records')}")
+                print(f"│  ├─ Invalid values to clean: {sum(p['count'] for p in problems['warning'])}")
+                print(f"│  └─ Empty records to remove: {sum(p['count'] for p in problems['info'])}")
+                print("└─ Run with dry_run=False to apply fixes")
+            else:
+                total_cleaned = sum(cleanup_stats.values())
+                print(f"├─ Records cleaned: {total_cleaned}")
+                print(f"│  ├─ Duplicates removed: {cleanup_stats['duplicates_removed']}")
+                print(f"│  ├─ Invalid values cleaned: {cleanup_stats['invalid_records_cleaned']}")
+                print(f"│  └─ Empty records removed: {cleanup_stats['empty_records_removed']}")
+                
+                if total_cleaned > 0:
+                    print("├─ Database cleanup completed successfully")
+                    print("└─ Recommend running health check to verify improvements")
+                else:
+                    print("└─ No records needed cleaning")
+        
+        print_footer()
+        db.close()
+        return cleanup_stats
+        
+    except Exception as e:
+        logger.error(f"Error in auto cleanup: {e}")
+        db.close()
+        return cleanup_stats
 
 # ====================================================================
 # DATABASE STATUS FUNCTIONS
@@ -422,7 +854,34 @@ if __name__ == "__main__":
             check_unique_id_integrity(verbose=True)
         elif sys.argv[1] == '--transfers':
             analyze_transfers(verbose=True)
+        elif sys.argv[1] == '--problems':
+            problems = detect_data_problems(verbose=True)
+            print(f"\n🚨 Problemas críticos: {len(problems['critical'])}")
+            print(f"⚠️ Advertencias: {len(problems['warning'])}")
+            print(f"ℹ️ Info: {len(problems['info'])}")
+        elif sys.argv[1] == '--health':
+            score = calculate_health_score(verbose=True)
+            print(f"\n💚 Health Score: {score}/100")
+        elif sys.argv[1] == '--cleanup':
+            print("🧹 Iniciando limpieza automática...")
+            auto_cleanup_database()
+        elif sys.argv[1] == '--full':
+            print("🔍 Análisis completo de la base de datos\n")
+            check_database_status(verbose=True)
+            print("\n" + "="*60)
+            problems = detect_data_problems(verbose=True)
+            print("\n" + "="*60)
+            score = calculate_health_score(verbose=True)
+            print(f"\n💚 Health Score Final: {score}/100")
         else:
-            print("Usage: python database_checker.py [--quick|--integrity|--transfers]")
+            print("Usage: python database_checker.py [--quick|--integrity|--transfers|--problems|--health|--cleanup|--full]")
+            print("\nOpciones:")
+            print("  --quick      Estado rápido de tablas")
+            print("  --integrity  Verificar integridad de IDs únicos")
+            print("  --transfers  Analizar transferencias")
+            print("  --problems   Detectar problemas en los datos")
+            print("  --health     Calcular score de salud (0-100)")
+            print("  --cleanup    Limpiar datos corruptos automáticamente")
+            print("  --full       Análisis completo con todas las opciones")
     else:
         check_database_status(verbose=True)
