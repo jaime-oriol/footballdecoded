@@ -1,4 +1,9 @@
-"""Scraper for http://fbref.com."""
+"""Scraper for http://fbref.com.
+
+FBref is the primary source for comprehensive football statistics.
+Handles complex HTML table parsing with multi-level columns and
+special cases like "Big 5 European Leagues Combined" for efficiency.
+"""
 
 import warnings
 from datetime import datetime, timezone
@@ -6,6 +11,7 @@ from functools import reduce
 from pathlib import Path
 from typing import Callable, Optional, Union
 
+# Third-party imports
 import pandas as pd
 from lxml import etree, html
 
@@ -18,9 +24,12 @@ from ._common import (
 )
 from ._config import DATA_DIR, NOCACHE, NOSTORE, TEAMNAME_REPLACEMENTS, logger
 
+# FBref configuration
 FBREF_DATADIR = DATA_DIR / "FBref"
 FBREF_API = "https://fbref.com"
 
+# Mapping for "Big 5 European Leagues Combined" to individual league names
+# This allows efficient scraping of all top 5 leagues in a single request
 BIG_FIVE_DICT = {
     "Serie A": "ITA-Serie A",
     "Ligue 1": "FRA-Ligue 1",
@@ -29,6 +38,8 @@ BIG_FIVE_DICT = {
     "Bundesliga": "GER-Bundesliga",
 }
 
+# International competitions that require special handling
+# These are not parsed from the main competitions page
 INTERNATIONAL_COMPETITIONS = {
     "Champions League": {
         "comp_id": "8",
@@ -94,9 +105,10 @@ class FBref(BaseRequestsReader):
             no_store=no_store,
             data_dir=data_dir,
         )
+        # FBref requires 7-second delays to avoid being blocked
         self.rate_limit = 7
         self.seasons = seasons  # type: ignore
-        # check if all top 5 leagues are selected
+        # Check if user is trying to scrape all Big 5 leagues individually
         if (
             set(BIG_FIVE_DICT.values()).issubset(self.leagues)
             and "Big 5 European Leagues Combined" not in self.leagues
@@ -159,21 +171,23 @@ class FBref(BaseRequestsReader):
         filepath = self.data_dir / "leagues.html"
         reader = self.get(url, filepath)
 
-        # extract league links
+        # Parse domestic league tables from FBref competitions page
         dfs = []
         tree = html.parse(reader)
+        # Find all competition tables (domestic leagues)
         for html_table in tree.xpath("//table[contains(@id, 'comps')]"):
             df_table = _parse_table(html_table)
+            # Extract URLs for each league
             df_table["url"] = html_table.xpath(".//th[@data-stat='league_name']/a/@href")
             dfs.append(df_table)
 
-        # Domestic leagues
+        # Combine all domestic league data
         if dfs:
             df = pd.concat(dfs)
         else:
             df = pd.DataFrame()
         
-        # ADD INTERNATIONAL COMPETITIONS manually
+        # Add international competitions manually (not in main competitions page)
         international_rows = []
         for league_name, selected_name in self._selected_leagues.items():
             if selected_name in INTERNATIONAL_COMPETITIONS:
@@ -234,28 +248,30 @@ class FBref(BaseRequestsReader):
         df_leagues = self.read_leagues(split_up_big5)
 
         seasons = []
+        # Process each league to get available seasons
         for lkey, league in df_leagues.iterrows():
             url = FBREF_API + league.url
             filepath = self.data_dir / filemask.format(lkey)
             reader = self.get(url, filepath)
 
-            # extract season links
+            # Parse seasons table from league's main page
             tree = html.parse(reader)
             (html_table,) = tree.xpath("//table[@id='seasons']")
             df_table = _parse_table(html_table)
+            # Extract season URLs for detailed data
             df_table["url"] = html_table.xpath(
                 "//th[@data-stat='year_id' or @data-stat='year']/a/@href"
             )
-            # Override the competition name or add if missing
-            df_table["Competition Name"] = lkey
-            # Some tournaments have a "year" column instead of "season"
+            # Standardize competition data structure
+            df_table["Competition Name"] = lkey  # Ensure consistent naming
+            # Handle different column names across competitions
             if "Year" in df_table.columns:
                 df_table.rename(columns={"Year": "Season"}, inplace=True)
-            # Get the competition format
+            # Determine competition format based on available columns
             if "Final" in df_table.columns:
-                df_table["Format"] = "elimination"
+                df_table["Format"] = "elimination"  # Cup competitions
             else:
-                df_table["Format"] = "round-robin"
+                df_table["Format"] = "round-robin"   # League competitions
             seasons.append(df_table)
 
         df = pd.concat(seasons).pipe(standardize_colnames)
@@ -341,13 +357,15 @@ class FBref(BaseRequestsReader):
         # get league IDs
         seasons = self.read_seasons()
 
-        # collect teams
+        # Collect team statistics for each league and season
         teams = []
         for (lkey, skey), season in seasons.iterrows():
             big_five = lkey == "Big 5 European Leagues Combined"
             tournament = season["format"] == "elimination"
-            # read html page (league overview)
+            
+            # Build appropriate file path and URL structure
             filepath = self.data_dir / filemask.format(lkey, skey, stat_type if big_five else page)
+            # Construct URL based on competition type and format
             url = (
                 FBREF_API
                 + "/".join(season.url.split("/")[:-1])
@@ -356,19 +374,25 @@ class FBref(BaseRequestsReader):
             )
             reader = self.get(url, filepath)
 
-            # parse HTML and select table
+            # Parse team statistics table from FBref page
             tree = html.parse(reader)
+            # Find the specific stats table (different IDs for teams vs squads)
             (html_table,) = tree.xpath(
                 f"//table[@id='stats_teams_{stat_type}' or @id='stats_squads_{stat_type}']"
             )
             df_table = _parse_table(html_table)
+            # Add metadata for tracking
             df_table["league"] = lkey
             df_table["season"] = skey
+            # Extract team URLs for individual team pages
             df_table["url"] = html_table.xpath(".//*[@data-stat='team']/a/@href")
+            # Handle special case: Big 5 European Leagues Combined
             if big_five:
+                # Map competition abbreviations to full league names
                 df_table["league"] = (
                     df_table.xs("Comp", axis=1, level=1).squeeze().map(BIG_FIVE_DICT)
                 )
+                # Remove unnecessary columns from multi-level structure
                 df_table.drop("Comp", axis=1, level=1, inplace=True)
                 df_table.drop("Rk", axis=1, level=1, inplace=True)
             teams.append(df_table)
@@ -462,10 +486,11 @@ class FBref(BaseRequestsReader):
         else:
             iterator = df_teams
 
-        # collect match logs for each team
+        # Collect match logs for each team
+        # This processes individual team pages for detailed match-by-match stats
         stats = []
         for (lkey, skey, team), team_url in iterator.url.items():
-            # read html page
+            # Build file path for caching team's match log data
             filepath = self.data_dir / filemask.format(team, skey, stat_type)
             if len(team_url.split("/")) == 6:  # already have season in the url
                 url = (
@@ -496,22 +521,27 @@ class FBref(BaseRequestsReader):
             current_season = not self._is_complete(lkey, skey)
             reader = self.get(url, filepath, no_cache=current_season and not force_cache)
 
-            # parse HTML and select table
+            # Parse match logs table from team's page
             tree = html.parse(reader)
             (html_table,) = tree.xpath(f"//table[@id='matchlogs_{opp_type}']")
-            # remove for / against header
+            
+            # Clean up table structure specific to match logs
+            # Remove confusing "for/against" headers
             for elem in html_table.xpath("//th[@data-stat='header_for_against']"):
                 elem.text = ""
-            # remove aggregate rows
+            # Remove aggregate/summary rows from table footer
             for elem in html_table.xpath("//tfoot"):
                 elem.getparent().remove(elem)
             # parse table
             df_table = _parse_table(html_table)
             df_table["season"] = skey
             df_table["team"] = team
+            # Extract additional data from HTML attributes
+            # Time data is stored in 'csk' attribute for sorting
             df_table["Time"] = [
                 x.get("csk", None) for x in html_table.xpath(".//td[@data-stat='start_time']")
             ]
+            # Extract match report URLs for detailed match data
             df_table["Match Report"] = [
                 (
                     mlink.xpath("./a/@href")[0]
@@ -1176,27 +1206,36 @@ class FBref(BaseRequestsReader):
 
 
 def _parse_table(html_table: html.HtmlElement) -> pd.DataFrame:
-    """Parse HTML table into a dataframe.
+    """Parse FBref HTML table into a clean DataFrame.
 
+    FBref tables contain various HTML artifacts that need cleaning:
+    - Icon spans that interfere with text extraction
+    - Spacer rows for visual separation
+    - Header rows repeated in table body
+    
     Parameters
     ----------
     html_table : lxml.html.HtmlElement
-        HTML table to clean up.
+        HTML table element from FBref page.
 
     Returns
     -------
     pd.DataFrame
+        Cleaned DataFrame with proper data types.
     """
-    # remove icons
+    # Remove icon spans that interfere with data extraction
     for elem in html_table.xpath("//span[contains(@class, 'f-i')]"):
         etree.strip_elements(elem.getparent(), "span", with_tail=False)
-    # remove sep rows
+    
+    # Remove spacer rows used for visual separation
     for elem in html_table.xpath("//tbody/tr[contains(@class, 'spacer')]"):
         elem.getparent().remove(elem)
-    # remove thead rows in the table body
+    
+    # Remove header rows that are repeated in table body
     for elem in html_table.xpath("//tbody/tr[contains(@class, 'thead')]"):
         elem.getparent().remove(elem)
-    # parse HTML to dataframe
+    
+    # Convert cleaned HTML to DataFrame
     (df_table,) = pd.read_html(html.tostring(html_table), flavor="lxml")
     return df_table.convert_dtypes()
 
@@ -1204,6 +1243,10 @@ def _parse_table(html_table: html.HtmlElement) -> pd.DataFrame:
 def _concat(dfs: list[pd.DataFrame], key: list[str]) -> pd.DataFrame:
     """Merge matching tables scraped from different pages.
 
+    FBref's HTML structure varies across seasons and leagues, particularly
+    in multi-level column headers. This function harmonizes these differences
+    by analyzing column structures and choosing the most complete one.
+    
     The level 0 headers are not consistent across seasons and leagues, this
     function tries to determine uniform column names.
 
@@ -1213,7 +1256,7 @@ def _concat(dfs: list[pd.DataFrame], key: list[str]) -> pd.DataFrame:
     Parameters
     ----------
     dfs : list(pd.DataFrame)
-        Input dataframes.
+        Input dataframes from different FBref pages.
     key : list(str)
         List of columns that uniquely identify each df.
 
@@ -1224,18 +1267,19 @@ def _concat(dfs: list[pd.DataFrame], key: list[str]) -> pd.DataFrame:
     """
     all_columns = []
 
-    # Step 0: Sort dfs by the number of columns
+    # Sort DataFrames by column count (most complete first)
+    # This ensures we use the most comprehensive column structure
     dfs = sorted(dfs, key=lambda x: len(x.columns), reverse=True)
 
-    # Step 1: Clean up the columns of each dataframe that should be merged
+    # Clean up column names from each DataFrame for merging
     for df in dfs:
         columns = pd.DataFrame(df.columns.tolist())
-        # Set "Unnamed: ..." column names to None
+        # Clean up pandas' "Unnamed: ..." column names from HTML parsing
         columns.replace(to_replace=r"^Unnamed:.*", value=None, regex=True, inplace=True)
-        if columns.shape[1] == 2:
-            # Set "" column names to None
+        if columns.shape[1] == 2:  # Multi-level columns
+            # Replace empty strings with None for consistency
             columns.replace(to_replace="", value=None, inplace=True)
-            # Move None column names to level 0
+            # Reorganize None values in multi-level structure
             mask = pd.isnull(columns[1])
             columns.loc[mask, [0, 1]] = columns.loc[mask, [1, 0]].values
 
@@ -1248,7 +1292,8 @@ def _concat(dfs: list[pd.DataFrame], key: list[str]) -> pd.DataFrame:
             columns.loc[mask, 1] = ""
             df.columns = pd.MultiIndex.from_tuples(columns.to_records(index=False).tolist())
 
-    # throw a warning if not all dataframes have the same length and level 1 columns
+    # Check for inconsistencies in column structure across DataFrames
+    # This is common when FBref changes their HTML structure between seasons
     if len(all_columns) and all_columns[0].shape[1] == 2:
         for i, columns in enumerate(all_columns):
             if not columns[1].equals(all_columns[0][1]):
@@ -1283,52 +1328,57 @@ def _concat(dfs: list[pd.DataFrame], key: list[str]) -> pd.DataFrame:
                 )
 
     if len(all_columns) and all_columns[0].shape[1] == 2:
-        # Step 2: Look for the most complete level 0 columns
+        # Find the most complete column structure by combining all variants
         columns = reduce(lambda left, right: left.combine_first(right), all_columns)
 
-        # Step 3: Make sure columns are consistent
+        # Ensure final column structure is consistent
         mask = pd.isnull(columns[0])
         columns.loc[mask, [0, 1]] = columns.loc[mask, [1, 0]].values
         columns.loc[mask, 1] = ""
         column_idx = pd.MultiIndex.from_tuples(columns.to_records(index=False).tolist())
 
+        # Apply standardized column structure to all DataFrames
         for i, df in enumerate(dfs):
             if df.columns.equals(column_idx):
-                # This dataframe already has the uniform column index
+                # DataFrame already has the correct column structure
                 pass
-            if len(df.columns) == len(column_idx):
-                # This dataframe has the same number of columns and the same
-                # level 1 columns, we assume that the level 0 columns can be
-                # replaced
+            elif len(df.columns) == len(column_idx):
+                # Same column count - replace column names
                 df.columns = column_idx
             else:
-                # This dataframe has a different number of columns, so we want
-                # to make sure its columns match with column_idx
+                # Different column count - reindex to match standard structure
                 dfs[i] = df.reindex(columns=column_idx, fill_value=None)
 
     return pd.concat(dfs)
 
 
 def _fix_nation_col(df_table: pd.DataFrame) -> pd.DataFrame:
-    """Fix the "Nation" column.
+    """Fix the "Nation" column for international competitions.
 
+    FBref sometimes omits the Nation column in international competitions.
+    This function adds it based on the team's name when missing.
+    
     Adds a 'nations' column for international games based on the team's name.
 
     Parameters
     ----------
     df_table : pd.DataFrame
-        Input dataframe.
+        Input dataframe from FBref player stats.
 
     Returns
     -------
     pd.DataFrame
+        DataFrame with proper Nation column.
     """
+    # Check if Nation column exists in multi-level columns
     if "Nation" not in df_table.columns.get_level_values(1):
+        # Clean Squad column values (remove header repetitions)
         df_table.loc[:, (slice(None), "Squad")] = (
             df_table.xs("Squad", axis=1, level=1)
             .squeeze()
             .apply(lambda x: x if isinstance(x, str) and x != "Squad" else None)
         )
+        # Insert Nation column based on Squad data
         df_table.insert(
             2,
             ("Unnamed: nation", "Nation"),

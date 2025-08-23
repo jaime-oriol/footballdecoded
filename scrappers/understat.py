@@ -1,5 +1,11 @@
-"""Scraper for understat.com."""
+"""Scraper for understat.com.
 
+Understat specializes in advanced metrics like xG, xA, PPDA.
+Uses regex to extract JavaScript variables from HTML pages
+and provides model-based statistics not available in other sources.
+"""
+
+# Standard library imports
 import itertools
 import json
 from collections.abc import Iterable
@@ -7,14 +13,18 @@ from html import unescape
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 
+# Third-party imports
 import pandas as pd
 
 from ._common import BaseRequestsReader, make_game_id
 from ._config import DATA_DIR, NOCACHE, NOSTORE, TEAMNAME_REPLACEMENTS
 
+# Understat configuration
 UNDERSTAT_DATADIR = DATA_DIR / "Understat"
 UNDERSTAT_URL = "https://understat.com"
 
+# Mappings for Understat's internal codes to readable names
+# These standardize the shot event data
 SHOT_SITUATIONS = {
     "OpenPlay": "Open Play",
     "FromCorner": "From Corner",
@@ -90,15 +100,18 @@ class Understat(BaseRequestsReader):
         -------
         pd.DataFrame
         """
+        # Extract league data from Understat's main page JavaScript
         data = self._read_leagues()
 
         leagues = {}
 
+        # Parse statData JavaScript variable containing league information
         league_data = data["statData"]
         for league_stat in league_data:
             league_id = league_stat["league_id"]
             if league_id not in leagues:
                 league = league_stat["league"]
+                # Create URL-friendly slug from league name
                 league_slug = league.replace(" ", "_")
                 leagues[league_id] = {
                     "league_id": league_id,
@@ -128,15 +141,18 @@ class Understat(BaseRequestsReader):
         -------
         pd.DataFrame
         """
+        # Extract available seasons from league data
         data = self._read_leagues()
 
         seasons = {}
 
+        # Process statData to extract season information
         league_data = data["statData"]
         for league_stat in league_data:
             league_id = league_stat["league_id"]
             year = int(league_stat["year"])
             month = int(league_stat["month"])
+            # Determine season based on month (seasons start in July/August)
             season_id = year if month >= 7 else year - 1
             key = (league_id, season_id)
             if key not in seasons:
@@ -200,9 +216,11 @@ class Understat(BaseRequestsReader):
 
             data = self._read_league_season(url, league_id, season_id, no_cache)
 
+            # Process match data from datesData JavaScript variable
             matches_data = data["datesData"]
             for match in matches_data:
                 match_id = _as_int(match["id"])
+                # Check if match has xG data (indicates processed match)
                 has_home_xg = match["xG"]["h"] not in ("0", None)
                 has_away_xg = match["xG"]["a"] not in ("0", None)
                 has_data = has_home_xg or has_away_xg
@@ -281,9 +299,11 @@ class Understat(BaseRequestsReader):
 
             data = self._read_league_season(url, league_id, season_id, no_cache)
 
-            schedule = {}
-            matches = {}
+            # Build lookup structures for efficient data matching
+            schedule = {}  # Match metadata by match_id
+            matches = {}   # Match_id by (date, team_id)
 
+            # Process match schedule data
             matches_data = data["datesData"]
             for match in matches_data:
                 match_id = _as_int(match["id"])
@@ -302,13 +322,16 @@ class Understat(BaseRequestsReader):
                     "away_team_code": _as_str(match["a"]["short_title"]),
                     "home_team_code": _as_str(match["h"]["short_title"]),
                 }
+                # Create lookup by date and team for team history matching
                 for side in ("h", "a"):
                     team_id = _as_int(match[side]["id"])
                     matches[(match_date, team_id)] = match_id
 
+            # Process detailed team performance data
             teams_data = data["teamsData"]
             for team in teams_data.values():
                 team_id = _as_int(team["id"])
+                # Process each match in team's history
                 for match in team["history"]:
                     match_date = match["date"]
                     match_id = matches[(match_date, team_id)]
@@ -318,6 +341,7 @@ class Understat(BaseRequestsReader):
                     if match_id not in stats:
                         stats[match_id] = schedule[match_id]
 
+                    # Calculate PPDA (Passes per Defensive Action)
                     ppda = match["ppda"]
                     team_ppda = (ppda["att"] / ppda["def"]) if ppda["def"] != 0 else pd.NA
 
@@ -386,10 +410,12 @@ class Understat(BaseRequestsReader):
                 team_id = _as_int(team["id"])
                 team_mapping[team_name] = team_id
 
+            # Process player season statistics
             players_data = data["playersData"]
             for player in players_data:
                 player_team_name = player["team_title"]
-                if "," in player_team_name:  # pick first team if multiple teams are listed
+                # Handle players who played for multiple teams in the season
+                if "," in player_team_name:
                     player_team_name = player_team_name.split(",")[0]
                 player_team_name = _as_str(player_team_name)
                 player_team_id = team_mapping[player_team_name]
@@ -665,7 +691,11 @@ class Understat(BaseRequestsReader):
         return data
 
 
+# Helper functions for safe type conversion from JavaScript data
+# These handle None values and invalid data gracefully
+
 def _as_bool(value: Any) -> Optional[bool]:
+    """Safely convert value to boolean."""
     try:
         return bool(value)
     except (TypeError, ValueError):
@@ -673,6 +703,7 @@ def _as_bool(value: Any) -> Optional[bool]:
 
 
 def _as_float(value: Any) -> Optional[float]:
+    """Safely convert value to float."""
     try:
         return float(value)
     except (TypeError, ValueError):
@@ -680,6 +711,7 @@ def _as_float(value: Any) -> Optional[float]:
 
 
 def _as_int(value: Any) -> Optional[int]:
+    """Safely convert value to integer."""
     try:
         return int(value)
     except (TypeError, ValueError):
@@ -687,6 +719,7 @@ def _as_int(value: Any) -> Optional[int]:
 
 
 def _as_str(value: Any) -> Optional[str]:
+    """Safely convert value to string and unescape HTML entities."""
     try:
         return unescape(value)
     except (TypeError, ValueError):

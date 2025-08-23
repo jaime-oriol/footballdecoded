@@ -1,5 +1,11 @@
-"""Scraper for http://whoscored.com."""
+"""Scraper for http://whoscored.com.
 
+WhoScored provides detailed event data with spatial coordinates.
+Requires Selenium for JavaScript rendering and handles complex
+event data structures with multiple output formats.
+"""
+
+# Standard library imports
 import itertools
 import json
 import re
@@ -8,6 +14,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Callable, Literal, Optional, Union
 
+# Third-party imports
 import numpy as np
 import pandas as pd
 from lxml import html
@@ -20,13 +27,16 @@ from selenium.webdriver.common.by import By
 from ._common import BaseSeleniumReader, make_game_id, standardize_colnames
 from ._config import DATA_DIR, NOCACHE, NOSTORE, TEAMNAME_REPLACEMENTS, logger
 
+# WhoScored configuration
 WHOSCORED_DATADIR = DATA_DIR / "WhoScored"
 WHOSCORED_URL = "https://www.whoscored.com"
 
+# Standard event data structure for WhoScored events
+# This ensures consistent column structure across all event data
 COLS_EVENTS = {
     # The ID of the game
     "game_id": np.nan,
-    # 'PreMatch', 'FirstHalf', 'SecondHalf', 'PostGame'
+    # Match period: 'PreMatch', 'FirstHalf', 'SecondHalf', 'PostGame'
     "period": np.nan,
     # Integer indicating the minute of the event, ignoring stoppage time
     "minute": -1,
@@ -73,12 +83,15 @@ COLS_EVENTS = {
 
 
 def _parse_url(url: str) -> dict:
-    """Parse a URL from WhoScored.
+    """Parse a WhoScored URL to extract competition and match identifiers.
+    
+    WhoScored URLs follow a structured pattern with region, tournament,
+    season, stage, and match IDs. This function extracts these components.
 
     Parameters
     ----------
     url : str
-        URL to parse.
+        WhoScored URL to parse.
 
     Raises
     ------
@@ -88,6 +101,7 @@ def _parse_url(url: str) -> dict:
     Returns
     -------
     dict
+        Dictionary with extracted IDs (region_id, league_id, etc.)
     """
     patt = (
         r"^(?:https:\/\/www.whoscored.com)?\/"
@@ -167,13 +181,15 @@ class WhoScored(BaseSeleniumReader):
             headless=headless,
         )
         self.seasons = seasons  # type: ignore
+        # WhoScored rate limiting - 5 seconds base + up to 5 seconds random
         self.rate_limit = 5
         self.max_delay = 5
+        # Create directory structure for different data types
         if not self.no_store:
-            (self.data_dir / "seasons").mkdir(parents=True, exist_ok=True)
-            (self.data_dir / "matches").mkdir(parents=True, exist_ok=True)
-            (self.data_dir / "previews").mkdir(parents=True, exist_ok=True)
-            (self.data_dir / "events").mkdir(parents=True, exist_ok=True)
+            (self.data_dir / "seasons").mkdir(parents=True, exist_ok=True)   # Season info
+            (self.data_dir / "matches").mkdir(parents=True, exist_ok=True)   # Match schedules
+            (self.data_dir / "previews").mkdir(parents=True, exist_ok=True)  # Pre-match data
+            (self.data_dir / "events").mkdir(parents=True, exist_ok=True)    # Event data
 
     def read_leagues(self) -> pd.DataFrame:
         """Retrieve the selected leagues from the datasource.
@@ -588,7 +604,11 @@ class WhoScored(BaseSeleniumReader):
         retry_missing: bool = True,
         on_error: Literal["raise", "skip"] = "raise",
     ) -> Optional[Union[pd.DataFrame, dict[int, list], "OptaLoader"]]:  # type: ignore  # noqa: F821
-        """Retrieve the the event data for each game in the selected leagues and seasons.
+        """Retrieve detailed event data for matches with spatial coordinates.
+
+        This is the core method for extracting WhoScored's rich event data,
+        which includes x,y coordinates for all ball actions. The method handles
+        multiple output formats and integrates with the socceraction library.
 
         Parameters
         ----------
@@ -636,6 +656,7 @@ class WhoScored(BaseSeleniumReader):
         -------
         See the description of the ``output_fmt`` parameter.
         """
+        # Normalize output format and check requirements
         output_fmt = output_fmt.lower() if output_fmt is not None else None
         if output_fmt in ["loader", "spadl", "atomic-spadl"]:
             if self.no_store:
@@ -643,6 +664,7 @@ class WhoScored(BaseSeleniumReader):
                     f"The '{output_fmt}' output format is not supported "
                     "when using the 'no_store' option."
                 )
+            # Import socceraction dependencies for advanced formats
             try:
                 from socceraction.atomic.spadl import convert_to_atomic
                 from socceraction.data.opta import OptaLoader
@@ -677,9 +699,12 @@ class WhoScored(BaseSeleniumReader):
         else:
             iterator = df_schedule.sample(frac=1)
 
-        events = {}
-        player_names = {}
-        team_names = {}
+        # Initialize data structures for event processing
+        events = {}          # Match events by game_id
+        player_names = {}    # Player ID to name mapping
+        team_names = {}      # Team ID to name mapping
+        
+        # Process each match to extract event data
         for i, (_, game) in enumerate(iterator.iterrows()):
             url = urlmask.format(game["game_id"])
             # get league and season
@@ -693,7 +718,9 @@ class WhoScored(BaseSeleniumReader):
                 game["league"], game["season"], game["game_id"]
             )
 
+            # Extract match data from JavaScript variable
             try:
+                # Get matchCentreData JavaScript variable containing all event data
                 reader = self.get(
                     url,
                     filepath,
@@ -701,6 +728,8 @@ class WhoScored(BaseSeleniumReader):
                     no_cache=live,
                 )
                 reader_value = reader.read()
+                
+                # Retry if we got empty/null data (common for live matches)
                 if retry_missing and reader_value == b"null" or reader_value == b"":
                     reader = self.get(
                         url,
@@ -807,13 +836,18 @@ class WhoScored(BaseSeleniumReader):
         return df
 
     def _handle_banner(self) -> None:
+        """Handle cookie consent banner on WhoScored.
+        
+        WhoScored shows a cookie consent banner that must be dismissed
+        before accessing match data.
+        """
         try:
-            # self._driver.get(WHOSCORED_URL)
+            # Wait for page to load
             time.sleep(2)
+            # Click the AGREE button to dismiss cookie banner
             self._driver.find_element(By.XPATH, "//button[./span[text()='AGREE']]").click()
             time.sleep(2)
         except NoSuchElementException:
-            # with open("/tmp/error.html", "w") as f:
-            # f.write(self._driver.page_source)
+            # Banner not found - page structure may have changed
             raise ElementClickInterceptedException()
         

@@ -1,3 +1,4 @@
+# Standard library imports
 import io
 import json
 import pprint
@@ -12,6 +13,7 @@ from enum import Enum
 from pathlib import Path
 from typing import IO, Callable, Optional, Union
 
+# Third-party imports
 import numpy as np
 import pandas as pd
 import seleniumbase as sb
@@ -96,8 +98,18 @@ class SeasonCode(Enum):
         return SeasonCode.MULTI_YEAR
 
     def parse(self, season: Union[str, int]) -> str:  # noqa: C901
-        """Convert a string or int to a standard season format."""
+        """Convert a string or int to a standard season format.
+        
+        This method handles multiple season format inputs and converts them to
+        a standardized format based on the season code type (single-year vs multi-year).
+        
+        Examples of supported formats:
+        - Single digits: '94' -> '1994' or '2094'
+        - Four digits: '1994' -> '1994' or '9495'
+        - Range formats: '1994-95', '94-95', '1994/1995'
+        """
         season = str(season)
+        # Define regex patterns and their corresponding processing functions
         patterns = [
             (
                 re.compile(r"^[0-9]{4}$"),  # 1994 | 9495
@@ -132,7 +144,11 @@ class SeasonCode(Enum):
         current_year = datetime.now(tz=timezone.utc).year
 
         def process_four_digit_year(season: str) -> str:
-            """Process a 4-digit string like '1994' or '9495'."""
+            """Process a 4-digit string like '1994' or '9495'.
+            
+            For multi-year format: converts '1994' to '9495' or '9900' for edge cases.
+            For single-year format: handles ambiguous cases like '2021' and '1920'.
+            """
             if self == SeasonCode.MULTI_YEAR:
                 if int(season[2:]) == int(season[:2]) + 1:
                     if season == "2021":
@@ -156,7 +172,11 @@ class SeasonCode(Enum):
             return "19" + season[:2]
 
         def process_two_digit_year(season: str) -> str:
-            """Process a 2-digit string like '94'."""
+            """Process a 2-digit string like '94'.
+            
+            Determines century based on current year and season code type.
+            For multi-year: '94' -> '9495', for single-year: '94' -> '1994' or '2094'.
+            """
             if self == SeasonCode.MULTI_YEAR:
                 if season == "99":
                     return "9900"
@@ -166,29 +186,41 @@ class SeasonCode(Enum):
             return "19" + season
 
         def process_full_year_range(season: str) -> str:
-            """Process a range of 4-digit strings like '1994-1995'."""
+            """Process a range of 4-digit strings like '1994-1995'.
+            
+            Extracts the appropriate format based on season code type.
+            Multi-year: '1994-1995' -> '9495', Single-year: '1994-1995' -> '1994'
+            """
             if self == SeasonCode.MULTI_YEAR:
                 return season[2:4] + season[-2:]
             return season[:4]
 
         def process_partial_year_range(season: str) -> str:
-            """Process a range of 4-digit and 2-digit string like '1994-95'."""
+            """Process a range of 4-digit and 2-digit string like '1994-95'.
+            
+            Similar to full year range but handles mixed digit formats.
+            """
             if self == SeasonCode.MULTI_YEAR:
                 return season[2:4] + season[-2:]
             return season[:4]
 
         def process_short_year_range(season: str) -> str:
-            """Process a range of 2-digit strings like '94-95'."""
+            """Process a range of 2-digit strings like '94-95'.
+            
+            Handles short format ranges with century determination logic.
+            """
             if self == SeasonCode.MULTI_YEAR:
                 return season[:2] + season[-2:]
             if int("20" + season[:2]) <= current_year:
                 return "20" + season[:2]
             return "19" + season[:2]
 
+        # Try each pattern until one matches
         for pattern, action in patterns:
             if pattern.match(season):
                 return action(season)
 
+        # If no pattern matches, raise error
         raise ValueError(f"Unrecognized season code: '{season}'")
 
 
@@ -257,11 +289,11 @@ class BaseReader(ABC):
         no_cache: bool = False,
         var: Optional[Union[str, Iterable[str]]] = None,
     ) -> IO[bytes]:
-        """Load data from `url`.
+        """Load data from `url` with caching support.
 
         By default, the source of `url` is downloaded and saved to `filepath`.
         If `filepath` exists, the `url` is not visited and the cached data is
-        returned.
+        returned. This is the core method for all data fetching in scrapers.
 
         Parameters
         ----------
@@ -275,6 +307,7 @@ class BaseReader(ABC):
             If True, will not use cached data. Overrides the class property.
         var : str or list of str, optional
             Return a JavaScript variable instead of the page source.
+            Used for extracting specific JS variables from pages.
 
         Raises
         ------
@@ -286,10 +319,13 @@ class BaseReader(ABC):
         io.BufferedIOBase
             File-like object of downloaded data.
         """
+        # Check if we have a valid cached version
         is_cached = self._is_cached(filepath, max_age)
         if no_cache or self.no_cache or not is_cached:
+            # Download fresh data
             logger.debug("Fetching %s", url)
             return self._download_and_save(url, filepath, var)
+        # Use cached data
         logger.debug("Cache hit: %s", url)
         if filepath is None:
             raise ValueError("No filepath provided for cached data.")
@@ -319,7 +355,7 @@ class BaseReader(ABC):
         bool
             True in case of a cache hit, otherwise False.
         """
-        # Validate inputs
+        # Validate and normalize max_age parameter
         if max_age is not None:
             if isinstance(max_age, int):
                 _max_age = timedelta(days=max_age)
@@ -331,7 +367,7 @@ class BaseReader(ABC):
             _max_age = None
 
         cache_invalid = False
-        # Check if cached file is too old
+        # Check if cached file exists and is not too old
         if _max_age is not None and filepath is not None and filepath.exists():
             last_modified = datetime.fromtimestamp(filepath.stat().st_mtime, tz=timezone.utc)
             now = datetime.now(timezone.utc)
