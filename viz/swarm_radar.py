@@ -242,7 +242,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
                            labelsize=8, zorder=10, pad=0, colors='w')  # Reducido de 9 a 8
         
         rotation = 180 if theta_mid[idx] >= np.pi/2 and theta_mid[idx] <= 3*np.pi/2 else 0
-        plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation, family='serif')  # Añadido family='serif'
+        plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation, family='DejaVu Sans')  # Añadido family='DejaVu Sans'
         
         ax_mins.append(ax_save.get_xlim()[0])
         ax_maxs.append(ax_save.get_xlim()[1])
@@ -273,7 +273,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         text_rotation_delta = 90 if theta_mid[idx] >= np.pi else -90
         radar_ax.text(theta_mid[idx], 0.92, metric_titles[idx], 
                      ha="center", va="center", fontweight="bold", 
-                     fontsize=10, color='w', family='serif',  # Añadido family='serif'
+                     fontsize=10, color='w', family='DejaVu Sans',  # Añadido family='DejaVu Sans'
                      rotation=text_rotation_delta + (180/np.pi) * theta_mid[idx])
         
         plt.close(fig_save)
@@ -320,9 +320,9 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     # UNIFIED FOOTER: Consistent FootballDecoded branding hierarchy
     fig.text(0.87, 0.115, "Football Decoded", ha="center", fontsize=14, color="white", 
-             weight='bold', family='serif')  # Primary brand position
+             weight='bold', family='DejaVu Sans')  # Primary brand position
     fig.text(0.1, 0.115, "Created by Jaime Oriol", ha="center", fontsize=10, color="white", 
-             weight='bold', family='serif')  # Creator attribution position
+             weight='bold', family='DejaVu Sans')  # Creator attribution position
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
@@ -421,7 +421,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             rot_deg += 180
             
         ax.text(x, y, title, rotation=rot_deg, ha='center', va='center',
-                fontsize=10, fontweight='bold', color='white', family='serif')  # Añadido family='serif'
+                fontsize=10, fontweight='bold', color='white', family='DejaVu Sans')  # Añadido family='DejaVu Sans'
     
     # Líneas radiales (más cortas)
     for angle in angles:
@@ -460,7 +460,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             
             ax.text(x, y, label, ha='center', va='center', size=7, color='white',  # Reducido de 8 a 7
                    bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR, 
-                           edgecolor='none', alpha=0.9), family='serif')  # Añadido family='serif'
+                           edgecolor='none', alpha=0.9), family='DejaVu Sans')  # Añadido family='DejaVu Sans'
     
     # Función para convertir valor a coordenada (rango más pequeño)
     def get_radar_coordinates(values, ranges):
@@ -553,9 +553,9 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     
     # UNIFIED FOOTER: Consistent brand positioning across modules
     ax.text(18, -21.5, "Football Decoded", ha='center', fontsize=14, color='white', 
-            weight='bold', family='serif')  # Primary brand - right position
+            weight='bold', family='DejaVu Sans')  # Primary brand - right position
     ax.text(-18, -21.5, "Created by Jaime Oriol", ha='center', fontsize=10, color='white', 
-            weight='bold', family='serif')  # Creator attribution - left position
+            weight='bold', family='DejaVu Sans')  # Creator attribution - left position
     
     ax.axis('off')
     

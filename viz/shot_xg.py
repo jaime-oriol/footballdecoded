@@ -89,7 +89,7 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     shots_df = pd.read_csv(csv_path)
     
     # Unified typography system
-    font = 'serif'
+    font = 'DejaVu Sans'
     
     # Unified colormap system matching FootballDecoded modules
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [

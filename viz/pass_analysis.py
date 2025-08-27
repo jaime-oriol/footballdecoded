@@ -339,7 +339,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
             # SCATTER USA COORDENADAS INVERTIDAS (y, x)
             ax[idx].scatter(end_y, end_x, s=100, c=[color], zorder=count)
     
-    font = 'serif'
+    font = 'DejaVu Sans'
     
     # Títulos
     fig.text(x=0.5, y=.93, s="Pass Flow",
@@ -764,7 +764,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
                         fontsize=8, fontweight='bold', va='center', ha='center', 
                         color=text_color, zorder=4, family='serif')
     
-    font = 'serif'
+    font = 'DejaVu Sans'
     
     # Títulos
     fig.text(x=0.5, y=.93, s="Pass Hull",

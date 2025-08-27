@@ -62,7 +62,7 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
         season: Season string
     """
     # Font unificado
-    font = 'serif'
+    font = 'DejaVu Sans'
     
     # Colormap unificado
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [

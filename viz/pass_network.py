@@ -417,9 +417,9 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     
     # Textos y títulos
     fig.text(x=0.5, y=0.19, s='Passes from minutes 1 to 90. Only players with 15+ minutes shown for visual clarity.',
-             ha='center', va='center', color='white', fontsize=7, fontfamily='serif')
+             ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
     
-    font = 'serif'
+    font = 'DejaVu Sans'
     
     fig.text(x=0.5, y=.93, s="Pass Network",
             weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')

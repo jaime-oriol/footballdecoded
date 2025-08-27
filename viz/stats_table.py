@@ -149,9 +149,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     
     # Player 1 name and context
     ax.text(text1_x, y_start, p1['player_name'], 
-            fontweight='bold', fontsize=13, color=team_colors[0], ha='left', va='center', family='serif')
+            fontweight='bold', fontsize=13, color=team_colors[0], ha='left', va='center', family='DejaVu Sans')
     ax.text(text1_x, y_start - 0.4, f"{p1['league']} {p1['season']}", 
-            fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='serif')
+            fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='DejaVu Sans')
     
     # PLAYER 2 HEADER: Logo and identification (if comparing two players)
     if p2 is not None:
@@ -166,9 +166,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         
         # Player 2 name and context
         ax.text(text2_x, y_start, p2['player_name'],
-                fontweight='bold', fontsize=13, color=team_colors[1], ha='left', va='center', family='serif')
+                fontweight='bold', fontsize=13, color=team_colors[1], ha='left', va='center', family='DejaVu Sans')
         ax.text(text2_x, y_start - 0.4, f"{p2['league']} {p2['season']}", 
-                fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='serif')
+                fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='DejaVu Sans')
     
     # Header separator line
     y_line = y_start - 0.7
@@ -178,21 +178,21 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     y_context = y_start - 1.2
     
     # Minutes played context
-    ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', weight='bold', family='serif')
+    ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', weight='bold', family='DejaVu Sans')
     min1 = int(p1.get('minutes_played', 0))
-    ax.text(p1_value_x, y_context, f"{min1}", fontsize=10, color='white', ha='right', weight='bold', family='serif')
+    ax.text(p1_value_x, y_context, f"{min1}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
     if p2 is not None:
         min2 = int(p2.get('minutes_played', 0))
-        ax.text(p2_value_x, y_context, f"{min2}", fontsize=10, color='white', ha='right', weight='bold', family='serif')
+        ax.text(p2_value_x, y_context, f"{min2}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
     
     # Matches played context
     y_context -= 0.4
-    ax.text(0.7, y_context, "Matches Played", fontsize=10, color='white', weight='bold', family='serif')
+    ax.text(0.7, y_context, "Matches Played", fontsize=10, color='white', weight='bold', family='DejaVu Sans')
     mat1 = int(p1.get('matches_played', 0))
-    ax.text(p1_value_x, y_context, f"{mat1}", fontsize=10, color='white', ha='right', weight='bold', family='serif')
+    ax.text(p1_value_x, y_context, f"{mat1}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
     if p2 is not None:
         mat2 = int(p2.get('matches_played', 0))
-        ax.text(p2_value_x, y_context, f"{mat2}", fontsize=10, color='white', ha='right', weight='bold', family='serif')
+        ax.text(p2_value_x, y_context, f"{mat2}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
     
     # Context separator line
     y_line = y_context - 0.3
@@ -210,7 +210,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
             ax.add_patch(rect)
         
         clean_title = title.replace('\n', ' ')
-        ax.text(0.7, y_pos, clean_title, fontsize=10, color='white', weight='bold', va='center', family='serif')
+        ax.text(0.7, y_pos, clean_title, fontsize=10, color='white', weight='bold', va='center', family='DejaVu Sans')
         
         # Jugador 1
         val_1 = p1.get(metric, 0)
@@ -232,9 +232,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         pct_color_1 = node_cmap(percentile_norm(pct_1))
         
         ax.text(p1_value_x, y_pos, val_str_1, fontsize=10, color='white', ha='right', 
-                weight='bold', va='center', family='serif')
+                weight='bold', va='center', family='DejaVu Sans')
         ax.text(p1_pct_x, y_pos, f"{int(pct_1)}", 
-                fontsize=10, color=pct_color_1, ha='left', fontweight='bold', va='center', family='serif')
+                fontsize=10, color=pct_color_1, ha='left', fontweight='bold', va='center', family='DejaVu Sans')
         
         # Jugador 2
         if p2 is not None:
@@ -256,9 +256,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
             pct_color_2 = node_cmap(percentile_norm(pct_2))
             
             ax.text(p2_value_x, y_pos, val_str_2, fontsize=10, color='white', ha='right', 
-                    weight='bold', va='center', family='serif')
+                    weight='bold', va='center', family='DejaVu Sans')
             ax.text(p2_pct_x, y_pos, f"{int(pct_2)}", 
-                    fontsize=10, color=pct_color_2, ha='left', fontweight='bold', va='center', family='serif')
+                    fontsize=10, color=pct_color_2, ha='left', fontweight='bold', va='center', family='DejaVu Sans')
     
     # Footer
     footer_y = y_metrics - (len(metrics) * row_height)
@@ -268,7 +268,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         ax.add_patch(rect)
     
     ax.text(0.7, footer_y, footer_text, 
-            fontsize=10, color='white', ha='left', style='italic', weight='bold', va='center', family='serif')
+            fontsize=10, color='white', ha='left', style='italic', weight='bold', va='center', family='DejaVu Sans')
     
     # Leyenda de percentiles (movida a la derecha)
     legend_y = footer_y - 0.8
@@ -285,7 +285,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
                 color=color, linewidth=3, solid_capstyle='round')
         
         ax.text(x_pos, legend_y - 0.3, f"{low}-{high}", 
-                fontsize=8, color='white', ha='center', va='center', family='serif')
+                fontsize=8, color='white', ha='center', va='center', family='DejaVu Sans')
     
     # LOW → HIGH con flecha
     arrow_y = legend_y - 0.8
@@ -296,9 +296,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
                 arrowprops=dict(arrowstyle='->', color='white', lw=1))
     
     ax.text(arrow_start_x - 0.1, arrow_y, 'LOW', fontsize=8, color='white', 
-            ha='right', va='center', family='serif')
+            ha='right', va='center', family='DejaVu Sans')
     ax.text(arrow_end_x + 0.1, arrow_y, 'HIGH', fontsize=8, color='white', 
-            ha='left', va='center', family='serif')
+            ha='left', va='center', family='DejaVu Sans')
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
