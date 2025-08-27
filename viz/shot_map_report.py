@@ -291,9 +291,9 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     subtitle_text = f"{home_team} {h_stats['goals']}-{a_stats['goals']} {away_team}"
     subsubtitle_text = f"{league} | {season}"
     
-    fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=20, color='w', fontfamily=font)
-    fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="bold", fontsize=18, color='w', fontfamily=font)
-    fig.text(0.5, 0.79, subsubtitle_text, ha='center', fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=23, color='w', fontfamily=font)
+    fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="regular", fontsize=21, color='w', fontfamily=font)
+    fig.text(0.5, 0.79, subsubtitle_text, ha='center', fontweight="regular", fontsize=17, color='w', fontfamily=font)
     
     # Logos
     if home_logo_path:

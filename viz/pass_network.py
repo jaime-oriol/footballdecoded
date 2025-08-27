@@ -430,7 +430,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.175, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.18, result_y-0.045, 0.135, 0.135])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -439,7 +439,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.71, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.67, result_y-0.045, 0.135, 0.135])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -447,16 +447,28 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     
     # Resultado
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='bold', va="bottom", ha="center", fontsize=10, font=font, color='white')
+            weight='regular', va="bottom", ha="center", fontsize=10, font=font, color='white')
     
     # Metadata
     fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=8, font=font, color='white')
     
-    # Créditos
-    fig.text(x=0.87, y=-0.0, s="Football Decoded", va="bottom", ha="center", 
-            weight='bold', fontsize=12, font=font, color='white')
-    fig.text(x=0.1, y=-0.0, s="Created by Jaime Oriol", va="bottom", ha="center", 
+    # Logo Football Decoded
+    try:
+        # Obtener la ruta del directorio del proyecto
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.675, -0.05, 0.32, 0.12])  # [x, y, width, height]
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        print(f"Error cargando logo: {e}")  # Para debug
+        fig.text(x=0.87, y=-0.0, s="Football Decoded", va="bottom", ha="center", 
+                weight='bold', fontsize=12, font=font, color='white')
+    fig.text(x=0.14, y=-0.015, s="Created by Jaime Oriol", va="bottom", ha="center", 
             weight='bold', fontsize=6, font=font, color='white')
     
     # Títulos de leyenda
@@ -486,23 +498,23 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
             fontsize=6, font=font, color='white')
     
     # Elementos visuales de leyenda
-    x0 = 225
-    y0 = 250
+    x0 = 195
+    y0 = 370
     dx = 60
     dy = 120
     shift_x = 70
     
-    x1 = 740
-    x2 = 1400
-    y2 = 310
+    x1 = 710
+    x2 = 1370
+    y2 = 430
     shift_x2 = 70
     radius = 20
     
-    x3 = 1840
+    x3 = 1810
     shift_x3 = 100
     
-    x4 = 960
-    y4 = 100
+    x4 = 930
+    y4 = 220
     
     style = ArrowStyle('->', head_length=5, head_width=3)
     

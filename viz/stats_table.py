@@ -153,7 +153,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     
     # Player 1 name and context
     ax.text(text1_x, y_start, p1['player_name'], 
-            fontweight='bold', fontsize=18, color=team_colors[0], ha='left', va='center', family='DejaVu Sans')
+            fontweight='regular', fontsize=18, color=team_colors[0], ha='left', va='center', family='DejaVu Sans')
     ax.text(text1_x, y_start - 0.4, f"{p1['league']} {p1['season']}", 
             fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='DejaVu Sans')
     
@@ -170,7 +170,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         
         # Player 2 name and context
         ax.text(text2_x, y_start, p2['player_name'],
-                fontweight='bold', fontsize=18, color=team_colors[1], ha='left', va='center', family='DejaVu Sans')
+                fontweight='regular', fontsize=18, color=team_colors[1], ha='left', va='center', family='DejaVu Sans')
         ax.text(text2_x, y_start - 0.4, f"{p2['league']} {p2['season']}", 
                 fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='DejaVu Sans')
     

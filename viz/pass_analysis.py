@@ -347,7 +347,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
     
     result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='bold', va="bottom", ha="center", fontsize=18, font=font, color='white')
+            weight='regular', va="bottom", ha="center", fontsize=18, font=font, color='white')
     
     fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=14, font=font, color='white')
@@ -772,7 +772,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     
     result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='bold', va="bottom", ha="center", fontsize=18, font=font, color='white')
+            weight='regular', va="bottom", ha="center", fontsize=18, font=font, color='white')
     
     fig.text(x=0.5, y=0.895, s=f"{league} | Season {season} | {match_date}",
             va="bottom", ha="center", fontsize=14, font=font, color='white')

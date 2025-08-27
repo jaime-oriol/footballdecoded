@@ -222,9 +222,9 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     if not subsubtitle_text:
         subsubtitle_text = "2024-25"
     
-    fig.text(0.18, 0.92, title_text, fontweight="bold", fontsize=20, color='w', fontfamily=font)
-    fig.text(0.18, 0.883, subtitle_text, fontweight="bold", fontsize=18, color='w', fontfamily=font)
-    fig.text(0.18, 0.852, subsubtitle_text, fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.18, 0.92, title_text, fontweight="bold", fontsize=16, color='w', fontfamily=font)
+    fig.text(0.18, 0.883, subtitle_text, fontweight="regular", fontsize=13, color='w', fontfamily=font)
+    fig.text(0.18, 0.852, subsubtitle_text, fontweight="regular", fontsize=10, color='w', fontfamily=font)
     
     # Estadísticas calculadas
     sign = '+' if selected_shots['goal'].sum() - selected_shots['xg'].sum() > 0 else ''
