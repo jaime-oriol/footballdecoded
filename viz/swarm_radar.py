@@ -319,10 +319,22 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     radar_object.make_pizza(**kwargs)
     
     # UNIFIED FOOTER: Consistent FootballDecoded branding hierarchy
-    fig.text(0.87, 0.115, "Football Decoded", ha="center", fontsize=14, color="white", 
-             weight='bold', family='DejaVu Sans')  # Primary brand position
     fig.text(0.1, 0.115, "Created by Jaime Oriol", ha="center", fontsize=10, color="white", 
              weight='bold', family='DejaVu Sans')  # Creator attribution position
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.82, 0.10, 0.2, 0.08])  # [x, y, width, height]
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        fig.text(0.87, 0.115, "Football Decoded", ha="center", fontsize=14, color="white", 
+                 weight='bold', family='DejaVu Sans')  # Primary brand position
     
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
@@ -552,10 +564,22 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         ax.plot(x_coords_2, y_coords_2, color=colors[1], linewidth=3, zorder=3)
     
     # UNIFIED FOOTER: Consistent brand positioning across modules
-    ax.text(18, -21.5, "Football Decoded", ha='center', fontsize=14, color='white', 
-            weight='bold', family='DejaVu Sans')  # Primary brand - right position
     ax.text(-18, -21.5, "Created by Jaime Oriol", ha='center', fontsize=10, color='white', 
             weight='bold', family='DejaVu Sans')  # Creator attribution - left position
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.82, 0.02, 0.2, 0.08])  # [x, y, width, height]
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        ax.text(18, -21.5, "Football Decoded", ha='center', fontsize=14, color='white', 
+                weight='bold', family='DejaVu Sans')  # Primary brand - right position
     
     ax.axis('off')
     

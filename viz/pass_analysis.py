@@ -343,23 +343,23 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
     
     # Títulos
     fig.text(x=0.5, y=.93, s="Pass Flow",
-            weight='bold', va="bottom", ha="center", fontsize=20, font=font, color='white')
+            weight='bold', va="bottom", ha="center", fontsize=16, font=font, color='white')
     
     result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='regular', va="bottom", ha="center", fontsize=18, font=font, color='white')
+            weight='regular', va="bottom", ha="center", fontsize=12, font=font, color='white')
     
     fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
-            va="bottom", ha="center", fontsize=14, font=font, color='white')
+            va="bottom", ha="center", fontsize=10, font=font, color='white')
     
     fig.text(x=0.5, y=0.87, s="Most Frequent Inter-zone Passes", ha='center',
-            fontweight="regular", fontsize=10, color='w', family=font)
+            fontweight="regular", fontsize=9, color='w', family=font)
     
     # Logos
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.23, result_y-0.07, 0.13, 0.13])
+            logo_ax = fig.add_axes([0.19, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -368,7 +368,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.65, result_y-0.07, 0.13, 0.13])
+            logo_ax = fig.add_axes([0.68, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -417,11 +417,23 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
     away_total = len(passes_df[passes_df['team'] == away_team])
     
     fig.text(0.5, 0.055, f"Total passes: {home_team} {home_total} | {away_team} {away_total}", 
-             ha='center', va='center', color='white', fontsize=9, family=font)
+             ha='center', va='center', color='white', fontsize=10, family=font)
     
     # Créditos
-    fig.text(0.87, 0.03, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
-    fig.text(0.1, 0.03, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
+    fig.text(0.14, 0.015, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.71, -0.03, 0.3, 0.12])  # [x, y, width, height]
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        fig.text(0.87, 0.03, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
     
     plt.tight_layout()
     
@@ -768,23 +780,23 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     
     # Títulos
     fig.text(x=0.5, y=.93, s="Pass Hull",
-            weight='bold', va="bottom", ha="center", fontsize=20, font=font, color='white')
+            weight='bold', va="bottom", ha="center", fontsize=16, font=font, color='white')
     
     result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='regular', va="bottom", ha="center", fontsize=18, font=font, color='white')
+            weight='regular', va="bottom", ha="center", fontsize=12, font=font, color='white')
     
-    fig.text(x=0.5, y=0.895, s=f"{league} | Season {season} | {match_date}",
-            va="bottom", ha="center", fontsize=14, font=font, color='white')
+    fig.text(x=0.5, y=0.8925, s=f"{league} | Season {season} | {match_date}",
+            va="bottom", ha="center", fontsize=10, font=font, color='white')
     
-    fig.text(x=0.5, y=0.85, s="Variation in start position of player passes.\nCentral 50% of passes shown per player,\nrepresented by a shaded region", ha='center', 
-            fontweight="regular", fontsize=8, color='w', family=font)
+    fig.text(x=0.5, y=0.845, s="Variation in start position of player passes.\nCentral 50% of passes shown per player,\nrepresented by a shaded region", ha='center', 
+            fontweight="regular", fontsize=9, color='w', family=font)
     
     # Logos
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.23, result_y-0.07, 0.13, 0.13])
+            logo_ax = fig.add_axes([0.19, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -793,7 +805,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.65, result_y-0.07, 0.13, 0.13])
+            logo_ax = fig.add_axes([0.68, result_y-0.07, 0.13, 0.13])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -818,7 +830,7 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     legend_ax.axis('off')
     
     ranking_text = "Top players by area of\nregion containing central\n50% passes shown \n(as % of total pitch area)"
-    legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=9, color='w', family=font)
+    legend_ax.text(5, 0.55, ranking_text, ha='center', va='center', fontsize=10, color='w', family=font)
     
     # Líneas de conexión
     legend_ax.arrow(3.6, 0.5, -0.75, 0, color='w', width=0.005, head_width=0.03, head_length=0.1)
@@ -842,8 +854,20 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
         legend_ax.text(9.65, y_pos, f"{area_pct:.1f}%", ha='right', va='center', fontsize=10, color='w', family=font)
     
     # Footer
-    fig.text(0.87, 0.05, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
-    fig.text(0.1, 0.05, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
+    fig.text(0.14, 0.03, "Created by Jaime Oriol", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.71, -0.01, 0.3, 0.12])  # [x, y, width, height]
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        fig.text(0.87, 0.05, "Football Decoded", va="bottom", ha="center", weight='bold', fontsize=14, family=font, color='white')
     
     plt.tight_layout()
     

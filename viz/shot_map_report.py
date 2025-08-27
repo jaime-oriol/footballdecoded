@@ -46,6 +46,7 @@ import matplotlib as mpl
 import matplotlib.colors as mcolors
 from mplsoccer.pitch import VerticalPitch
 from PIL import Image
+import os
 
 # Configuración visual unificada
 BACKGROUND_COLOR = '#313332'
@@ -316,7 +317,19 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     
     # Footer unificado
     fig.text(0.05, 0.02, "Created by Jaime Oriol", fontweight='bold', fontsize=10, color="white", fontfamily=font)
-    fig.text(0.8, 0.02, "Football Decoded", fontweight='bold', fontsize=14, color="white", fontfamily=font)
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.75, 0.01, 0.2, 0.08])  # [x, y, width, height]
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        fig.text(0.8, 0.02, "Football Decoded", fontweight='bold', fontsize=14, color="white", fontfamily=font)
     
     plt.tight_layout()
     return fig
