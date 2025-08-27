@@ -52,11 +52,18 @@ import os
 # Visual configuration consistent with FootballDecoded standards
 BACKGROUND_COLOR = '#313332'
 
-# Fixed dimensions for swarm radar integration compatibility
+# Fixed dimensions for radar integration compatibility
 # These ensure perfect alignment when combining with radar visualizations
+
+# Swarm radar dimensions (original)
 SWARM_TOTAL_SIZE = (4945, 2755)   # Total combined visualization size
 SWARM_RADAR_SIZE = (2625, 2755)   # Radar chart portion dimensions
 SWARM_TABLE_SIZE = (2320, 2755)   # Statistical table portion dimensions
+
+# Traditional radar dimensions (adjusted for 9x10 aspect ratio)
+TRADITIONAL_TOTAL_SIZE = (4820, 2755)   # Total combined size for traditional radar
+TRADITIONAL_RADAR_SIZE = (2500, 2755)   # Traditional radar portion (maintains aspect ratio)
+TRADITIONAL_TABLE_SIZE = (2320, 2755)   # Table portion (same as swarm)
 
 def create_stats_table(df_data, player_1_id, metrics, metric_titles, 
                       player_2_id=None, team_colors=None, 
@@ -122,9 +129,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.set_ylim(0, 15)   # Fixed height for metric accommodation
     ax.axis('off')       # Clean appearance without axes
     
-    # Main title
-    fig.text(0.5, 0.95, "Player Comparison", fontweight='bold', fontsize=20, 
-             color='white', ha='center', va='top', family='DejaVu Sans')
+    # Main title - removed
+    # fig.text(0.5, 0.95, "Player Comparison", fontweight='bold', fontsize=20, 
+    #          color='white', ha='center', va='top', family='DejaVu Sans')
     
     # Layout positioning coordinates (optimized for readability)
     y_start = 14.5      # Top position for player headers
@@ -153,11 +160,11 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     
     # Player 1 name and context
     ax.text(text1_x, y_start, p1['player_name'], 
-            fontweight='regular', fontsize=18, color=team_colors[0], ha='left', va='center', family='DejaVu Sans')
-    ax.text(text1_x, y_start - 0.4, f"{p1['league']} {p1['season']}", 
-            fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='DejaVu Sans')
+            fontweight='bold', fontsize=14, color=team_colors[0], ha='left', va='center', family='DejaVu Sans')
+    ax.text(text1_x, y_start - 0.425, f"{p1['league']} {p1['season']}", 
+            fontsize=10, color='white', alpha=0.9, ha='left', fontweight='regular', family='DejaVu Sans')
     
-    # PLAYER 2 HEADER: Logo and identification (if comparing two players)
+    # PLAYER 2 HEADER: Logo and identification (only show if P2 exists)
     if p2 is not None:
         if team_logos and p2['team'] in team_logos:
             try:
@@ -170,9 +177,17 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         
         # Player 2 name and context
         ax.text(text2_x, y_start, p2['player_name'],
-                fontweight='regular', fontsize=18, color=team_colors[1], ha='left', va='center', family='DejaVu Sans')
-        ax.text(text2_x, y_start - 0.4, f"{p2['league']} {p2['season']}", 
-                fontsize=10, color='white', alpha=0.9, ha='left', weight='normal', family='DejaVu Sans')
+                fontweight='bold', fontsize=14, color=team_colors[1], ha='left', va='center', family='DejaVu Sans')
+        ax.text(text2_x, y_start - 0.425, f"{p2['league']} {p2['season']}", 
+                fontsize=10, color='white', alpha=0.9, ha='left', fontweight='regular', family='DejaVu Sans')
+    # NOTE: Layout space for P2 is always reserved, content only shows when P2 exists
+    # Add invisible placeholder elements to maintain consistent layout even with 1 player
+    if p2 is None:
+        # Invisible text elements to preserve layout dimensions
+        ax.text(text2_x, y_start, "", 
+                fontweight='bold', fontsize=14, color='white', alpha=0, ha='left', va='center', family='DejaVu Sans')
+        ax.text(text2_x, y_start - 0.425, "", 
+                fontsize=10, color='white', alpha=0, ha='left', fontweight='regular', family='DejaVu Sans')
     
     # Header separator line
     y_line = y_start - 0.7
@@ -182,21 +197,29 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     y_context = y_start - 1.2
     
     # Minutes played context
-    ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', weight='bold', family='DejaVu Sans')
+    ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', fontweight='bold', family='DejaVu Sans')
     min1 = int(p1.get('minutes_played', 0))
-    ax.text(p1_value_x, y_context, f"{min1}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
+    ax.text(p1_value_x, y_context, f"{min1}", fontsize=11, color='white', ha='right', fontweight='regular', family='DejaVu Sans')
     if p2 is not None:
         min2 = int(p2.get('minutes_played', 0))
-        ax.text(p2_value_x, y_context, f"{min2}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
+        ax.text(p2_value_x, y_context, f"{min2}", fontsize=11, color='white', ha='right', fontweight='regular', family='DejaVu Sans')
+    else:
+        # Invisible placeholder for consistent layout
+        ax.text(p2_value_x, y_context, "", fontsize=11, color='white', alpha=0, ha='right', fontweight='regular', family='DejaVu Sans')
+    # NOTE: P2 column space reserved, value only shown when P2 exists
     
     # Matches played context
     y_context -= 0.4
-    ax.text(0.7, y_context, "Matches Played", fontsize=10, color='white', weight='bold', family='DejaVu Sans')
+    ax.text(0.7, y_context, "Matches Played", fontsize=10, color='white', fontweight='bold', family='DejaVu Sans')
     mat1 = int(p1.get('matches_played', 0))
-    ax.text(p1_value_x, y_context, f"{mat1}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
+    ax.text(p1_value_x, y_context, f"{mat1}", fontsize=11, color='white', ha='right', fontweight='regular', family='DejaVu Sans')
     if p2 is not None:
         mat2 = int(p2.get('matches_played', 0))
-        ax.text(p2_value_x, y_context, f"{mat2}", fontsize=10, color='white', ha='right', weight='bold', family='DejaVu Sans')
+        ax.text(p2_value_x, y_context, f"{mat2}", fontsize=11, color='white', ha='right', fontweight='regular', family='DejaVu Sans')
+    else:
+        # Invisible placeholder for consistent layout
+        ax.text(p2_value_x, y_context, "", fontsize=11, color='white', alpha=0, ha='right', fontweight='regular', family='DejaVu Sans')
+    # NOTE: P2 column space reserved, value only shown when P2 exists
     
     # Context separator line
     y_line = y_context - 0.3
@@ -214,7 +237,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
             ax.add_patch(rect)
         
         clean_title = title.replace('\n', ' ')
-        ax.text(0.7, y_pos, clean_title, fontsize=10, color='white', weight='bold', va='center', family='DejaVu Sans')
+        ax.text(0.7, y_pos, clean_title, fontsize=10, color='white', fontweight='bold', va='center', family='DejaVu Sans')
         
         # Jugador 1
         val_1 = p1.get(metric, 0)
@@ -235,12 +258,12 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         
         pct_color_1 = node_cmap(percentile_norm(pct_1))
         
-        ax.text(p1_value_x, y_pos, val_str_1, fontsize=10, color='white', ha='right', 
-                weight='bold', va='center', family='DejaVu Sans')
+        ax.text(p1_value_x, y_pos, val_str_1, fontsize=11, color='white', ha='right', 
+                fontweight='regular', va='center', family='DejaVu Sans')
         ax.text(p1_pct_x, y_pos, f"{int(pct_1)}", 
-                fontsize=10, color=pct_color_1, ha='left', fontweight='bold', va='center', family='DejaVu Sans')
+                fontsize=10, color=pct_color_1, ha='left', fontweight='regular', va='center', family='DejaVu Sans')
         
-        # Jugador 2
+        # Jugador 2 (only show values when P2 exists)
         if p2 is not None:
             val_2 = p2.get(metric, 0)
             pct_2 = p2.get(pct_col, 0)
@@ -259,10 +282,17 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
             
             pct_color_2 = node_cmap(percentile_norm(pct_2))
             
-            ax.text(p2_value_x, y_pos, val_str_2, fontsize=10, color='white', ha='right', 
-                    weight='bold', va='center', family='DejaVu Sans')
+            ax.text(p2_value_x, y_pos, val_str_2, fontsize=11, color='white', ha='right', 
+                    fontweight='regular', va='center', family='DejaVu Sans')
             ax.text(p2_pct_x, y_pos, f"{int(pct_2)}", 
-                    fontsize=10, color=pct_color_2, ha='left', fontweight='bold', va='center', family='DejaVu Sans')
+                    fontsize=10, color=pct_color_2, ha='left', fontweight='regular', va='center', family='DejaVu Sans')
+        else:
+            # Invisible placeholders for consistent layout
+            ax.text(p2_value_x, y_pos, "", fontsize=11, color='white', alpha=0, ha='right', 
+                    fontweight='regular', va='center', family='DejaVu Sans')
+            ax.text(p2_pct_x, y_pos, "", 
+                    fontsize=10, color='white', alpha=0, ha='left', fontweight='regular', va='center', family='DejaVu Sans')
+        # NOTE: P2 statistics columns reserved, values only shown when P2 exists
     
     # Footer
     footer_y = y_metrics - (len(metrics) * row_height)
@@ -271,8 +301,8 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         rect = Rectangle((0.5, footer_y - 0.4), 8.0, 0.8, facecolor='white', alpha=0.05)
         ax.add_patch(rect)
     
-    ax.text(0.7, footer_y, footer_text, 
-            fontsize=10, color='white', ha='left', style='italic', weight='bold', va='center', family='DejaVu Sans')
+    ax.text(0.7, footer_y, f"*{footer_text}", 
+            fontsize=10, color='white', ha='left', style='italic', fontweight='bold', va='center', family='DejaVu Sans')
     
     # Leyenda de percentiles (movida a la derecha)
     legend_y = footer_y - 0.8
@@ -289,7 +319,7 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
                 color=color, linewidth=3, solid_capstyle='round')
         
         ax.text(x_pos, legend_y - 0.3, f"{low}-{high}", 
-                fontsize=8, color='white', ha='center', va='center', family='DejaVu Sans')
+                fontsize=9, color='white', ha='center', va='center', family='DejaVu Sans')
     
     # LOW → HIGH con flecha
     arrow_y = legend_y - 0.8
@@ -299,10 +329,28 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.annotate('', xy=(arrow_end_x, arrow_y), xytext=(arrow_start_x, arrow_y),
                 arrowprops=dict(arrowstyle='->', color='white', lw=1))
     
-    ax.text(arrow_start_x - 0.1, arrow_y, 'LOW', fontsize=8, color='white', 
+    ax.text(arrow_start_x - 0.1, arrow_y, 'LOW', fontsize=9, color='white', 
             ha='right', va='center', family='DejaVu Sans')
-    ax.text(arrow_end_x + 0.1, arrow_y, 'HIGH', fontsize=8, color='white', 
+    ax.text(arrow_end_x + 0.1, arrow_y, 'HIGH', fontsize=9, color='white', 
             ha='left', va='center', family='DejaVu Sans')
+    
+    # Logo Football Decoded in lower right corner
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.575, 0.025, 0.4, 0.16])  # [x, y, width, height] - back to original size
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        # Fallback al texto si no se encuentra la imagen
+        ax.text(6.5, 0.5, "Football Decoded", fontsize=10, color='white', 
+                fontweight='bold', ha='center', va='center', family='DejaVu Sans')
+    
+    # "Created by Jaime Oriol" below the logo
+    ax.text(6.7, 0.65, "Created by Jaime Oriol", fontsize=10, color='white', 
+            fontweight='bold', ha='center', va='center', family='DejaVu Sans')
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
@@ -314,15 +362,16 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     
     return save_path
 
-def combine_radar_and_table(radar_path, table_path, output_path='combined_visualization.png'):
+def combine_radar_and_table(radar_path, table_path, output_path='combined_visualization.png', radar_type='auto'):
     """
-    Combine radar chart and statistical table with fixed dimensions.
+    Combine radar chart and statistical table with appropriate dimensions.
     
     Creates unified visualization by combining radar chart and statistical
-    table with precise dimensions for professional presentation.
+    table with dimensions optimized for the specific radar type.
     
     Features:
-    - Fixed dimension system ensures consistent output
+    - Automatic radar type detection or manual specification
+    - Dimension system adapted to swarm vs traditional radar
     - High-quality resampling for professional appearance
     - Seamless integration with unified background
     - Optimal layout for comparative analysis
@@ -331,13 +380,14 @@ def combine_radar_and_table(radar_path, table_path, output_path='combined_visual
         radar_path: Path to radar chart image file
         table_path: Path to statistical table image file
         output_path: Path for combined output image
+        radar_type: 'auto', 'swarm', or 'traditional' - type of radar to combine
         
     Returns:
         Path to saved combined visualization
         
     Note:
         Uses LANCZOS resampling for high-quality scaling
-        Dimensions based on swarm radar integration standards
+        Auto-detection based on image dimensions
         Background color maintained for visual consistency
     """
     
@@ -345,14 +395,38 @@ def combine_radar_and_table(radar_path, table_path, output_path='combined_visual
     radar_img = Image.open(radar_path)
     table_img = Image.open(table_path)
     
-    # Resize to exact swarm integration dimensions with high-quality resampling
-    radar_resized = radar_img.resize(SWARM_RADAR_SIZE, Image.Resampling.LANCZOS)
-    table_resized = table_img.resize(SWARM_TABLE_SIZE, Image.Resampling.LANCZOS)
+    # Detect radar type if auto
+    if radar_type == 'auto':
+        radar_width, radar_height = radar_img.size
+        aspect_ratio = radar_width / radar_height
+        
+        # Traditional radar has more square aspect (9x10 = 0.9)
+        # Swarm radar is more rectangular (different proportions)
+        if 0.8 <= aspect_ratio <= 1.0:
+            radar_type = 'traditional'
+        else:
+            radar_type = 'swarm'
     
-    # Create combined canvas with fixed dimensions and consistent background
-    combined = Image.new('RGB', SWARM_TOTAL_SIZE, color=BACKGROUND_COLOR)
-    combined.paste(radar_resized, (0, 0))      # Radar on left side
-    combined.paste(table_resized, (2625, 0))   # Table on right side
+    # Select appropriate dimensions based on radar type
+    if radar_type == 'traditional':
+        total_size = TRADITIONAL_TOTAL_SIZE
+        radar_size = TRADITIONAL_RADAR_SIZE
+        table_size = TRADITIONAL_TABLE_SIZE
+        table_x_offset = TRADITIONAL_RADAR_SIZE[0]  # Position table after radar
+    else:  # swarm or fallback
+        total_size = SWARM_TOTAL_SIZE
+        radar_size = SWARM_RADAR_SIZE
+        table_size = SWARM_TABLE_SIZE
+        table_x_offset = SWARM_RADAR_SIZE[0]  # Position table after radar
+    
+    # Resize to exact dimensions with high-quality resampling
+    radar_resized = radar_img.resize(radar_size, Image.Resampling.LANCZOS)
+    table_resized = table_img.resize(table_size, Image.Resampling.LANCZOS)
+    
+    # Create combined canvas with appropriate dimensions and consistent background
+    combined = Image.new('RGB', total_size, color=BACKGROUND_COLOR)
+    combined.paste(radar_resized, (0, 0))              # Radar on left side
+    combined.paste(table_resized, (table_x_offset, 0))  # Table on right side
     
     # Save with high DPI for professional quality
     combined.save(output_path, dpi=(300, 300))

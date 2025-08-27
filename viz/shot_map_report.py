@@ -292,13 +292,22 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     subtitle_text = f"{home_team} {h_stats['goals']}-{a_stats['goals']} {away_team}"
     subsubtitle_text = f"{league} | {season}"
     
-    fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=23, color='w', fontfamily=font)
-    fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="regular", fontsize=21, color='w', fontfamily=font)
-    fig.text(0.5, 0.79, subsubtitle_text, ha='center', fontweight="regular", fontsize=17, color='w', fontfamily=font)
+    fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=20, color='w', fontfamily=font)
+    fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="regular", fontsize=18, color='w', fontfamily=font)
+    fig.text(0.5, 0.79, subsubtitle_text, ha='center', fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    
+    # Add xG line with arrows below league name - compact Unicode arrows with 2 lines
+    fig.text(0.5, 0.75, "xG", ha='center', fontweight="bold", fontsize=12, color='w', fontfamily=font)
+    # Left Unicode arrow and home team xG - compact with 2 lines
+    fig.text(0.42, 0.75, f"{h_stats['xg']:.1f}", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.46, 0.75, "←──", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    # Right Unicode arrow and away team xG - compact with 2 lines
+    fig.text(0.54, 0.75, "──→", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.58, 0.75, f"{a_stats['xg']:.1f}", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
     
     # Logos
     if home_logo_path:
-        ax_logo = fig.add_axes([0.195, 0.75, 0.2, 0.2])
+        ax_logo = fig.add_axes([0.16, 0.75, 0.2, 0.2])
         ax_logo.axis("off")
         try:
             img = Image.open(home_logo_path)
@@ -307,7 +316,7 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
             pass
     
     if away_logo_path:
-        ax_logo = fig.add_axes([0.61, 0.75, 0.2, 0.2])
+        ax_logo = fig.add_axes([0.64, 0.75, 0.2, 0.2])
         ax_logo.axis("off")
         try:
             img = Image.open(away_logo_path)
@@ -324,7 +333,7 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
         project_root = os.path.dirname(current_dir)
         logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
         logo = Image.open(logo_path)
-        logo_ax = fig.add_axes([0.75, 0.01, 0.2, 0.08])  # [x, y, width, height]
+        logo_ax = fig.add_axes([0.67, -0.025, 0.4, 0.16])  # [x, y, width, height] - even lower
         logo_ax.imshow(logo)
         logo_ax.axis('off')
     except Exception as e:

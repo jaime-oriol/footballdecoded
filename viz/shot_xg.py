@@ -258,7 +258,7 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     fig.text(0.89, 0.85, f"{round(highest_xg_miss['xg'].iloc[0], 2)}" if not highest_xg_miss.empty else "N/A", fontweight="regular", fontsize=10, color='w', fontfamily=font)
     
     # UNIFIED FOOTER: Consistent FootballDecoded branding
-    fig.text(0.075 , 0.02, "Created by Jaime Oriol", fontweight='bold', fontsize=10, color="white", fontfamily=font)
+    fig.text(0.085 , 0.02, "Created by Jaime Oriol", fontweight='bold', fontsize=10, color="white", fontfamily=font)
     
     # Logo Football Decoded
     try:
@@ -266,7 +266,7 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
         project_root = os.path.dirname(current_dir)
         logo_path_fd = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
         logo = Image.open(logo_path_fd)
-        logo_ax = fig.add_axes([0.65, 0.01, 0.2, 0.08])  # [x, y, width, height]
+        logo_ax = fig.add_axes([0.67, -0.018, 0.28, 0.12])  # [x, y, width, height]
         logo_ax.imshow(logo)
         logo_ax.axis('off')
     except Exception as e:
