@@ -287,9 +287,9 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     
     # Title
     league = "ESP-La Liga"  # Extract from path if needed
-    title_text = f"{league} - {season}"
+    title_text = "Shot Map"
     subtitle_text = f"{home_team} {h_stats['goals']}-{a_stats['goals']} {away_team}"
-    subsubtitle_text = f"Expected Goals: {h_stats['xg']:.2f} - {a_stats['xg']:.2f}"
+    subsubtitle_text = f"{league} | {season}"
     
     fig.text(0.5, 0.89, title_text, ha='center', fontweight="bold", fontsize=20, color='w', fontfamily=font)
     fig.text(0.5, 0.835, subtitle_text, ha='center', fontweight="bold", fontsize=18, color='w', fontfamily=font)

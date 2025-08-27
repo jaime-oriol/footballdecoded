@@ -343,14 +343,14 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
     
     # Títulos
     fig.text(x=0.5, y=.93, s="Pass Flow",
-            weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
+            weight='bold', va="bottom", ha="center", fontsize=20, font=font, color='white')
     
     result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
+            weight='bold', va="bottom", ha="center", fontsize=18, font=font, color='white')
     
     fig.text(x=0.5, y=0.89, s=f"{league} | Season {season} | {match_date}",
-            va="bottom", ha="center", fontsize=8, font=font, color='white')
+            va="bottom", ha="center", fontsize=14, font=font, color='white')
     
     fig.text(x=0.5, y=0.87, s="Most Frequent Inter-zone Passes", ha='center',
             fontweight="regular", fontsize=10, color='w', family=font)
@@ -768,14 +768,14 @@ def plot_pass_hull(events_csv_path, info_csv_path, aggregates_csv_path,
     
     # Títulos
     fig.text(x=0.5, y=.93, s="Pass Hull",
-            weight='bold', va="bottom", ha="center", fontsize=14, font=font, color='white')
+            weight='bold', va="bottom", ha="center", fontsize=20, font=font, color='white')
     
     result_y = 0.91
     fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
-            weight='bold', va="bottom", ha="center", fontsize=11, font=font, color='white')
+            weight='bold', va="bottom", ha="center", fontsize=18, font=font, color='white')
     
     fig.text(x=0.5, y=0.895, s=f"{league} | Season {season} | {match_date}",
-            va="bottom", ha="center", fontsize=8, font=font, color='white')
+            va="bottom", ha="center", fontsize=14, font=font, color='white')
     
     fig.text(x=0.5, y=0.85, s="Variation in start position of player passes.\nCentral 50% of passes shown per player,\nrepresented by a shaded region", ha='center', 
             fontweight="regular", fontsize=8, color='w', family=font)
