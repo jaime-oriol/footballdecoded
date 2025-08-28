@@ -289,7 +289,7 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     
     # Logo opcional
     if logo_path and os.path.exists(logo_path):
-        ax_logo = fig.add_axes([0.05, 0.82, 0.15, 0.15])
+        ax_logo = fig.add_axes([0.05, 0.82, 0.135, 0.135])
         ax_logo.axis("off")
         try:
             img = Image.open(logo_path)

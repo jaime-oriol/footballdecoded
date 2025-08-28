@@ -434,7 +434,7 @@ def combine_radar_and_table(radar_path, table_path, output_path='combined_visual
     return output_path
 
 def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_titles, 
-                               save_path='minimal_stats.png', show_plot=True):
+                               save_path='minimal_stats.png', show_plot=True, player_image_path=None):
     """
     Create minimal statistical table for notebook analysis.
     
@@ -448,6 +448,7 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         metrics_titles: List of 8-12 metric display names
         save_path: Output file path
         show_plot: Whether to display the plot
+        player_image_path: Optional path to player image file
         
     Returns:
         Path to saved visualization file
@@ -466,11 +467,21 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
     ax.set_ylim(0, len(metrics_data) + 2.5)
     ax.axis('off')
     
-    # Header with player and team - moved to left
-    ax.text(0.5, len(metrics_data) + 1.8, player_name, fontsize=16, color='white', 
+    # Header with player and team - moved to right to make space for image
+    ax.text(1.5, len(metrics_data) + 1.4, player_name, fontsize=14, color='white', 
             fontweight='bold', ha='left', va='center', family='DejaVu Sans')
-    ax.text(0.5, len(metrics_data) + 1.3, team_name, fontsize=12, color='white', 
+    ax.text(1.5, len(metrics_data) + 0.9, team_name, fontsize=10, color='white', 
             ha='left', va='center', family='DejaVu Sans')
+    
+    # Player image in top left if provided
+    if player_image_path and os.path.exists(player_image_path):
+        try:
+            player_img = Image.open(player_image_path)
+            player_ax = fig.add_axes([0.05, 0.75, 0.25, 0.2])  # [x, y, width, height] - top left
+            player_ax.imshow(player_img)
+            player_ax.axis('off')
+        except Exception as e:
+            pass  # Skip image if loading fails
     
     # Logo in top right corner
     try:
@@ -478,7 +489,7 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         project_root = os.path.dirname(current_dir)
         logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
         logo = Image.open(logo_path)
-        logo_ax = fig.add_axes([0.75, 0.82, 0.2, 0.15])  # [x, y, width, height] - top right
+        logo_ax = fig.add_axes([0.4, 0.75, 0.3, 0.25])  # [x, y, width, height] - top right, double size
         logo_ax.imshow(logo)
         logo_ax.axis('off')
     except Exception as e:
@@ -503,7 +514,7 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         else:
             display_value = str(value)
             
-        ax.text(5.5, y_pos, display_value, fontsize=11, color='white', 
+        ax.text(4.0, y_pos, display_value, fontsize=11, color='white', 
                 ha='right', va='center', family='DejaVu Sans')
     
     plt.tight_layout()
