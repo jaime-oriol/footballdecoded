@@ -1,91 +1,95 @@
 info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
-match_metadata,match_id,Athletic Club_vs_Barcelona_2025-05-25,,,,,,,,
-match_metadata,home_team,Athletic Club,,,,,,,,
-match_metadata,away_team,Barcelona,,,,,,,,
-match_metadata,match_date,2025-05-25,,,,,,,,
+match_metadata,match_id,Villarreal_vs_Girona_2025-08-24,,,,,,,,
+match_metadata,home_team,Villarreal,,,,,,,,
+match_metadata,away_team,Girona,,,,,,,,
+match_metadata,match_date,2025-08-24,,,,,,,,
 match_metadata,league,ESP-La Liga,,,,,,,,
-match_metadata,season,24-25,,,,,,,,
-match_metadata,total_events,1810,,,,,,,,
-match_metadata,match_duration_minutes,94,,,,,,,,
-team_stats,total_events,569,Athletic Club,569.0,,,,,,
-team_stats,possession_pct,31.4,Athletic Club,31.4,,,,,,
-team_stats,passes_attempted,244,Athletic Club,244.0,,,,,,
-team_stats,passes_completed,186,Athletic Club,186.0,,,,,,
-team_stats,pass_accuracy,76.2,Athletic Club,76.2,,,,,,
-team_stats,xthreat_total,8.676,Athletic Club,8.676,,,,,,
-team_stats,progressive_actions,56,Athletic Club,56.0,,,,,,
-team_stats,box_entries,15,Athletic Club,15.0,,,,,,
-team_stats,shots,9,Athletic Club,9.0,,,,,,
-team_stats,xg_total,0.72,Athletic Club,0.72,,,,,,
-team_stats,total_events,1241,Barcelona,1241.0,,,,,,
-team_stats,possession_pct,68.6,Barcelona,68.6,,,,,,
-team_stats,passes_attempted,754,Barcelona,754.0,,,,,,
-team_stats,passes_completed,686,Barcelona,686.0,,,,,,
-team_stats,pass_accuracy,91.0,Barcelona,91.0,,,,,,
-team_stats,xthreat_total,28.762,Barcelona,28.762,,,,,,
-team_stats,progressive_actions,55,Barcelona,55.0,,,,,,
-team_stats,box_entries,8,Barcelona,8.0,,,,,,
-team_stats,shots,13,Barcelona,13.0,,,,,,
-team_stats,xg_total,3.41,Barcelona,3.41,,,,,,
-player_participation,player_activity,Unai Gómez,Athletic Club,28.0,0.0,61.0,61.0,,,
-player_participation,player_activity,Unai Simón,Athletic Club,42.0,0.0,93.0,93.0,,,
-player_participation,player_activity,Maroan Sannadi,Athletic Club,45.0,0.0,89.0,89.0,,,
-player_participation,player_activity,Óscar De Marcos,Athletic Club,54.0,0.0,88.0,88.0,,,
-player_participation,player_activity,Alex Berenguer,Athletic Club,47.0,0.0,86.0,86.0,,,
-player_participation,player_activity,Yuri Berchiche,Athletic Club,65.0,0.0,89.0,89.0,,,
-player_participation,player_activity,Nico Williams,Athletic Club,61.0,0.0,79.0,79.0,,,
-player_participation,player_activity,Mikel Jauregizar,Athletic Club,58.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Unai Núñez,Athletic Club,31.0,1.0,61.0,60.0,,,
-player_participation,player_activity,Íñigo Ruíz de Galarreta,Athletic Club,41.0,3.0,61.0,58.0,,,
-player_participation,player_activity,Aitor Paredes,Athletic Club,38.0,7.0,84.0,77.0,,,
-player_participation,player_activity,Beñat Prados,Athletic Club,24.0,61.0,86.0,25.0,,,
-player_participation,player_activity,Oihan Sancet,Athletic Club,12.0,61.0,86.0,25.0,,,
-player_participation,player_activity,Dani Vivian,Athletic Club,9.0,61.0,78.0,17.0,,,
-player_participation,player_activity,Iñaki Williams,Athletic Club,3.0,79.0,89.0,10.0,,,
-player_participation,player_activity,Íñigo Lekue,Athletic Club,3.0,88.0,89.0,1.0,,,
-player_participation,player_activity,Pau Cubarsí,Barcelona,86.0,0.0,85.0,85.0,,,
-player_participation,player_activity,Alejandro Balde,Barcelona,110.0,0.0,80.0,80.0,,,
-player_participation,player_activity,Iñaki Peña,Barcelona,80.0,0.0,89.0,89.0,,,
-player_participation,player_activity,Ronald Araújo,Barcelona,120.0,0.0,63.0,63.0,,,
-player_participation,player_activity,Pedri,Barcelona,178.0,0.0,80.0,80.0,,,
-player_participation,player_activity,Eric García,Barcelona,140.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Lamine Yamal,Barcelona,95.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Gavi,Barcelona,160.0,1.0,89.0,88.0,,,
-player_participation,player_activity,Robert Lewandowski,Barcelona,26.0,1.0,88.0,87.0,,,
-player_participation,player_activity,Fermín López,Barcelona,91.0,2.0,86.0,84.0,,,
-player_participation,player_activity,Raphinha,Barcelona,45.0,5.0,63.0,58.0,,,
-player_participation,player_activity,Andreas Christensen,Barcelona,45.0,63.0,85.0,22.0,,,
-player_participation,player_activity,Dani Olmo,Barcelona,31.0,63.0,93.0,30.0,,,
-player_participation,player_activity,Gerard Martín,Barcelona,8.0,80.0,89.0,9.0,,,
-player_participation,player_activity,Frenkie de Jong,Barcelona,17.0,80.0,89.0,9.0,,,
-player_participation,player_activity,Pau Víctor,Barcelona,1.0,88.0,88.0,0.0,,,
-timeline,key_event,Goal - Robert Lewandowski,Barcelona,13.0,,,,Goal,13.0,FirstHalf
-timeline,key_event,Goal - Robert Lewandowski,Barcelona,17.0,,,,Goal,17.0,FirstHalf
-timeline,key_event,SubstitutionOff - Íñigo Ruíz de Galarreta,Athletic Club,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Beñat Prados,Athletic Club,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Unai Gómez,Athletic Club,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Oihan Sancet,Athletic Club,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Unai Núñez,Athletic Club,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Dani Vivian,Athletic Club,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Ronald Araújo,Barcelona,63.0,,,,SubstitutionOff,63.0,SecondHalf
-timeline,key_event,SubstitutionOn - Andreas Christensen,Barcelona,63.0,,,,SubstitutionOn,63.0,SecondHalf
-timeline,key_event,SubstitutionOff - Raphinha,Barcelona,63.0,,,,SubstitutionOff,63.0,SecondHalf
-timeline,key_event,SubstitutionOn - Dani Olmo,Barcelona,63.0,,,,SubstitutionOn,63.0,SecondHalf
-timeline,key_event,Card - Yuri Berchiche,Athletic Club,74.0,,,,Card,74.0,SecondHalf
-timeline,key_event,SubstitutionOff - Nico Williams,Athletic Club,79.0,,,,SubstitutionOff,79.0,SecondHalf
-timeline,key_event,SubstitutionOn - Iñaki Williams,Athletic Club,79.0,,,,SubstitutionOn,79.0,SecondHalf
-timeline,key_event,SubstitutionOff - Alejandro Balde,Barcelona,80.0,,,,SubstitutionOff,80.0,SecondHalf
-timeline,key_event,SubstitutionOn - Gerard Martín,Barcelona,80.0,,,,SubstitutionOn,80.0,SecondHalf
-timeline,key_event,SubstitutionOff - Pedri,Barcelona,80.0,,,,SubstitutionOff,80.0,SecondHalf
-timeline,key_event,SubstitutionOn - Frenkie de Jong,Barcelona,80.0,,,,SubstitutionOn,80.0,SecondHalf
-timeline,key_event,SubstitutionOff - Óscar De Marcos,Athletic Club,88.0,,,,SubstitutionOff,88.0,SecondHalf
-timeline,key_event,SubstitutionOn - Íñigo Lekue,Athletic Club,88.0,,,,SubstitutionOn,88.0,SecondHalf
-timeline,key_event,SubstitutionOff - Robert Lewandowski,Barcelona,88.0,,,,SubstitutionOff,88.0,SecondHalf
-timeline,key_event,SubstitutionOn - Pau Víctor,Barcelona,88.0,,,,SubstitutionOn,88.0,SecondHalf
-timeline,key_event,Goal - Dani Olmo,Barcelona,93.0,,,,Goal,93.0,SecondHalf
-data_quality,events_with_coordinates,1810,,1810.0,,,,,,
-data_quality,events_with_xthreat,603,,603.0,,,,,,
-data_quality,events_with_outcome,1810,,1810.0,,,,,,
-data_quality,successful_events,1551,,1551.0,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1902,,,,,,,,
+match_metadata,match_duration_minutes,93,,,,,,,,
+team_stats,total_events,982,Villarreal,982.0,,,,,,
+team_stats,possession_pct,51.6,Villarreal,51.6,,,,,,
+team_stats,passes_attempted,551,Villarreal,551.0,,,,,,
+team_stats,passes_completed,488,Villarreal,488.0,,,,,,
+team_stats,pass_accuracy,88.6,Villarreal,88.6,,,,,,
+team_stats,xthreat_total,23.29,Villarreal,23.29,,,,,,
+team_stats,progressive_actions,75,Villarreal,75.0,,,,,,
+team_stats,box_entries,24,Villarreal,24.0,,,,,,
+team_stats,shots,19,Villarreal,19.0,,,,,,
+team_stats,xg_total,3.0,Villarreal,3.0,,,,,,
+team_stats,total_events,920,Girona,920.0,,,,,,
+team_stats,possession_pct,48.4,Girona,48.4,,,,,,
+team_stats,passes_attempted,499,Girona,499.0,,,,,,
+team_stats,passes_completed,445,Girona,445.0,,,,,,
+team_stats,pass_accuracy,89.2,Girona,89.2,,,,,,
+team_stats,xthreat_total,29.518,Girona,29.518,,,,,,
+team_stats,progressive_actions,51,Girona,51.0,,,,,,
+team_stats,box_entries,10,Girona,10.0,,,,,,
+team_stats,shots,5,Girona,5.0,,,,,,
+team_stats,xg_total,0.14,Girona,0.14,,,,,,
+player_participation,player_activity,Nicolas Pépé,Villarreal,55.0,0.0,62.0,62.0,,,
+player_participation,player_activity,Luiz Júnior,Villarreal,37.0,0.0,89.0,89.0,,,
+player_participation,player_activity,Santiago Mouriño,Villarreal,133.0,0.0,92.0,92.0,,,
+player_participation,player_activity,Santi Comesaña,Villarreal,41.0,0.0,45.0,45.0,,,
+player_participation,player_activity,Tajon Buchanan,Villarreal,60.0,0.0,92.0,92.0,,,
+player_participation,player_activity,Juan Foyth,Villarreal,50.0,0.0,45.0,45.0,,,
+player_participation,player_activity,Pape Gueye,Villarreal,85.0,0.0,65.0,65.0,,,
+player_participation,player_activity,Rafa Marín,Villarreal,104.0,0.0,92.0,92.0,,,
+player_participation,player_activity,Sergi Cardona,Villarreal,84.0,0.0,92.0,92.0,,,
+player_participation,player_activity,Etta Eyong,Villarreal,38.0,0.0,80.0,80.0,,,
+player_participation,player_activity,Yéremy Pino,Villarreal,61.0,1.0,69.0,68.0,,,
+player_participation,player_activity,Thomas Partey,Villarreal,58.0,45.0,91.0,46.0,,,
+player_participation,player_activity,Renato Veiga,Villarreal,61.0,45.0,92.0,47.0,,,
+player_participation,player_activity,Ilias Akhomach,Villarreal,33.0,62.0,92.0,30.0,,,
+player_participation,player_activity,Dani Parejo,Villarreal,55.0,65.0,92.0,27.0,,,
+player_participation,player_activity,Alberto Moleiro,Villarreal,20.0,69.0,92.0,23.0,,,
+player_participation,player_activity,Ladislav Krejcí,Girona,90.0,0.0,90.0,90.0,,,
+player_participation,player_activity,Portu,Girona,13.0,0.0,45.0,45.0,,,
+player_participation,player_activity,Joel Roca,Girona,92.0,0.0,87.0,87.0,,,
+player_participation,player_activity,Viktor Tsygankov,Girona,48.0,0.0,77.0,77.0,,,
+player_participation,player_activity,Vitor Reis,Girona,118.0,0.0,90.0,90.0,,,
+player_participation,player_activity,Daley Blind,Girona,109.0,1.0,87.0,86.0,,,
+player_participation,player_activity,Vladyslav Krapyvtsov,Girona,38.0,1.0,89.0,88.0,,,
+player_participation,player_activity,Yangel Herrera,Girona,46.0,1.0,41.0,40.0,,,
+player_participation,player_activity,Jhon Solís,Girona,86.0,1.0,70.0,69.0,,,
+player_participation,player_activity,Hugo Rincón,Girona,57.0,2.0,89.0,87.0,,,
+player_participation,player_activity,Dawda Camara,Girona,16.0,4.0,47.0,43.0,,,
+player_participation,player_activity,David López,Girona,61.0,41.0,92.0,51.0,,,
+player_participation,player_activity,Thomas Lemar,Girona,36.0,45.0,87.0,42.0,,,
+player_participation,player_activity,Álex Moreno,Girona,55.0,45.0,92.5,47.5,,,
+player_participation,player_activity,Iván Martín,Girona,34.0,70.0,90.0,20.0,,,
+player_participation,player_activity,Yáser Asprilla,Girona,10.0,77.0,89.0,12.0,,,
+timeline,key_event,Goal - Nicolas Pépé,Villarreal,6.0,,,,Goal,6.0,FirstHalf
+timeline,key_event,Goal - Tajon Buchanan,Villarreal,15.0,,,,Goal,15.0,FirstHalf
+timeline,key_event,Goal - Rafa Marín,Villarreal,24.0,,,,Goal,24.0,FirstHalf
+timeline,key_event,Goal - Tajon Buchanan,Villarreal,27.0,,,,Goal,27.0,FirstHalf
+timeline,key_event,SubstitutionOff - Yangel Herrera,Girona,41.0,,,,SubstitutionOff,41.0,FirstHalf
+timeline,key_event,SubstitutionOn - David López,Girona,41.0,,,,SubstitutionOn,41.0,FirstHalf
+timeline,key_event,SubstitutionOff - Santi Comesaña,Villarreal,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Thomas Partey,Villarreal,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Juan Foyth,Villarreal,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Renato Veiga,Villarreal,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Dawda Camara,Girona,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Thomas Lemar,Girona,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Portu,Girona,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Álex Moreno,Girona,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,Card - Vitor Reis,Girona,52.0,,,,Card,52.0,SecondHalf
+timeline,key_event,Card - Santiago Mouriño,Villarreal,55.0,,,,Card,55.0,SecondHalf
+timeline,key_event,Card - Ladislav Krejcí,Girona,58.0,,,,Card,58.0,SecondHalf
+timeline,key_event,SubstitutionOff - Nicolas Pépé,Villarreal,62.0,,,,SubstitutionOff,62.0,SecondHalf
+timeline,key_event,SubstitutionOn - Ilias Akhomach,Villarreal,62.0,,,,SubstitutionOn,62.0,SecondHalf
+timeline,key_event,Goal - Tajon Buchanan,Villarreal,63.0,,,,Goal,63.0,SecondHalf
+timeline,key_event,SubstitutionOff - Pape Gueye,Villarreal,65.0,,,,SubstitutionOff,65.0,SecondHalf
+timeline,key_event,SubstitutionOn - Dani Parejo,Villarreal,65.0,,,,SubstitutionOn,65.0,SecondHalf
+timeline,key_event,SubstitutionOff - Yéremy Pino,Villarreal,69.0,,,,SubstitutionOff,69.0,SecondHalf
+timeline,key_event,SubstitutionOn - Alberto Moleiro,Villarreal,69.0,,,,SubstitutionOn,69.0,SecondHalf
+timeline,key_event,SubstitutionOff - Jhon Solís,Girona,70.0,,,,SubstitutionOff,70.0,SecondHalf
+timeline,key_event,SubstitutionOn - Iván Martín,Girona,70.0,,,,SubstitutionOn,70.0,SecondHalf
+timeline,key_event,SubstitutionOff - Viktor Tsygankov,Girona,77.0,,,,SubstitutionOff,77.0,SecondHalf
+timeline,key_event,SubstitutionOn - Yáser Asprilla,Girona,77.0,,,,SubstitutionOn,77.0,SecondHalf
+data_quality,events_with_coordinates,1902,,1902.0,,,,,,
+data_quality,events_with_xthreat,685,,685.0,,,,,,
+data_quality,events_with_outcome,1902,,1902.0,,,,,,
+data_quality,successful_events,1646,,1646.0,,,,,,
 data_quality,unique_players,32,,32.0,,,,,,
 data_quality,periods_played,4,,4.0,,,,,,

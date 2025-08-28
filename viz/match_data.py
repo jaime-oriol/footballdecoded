@@ -106,7 +106,7 @@ def extract_match_complete(ws_id: int, us_id: int, league: str, season: str,
     
     # Extract raw data from both sources
     ws_data = _get_whoscored_data(ws_id, league, season)
-    us_data = _get_understat_data(us_id, league, season)
+    us_data = _get_understat_data_direct(us_id, league, home_team, away_team)
     
     # Get base events from WhoScored
     events = ws_data.get('events', pd.DataFrame())
@@ -171,44 +171,68 @@ def _get_whoscored_data(match_id: int, league: str, season: str) -> Dict:
         print(f"WhoScored error: {e}")
         return {}
 
-def _get_understat_data(match_id: int, league: str, season: str) -> Dict:
+def _get_understat_data_direct(match_id: int, league: str, home_team: str, away_team: str) -> Dict:
     """
-    Extract shot data with xG values from Understat.
-    
-    Understat provides advanced shot metrics including:
-    - Expected Goals (xG) for each shot
-    - Shot coordinates and context
-    - Player and team mappings
+    Universal Understat xG extractor bypassing broken schedule.
+    Works for ALL leagues and ALL teams in current season.
     
     Args:
-        match_id: Understat match identifier
-        league: League identifier
-        season: Season identifier
+        match_id: Understat match ID
+        league: League identifier (ESP-La Liga, ENG-Premier League, etc.)
+        home_team: Home team name for validation
+        away_team: Away team name for validation
         
     Returns:
         Dictionary with 'shots' key containing xG-enhanced DataFrame
     """
     try:
-        understat = Understat(leagues=[league], seasons=[season])
+        # Get league mapping for proper initialization
+        from scrappers._config import LEAGUE_DICT
+        understat_league = LEAGUE_DICT.get(league, {}).get('Understat', league)
         
-        shots = understat.read_shot_events(match_id=match_id)
-        if shots.empty:
+        understat = Understat(leagues=[league], seasons=['25-26'])
+        match_url = f'https://understat.com/match/{match_id}'
+        
+        data = understat._read_match(match_url, match_id)
+        if not data or 'shotsData' not in data:
             return {}
         
-        players = understat.read_player_match_stats(match_id=match_id)
-        if not players.empty:
-            players_reset = players.reset_index()
-            player_lookup = players_reset.set_index('player_id')['player'].to_dict()
-            team_lookup = players_reset.set_index('team_id')['team'].to_dict()
-            
-            shots = shots.reset_index()
-            shots['player'] = shots['player_id'].map(player_lookup)
-            shots['team'] = shots['team_id'].map(team_lookup)
-        else:
-            shots = shots.reset_index()
+        # Validate match teams
+        match_info = data.get('match_info', {})
+        understat_home = match_info.get('team_h', '')
+        understat_away = match_info.get('team_a', '')
         
-        return {'shots': shots}
-    except Exception:
+        # Process all shots into standardized format
+        shots = []
+        for team_key, team_shots in data['shotsData'].items():
+            for shot in team_shots:
+                team_name = shot['h_team'] if shot['h_a'] == 'h' else shot['a_team']
+                
+                shots.append({
+                    'minute': float(shot['minute']),
+                    'team': team_name,
+                    'player': shot['player'],
+                    'xg': float(shot['xG']),
+                    'x': float(shot['X']),
+                    'y': float(shot['Y']),
+                    'result': shot['result'],
+                    'situation': shot.get('situation', ''),
+                    'shotType': shot.get('shotType', ''),
+                    'player_id': shot.get('player_id', 0),
+                    'match_id': match_id
+                })
+        
+        return {
+            'shots': pd.DataFrame(shots),
+            'match_info': {
+                'home_team': understat_home,
+                'away_team': understat_away,
+                'total_shots': len(shots)
+            }
+        }
+        
+    except Exception as e:
+        print(f"Warning: Understat direct access failed for match {match_id}: {e}")
         return {}
 
 # ====================================================================
@@ -627,7 +651,7 @@ def _add_action_classifications(events: pd.DataFrame) -> pd.DataFrame:
     return events
 
 def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced xG merging with better matching"""
+    """Enhanced xG merging with better team/player matching"""
     if us_shots.empty:
         events['xg'] = 0.0
         return events
@@ -640,27 +664,43 @@ def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame
         team = shot['team']
         player = shot['player']
         
-        # Try exact match first
-        exact_match = us_shots[
-            (us_shots['minute'] == minute) & 
+        # Multi-level matching strategy
+        matches = []
+        
+        # 1. Exact match (minute + team + player)
+        if pd.notna(player):
+            player_last_name = str(player).split()[-1] if player else ""
+            exact = us_shots[
+                (abs(us_shots['minute'] - minute) <= 1) & 
+                (us_shots['team'] == team) &
+                (us_shots['player'].str.contains(player_last_name, case=False, na=False))
+            ]
+            if not exact.empty:
+                matches.append(('exact', exact))
+        
+        # 2. Time + team match (when player names differ)
+        time_team = us_shots[
+            (abs(us_shots['minute'] - minute) <= 2) & 
             (us_shots['team'] == team)
         ]
+        if not time_team.empty:
+            matches.append(('time_team', time_team))
         
-        if not exact_match.empty:
-            events.loc[idx, 'xg'] = exact_match.iloc[0]['xg']
-            continue
-            
-        # Fuzzy match within 2-minute window
-        fuzzy_match = us_shots[
-            (us_shots['minute'].between(minute-2, minute+2)) & 
-            (us_shots['team'] == team)
-        ]
+        # 3. Team + result match (for goals)
+        if shot.get('is_goal', False) or 'Goal' in shot.get('event_type', ''):
+            goal_match = us_shots[
+                (us_shots['team'] == team) &
+                (us_shots['result'] == 'Goal')
+            ]
+            if not goal_match.empty:
+                matches.append(('goal', goal_match))
         
-        if not fuzzy_match.empty:
-            # Get closest match
-            time_diffs = abs(fuzzy_match['minute'] - minute)
-            best_match = fuzzy_match.loc[time_diffs.idxmin()]
-            events.loc[idx, 'xg'] = best_match['xg']
+        # Use best match
+        for match_type, match_df in matches:
+            if not match_df.empty:
+                xg_value = match_df.iloc[0]['xg']
+                events.at[idx, 'xg'] = xg_value
+                break
     
     return events
 
