@@ -91,14 +91,50 @@ def calculate_node_size(total_passes: int, max_passes: int, threshold: int = 20)
     
     return min_size + (total_passes - 5) * increment_per_pass
 
+def calculate_node_size_period(total_passes: int, max_passes: int = 50, threshold: int = 20) -> float:
+    """
+    Calculate node size for period visualizations (first/second half).
+    
+    Adjusted scaling for 45-minute periods where typical maximum is ~50 passes
+    instead of 100+ passes in full matches.
+    
+    Scaling Logic:
+    - Minimum size: 5 points (low activity players)
+    - Maximum size: 30 points (high activity players)  
+    - Linear scaling between 3-50 completed passes
+    - Better visual distribution for period data
+    
+    Args:
+        total_passes: Player's completed pass count in period
+        max_passes: Expected maximum for period (default 50)
+        threshold: Minimum passes for size calculation (unused)
+        
+    Returns:
+        Node size in points (5.0 to 30.0)
+    """
+    min_size = 5
+    max_size = 30
+    
+    if total_passes <= 3:
+        return min_size
+    if total_passes >= 50:
+        return max_size
+    
+    # Escalado lineal entre 3 y 50 pases (ajustado para períodos)
+    size_range = max_size - min_size  
+    pass_range = 50 - 3             
+    increment_per_pass = size_range / pass_range  
+    
+    return min_size + (total_passes - 3) * increment_per_pass
+
 def calculate_line_width(pass_count: int, min_connections: int, max_connections: int, min_required: int = 5) -> float:
-    """Grosor de línea según número de pases: 5-7 (fino), 7-12 (medio), 12+ (grueso)."""
+    """Grosor de línea según número de pases: 3-5 (fino), 5-9 (medio), 9+ (grueso)."""
     if pass_count < min_required:
         return 0.0
     
-    if pass_count <= 7:
+    if pass_count <= 5:
         return 0.5
-    elif pass_count <= 12:
+    elif pass_count <= 9:
         return 1.5
     else:
         return 2.5
@@ -267,6 +303,112 @@ def _calculate_period_stats(events_df, player_name, period_type='full'):
     xthreat_per_pass = player_passes['xthreat_gen'].sum() / max(1, len(player_passes))
     
     return passes_completed, xthreat_per_pass
+
+def _calculate_period_positions(events_df, positions_df, period_type='full'):
+    """
+    Calculate positions exactly like match_data.py but for specific period.
+    
+    Replicates _build_player_network_optimized() position logic with period filtering.
+    
+    Args:
+        events_df: Match events dataframe 
+        positions_df: Original positions dataframe (structure template)
+        period_type: 'first_half', 'second_half', or 'full'
+        
+    Returns:
+        Updated positions_df with period-specific data using exact match_data.py logic
+    """
+    if period_type == 'full':
+        return positions_df  # No changes for full match
+        
+    # Filter events for the period - EXACT same logic as match_data.py uses
+    if period_type == 'first_half':
+        period_events = events_df[events_df['minute'] <= 44]
+    elif period_type == 'second_half':
+        period_events = events_df[events_df['minute'] >= 46]
+    
+    # Create copy to avoid modifying original
+    updated_positions = positions_df.copy()
+    
+    # EXACT same grouping and calculation as match_data.py line 826-848
+    for (player, team), player_events in period_events.groupby(['player', 'team']):
+        if pd.notna(player):
+            # Find the corresponding position in updated_positions
+            mask = (
+                (updated_positions['source_player'] == player) &
+                (updated_positions['team'] == team)
+            )
+            
+            if mask.any():
+                # Update with EXACT same calculations as match_data.py
+                updated_positions.loc[mask, 'avg_x_start'] = round(player_events['x'].mean(), 2)
+                updated_positions.loc[mask, 'avg_y_start'] = round(player_events['y'].mean(), 2)
+                updated_positions.loc[mask, 'avg_xthreat'] = round(player_events['xthreat_gen'].mean(), 4)
+                updated_positions.loc[mask, 'total_actions'] = len(player_events)
+                updated_positions.loc[mask, 'minutes_active'] = round(player_events['minute'].max() - player_events['minute'].min(), 1)
+                updated_positions.loc[mask, 'position_variance_x'] = round(player_events['x'].std(), 2)
+                updated_positions.loc[mask, 'position_variance_y'] = round(player_events['y'].std(), 2)
+                updated_positions.loc[mask, 'xthreat_total'] = round(player_events['xthreat_gen'].sum(), 4)
+    
+    return updated_positions
+
+def _calculate_period_connections(events_df, connections_df, period_type='full'):
+    """
+    Recalculate connections exactly like match_data.py but for specific period.
+    
+    Replicates _build_player_network_optimized() logic with period filtering.
+    
+    Args:
+        events_df: Match events dataframe 
+        connections_df: Original connections dataframe (structure template)
+        period_type: 'first_half', 'second_half', or 'full'
+        
+    Returns:
+        Updated connections_df with period-specific data using exact match_data.py logic
+    """
+    if period_type == 'full':
+        return connections_df  # No changes for full match
+    
+    # Filter events for the period - EXACT same logic as match_data.py uses
+    if period_type == 'first_half':
+        period_events = events_df[events_df['minute'] <= 44]
+    elif period_type == 'second_half':
+        period_events = events_df[events_df['minute'] >= 46]
+    
+    # EXACT same pass filtering as match_data.py line 800-804
+    passes = period_events[
+        (period_events['event_type'] == 'Pass') & 
+        (period_events['outcome_type'] == 'Successful') &
+        period_events['next_player'].notna()
+    ]
+    
+    # Create copy to avoid modifying original
+    updated_connections = connections_df.copy()
+    updated_connections['connection_strength'] = 0
+    updated_connections['avg_xthreat'] = 0.0
+    updated_connections['progressive_passes'] = 0
+    updated_connections['box_entries'] = 0
+    updated_connections['pass_distance_avg'] = 0.0
+    
+    # EXACT same grouping and calculation as match_data.py line 806-823
+    for (team, passer, receiver), group in passes.groupby(['team', 'player', 'next_player']):
+        if passer != receiver:
+            # Find the corresponding connection in updated_connections
+            mask = (
+                (updated_connections['team'] == team) &
+                (updated_connections['source_player'] == passer) &
+                (updated_connections['target_player'] == receiver)
+            )
+            
+            if mask.any():
+                # Update with EXACT same calculations as match_data.py
+                updated_connections.loc[mask, 'connection_strength'] = len(group)
+                updated_connections.loc[mask, 'avg_xthreat'] = round(group['xthreat'].mean(), 4)
+                updated_connections.loc[mask, 'progressive_passes'] = int(group['is_progressive'].sum())
+                updated_connections.loc[mask, 'box_entries'] = int(group['is_box_entry'].sum())
+                updated_connections.loc[mask, 'pass_distance_avg'] = round(group['pass_distance'].mean(), 2)
+    
+    return updated_connections
 
 def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                      home_logo_path=None, away_logo_path=None, 
@@ -642,7 +784,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
                                  figsize=(6, 6), save_path=None):
     """
     Genera visualización de red de pases para el primer tiempo (minutos 1-44).
-    Filtra jugadores con menos de 5 minutos de actividad en el primer tiempo.
+    Usa la misma implementación visual que plot_pass_network() pero filtra por período.
     """
     # Cargar datos
     network_df = pd.read_csv(network_csv_path)
@@ -668,7 +810,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     home_goals = len(first_half_goals[first_half_goals['team'] == home_team])
     away_goals = len(first_half_goals[first_half_goals['team'] == away_team])
     
-    # Separar datos y filtrar por primer tiempo
+    # Separar datos
     player_aggregates = aggregates_df[aggregates_df['entity_type'] == 'player'].copy()
     positions_df = network_df[network_df['record_type'] == 'position'].copy()
     connections_df = network_df[network_df['record_type'] == 'connection'].copy()
@@ -678,24 +820,30 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
         events_df, player_aggregates, 'first_half', 5
     )
     
-    # Transformar coordenadas
+    # Recalcular posiciones para el primer tiempo
+    positions_df = _calculate_period_positions(events_df, positions_df, 'first_half')
+    
+    # Recalcular conexiones para el primer tiempo
+    connections_df = _calculate_period_connections(events_df, connections_df, 'first_half')
+    
+    # Transformar coordenadas Opta a campo vertical
     positions_df['x_pitch'] = positions_df['avg_y_start']
     positions_df['y_pitch'] = positions_df['avg_x_start']
     
-    # Rangos para normalización de colores (IDÉNTICO AL ORIGINAL)
+    # Rangos para normalización de colores (IDÉNTICOS AL ORIGINAL)
     min_connection_xt = -0.1
     max_connection_xt = 0.2
     min_player_xt = 0.0
-    max_player_xt = 0.08  
-    min_passes = 3  # Reducido para primer tiempo (era 6 en original)
+    max_player_xt = 0.08
+    min_passes = 3  # Reducido para primer tiempo
 
-    # Configurar figura (IDÉNTICO AL ORIGINAL)
+    # Configurar figura
     plt.style.use('default')
     fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400, facecolor=BACKGROUND_COLOR)
     
     teams = [home_team, away_team]
     
-    # Configurar mapas de color (IDÉNTICO AL ORIGINAL)
+    # Configurar mapas de color
     connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
     player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
     
@@ -704,11 +852,11 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
         'gold', 'lightpink', 'tomato'
     ])
     
-    # Procesar cada equipo (LÓGICA COMPLETA COPIADA DEL ORIGINAL)
+    # Procesar cada equipo
     for i, team in enumerate(teams):
         ax[i].set_facecolor(BACKGROUND_COLOR)
         
-        # Dibujar campo (IDÉNTICO AL ORIGINAL)
+        # Dibujar campo
         pitch = VerticalPitch(pitch_type='opta', 
                              pitch_color=PITCH_COLOR,
                              line_color='white',
@@ -724,9 +872,9 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
         if team_positions.empty or team_player_data.empty:
             continue
         
-        max_passes_team = 50  # Ajustado para primer tiempo
+        max_passes_team = team_player_data['passes_completed'].max() if not team_player_data.empty else 50
         
-        # Procesar estadísticas de jugadores (LÓGICA COPIADA)
+        # Procesar estadísticas de jugadores (LÓGICA EXACTA DEL ORIGINAL)
         player_stats = {}
         
         for _, player in team_positions.iterrows():
@@ -742,10 +890,9 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
                 events_df, player_name, 'first_half'
             )
             
-            if passes_completed < 3:  # Mínimo para primer tiempo
-                continue
+            # No filtrar por pases aquí - solo mostrar jugadores con minutos suficientes
             
-            marker_size = calculate_node_size(passes_completed, max_passes_team)
+            marker_size = calculate_node_size_period(passes_completed, max_passes_team)
             node_radius = get_node_radius(marker_size)
             
             player_stats[player_name] = {
@@ -756,7 +903,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
                 'xthreat_per_pass': xthreat_per_pass
             }
         
-        # Dibujar conexiones (LÓGICA COMPLETA COPIADA)
+        # Dibujar conexiones (LÓGICA EXACTA DEL ORIGINAL)
         valid_connections = team_connections[team_connections['connection_strength'] >= min_passes].copy()
         
         if not valid_connections.empty:
@@ -770,98 +917,174 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
                 if source_name not in player_stats or target_name not in player_stats:
                     continue
                 
-                source_stats = player_stats[source_name]
-                target_stats = player_stats[target_name]
+                source = player_stats[source_name]
+                target = player_stats[target_name]
                 
-                pass_count = conn['connection_strength']
-                xthreat_conn = conn.get('xthreat_total', 0)
+                num_passes = conn['connection_strength']
+                pass_value = conn.get('avg_xthreat', 0)
                 
-                # Calcular posición de la línea (LÓGICA ORIGINAL)
-                dx = target_stats['x'] - source_stats['x']
-                dy = target_stats['y'] - source_stats['y']
-                distance = (dx**2 + dy**2)**0.5
+                # Calcular puntos evitando solapamiento
+                start_x, start_y, end_x, end_y = calculate_connection_points(
+                    source['x'], source['y'], target['x'], target['y'],
+                    source['radius'], target['radius'], num_passes
+                )
                 
-                if distance < 0.1:
-                    continue
+                line_width = calculate_line_width(num_passes, min_conn, max_conn, min_passes)
+                edge_color = node_cmap(connection_norm(pass_value))
                 
-                # Ajustar inicio y fin para evitar solapar con nodos
-                start_x = source_stats['x'] + (dx/distance) * source_stats['radius']
-                start_y = source_stats['y'] + (dy/distance) * source_stats['radius']
-                end_x = target_stats['x'] - (dx/distance) * target_stats['radius']
-                end_y = target_stats['y'] - (dy/distance) * target_stats['radius']
+                # Crear línea con gradiente de transparencia
+                num_points = 75
+                x_points = np.linspace(start_x, end_x, num_points)
+                y_points = np.linspace(start_y, end_y, num_points)
                 
-                # Color y grosor (LÓGICA ORIGINAL)
-                line_width = calculate_line_width(pass_count, min_conn, max_conn, min_passes)
-                if line_width == 0:
-                    continue
+                points = np.array([x_points, y_points]).T.reshape(-1, 1, 2)
+                segments = np.concatenate([points[:-1], points[1:]], axis=1)
                 
-                alpha = min(0.9, max(0.2, (pass_count - min_conn) / max(1, max_conn - min_conn)))
-                color = node_cmap(connection_norm(xthreat_conn))
+                # Gradiente: transparente al inicio, opaco al final
+                alphas = np.linspace(0.1, 1.0, len(segments))
+                rgb = mcolors.to_rgb(edge_color)
+                colors_with_alpha = [(rgb[0], rgb[1], rgb[2], alpha) for alpha in alphas]
                 
-                ax[i].plot([start_x, end_x], [start_y, end_y], 
-                          color=color, linewidth=line_width, alpha=alpha, zorder=1)
+                lc = LineCollection(segments, colors=colors_with_alpha, 
+                                   linewidths=line_width, capstyle='round', zorder=1)
+                ax[i].add_collection(lc)
+                
+                draw_arrow(ax[i], start_x, start_y, end_x, end_y, edge_color, line_width)
         
-        # Dibujar nodos de jugadores (LÓGICA ORIGINAL)
+        # Dibujar nodos de jugadores (LÓGICA EXACTA DEL ORIGINAL)
         for player_name, stats in player_stats.items():
-            color = node_cmap(player_norm(stats['xthreat_per_pass']))
+            x, y = stats['x'], stats['y']
+            marker_size = stats['marker_size']
+            pass_value = stats['xthreat_per_pass']
             
-            # Nodo principal
-            ax[i].scatter(stats['x'], stats['y'], 
-                         s=stats['marker_size'], c=color, 
-                         edgecolors='white', linewidths=0.5, alpha=0.8, zorder=5)
+            node_color = node_cmap(player_norm(pass_value))
+                        
+            # Círculo interior transparente
+            ax[i].scatter(x, y, s=marker_size**2, c=node_color, alpha=0.3, 
+                        edgecolors='none', zorder=5)
+
+            # Borde nítido
+            ax[i].scatter(x, y, s=marker_size**2, facecolors='none', 
+                        edgecolors=node_color, linewidth=1, zorder=6)
             
             # Nombre del jugador
-            formatted_name = format_player_name(player_name)
-            ax[i].text(stats['x'], stats['y']-2.5, formatted_name, 
-                      fontsize=6, color='white', ha='center', va='top',
-                      fontweight='regular', family='DejaVu Sans')
-        
-        # Título del equipo
-        team_title = f"{team} {home_goals if team == home_team else away_goals}"
-        ax[i].text(50, -10, team_title, fontsize=12, color='white', 
-                  ha='center', va='center', fontweight='bold', family='DejaVu Sans')
-        
-        # Configuración de ejes (IDÉNTICO AL ORIGINAL)
-        ax[i].set_xlim(-5, 105)
-        ax[i].set_ylim(-15, 105)
-        ax[i].axis('off')
+            display_name = format_player_name(player_name)
+            ax[i].text(x, y, display_name, ha='center', va='center',
+                      color='white', fontsize=5, fontweight='bold',
+                      family='serif',
+                      path_effects=[
+                          path_effects.Stroke(linewidth=1.5, foreground='black'),
+                          path_effects.Normal()
+                      ], zorder=7)
     
-    # Metadata y títulos (FORMATO ORIGINAL)
-    fig.suptitle(f"{home_team} {home_goals}-{away_goals} {away_team} (1st Half)", 
-                 fontsize=14, color='white', fontweight='bold', y=0.95, family='DejaVu Sans')
+    # Flecha de dirección de juego
+    arrow_ax = fig.add_axes([0.47, 0.17, 0.06, 0.6])
+    arrow_ax.set_xlim(0, 1)
+    arrow_ax.set_ylim(0, 1)
+    arrow_ax.axis("off")
+    arrow_ax.arrow(0.55, 0.45, 0, 0.3, color="w", width=0.001, head_width=0.1, head_length=0.02)
+    arrow_ax.text(0.35, 0.6, "Direction of play", ha="center", va="center", fontsize=7, font = 'serif', color="w", fontweight="regular", rotation=90)
     
-    fig.text(0.5, 0.91, f"{league} | {season} | {match_date}", 
-             ha='center', va='center', color='white', fontsize=10, family='DejaVu Sans')
+    # Textos y títulos
+    fig.text(x=0.5, y=0.19, s=period_text,
+             ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
     
-    # LEYENDAS COMPLETAS (COPIADAS DEL ORIGINAL)
+    font = 'DejaVu Sans'
+    
+    fig.text(x=0.5, y=.93, s="1st Half Pass Network",
+            weight='bold', va="bottom", ha="center", fontsize=13, font=font, color='white')
+    
+    result_y = 0.9
+    
+    # Logos de equipos
+    if home_logo_path and os.path.exists(home_logo_path):
+        try:
+            logo = Image.open(home_logo_path)
+            logo_ax = fig.add_axes([0.18, result_y-0.045, 0.135, 0.135])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+        except:
+            pass
+    
+    if away_logo_path and os.path.exists(away_logo_path):
+        try:
+            logo = Image.open(away_logo_path)
+            logo_ax = fig.add_axes([0.67, result_y-0.045, 0.135, 0.135])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+        except:
+            pass
+    
+    # Resultado
+    fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
+            weight='regular', va="bottom", ha="center", fontsize=10, font=font, color='white')
+    
+    # Metadata
+    fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
+            va="bottom", ha="center", fontsize=8, font=font, color='white')
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.675, -0.05, 0.32, 0.12])
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        print(f"Error cargando logo: {e}")
+        fig.text(x=0.87, y=-0.0, s="Football Decoded", va="bottom", ha="center", 
+                weight='bold', fontsize=12, font=font, color='white')
+    fig.text(x=0.14, y=-0.015, s="Created by Jaime Oriol", va="bottom", ha="center", 
+            weight='bold', fontsize=6, font=font, color='white')
+    
     # Títulos de leyenda
-    fig.text(0.135, 0.35, "Connection", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.135, 0.33, "Thickness", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.3, 0.35, "Connection", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.3, 0.33, "xThreat", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.46, 0.35, "Node Size", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.46, 0.33, "Pass Count", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.6, 0.35, "Node Colour", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.6, 0.33, "xThreat/Pass", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
-    fig.text(0.77, 0.35, "Scale", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(x=0.14, y=.14, s="Pass count between", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.38, y=.14, s="Pass value between (xT)", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.61, y=.14, s="Player pass count", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.84, y=.14, s="Player value per pass (xT)", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
     
-    # Elementos de leyenda (POSICIONES ORIGINALES)
-    x0, y0 = 320, 280
+    # Valores de leyenda
+    fig.text(x=0.13, y=0.07, s="3 to 9+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    fig.text(x=0.37, y=0.07, s="-0.1 to 0.2+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    fig.text(x=0.61, y=0.07, s="3 to 50+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    fig.text(x=0.84, y=0.07, s="0 to 0.08+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    
+    # Indicadores de escala
+    fig.text(x=0.41, y=.038, s="Low", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.6, y=.038, s="High", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    
+    # Elementos visuales de leyenda
+    x0 = 195
+    y0 = 370
     dx = 60
-    dy = 120  
+    dy = 120
     shift_x = 70
     
     x1 = 710
-    x2 = 1100
-    radius = 23
-    x3 = 1420
-    shift_x3 = 70
+    x2 = 1370
+    y2 = 430
+    shift_x2 = 70
+    radius = 20
     
-    x4, y4 = 1800, 300
-    y2 = 280
-    shift_x2 = 85
+    x3 = 1810
+    shift_x3 = 100
     
-    style = ArrowStyle('->', head_length=0.4, head_width=0.4)
+    x4 = 930
+    y4 = 220
+    
+    style = ArrowStyle('->', head_length=5, head_width=3)
     
     # Leyenda de grosor de líneas
     arrow1 = FancyArrowPatch((x0, y0), (x0+dx, y0+dy), lw=0.5, arrowstyle=style, color='white')
@@ -906,44 +1129,6 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     fig.patches.extend([arrow1, arrow2, arrow3, arrow4, arrow5, arrow6, arrow7, arrow8,
                        circle1, circle2, circle3, arrow9])
     
-    # Logos (LÓGICA ORIGINAL)
-    if home_logo_path:
-        try:
-            logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.16, 0.75, 0.08, 0.08])
-            logo_ax.imshow(logo)
-            logo_ax.axis('off')
-        except:
-            pass
-    
-    if away_logo_path:
-        try:
-            logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.76, 0.75, 0.08, 0.08])
-            logo_ax.imshow(logo)
-            logo_ax.axis('off')
-        except:
-            pass
-    
-    # Textos y títulos (TEXTO PERÍODO ESPECÍFICO)
-    fig.text(x=0.5, y=0.19, s=period_text,
-             ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
-    
-    font = 'DejaVu Sans'
-    fig.text(0.75, 0.041, f"@jaimeoriolfc", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
-    
-    # Logo FootballDecoded (ORIGINAL)
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(current_dir)  
-        logo_path_fd = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
-        logo = Image.open(logo_path_fd)
-        logo_ax = fig.add_axes([0.76, -0.03, 0.21, 0.12])
-        logo_ax.imshow(logo)
-        logo_ax.axis('off')
-    except Exception as e:
-        pass
-    
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.1, hspace=0, bottom=0.1)
     
@@ -958,11 +1143,8 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
                                   figsize=(6, 6), save_path=None):
     """
     Genera visualización de red de pases para el segundo tiempo (minutos 46-90).
-    Filtra jugadores con menos de 5 minutos de actividad en el segundo tiempo.
+    Usa la misma implementación visual que plot_pass_network() pero filtra por período.
     """
-    # [Implementación similar a first_half pero con filtro 'second_half']
-    # [Por brevedad, estructura idéntica pero con period_type='second_half']
-    
     # Cargar datos
     network_df = pd.read_csv(network_csv_path)
     info_df = pd.read_csv(info_csv_path)
@@ -971,14 +1153,14 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     events_csv_path = os.path.join(os.path.dirname(network_csv_path), 'match_events.csv')
     events_df = pd.read_csv(events_csv_path)
     
-    # Metadata
+    # Extraer metadata del partido
     home_team = info_df[info_df['info_key'] == 'home_team']['info_value'].iloc[0]
     away_team = info_df[info_df['info_key'] == 'away_team']['info_value'].iloc[0]
     match_date = info_df[info_df['info_key'] == 'match_date']['info_value'].iloc[0]
     league = info_df[info_df['info_key'] == 'league']['info_value'].iloc[0]
     season = info_df[info_df['info_key'] == 'season']['info_value'].iloc[0]
     
-    # Resultado segundo tiempo
+    # Calcular resultado del segundo tiempo
     second_half_goals = events_df[
         (events_df['minute'] >= 46) & 
         (events_df['event_type'] == 'Goal')
@@ -987,26 +1169,327 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     home_goals = len(second_half_goals[second_half_goals['team'] == home_team])
     away_goals = len(second_half_goals[second_half_goals['team'] == away_team])
     
-    # Aplicar filtro segundo tiempo
+    # Separar datos
     player_aggregates = aggregates_df[aggregates_df['entity_type'] == 'player'].copy()
+    positions_df = network_df[network_df['record_type'] == 'position'].copy()
+    connections_df = network_df[network_df['record_type'] == 'connection'].copy()
+    
+    # Aplicar filtro de período
     filtered_aggregates, period_events, period_text = _filter_players_by_period(
         events_df, player_aggregates, 'second_half', 5
     )
     
-    # [Resto de implementación idéntica a first_half pero con 'second_half']
+    # Recalcular posiciones para el segundo tiempo
+    positions_df = _calculate_period_positions(events_df, positions_df, 'second_half')
     
-    # Setup básico
+    # Recalcular conexiones para el segundo tiempo
+    connections_df = _calculate_period_connections(events_df, connections_df, 'second_half')
+    
+    # Transformar coordenadas Opta a campo vertical
+    positions_df['x_pitch'] = positions_df['avg_y_start']
+    positions_df['y_pitch'] = positions_df['avg_x_start']
+    
+    # Rangos para normalización de colores (IDÉNTICOS AL ORIGINAL)
+    min_connection_xt = -0.1
+    max_connection_xt = 0.2
+    min_player_xt = 0.0
+    max_player_xt = 0.08
+    min_passes = 3  # Reducido para segundo tiempo
+
+    # Configurar figura
     plt.style.use('default')
     fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400, facecolor=BACKGROUND_COLOR)
     
-    fig.suptitle(f"{home_team} {home_goals}-{away_goals} {away_team} (2nd Half)", 
-                 fontsize=14, color='white', fontweight='bold', y=0.95, family='DejaVu Sans')
+    teams = [home_team, away_team]
     
-    fig.text(0.5, 0.91, f"{league} | {season} | {match_date}", 
-             ha='center', va='center', color='white', fontsize=10, family='DejaVu Sans')
+    # Configurar mapas de color
+    connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
+    player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
     
+    node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
+        'deepskyblue', 'cyan', 'lawngreen', 'yellow', 
+        'gold', 'lightpink', 'tomato'
+    ])
+    
+    # Procesar cada equipo
+    for i, team in enumerate(teams):
+        ax[i].set_facecolor(BACKGROUND_COLOR)
+        
+        # Dibujar campo
+        pitch = VerticalPitch(pitch_type='opta', 
+                             pitch_color=PITCH_COLOR,
+                             line_color='white',
+                             linewidth=1, 
+                             pad_bottom=4)
+        pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
+        
+        # Filtrar datos del equipo
+        team_positions = positions_df[positions_df['team'] == team].copy()
+        team_connections = connections_df[connections_df['team'] == team].copy()
+        team_player_data = filtered_aggregates[filtered_aggregates['team'] == team].copy()
+        
+        if team_positions.empty or team_player_data.empty:
+            continue
+        
+        max_passes_team = team_player_data['passes_completed'].max() if not team_player_data.empty else 50
+        
+        # Procesar estadísticas de jugadores (LÓGICA EXACTA DEL ORIGINAL)
+        player_stats = {}
+        
+        for _, player in team_positions.iterrows():
+            x = player['x_pitch']
+            y = player['y_pitch']
+            player_name = player['source_player']
+            
+            if player_name not in team_player_data['entity_name'].values:
+                continue
+            
+            # Calcular stats específicas del segundo tiempo
+            passes_completed, xthreat_per_pass = _calculate_period_stats(
+                events_df, player_name, 'second_half'
+            )
+            
+            # No filtrar por pases aquí - solo mostrar jugadores con minutos suficientes
+            
+            marker_size = calculate_node_size_period(passes_completed, max_passes_team)
+            node_radius = get_node_radius(marker_size)
+            
+            player_stats[player_name] = {
+                'x': x, 'y': y, 
+                'radius': node_radius, 
+                'marker_size': marker_size,
+                'passes': passes_completed,
+                'xthreat_per_pass': xthreat_per_pass
+            }
+        
+        # Dibujar conexiones (LÓGICA EXACTA DEL ORIGINAL)
+        valid_connections = team_connections[team_connections['connection_strength'] >= min_passes].copy()
+        
+        if not valid_connections.empty:
+            min_conn = valid_connections['connection_strength'].min()
+            max_conn = valid_connections['connection_strength'].max()
+            
+            for _, conn in valid_connections.iterrows():
+                source_name = conn['source_player']
+                target_name = conn['target_player']
+                
+                if source_name not in player_stats or target_name not in player_stats:
+                    continue
+                
+                source = player_stats[source_name]
+                target = player_stats[target_name]
+                
+                num_passes = conn['connection_strength']
+                pass_value = conn.get('avg_xthreat', 0)
+                
+                # Calcular puntos evitando solapamiento
+                start_x, start_y, end_x, end_y = calculate_connection_points(
+                    source['x'], source['y'], target['x'], target['y'],
+                    source['radius'], target['radius'], num_passes
+                )
+                
+                line_width = calculate_line_width(num_passes, min_conn, max_conn, min_passes)
+                edge_color = node_cmap(connection_norm(pass_value))
+                
+                # Crear línea con gradiente de transparencia
+                num_points = 75
+                x_points = np.linspace(start_x, end_x, num_points)
+                y_points = np.linspace(start_y, end_y, num_points)
+                
+                points = np.array([x_points, y_points]).T.reshape(-1, 1, 2)
+                segments = np.concatenate([points[:-1], points[1:]], axis=1)
+                
+                # Gradiente: transparente al inicio, opaco al final
+                alphas = np.linspace(0.1, 1.0, len(segments))
+                rgb = mcolors.to_rgb(edge_color)
+                colors_with_alpha = [(rgb[0], rgb[1], rgb[2], alpha) for alpha in alphas]
+                
+                lc = LineCollection(segments, colors=colors_with_alpha, 
+                                   linewidths=line_width, capstyle='round', zorder=1)
+                ax[i].add_collection(lc)
+                
+                draw_arrow(ax[i], start_x, start_y, end_x, end_y, edge_color, line_width)
+        
+        # Dibujar nodos de jugadores (LÓGICA EXACTA DEL ORIGINAL)
+        for player_name, stats in player_stats.items():
+            x, y = stats['x'], stats['y']
+            marker_size = stats['marker_size']
+            pass_value = stats['xthreat_per_pass']
+            
+            node_color = node_cmap(player_norm(pass_value))
+                        
+            # Círculo interior transparente
+            ax[i].scatter(x, y, s=marker_size**2, c=node_color, alpha=0.3, 
+                        edgecolors='none', zorder=5)
+
+            # Borde nítido
+            ax[i].scatter(x, y, s=marker_size**2, facecolors='none', 
+                        edgecolors=node_color, linewidth=1, zorder=6)
+            
+            # Nombre del jugador
+            display_name = format_player_name(player_name)
+            ax[i].text(x, y, display_name, ha='center', va='center',
+                      color='white', fontsize=5, fontweight='bold',
+                      family='serif',
+                      path_effects=[
+                          path_effects.Stroke(linewidth=1.5, foreground='black'),
+                          path_effects.Normal()
+                      ], zorder=7)
+    
+    # Flecha de dirección de juego
+    arrow_ax = fig.add_axes([0.47, 0.17, 0.06, 0.6])
+    arrow_ax.set_xlim(0, 1)
+    arrow_ax.set_ylim(0, 1)
+    arrow_ax.axis("off")
+    arrow_ax.arrow(0.55, 0.45, 0, 0.3, color="w", width=0.001, head_width=0.1, head_length=0.02)
+    arrow_ax.text(0.35, 0.6, "Direction of play", ha="center", va="center", fontsize=7, font = 'serif', color="w", fontweight="regular", rotation=90)
+    
+    # Textos y títulos
     fig.text(x=0.5, y=0.19, s=period_text,
              ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
+    
+    font = 'DejaVu Sans'
+    
+    fig.text(x=0.5, y=.93, s="2nd Half Pass Network",
+            weight='bold', va="bottom", ha="center", fontsize=13, font=font, color='white')
+    
+    result_y = 0.9
+    
+    # Logos de equipos
+    if home_logo_path and os.path.exists(home_logo_path):
+        try:
+            logo = Image.open(home_logo_path)
+            logo_ax = fig.add_axes([0.18, result_y-0.045, 0.135, 0.135])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+        except:
+            pass
+    
+    if away_logo_path and os.path.exists(away_logo_path):
+        try:
+            logo = Image.open(away_logo_path)
+            logo_ax = fig.add_axes([0.67, result_y-0.045, 0.135, 0.135])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+        except:
+            pass
+    
+    # Resultado
+    fig.text(x=0.5, y=result_y, s=f"{home_team} {home_goals} - {away_goals} {away_team}",
+            weight='regular', va="bottom", ha="center", fontsize=10, font=font, color='white')
+    
+    # Metadata
+    fig.text(x=0.5, y=0.875, s=f"{league} | Season {season} | {match_date}",
+            va="bottom", ha="center", fontsize=8, font=font, color='white')
+    
+    # Logo Football Decoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.675, -0.05, 0.32, 0.12])
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        print(f"Error cargando logo: {e}")
+        fig.text(x=0.87, y=-0.0, s="Football Decoded", va="bottom", ha="center", 
+                weight='bold', fontsize=12, font=font, color='white')
+    fig.text(x=0.14, y=-0.015, s="Created by Jaime Oriol", va="bottom", ha="center", 
+            weight='bold', fontsize=6, font=font, color='white')
+    
+    # Títulos de leyenda
+    fig.text(x=0.14, y=.14, s="Pass count between", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.38, y=.14, s="Pass value between (xT)", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.61, y=.14, s="Player pass count", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.84, y=.14, s="Player value per pass (xT)", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    
+    # Valores de leyenda
+    fig.text(x=0.13, y=0.07, s="3 to 9+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    fig.text(x=0.37, y=0.07, s="-0.1 to 0.2+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    fig.text(x=0.61, y=0.07, s="3 to 50+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    fig.text(x=0.84, y=0.07, s="0 to 0.08+", va="bottom", ha="center",
+            fontsize=5, font=font, color='white')
+    
+    # Indicadores de escala
+    fig.text(x=0.41, y=.038, s="Low", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    fig.text(x=0.6, y=.038, s="High", va="bottom", ha="center",
+            fontsize=6, font=font, color='white')
+    
+    # Elementos visuales de leyenda
+    x0 = 195
+    y0 = 370
+    dx = 60
+    dy = 120
+    shift_x = 70
+    
+    x1 = 710
+    x2 = 1370
+    y2 = 430
+    shift_x2 = 70
+    radius = 20
+    
+    x3 = 1810
+    shift_x3 = 100
+    
+    x4 = 930
+    y4 = 220
+    
+    style = ArrowStyle('->', head_length=5, head_width=3)
+    
+    # Leyenda de grosor de líneas
+    arrow1 = FancyArrowPatch((x0, y0), (x0+dx, y0+dy), lw=0.5, arrowstyle=style, color='white')
+    arrow2 = FancyArrowPatch((x0+shift_x, y0), (x0+dx+shift_x, y0+dy), lw=1.5, arrowstyle=style, color='white')
+    arrow3 = FancyArrowPatch((x0+2*shift_x, y0), (x0+dx+2*shift_x, y0+dy), lw=2.5, arrowstyle=style, color='white')
+    
+    # Leyenda de colores de conexiones
+    colors_legend = [node_cmap(i/4) for i in range(5)]
+    
+    arrow4 = FancyArrowPatch((x1, y0), (x1+dx, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[0])
+    arrow5 = FancyArrowPatch((x1+shift_x, y0), (x1+dx+shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[1])
+    arrow6 = FancyArrowPatch((x1+2*shift_x, y0), (x1+dx+2*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[2])
+    arrow7 = FancyArrowPatch((x1+3*shift_x, y0), (x1+dx+3*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[3])
+    arrow8 = FancyArrowPatch((x1+4*shift_x, y0), (x1+dx+4*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[4])
+    
+    # Leyenda de tamaños de nodos
+    circle1 = Circle(xy=(x2, y2), radius=radius, edgecolor='white', fill=False)
+    circle2 = Circle(xy=(x2+shift_x2, y2), radius=radius*1.5, edgecolor='white', fill=False)
+    circle3 = Circle(xy=(x2+2.3*shift_x2, y2), radius=radius*2, edgecolor='white', fill=False)
+    
+    # Leyenda de colores de nodos
+    for idx, (x_pos, color) in enumerate([
+        (x3, colors_legend[0]),
+        (x3+shift_x3, colors_legend[1]),
+        (x3+2*shift_x3, colors_legend[2]),
+        (x3+3*shift_x3, colors_legend[3]),
+        (x3+4*shift_x3, colors_legend[4])
+    ]):
+        # Interior transparente
+        inner_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
+                            color=color, alpha=0.3, zorder=10)
+        fig.patches.append(inner_circle)
+        
+        # Borde nítido
+        border_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
+                             color=color, fill=False, linewidth=1, zorder=11)
+        fig.patches.append(border_circle)
+    
+    # Flecha de escala
+    arrow9 = FancyArrowPatch((x4, y4), (x4+550, y4), lw=1, arrowstyle=style, color='white')
+    
+    fig.patches.extend([arrow1, arrow2, arrow3, arrow4, arrow5, arrow6, arrow7, arrow8,
+                       circle1, circle2, circle3, arrow9])
+    
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.1, hspace=0, bottom=0.1)
     
     if save_path:
         fig.savefig(save_path, bbox_inches='tight', dpi=400, facecolor=BACKGROUND_COLOR)

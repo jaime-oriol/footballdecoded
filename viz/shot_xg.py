@@ -171,15 +171,25 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     # EXTREME HIGHLIGHT: Highest xG miss with maximum color intensity
     if not highest_xg_miss.empty:
         highxg_marker = 'o' if highest_xg_miss['header_tag'].iloc[0]==1 else 'h'
+        # Capa extra roja
         ax['pitch'].scatter(highest_xg_miss['y'].iloc[0], highest_xg_miss['x'].iloc[0], 
-                           marker=highxg_marker, s=200, c=node_cmap(1.0), edgecolors='grey', 
+                           marker=highxg_marker, s=280, c=PITCH_COLOR, edgecolors='red', 
+                           lw=3, zorder=2)
+        # Scatter principal
+        ax['pitch'].scatter(highest_xg_miss['y'].iloc[0], highest_xg_miss['x'].iloc[0], 
+                           marker=highxg_marker, s=200, c=highest_xg_miss['xg'].iloc[0], edgecolors='black', 
                            lw=2.5, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=3)
     
     # EXTREME HIGHLIGHT: Lowest xG goal with minimum color intensity  
     if not lowest_xg_goal.empty:
         lowxg_marker = 'o' if lowest_xg_goal['header_tag'].iloc[0]==1 else 'h'
+        # Capa extra verde fucsia
         ax['pitch'].scatter(lowest_xg_goal['y'].iloc[0], lowest_xg_goal['x'].iloc[0], 
-                           marker=lowxg_marker, s=200, c=node_cmap(0.0), edgecolors='w', 
+                           marker=lowxg_marker, s=280, c=PITCH_COLOR, edgecolors='lime', 
+                           lw=3, zorder=2)
+        # Scatter principal
+        ax['pitch'].scatter(lowest_xg_goal['y'].iloc[0], lowest_xg_goal['x'].iloc[0], 
+                           marker=lowxg_marker, s=200, c=lowest_xg_goal['xg'].iloc[0], edgecolors='white', 
                            lw=2.5, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=3)
     
     # xG COLOR SCALE: Horizontal colorbar for value reference
@@ -208,9 +218,13 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     legend_ax.text(1.45, 0.61, "Goal", color="w", fontfamily=font)
     legend_ax.text(1.465, 0.11, "No Goal", color="w", fontfamily=font)
     
-    # Extremos destacados
-    legend_ax.scatter(2.4, 0.7, marker='h', s=200, c=node_cmap(0.0), edgecolors='w', lw=2.5)
-    legend_ax.scatter(2.4, 0.2, marker='h', s=200, c=node_cmap(1.0), edgecolors='grey', lw=2.5)
+    # Extremos destacados con doble borde
+    # Lowest xG Goal
+    legend_ax.scatter(2.4, 0.7, marker='h', s=280, c=PITCH_COLOR, edgecolors='lime', lw=3, zorder=1)
+    legend_ax.scatter(2.4, 0.7, marker='h', s=200, c=node_cmap(0.0), edgecolors='white', lw=2.5, zorder=2)
+    # Highest xG Miss  
+    legend_ax.scatter(2.4, 0.2, marker='h', s=280, c=PITCH_COLOR, edgecolors='red', lw=3, zorder=1)
+    legend_ax.scatter(2.4, 0.2, marker='h', s=200, c=node_cmap(1.0), edgecolors='black', lw=2.5, zorder=2)
     legend_ax.text(2.55, 0.61, "Lowest xG Goal", color="w", fontfamily=font)
     legend_ax.text(2.565, 0.11, "Highest xG Miss", color="w", fontfamily=font)
     

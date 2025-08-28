@@ -432,3 +432,86 @@ def combine_radar_and_table(radar_path, table_path, output_path='combined_visual
     combined.save(output_path, dpi=(300, 300))
     
     return output_path
+
+def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_titles, 
+                               save_path='minimal_stats.png', show_plot=True):
+    """
+    Create minimal statistical table for notebook analysis.
+    
+    Simple, clean statistical table showing player name, team, and 8-12 metrics
+    without percentiles, logos, or decorative elements.
+    
+    Args:
+        player_name: Player name string
+        team_name: Team name string  
+        metrics_data: List of 8-12 numerical values
+        metrics_titles: List of 8-12 metric display names
+        save_path: Output file path
+        show_plot: Whether to display the plot
+        
+    Returns:
+        Path to saved visualization file
+    """
+    # Validate inputs
+    if len(metrics_data) != len(metrics_titles):
+        raise ValueError("metrics_data and metrics_titles must have same length")
+    if not (8 <= len(metrics_data) <= 12):
+        raise ValueError("Must provide between 8 and 12 metrics")
+    
+    # Setup figure - more compact size
+    fig, ax = plt.subplots(figsize=(6, 5))
+    fig.patch.set_facecolor(BACKGROUND_COLOR)
+    ax.set_facecolor(BACKGROUND_COLOR)
+    ax.set_xlim(0, 6)
+    ax.set_ylim(0, len(metrics_data) + 2.5)
+    ax.axis('off')
+    
+    # Header with player and team - moved to left
+    ax.text(0.5, len(metrics_data) + 1.8, player_name, fontsize=16, color='white', 
+            fontweight='bold', ha='left', va='center', family='DejaVu Sans')
+    ax.text(0.5, len(metrics_data) + 1.3, team_name, fontsize=12, color='white', 
+            ha='left', va='center', family='DejaVu Sans')
+    
+    # Logo in top right corner
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path)
+        logo_ax = fig.add_axes([0.75, 0.82, 0.2, 0.15])  # [x, y, width, height] - top right
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        pass  # Skip logo if not found
+    
+    # Stats table - more compact
+    for i, (title, value) in enumerate(zip(metrics_titles, metrics_data)):
+        y_pos = len(metrics_data) - i
+        
+        # Alternating row background - narrower
+        if i % 2 == 0:
+            rect = Rectangle((0.3, y_pos - 0.4), 5.4, 0.8, facecolor='white', alpha=0.05)
+            ax.add_patch(rect)
+        
+        # Metric name (left) - closer to center
+        ax.text(0.5, y_pos, title, fontsize=11, color='white', 
+                ha='left', va='center', family='DejaVu Sans', fontweight='bold')
+        
+        # Value (right) - much closer to names
+        if isinstance(value, float):
+            display_value = f"{value:.2f}"
+        else:
+            display_value = str(value)
+            
+        ax.text(5.5, y_pos, display_value, fontsize=11, color='white', 
+                ha='right', va='center', family='DejaVu Sans')
+    
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
+    
+    if show_plot:
+        plt.show()
+    else:
+        plt.close()
+    
+    return save_path
