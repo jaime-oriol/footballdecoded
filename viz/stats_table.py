@@ -460,24 +460,24 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         raise ValueError("Must provide between 8 and 12 metrics")
     
     # Setup figure - more compact size
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(5, 5))
     fig.patch.set_facecolor(BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
-    ax.set_xlim(0, 6)
+    ax.set_xlim(0, 5)
     ax.set_ylim(0, len(metrics_data) + 2.5)
     ax.axis('off')
     
     # Header with player and team - moved to right to make space for image
-    ax.text(1.5, len(metrics_data) + 1.4, player_name, fontsize=14, color='white', 
+    ax.text(1.4, len(metrics_data) + 1.4, player_name, fontsize=14, color='white', 
             fontweight='bold', ha='left', va='center', family='DejaVu Sans')
-    ax.text(1.5, len(metrics_data) + 0.9, team_name, fontsize=10, color='white', 
+    ax.text(1.4, len(metrics_data) + 0.9, team_name, fontsize=10, color='white', 
             ha='left', va='center', family='DejaVu Sans')
     
     # Player image in top left if provided
     if player_image_path and os.path.exists(player_image_path):
         try:
             player_img = Image.open(player_image_path)
-            player_ax = fig.add_axes([0.05, 0.75, 0.25, 0.2])  # [x, y, width, height] - top left
+            player_ax = fig.add_axes([0.075, 0.825, 0.20, 0.15])  # [x, y, width, height] - top left
             player_ax.imshow(player_img)
             player_ax.axis('off')
         except Exception as e:
@@ -489,7 +489,7 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         project_root = os.path.dirname(current_dir)
         logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
         logo = Image.open(logo_path)
-        logo_ax = fig.add_axes([0.4, 0.75, 0.3, 0.25])  # [x, y, width, height] - top right, double size
+        logo_ax = fig.add_axes([0.575, 0.75, 0.3, 0.25])  # [x, y, width, height] - top right, double size
         logo_ax.imshow(logo)
         logo_ax.axis('off')
     except Exception as e:
@@ -501,7 +501,7 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         
         # Alternating row background - narrower
         if i % 2 == 0:
-            rect = Rectangle((0.3, y_pos - 0.4), 5.4, 0.8, facecolor='white', alpha=0.05)
+            rect = Rectangle((0.3, y_pos - 0.4), 4.4, 0.8, facecolor='white', alpha=0.05)
             ax.add_patch(rect)
         
         # Metric name (left) - closer to center
@@ -514,7 +514,7 @@ def create_minimal_stats_table(player_name, team_name, metrics_data, metrics_tit
         else:
             display_value = str(value)
             
-        ax.text(4.0, y_pos, display_value, fontsize=11, color='white', 
+        ax.text(4.2, y_pos, display_value, fontsize=11, color='white', 
                 ha='right', va='center', family='DejaVu Sans')
     
     plt.tight_layout()
