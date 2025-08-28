@@ -4,6 +4,9 @@
 
 **Ve paso a paso, uno a uno. Despacio es el camino más rápido. Escribe siempre el código lo más compacto y conciso posible, y que cumpla exactamente lo pedido al 100%. Sin emojis ni florituras. Usa nombres claros y estándar. Incluye solo comentarios útiles y necesarios.**
 
+Antes de realizar cualquier tarea, revisa cuidadosamente el archivo CLADUE.md.
+Ahí encontrarás las directrices de trabajo y la estructura del proyecto que debes seguir.
+
 ### Development Principles
 
 - **KISS (Keep It Simple, Stupid)**: Choose straightforward solutions over complex ones
