@@ -237,7 +237,7 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     
     # Valores izquierda
     fig.text(0.73, 0.925, f"{int(selected_shots.count()[0])}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.73, 0.9, f"{round(selected_shots['xg'].sum(), 1)}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.73, 0.9, f"{selected_shots['xg'].sum():.2f}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
     fig.text(0.73, 0.875, f"{int(selected_shots['goal'].sum())}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
     
     xg_sum = selected_shots['xg'].sum()

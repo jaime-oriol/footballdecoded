@@ -447,7 +447,7 @@ def plot_pass_flow(events_csv_path, info_csv_path, home_colors=['#E23237', '#FFF
 # PASS HULL VISUALIZATION - SIGUIENDO PATRÓN ORIGINAL
 # ====================================================================
 
-def calculate_player_hull(player_events, min_events=5):
+def calculate_player_hull(player_events, min_events=15):
     """
     Calculate convex hull for player's central positioning area.
     

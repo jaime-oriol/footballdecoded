@@ -299,11 +299,11 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     # Add xG line with arrows below league name - compact Unicode arrows with 2 lines
     fig.text(0.5, 0.75, "xG", ha='center', fontweight="bold", fontsize=12, color='w', fontfamily=font)
     # Left Unicode arrow and home team xG - compact with 2 lines
-    fig.text(0.42, 0.75, f"{h_stats['xg']:.1f}", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.42, 0.75, f"{h_stats['xg']:.2f}", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
     fig.text(0.46, 0.75, "←──", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
     # Right Unicode arrow and away team xG - compact with 2 lines
     fig.text(0.54, 0.75, "──→", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
-    fig.text(0.58, 0.75, f"{a_stats['xg']:.1f}", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.58, 0.75, f"{a_stats['xg']:.2f}", ha='center', fontweight="bold", fontsize=14, color='w', fontfamily=font)
     
     # Logos
     if home_logo_path:

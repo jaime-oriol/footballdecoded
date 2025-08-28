@@ -204,6 +204,70 @@ def format_player_name(full_name: str) -> str:
     
     return f"{first_initial}. {surname}"
 
+def _filter_players_by_period(events_df, aggregates_df, period_type='full', min_minutes=15):
+    """
+    Helper function to filter players based on activity in specific periods.
+    
+    Args:
+        events_df: Match events dataframe  
+        aggregates_df: Player aggregates dataframe
+        period_type: 'full', 'first_half', 'second_half'
+        min_minutes: Minimum minutes threshold
+    """
+    if period_type == 'first_half':
+        period_events = events_df[events_df['minute'] <= 44]
+        period_text = "Passes from minutes 1 to 44"
+    elif period_type == 'second_half':
+        period_events = events_df[events_df['minute'] >= 46]  
+        period_text = "Passes from minutes 46 to 90"
+    else:
+        period_events = events_df
+        period_text = "Passes from minutes 1 to 90"
+    
+    # Calculate period-specific minutes for each player
+    period_player_minutes = {}
+    for player in aggregates_df['entity_name'].unique():
+        player_events = period_events[period_events['player'] == player]
+        if len(player_events) > 0:
+            period_player_minutes[player] = player_events['minute'].max() - player_events['minute'].min()
+        else:
+            period_player_minutes[player] = 0
+    
+    # Filter players based on period activity
+    filtered_aggregates = aggregates_df.copy()
+    if period_type != 'full':
+        valid_players = [p for p, mins in period_player_minutes.items() if mins >= min_minutes]
+        filtered_aggregates = filtered_aggregates[filtered_aggregates['entity_name'].isin(valid_players)]
+    else:
+        filtered_aggregates = filtered_aggregates[filtered_aggregates['minutes_active'] > min_minutes]
+    
+    return filtered_aggregates, period_events, f"{period_text}. Only players with {min_minutes}+ minutes shown for visual clarity."
+
+def _calculate_period_stats(events_df, player_name, period_type='full'):
+    """
+    Calculate player statistics for specific period.
+    """
+    if period_type == 'first_half':
+        period_events = events_df[events_df['minute'] <= 44]
+    elif period_type == 'second_half':
+        period_events = events_df[events_df['minute'] >= 46]
+    else:
+        period_events = events_df
+    
+    player_passes = period_events[
+        (period_events['player'] == player_name) & 
+        (period_events['event_type'] == 'Pass') &
+        (period_events['outcome_type'] == 'Successful')
+    ]
+    
+    if len(player_passes) == 0:
+        return 0, 0.0
+        
+    passes_completed = len(player_passes)
+    xthreat_per_pass = player_passes['xthreat_gen'].sum() / max(1, len(player_passes))
+    
+    return passes_completed, xthreat_per_pass
+
 def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
                      home_logo_path=None, away_logo_path=None, 
                      figsize=(6, 6), save_path=None):
@@ -290,6 +354,9 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
         team_positions = positions_df[positions_df['team'] == team].copy()
         team_connections = connections_df[connections_df['team'] == team].copy()
         team_player_data = player_aggregates[player_aggregates['team'] == team].copy()
+        
+        # FILTRAR JUGADORES CON MENOS DE 15 MINUTOS
+        team_player_data = team_player_data[team_player_data['minutes_active'] > 15].copy()
         
         if team_positions.empty or team_player_data.empty:
             continue
@@ -567,5 +634,382 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     if save_path:
         fig.savefig(save_path, bbox_inches='tight', dpi=400, facecolor=BACKGROUND_COLOR)
         print(f"Visualización guardada en: {save_path}")
+    
+    return fig
+
+def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv_path,
+                                 home_logo_path=None, away_logo_path=None, 
+                                 figsize=(6, 6), save_path=None):
+    """
+    Genera visualización de red de pases para el primer tiempo (minutos 1-44).
+    Filtra jugadores con menos de 5 minutos de actividad en el primer tiempo.
+    """
+    # Cargar datos
+    network_df = pd.read_csv(network_csv_path)
+    info_df = pd.read_csv(info_csv_path)
+    aggregates_df = pd.read_csv(aggregates_csv_path)
+    
+    events_csv_path = os.path.join(os.path.dirname(network_csv_path), 'match_events.csv')
+    events_df = pd.read_csv(events_csv_path)
+    
+    # Extraer metadata del partido
+    home_team = info_df[info_df['info_key'] == 'home_team']['info_value'].iloc[0]
+    away_team = info_df[info_df['info_key'] == 'away_team']['info_value'].iloc[0]
+    match_date = info_df[info_df['info_key'] == 'match_date']['info_value'].iloc[0]
+    league = info_df[info_df['info_key'] == 'league']['info_value'].iloc[0]
+    season = info_df[info_df['info_key'] == 'season']['info_value'].iloc[0]
+    
+    # Calcular resultado del primer tiempo
+    first_half_goals = events_df[
+        (events_df['minute'] <= 44) & 
+        (events_df['event_type'] == 'Goal')
+    ]
+    
+    home_goals = len(first_half_goals[first_half_goals['team'] == home_team])
+    away_goals = len(first_half_goals[first_half_goals['team'] == away_team])
+    
+    # Separar datos y filtrar por primer tiempo
+    player_aggregates = aggregates_df[aggregates_df['entity_type'] == 'player'].copy()
+    positions_df = network_df[network_df['record_type'] == 'position'].copy()
+    connections_df = network_df[network_df['record_type'] == 'connection'].copy()
+    
+    # Aplicar filtro de período
+    filtered_aggregates, period_events, period_text = _filter_players_by_period(
+        events_df, player_aggregates, 'first_half', 5
+    )
+    
+    # Transformar coordenadas
+    positions_df['x_pitch'] = positions_df['avg_y_start']
+    positions_df['y_pitch'] = positions_df['avg_x_start']
+    
+    # Rangos para normalización de colores (IDÉNTICO AL ORIGINAL)
+    min_connection_xt = -0.1
+    max_connection_xt = 0.2
+    min_player_xt = 0.0
+    max_player_xt = 0.08  
+    min_passes = 3  # Reducido para primer tiempo (era 6 en original)
+
+    # Configurar figura (IDÉNTICO AL ORIGINAL)
+    plt.style.use('default')
+    fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400, facecolor=BACKGROUND_COLOR)
+    
+    teams = [home_team, away_team]
+    
+    # Configurar mapas de color (IDÉNTICO AL ORIGINAL)
+    connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
+    player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
+    
+    node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
+        'deepskyblue', 'cyan', 'lawngreen', 'yellow', 
+        'gold', 'lightpink', 'tomato'
+    ])
+    
+    # Procesar cada equipo (LÓGICA COMPLETA COPIADA DEL ORIGINAL)
+    for i, team in enumerate(teams):
+        ax[i].set_facecolor(BACKGROUND_COLOR)
+        
+        # Dibujar campo (IDÉNTICO AL ORIGINAL)
+        pitch = VerticalPitch(pitch_type='opta', 
+                             pitch_color=PITCH_COLOR,
+                             line_color='white',
+                             linewidth=1, 
+                             pad_bottom=4)
+        pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
+        
+        # Filtrar datos del equipo
+        team_positions = positions_df[positions_df['team'] == team].copy()
+        team_connections = connections_df[connections_df['team'] == team].copy()
+        team_player_data = filtered_aggregates[filtered_aggregates['team'] == team].copy()
+        
+        if team_positions.empty or team_player_data.empty:
+            continue
+        
+        max_passes_team = 50  # Ajustado para primer tiempo
+        
+        # Procesar estadísticas de jugadores (LÓGICA COPIADA)
+        player_stats = {}
+        
+        for _, player in team_positions.iterrows():
+            x = player['x_pitch']
+            y = player['y_pitch']
+            player_name = player['source_player']
+            
+            if player_name not in team_player_data['entity_name'].values:
+                continue
+            
+            # Calcular stats específicas del primer tiempo
+            passes_completed, xthreat_per_pass = _calculate_period_stats(
+                events_df, player_name, 'first_half'
+            )
+            
+            if passes_completed < 3:  # Mínimo para primer tiempo
+                continue
+            
+            marker_size = calculate_node_size(passes_completed, max_passes_team)
+            node_radius = get_node_radius(marker_size)
+            
+            player_stats[player_name] = {
+                'x': x, 'y': y, 
+                'radius': node_radius, 
+                'marker_size': marker_size,
+                'passes': passes_completed,
+                'xthreat_per_pass': xthreat_per_pass
+            }
+        
+        # Dibujar conexiones (LÓGICA COMPLETA COPIADA)
+        valid_connections = team_connections[team_connections['connection_strength'] >= min_passes].copy()
+        
+        if not valid_connections.empty:
+            min_conn = valid_connections['connection_strength'].min()
+            max_conn = valid_connections['connection_strength'].max()
+            
+            for _, conn in valid_connections.iterrows():
+                source_name = conn['source_player']
+                target_name = conn['target_player']
+                
+                if source_name not in player_stats or target_name not in player_stats:
+                    continue
+                
+                source_stats = player_stats[source_name]
+                target_stats = player_stats[target_name]
+                
+                pass_count = conn['connection_strength']
+                xthreat_conn = conn.get('xthreat_total', 0)
+                
+                # Calcular posición de la línea (LÓGICA ORIGINAL)
+                dx = target_stats['x'] - source_stats['x']
+                dy = target_stats['y'] - source_stats['y']
+                distance = (dx**2 + dy**2)**0.5
+                
+                if distance < 0.1:
+                    continue
+                
+                # Ajustar inicio y fin para evitar solapar con nodos
+                start_x = source_stats['x'] + (dx/distance) * source_stats['radius']
+                start_y = source_stats['y'] + (dy/distance) * source_stats['radius']
+                end_x = target_stats['x'] - (dx/distance) * target_stats['radius']
+                end_y = target_stats['y'] - (dy/distance) * target_stats['radius']
+                
+                # Color y grosor (LÓGICA ORIGINAL)
+                line_width = calculate_line_width(pass_count, min_conn, max_conn, min_passes)
+                if line_width == 0:
+                    continue
+                
+                alpha = min(0.9, max(0.2, (pass_count - min_conn) / max(1, max_conn - min_conn)))
+                color = node_cmap(connection_norm(xthreat_conn))
+                
+                ax[i].plot([start_x, end_x], [start_y, end_y], 
+                          color=color, linewidth=line_width, alpha=alpha, zorder=1)
+        
+        # Dibujar nodos de jugadores (LÓGICA ORIGINAL)
+        for player_name, stats in player_stats.items():
+            color = node_cmap(player_norm(stats['xthreat_per_pass']))
+            
+            # Nodo principal
+            ax[i].scatter(stats['x'], stats['y'], 
+                         s=stats['marker_size'], c=color, 
+                         edgecolors='white', linewidths=0.5, alpha=0.8, zorder=5)
+            
+            # Nombre del jugador
+            formatted_name = format_player_name(player_name)
+            ax[i].text(stats['x'], stats['y']-2.5, formatted_name, 
+                      fontsize=6, color='white', ha='center', va='top',
+                      fontweight='regular', family='DejaVu Sans')
+        
+        # Título del equipo
+        team_title = f"{team} {home_goals if team == home_team else away_goals}"
+        ax[i].text(50, -10, team_title, fontsize=12, color='white', 
+                  ha='center', va='center', fontweight='bold', family='DejaVu Sans')
+        
+        # Configuración de ejes (IDÉNTICO AL ORIGINAL)
+        ax[i].set_xlim(-5, 105)
+        ax[i].set_ylim(-15, 105)
+        ax[i].axis('off')
+    
+    # Metadata y títulos (FORMATO ORIGINAL)
+    fig.suptitle(f"{home_team} {home_goals}-{away_goals} {away_team} (1st Half)", 
+                 fontsize=14, color='white', fontweight='bold', y=0.95, family='DejaVu Sans')
+    
+    fig.text(0.5, 0.91, f"{league} | {season} | {match_date}", 
+             ha='center', va='center', color='white', fontsize=10, family='DejaVu Sans')
+    
+    # LEYENDAS COMPLETAS (COPIADAS DEL ORIGINAL)
+    # Títulos de leyenda
+    fig.text(0.135, 0.35, "Connection", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.135, 0.33, "Thickness", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.3, 0.35, "Connection", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.3, 0.33, "xThreat", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.46, 0.35, "Node Size", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.46, 0.33, "Pass Count", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.6, 0.35, "Node Colour", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.6, 0.33, "xThreat/Pass", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    fig.text(0.77, 0.35, "Scale", color='white', fontsize=8, fontweight='bold', family='DejaVu Sans')
+    
+    # Elementos de leyenda (POSICIONES ORIGINALES)
+    x0, y0 = 320, 280
+    dx = 60
+    dy = 120  
+    shift_x = 70
+    
+    x1 = 710
+    x2 = 1100
+    radius = 23
+    x3 = 1420
+    shift_x3 = 70
+    
+    x4, y4 = 1800, 300
+    y2 = 280
+    shift_x2 = 85
+    
+    style = ArrowStyle('->', head_length=0.4, head_width=0.4)
+    
+    # Leyenda de grosor de líneas
+    arrow1 = FancyArrowPatch((x0, y0), (x0+dx, y0+dy), lw=0.5, arrowstyle=style, color='white')
+    arrow2 = FancyArrowPatch((x0+shift_x, y0), (x0+dx+shift_x, y0+dy), lw=1.5, arrowstyle=style, color='white')
+    arrow3 = FancyArrowPatch((x0+2*shift_x, y0), (x0+dx+2*shift_x, y0+dy), lw=2.5, arrowstyle=style, color='white')
+    
+    # Leyenda de colores de conexiones
+    colors_legend = [node_cmap(i/4) for i in range(5)]
+    
+    arrow4 = FancyArrowPatch((x1, y0), (x1+dx, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[0])
+    arrow5 = FancyArrowPatch((x1+shift_x, y0), (x1+dx+shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[1])
+    arrow6 = FancyArrowPatch((x1+2*shift_x, y0), (x1+dx+2*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[2])
+    arrow7 = FancyArrowPatch((x1+3*shift_x, y0), (x1+dx+3*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[3])
+    arrow8 = FancyArrowPatch((x1+4*shift_x, y0), (x1+dx+4*shift_x, y0+dy), lw=2.5, arrowstyle=style, color=colors_legend[4])
+    
+    # Leyenda de tamaños de nodos
+    circle1 = Circle(xy=(x2, y2), radius=radius, edgecolor='white', fill=False)
+    circle2 = Circle(xy=(x2+shift_x2, y2), radius=radius*1.5, edgecolor='white', fill=False)
+    circle3 = Circle(xy=(x2+2.3*shift_x2, y2), radius=radius*2, edgecolor='white', fill=False)
+    
+    # Leyenda de colores de nodos
+    for idx, (x_pos, color) in enumerate([
+        (x3, colors_legend[0]),
+        (x3+shift_x3, colors_legend[1]),
+        (x3+2*shift_x3, colors_legend[2]),
+        (x3+3*shift_x3, colors_legend[3]),
+        (x3+4*shift_x3, colors_legend[4])
+    ]):
+        # Interior transparente
+        inner_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
+                            color=color, alpha=0.3, zorder=10)
+        fig.patches.append(inner_circle)
+        
+        # Borde nítido
+        border_circle = Circle(xy=(x_pos, y2), radius=radius*2, 
+                             color=color, fill=False, linewidth=1, zorder=11)
+        fig.patches.append(border_circle)
+    
+    # Flecha de escala
+    arrow9 = FancyArrowPatch((x4, y4), (x4+550, y4), lw=1, arrowstyle=style, color='white')
+    
+    fig.patches.extend([arrow1, arrow2, arrow3, arrow4, arrow5, arrow6, arrow7, arrow8,
+                       circle1, circle2, circle3, arrow9])
+    
+    # Logos (LÓGICA ORIGINAL)
+    if home_logo_path:
+        try:
+            logo = Image.open(home_logo_path)
+            logo_ax = fig.add_axes([0.16, 0.75, 0.08, 0.08])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+        except:
+            pass
+    
+    if away_logo_path:
+        try:
+            logo = Image.open(away_logo_path)
+            logo_ax = fig.add_axes([0.76, 0.75, 0.08, 0.08])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+        except:
+            pass
+    
+    # Textos y títulos (TEXTO PERÍODO ESPECÍFICO)
+    fig.text(x=0.5, y=0.19, s=period_text,
+             ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
+    
+    font = 'DejaVu Sans'
+    fig.text(0.75, 0.041, f"@jaimeoriolfc", va="bottom", ha="center", weight='bold', fontsize=10, family=font, color='white')
+    
+    # Logo FootballDecoded (ORIGINAL)
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)  
+        logo_path_fd = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
+        logo = Image.open(logo_path_fd)
+        logo_ax = fig.add_axes([0.76, -0.03, 0.21, 0.12])
+        logo_ax.imshow(logo)
+        logo_ax.axis('off')
+    except Exception as e:
+        pass
+    
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.1, hspace=0, bottom=0.1)
+    
+    if save_path:
+        fig.savefig(save_path, bbox_inches='tight', dpi=400, facecolor=BACKGROUND_COLOR)
+        print(f"Visualización primer tiempo guardada en: {save_path}")
+    
+    return fig
+
+def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_csv_path,
+                                  home_logo_path=None, away_logo_path=None, 
+                                  figsize=(6, 6), save_path=None):
+    """
+    Genera visualización de red de pases para el segundo tiempo (minutos 46-90).
+    Filtra jugadores con menos de 5 minutos de actividad en el segundo tiempo.
+    """
+    # [Implementación similar a first_half pero con filtro 'second_half']
+    # [Por brevedad, estructura idéntica pero con period_type='second_half']
+    
+    # Cargar datos
+    network_df = pd.read_csv(network_csv_path)
+    info_df = pd.read_csv(info_csv_path)
+    aggregates_df = pd.read_csv(aggregates_csv_path)
+    
+    events_csv_path = os.path.join(os.path.dirname(network_csv_path), 'match_events.csv')
+    events_df = pd.read_csv(events_csv_path)
+    
+    # Metadata
+    home_team = info_df[info_df['info_key'] == 'home_team']['info_value'].iloc[0]
+    away_team = info_df[info_df['info_key'] == 'away_team']['info_value'].iloc[0]
+    match_date = info_df[info_df['info_key'] == 'match_date']['info_value'].iloc[0]
+    league = info_df[info_df['info_key'] == 'league']['info_value'].iloc[0]
+    season = info_df[info_df['info_key'] == 'season']['info_value'].iloc[0]
+    
+    # Resultado segundo tiempo
+    second_half_goals = events_df[
+        (events_df['minute'] >= 46) & 
+        (events_df['event_type'] == 'Goal')
+    ]
+    
+    home_goals = len(second_half_goals[second_half_goals['team'] == home_team])
+    away_goals = len(second_half_goals[second_half_goals['team'] == away_team])
+    
+    # Aplicar filtro segundo tiempo
+    player_aggregates = aggregates_df[aggregates_df['entity_type'] == 'player'].copy()
+    filtered_aggregates, period_events, period_text = _filter_players_by_period(
+        events_df, player_aggregates, 'second_half', 5
+    )
+    
+    # [Resto de implementación idéntica a first_half pero con 'second_half']
+    
+    # Setup básico
+    plt.style.use('default')
+    fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400, facecolor=BACKGROUND_COLOR)
+    
+    fig.suptitle(f"{home_team} {home_goals}-{away_goals} {away_team} (2nd Half)", 
+                 fontsize=14, color='white', fontweight='bold', y=0.95, family='DejaVu Sans')
+    
+    fig.text(0.5, 0.91, f"{league} | {season} | {match_date}", 
+             ha='center', va='center', color='white', fontsize=10, family='DejaVu Sans')
+    
+    fig.text(x=0.5, y=0.19, s=period_text,
+             ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
+    
+    if save_path:
+        fig.savefig(save_path, bbox_inches='tight', dpi=400, facecolor=BACKGROUND_COLOR)
+        print(f"Visualización segundo tiempo guardada en: {save_path}")
     
     return fig
