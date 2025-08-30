@@ -226,22 +226,22 @@ def _create_spatial_fields_2x2(events_df: pd.DataFrame, player_name: str) -> dic
     
     # 1. Actions 1st half (minutes 1-44)
     paths['actions_1st'] = _create_actions_field(
-        events_df, player_name, 1, 44, 'temp_actions_1st.png', 'Acciones 1º Tiempo'
+        events_df, player_name, 1, 44, 'temp_actions_1st.png', 'Actions 1st Half'
     )
     
     # 2. Passes 1st half (minutes 1-44)  
     paths['passes_1st'] = _create_passes_field(
-        events_df, player_name, 1, 44, 'temp_passes_1st.png', 'Pases 1º Tiempo'
+        events_df, player_name, 1, 44, 'temp_passes_1st.png', 'Passes 1st Half'
     )
     
     # 3. Actions 2nd half (minutes 46-90)
     paths['actions_2nd'] = _create_actions_field(
-        events_df, player_name, 46, 90, 'temp_actions_2nd.png', 'Acciones 2º Tiempo'
+        events_df, player_name, 46, 90, 'temp_actions_2nd.png', 'Actions 2nd Half'
     )
     
     # 4. Passes 2nd half (minutes 46-90)
     paths['passes_2nd'] = _create_passes_field(
-        events_df, player_name, 46, 90, 'temp_passes_2nd.png', 'Pases 2º Tiempo'
+        events_df, player_name, 46, 90, 'temp_passes_2nd.png', 'Passes 2nd Half'
     )
     
     return paths
@@ -303,7 +303,7 @@ def _create_actions_field(
     ax.set_title(title, color='white', fontsize=12, pad=3, family='DejaVu Sans')
     
     # Simple legend at bottom - SAME position as passes
-    legend_text = f"Ganadas: {len(successful)} | Perdidas: {len(failed)}"
+    legend_text = f"Won: {len(successful)} | Lost: {len(failed)}"
     fig.text(0.5, 0.0, legend_text, ha='center', va='bottom', 
              fontsize=10, color='white', family='DejaVu Sans')
     
@@ -389,7 +389,7 @@ def _create_passes_field(
     ax.set_title(title, color='white', fontsize=12, pad=3, family='DejaVu Sans')
     
     # Simple legend at bottom - LOWER position
-    legend_text = f"Precisos: {len(successful)} | No precisos: {len(failed)}"
+    legend_text = f"Accurate: {len(successful)} | Inaccurate: {len(failed)}"
     fig.text(0.5, 0.0, legend_text, ha='center', va='bottom',
              fontsize=10, color='white', family='DejaVu Sans')
     
