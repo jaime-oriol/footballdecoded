@@ -399,6 +399,69 @@ def _create_passes_field(
     
     return save_path
 
+def create_goalkeeper_analysis(
+    player_name: str,
+    team_name: str,
+    enriched_metrics: List[Tuple[str, str]],
+    player_image_path: str = None
+):
+    """
+    Create goalkeeper-specific analysis with only stats table (no spatial maps).
+    
+    Generates professional goalkeeper statistics visualization without spatial field maps,
+    since goalkeeper positioning data is less relevant for analysis.
+    
+    Args:
+        player_name: Goalkeeper name string
+        team_name: Team/match description string  
+        enriched_metrics: List of (metric_name, formatted_value) tuples
+        player_image_path: Optional path to goalkeeper image file
+        
+    Returns:
+        matplotlib figure object
+        
+    Example:
+        fig = create_goalkeeper_analysis(
+            player_name='Donnarumma',
+            team_name='vs Arsenal Semis UCL',
+            enriched_metrics=[
+                ("1st Leg", ""),
+                ("Saves", "5"),
+                ("Goals conceded", "0"),
+                ("xGOT faced", "1.23"),
+                ("Goals prevented", "1.23"),
+                ("2nd Leg", ""),
+                ("Saves", "3"),
+                ("Goals conceded", "1"),
+                ("xGOT faced", "1.86"),
+                ("Goals prevented", "0.86"),
+            ],
+            player_image_path='../../caras/goalkeepers/donnarumma.png'
+        )
+    """
+    # Create stats table
+    table_path = 'temp_goalkeeper_stats.png'
+    _create_large_stats_table(
+        player_name, team_name, enriched_metrics, 
+        player_image_path, table_path
+    )
+    
+    # Load table image
+    table_img = Image.open(table_path)
+    table_width, table_height = table_img.size
+    
+    # Convert to matplotlib figure
+    fig, ax = plt.subplots(figsize=(table_width/100, table_height/100), dpi=100)
+    ax.imshow(table_img)
+    ax.axis('off')
+    fig.patch.set_facecolor(BACKGROUND_COLOR)
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
+    
+    # Clean up temporary file
+    os.remove(table_path)
+    
+    return fig
+
 def _create_blank_field() -> Image.Image:
     """Create blank field placeholder when no data available."""
     blank = Image.new('RGB', (500, 700), color=BACKGROUND_COLOR)
