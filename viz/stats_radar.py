@@ -155,8 +155,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
             logo_ax = fig.add_axes([logo1_x/10, (y_start-0.8)/15, 0.08, 0.08])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
-        except:
-            pass  # Graceful failure if logo unavailable
+        except Exception as e:
+            print(f"Error cargando logo para {p1['team']}: {e}")
+            print(f"Ruta: {team_logos[p1['team']]}")  # Graceful failure if logo unavailable
     
     # Player 1 name and context
     ax.text(text1_x, y_start, p1['player_name'], 
@@ -172,8 +173,9 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
                 logo_ax = fig.add_axes([logo2_x/10, (y_start-0.8)/15, 0.08, 0.08])
                 logo_ax.imshow(logo)
                 logo_ax.axis('off')
-            except:
-                pass  # Graceful failure if logo unavailable
+            except Exception as e:
+                print(f"Error cargando logo para {p2['team']}: {e}")
+                print(f"Ruta: {team_logos[p2['team']]}")  # Graceful failure if logo unavailable
         
         # Player 2 name and context
         ax.text(text2_x, y_start, p2['player_name'],
