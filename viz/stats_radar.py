@@ -342,16 +342,16 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
         project_root = os.path.dirname(current_dir)
         logo_path = os.path.join(project_root, "blog", "logo", "Logo-blanco.png")
         logo = Image.open(logo_path)
-        logo_ax = fig.add_axes([0.575, 0.025, 0.4, 0.16])  # [x, y, width, height] - back to original size
+        logo_ax = fig.add_axes([0.5, 0.025, 0.4, 0.16])  # [x, y, width, height] - back to original size
         logo_ax.imshow(logo)
         logo_ax.axis('off')
     except Exception as e:
         # Fallback al texto si no se encuentra la imagen
-        ax.text(6.5, 0.5, "Football Decoded", fontsize=10, color='white', 
+        ax.text(5.75, 0.5, "Football Decoded", fontsize=10, color='white', 
                 fontweight='bold', ha='center', va='center', family='DejaVu Sans')
     
     # "Created by Jaime Oriol" below the logo
-    ax.text(6.7, 0.65, "Created by Jaime Oriol", fontsize=10, color='white', 
+    ax.text(5.95, 0.65, "Created by Jaime Oriol", fontsize=11, color='white', 
             fontweight='bold', ha='center', va='center', family='DejaVu Sans')
     
     plt.tight_layout()
