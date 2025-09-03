@@ -251,14 +251,14 @@ def _filter_players_by_period(events_df, aggregates_df, period_type='full', min_
         min_minutes: Minimum minutes threshold
     """
     if period_type == 'first_half':
-        period_events = events_df[events_df['minute'] <= 44]
-        period_text = "Passes from minutes 1 to 44"
+        period_events = events_df[events_df['period'] == 'FirstHalf']
+        period_text = "Passes from First Half"
     elif period_type == 'second_half':
-        period_events = events_df[events_df['minute'] >= 46]  
-        period_text = "Passes from minutes 46 to 90"
+        period_events = events_df[events_df['period'] == 'SecondHalf']
+        period_text = "Passes from Second Half"
     else:
         period_events = events_df
-        period_text = "Passes from minutes 1 to 90"
+        period_text = "Passes from Full Match"
     
     # Calculate period-specific minutes for each player
     period_player_minutes = {}
@@ -284,9 +284,9 @@ def _calculate_period_stats(events_df, player_name, period_type='full'):
     Calculate player statistics for specific period.
     """
     if period_type == 'first_half':
-        period_events = events_df[events_df['minute'] <= 44]
+        period_events = events_df[events_df['period'] == 'FirstHalf']
     elif period_type == 'second_half':
-        period_events = events_df[events_df['minute'] >= 46]
+        period_events = events_df[events_df['period'] == 'SecondHalf']
     else:
         period_events = events_df
     
@@ -321,11 +321,11 @@ def _calculate_period_positions(events_df, positions_df, period_type='full'):
     if period_type == 'full':
         return positions_df  # No changes for full match
         
-    # Filter events for the period - EXACT same logic as match_data.py uses
+    # Filter events for the period - using period column
     if period_type == 'first_half':
-        period_events = events_df[events_df['minute'] <= 44]
+        period_events = events_df[events_df['period'] == 'FirstHalf']
     elif period_type == 'second_half':
-        period_events = events_df[events_df['minute'] >= 46]
+        period_events = events_df[events_df['period'] == 'SecondHalf']
     
     # Create copy to avoid modifying original
     updated_positions = positions_df.copy()
@@ -369,11 +369,11 @@ def _calculate_period_connections(events_df, connections_df, period_type='full')
     if period_type == 'full':
         return connections_df  # No changes for full match
     
-    # Filter events for the period - EXACT same logic as match_data.py uses
+    # Filter events for the period - using period column
     if period_type == 'first_half':
-        period_events = events_df[events_df['minute'] <= 44]
+        period_events = events_df[events_df['period'] == 'FirstHalf']
     elif period_type == 'second_half':
-        period_events = events_df[events_df['minute'] >= 46]
+        period_events = events_df[events_df['period'] == 'SecondHalf']
     
     # EXACT same pass filtering as match_data.py line 800-804
     passes = period_events[
@@ -625,7 +625,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     arrow_ax.text(0.35, 0.6, "Direction of play", ha="center", va="center", fontsize=7, font = 'serif', color="w", fontweight="regular", rotation=90)
     
     # Textos y títulos
-    fig.text(x=0.5, y=0.19, s='Passes from minutes 1 to 90. Only players with 15+ minutes shown for visual clarity.',
+    fig.text(x=0.5, y=0.19, s='Passes from minutes 1 to 90 (+ extra time). Only players with 15+ minutes shown for visual clarity.',
              ha='center', va='center', color='white', fontsize=7, fontfamily='DejaVu Sans')
     
     font = 'DejaVu Sans'
@@ -803,7 +803,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     
     # Calcular resultado del primer tiempo
     first_half_goals = events_df[
-        (events_df['minute'] <= 44) & 
+        (events_df['period'] == 'FirstHalf') & 
         (events_df['event_type'] == 'Goal')
     ]
     
@@ -1162,7 +1162,7 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     
     # Calcular resultado del segundo tiempo
     second_half_goals = events_df[
-        (events_df['minute'] >= 46) & 
+        (events_df['period'] == 'SecondHalf') & 
         (events_df['event_type'] == 'Goal')
     ]
     

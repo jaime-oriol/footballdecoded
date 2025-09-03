@@ -316,8 +316,7 @@ def _create_actions_field(
 def _create_passes_field(
     events_df: pd.DataFrame,
     player_name: str,
-    min_minute: int, 
-    max_minute: int,
+    period: str,
     save_path: str,
     title: str
 ) -> str:
@@ -325,8 +324,7 @@ def _create_passes_field(
     # Filter player pass events with coordinates and time period
     passes = events_df[
         (events_df['player'] == player_name) &
-        (events_df['minute'] >= min_minute) &
-        (events_df['minute'] <= max_minute) &
+        (events_df['period'] == period) &
         (events_df['event_type'] == 'Pass') &
         (events_df['x'].notna()) & 
         (events_df['y'].notna()) &

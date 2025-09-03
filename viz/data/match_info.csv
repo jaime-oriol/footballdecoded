@@ -1,0 +1,96 @@
+info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
+match_metadata,match_id,Espanyol_vs_Atletico_2025-08-17,,,,,,,,
+match_metadata,home_team,Espanyol,,,,,,,,
+match_metadata,away_team,Atletico,,,,,,,,
+match_metadata,match_date,2025-08-17,,,,,,,,
+match_metadata,league,ESP-La Liga,,,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1959,,,,,,,,
+match_metadata,match_duration_minutes,96,,,,,,,,
+team_stats,total_events,825,Espanyol,825.0,,,,,,
+team_stats,possession_pct,42.1,Espanyol,42.1,,,,,,
+team_stats,passes_attempted,436,Espanyol,436.0,,,,,,
+team_stats,passes_completed,346,Espanyol,346.0,,,,,,
+team_stats,pass_accuracy,79.4,Espanyol,79.4,,,,,,
+team_stats,xthreat_total,14.619,Espanyol,14.619,,,,,,
+team_stats,progressive_actions,54,Espanyol,54.0,,,,,,
+team_stats,box_entries,10,Espanyol,10.0,,,,,,
+team_stats,shots,9,Espanyol,9.0,,,,,,
+team_stats,xg_total,1.42,Espanyol,1.42,,,,,,
+team_stats,total_events,1134,Atletico,1134.0,,,,,,
+team_stats,possession_pct,57.9,Atletico,57.9,,,,,,
+team_stats,passes_attempted,646,Atletico,646.0,,,,,,
+team_stats,passes_completed,567,Atletico,567.0,,,,,,
+team_stats,pass_accuracy,87.8,Atletico,87.8,,,,,,
+team_stats,xthreat_total,26.727,Atletico,26.727,,,,,,
+team_stats,progressive_actions,82,Atletico,82.0,,,,,,
+team_stats,box_entries,20,Atletico,20.0,,,,,,
+team_stats,shots,15,Atletico,15.0,,,,,,
+team_stats,xg_total,1.29,Atletico,1.29,,,,,,
+player_participation,player_activity,Javi Puado,Espanyol,70.0,0.0,87.0,87.0,,,
+player_participation,player_activity,Leandro Cabrera,Espanyol,79.0,0.0,94.0,94.0,,,
+player_participation,player_activity,Marko Dmitrovic,Espanyol,67.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Fernando Calero,Espanyol,100.0,0.0,65.0,65.0,,,
+player_participation,player_activity,Roberto Fernández,Espanyol,29.0,0.0,73.0,73.0,,,
+player_participation,player_activity,Edu Expósito,Espanyol,71.0,1.0,87.0,86.0,,,
+player_participation,player_activity,Carlos Romero,Espanyol,72.0,1.0,95.0,94.0,,,
+player_participation,player_activity,Pol Lozano,Espanyol,78.0,3.0,95.0,92.0,,,
+player_participation,player_activity,Omar El Hilali,Espanyol,109.0,4.0,93.0,89.0,,,
+player_participation,player_activity,Ramon Terrats,Espanyol,27.0,4.0,48.0,44.0,,,
+player_participation,player_activity,Jofre Carreras,Espanyol,13.0,4.0,47.0,43.0,,,
+player_participation,player_activity,Kike García,Espanyol,32.0,45.0,95.0,50.0,,,
+player_participation,player_activity,Tyrhys Dolan,Espanyol,22.0,45.0,93.0,48.0,,,
+player_participation,player_activity,Miguel Rubio,Espanyol,23.0,65.0,94.0,29.0,,,
+player_participation,player_activity,Pere Milla,Espanyol,18.0,73.0,94.0,21.0,,,
+player_participation,player_activity,José Salinas,Espanyol,7.0,87.0,94.0,7.0,,,
+player_participation,player_activity,Julián Alvarez,Atletico,70.0,0.0,81.0,81.0,,,
+player_participation,player_activity,Johnny Cardoso,Atletico,70.0,0.0,47.0,47.0,,,
+player_participation,player_activity,Dávid Hancko,Atletico,114.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Matteo Ruggeri,Atletico,106.0,0.0,94.5,94.5,,,
+player_participation,player_activity,Jan Oblak,Atletico,44.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Robin Le Normand,Atletico,134.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Marcos Llorente,Atletico,121.0,0.0,94.0,94.0,,,
+player_participation,player_activity,Conor Gallagher,Atletico,60.0,2.0,47.0,45.0,,,
+player_participation,player_activity,Thiago Almada,Atletico,96.0,2.0,67.0,65.0,,,
+player_participation,player_activity,Álex Baena,Atletico,61.0,3.0,67.0,64.0,,,
+player_participation,player_activity,Giuliano Simeone,Atletico,79.0,5.0,95.0,90.0,,,
+player_participation,player_activity,Pablo Barrios,Atletico,68.0,45.0,95.0,50.0,,,
+player_participation,player_activity,Koke,Atletico,74.0,45.0,94.0,49.0,,,
+player_participation,player_activity,Antoine Griezmann,Atletico,8.0,67.0,95.0,28.0,,,
+player_participation,player_activity,Giacomo Raspadori,Atletico,17.0,67.0,93.0,26.0,,,
+player_participation,player_activity,Alexander Sørloth,Atletico,4.0,81.0,90.0,9.0,,,
+timeline,key_event,Goal - Julián Alvarez,Atletico,36.0,,,,Goal,36.0,FirstHalf
+timeline,key_event,Card - Johnny Cardoso,Atletico,41.0,,,,Card,41.0,FirstHalf
+timeline,key_event,SubstitutionOff - Ramon Terrats,Espanyol,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Kike García,Espanyol,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Jofre Carreras,Espanyol,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Tyrhys Dolan,Espanyol,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Johnny Cardoso,Atletico,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Pablo Barrios,Atletico,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Conor Gallagher,Atletico,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Koke,Atletico,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,Card - Fernando Calero,Espanyol,53.0,,,,Card,53.0,SecondHalf
+timeline,key_event,SubstitutionOff - Fernando Calero,Espanyol,65.0,,,,SubstitutionOff,65.0,SecondHalf
+timeline,key_event,SubstitutionOn - Miguel Rubio,Espanyol,65.0,,,,SubstitutionOn,65.0,SecondHalf
+timeline,key_event,Card - Robin Le Normand,Atletico,67.0,,,,Card,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Álex Baena,Atletico,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Antoine Griezmann,Atletico,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Thiago Almada,Atletico,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Giacomo Raspadori,Atletico,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,Card - Marcos Llorente,Atletico,71.0,,,,Card,71.0,SecondHalf
+timeline,key_event,Goal - Miguel Rubio,Espanyol,72.0,,,,Goal,72.0,SecondHalf
+timeline,key_event,SubstitutionOff - Roberto Fernández,Espanyol,73.0,,,,SubstitutionOff,73.0,SecondHalf
+timeline,key_event,SubstitutionOn - Pere Milla,Espanyol,73.0,,,,SubstitutionOn,73.0,SecondHalf
+timeline,key_event,Card - Omar El Hilali,Espanyol,73.0,,,,Card,73.0,SecondHalf
+timeline,key_event,SubstitutionOff - Julián Alvarez,Atletico,81.0,,,,SubstitutionOff,81.0,SecondHalf
+timeline,key_event,SubstitutionOn - Alexander Sørloth,Atletico,81.0,,,,SubstitutionOn,81.0,SecondHalf
+timeline,key_event,Goal - Pere Milla,Espanyol,83.0,,,,Goal,83.0,SecondHalf
+timeline,key_event,SubstitutionOff - Javi Puado,Espanyol,87.0,,,,SubstitutionOff,87.0,SecondHalf
+timeline,key_event,SubstitutionOn - José Salinas,Espanyol,87.0,,,,SubstitutionOn,87.0,SecondHalf
+timeline,key_event,Card - José Salinas,Espanyol,92.0,,,,Card,92.0,SecondHalf
+data_quality,events_with_coordinates,1959,,1959.0,,,,,,
+data_quality,events_with_xthreat,630,,630.0,,,,,,
+data_quality,events_with_outcome,1959,,1959.0,,,,,,
+data_quality,successful_events,1664,,1664.0,,,,,,
+data_quality,unique_players,32,,32.0,,,,,,
+data_quality,periods_played,4,,4.0,,,,,,
