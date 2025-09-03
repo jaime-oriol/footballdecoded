@@ -20,14 +20,17 @@ Ahí encontrarás las directrices de trabajo y la estructura del proyecto que de
 ```
 FootballDecoded/
 ├── scrappers/              # Data extraction from web sources
+│   ├── __init__.py         # Package initialization
 │   ├── _common.py          # Base classes for scrapers (BaseRequestsReader, BaseSeleniumReader)
 │   ├── _config.py          # Global configuration, paths, league mappings
+│   ├── _utils.py           # Common utility functions for distance calculations and name validation
 │   ├── fbref.py            # FBref.com scraper for comprehensive stats
 │   ├── understat.py        # Understat.com scraper for advanced metrics
 │   └── whoscored.py        # WhoScored.com scraper for spatial/event data
 │
 ├── wrappers/               # Simplified API for scrapers (see wrappers/README.md)
 │   ├── __init__.py         # Exports all wrapper functions
+│   ├── README.md           # Complete API documentation
 │   ├── fbref_data.py       # FBref wrapper with caching and error handling
 │   ├── understat_data.py   # Understat wrapper with merge capabilities
 │   └── whoscored_data.py   # WhoScored wrapper for match events
@@ -39,27 +42,50 @@ FootballDecoded/
 │   └── setup.sql           # Schema definition (players, teams tables)
 │
 ├── viz/                    # Visualization system (see viz/README.md)
-│   ├── data/              # CSV outputs for visualization
-│   ├── templates/         # Jupyter notebook templates
-│   ├── match_data.py      # Match data processing and aggregation
-│   ├── pass_network.py    # Pass network visualization
-│   ├── pass_analysis.py   # Pass flow and hull analysis
-│   ├── shot_map_report.py # Shot maps with xG overlay
-│   ├── shot_xg.py         # xG analysis and visualization
-│   ├── swarm_radar.py     # Player comparison radar charts
-│   └── stats_table.py     # Statistical comparison tables
+│   ├── downloaded_files/   # Selenium temporary files and locks
+│   ├── templates/          # Jupyter notebook templates
+│   │   ├── match_data.ipynb     # Match data processing template
+│   │   ├── match_data_BB.ipynb  # Match data template variant
+│   │   ├── pass_analysis.ipynb  # Pass analysis template
+│   │   ├── pass_network.ipynb   # Pass network template
+│   │   ├── shots.ipynb          # Shot analysis template
+│   │   └── swarm_radar.ipynb    # Player comparison template
+│   ├── README.md           # Visualization system documentation
+│   ├── match_data.py       # Match data processing and aggregation
+│   ├── pass_network.py     # Pass network visualization
+│   ├── pass_analysis.py    # Pass flow and hull analysis
+│   ├── shot_map_report.py  # Shot maps with xG overlay
+│   ├── shot_xg.py          # xG analysis and visualization
+│   ├── stats_radar.py      # Player radar chart visualizations
+│   ├── swarm_radar.py      # Player comparison radar charts
+│   └── stats_table.py      # Statistical comparison tables
 │
-├── blog/                   # Blog assets and notebooks
+├── blog/                   # Blog assets and content
+│   ├── caras/              # Player photos organized by team
+│   │   ├── atm/           # Atlético Madrid player photos
+│   │   ├── extras/        # Additional player photos
+│   │   └── villareal/     # Villarreal player photos
+│   ├── logo/              # FootballDecoded project branding
+│   │   └── [Brand assets and manual]
 │   ├── logos/             # Team logos organized by league
-│   │   ├── LaLiga/        # Example: FC Barcelona.png
-│   │   └── [Other leagues...]
-│   └── notebooks/         # Analysis notebooks for blog posts
+│   │   ├── LaLiga/        # Spanish league team logos
+│   │   ├── PL/            # Premier League team logos
+│   │   ├── Bundesliga/    # German league team logos
+│   │   ├── Ligue 1/       # French league team logos
+│   │   └── Serie A/       # Italian league team logos
+│   └── notebooks/         # Analysis notebooks for blog posts (empty)
 │
-├── pyproject.toml         # Poetry dependencies and project metadata
-├── poetry.lock            # Locked dependency versions
-├── Makefile              # Common tasks automation
-├── LICENSE.rst           # Project license
-└── README.rst            # Project overview
+├── .checkpoints/          # Jupyter checkpoint files
+├── .claude/               # Claude Code settings
+│   └── settings.local.json
+├── .env                   # Environment variables (git-ignored)
+├── .gitignore            # Git ignore patterns
+├── pyproject.toml        # Poetry dependencies and project metadata
+├── poetry.lock           # Locked dependency versions
+├── Makefile             # Common tasks automation
+├── LICENSE.rst          # Project license
+├── README.rst           # Project overview (if exists)
+└── CLAUDE.md            # This development guide
 ```
 
 ## Module Documentation
@@ -71,6 +97,9 @@ Base infrastructure for all scrapers. Provides `BaseRequestsReader` for HTTP-bas
 
 **_config.py**
 Central configuration hub. Defines `LEAGUE_DICT` for league ID mapping across sources, data directories, and global constants. All league standardization happens here.
+
+**_utils.py**
+Common utility functions shared across scrapers and analysis modules. Provides helper functions for distance calculations, name validation, and data processing tasks used throughout the project.
 
 **fbref.py**
 Primary statistics source. Extracts 11 different stat types (standard, shooting, passing, etc.) for players and teams. Handles the "Big 5 European Leagues Combined" special case efficiently.
@@ -126,11 +155,23 @@ Core data processing for visualizations. Generates five optimized CSV outputs:
 **pass_network.py**
 Creates publication-quality pass network visualizations. Shows player positions, pass connections weighted by frequency, and team formation analysis.
 
-**swarm_radar.py**
-Player comparison tool using pizza/radar charts. Supports both swarm plots (distribution context) and traditional radar comparisons.
+**pass_analysis.py**
+Advanced pass flow and hull analysis visualization. Provides tactical insights into team passing patterns and spatial coverage.
+
+**shot_xg.py**
+Focused xG visualization with flexible filtering options. Supports team/player filtering with optional inversion and comprehensive statistical analysis.
 
 **shot_map_report.py**
 Shot location visualization with xG values. Differentiates goals, saved shots, and misses with appropriate styling.
+
+**stats_radar.py**
+Player radar chart visualizations for individual player performance analysis across multiple metrics.
+
+**swarm_radar.py**
+Player comparison tool using pizza/radar charts. Supports both swarm plots (distribution context) and traditional radar comparisons.
+
+**stats_table.py**
+Statistical comparison tables for structured data presentation and analysis.
 
 See `viz/README.md` for detailed visualization documentation.
 
@@ -242,13 +283,6 @@ All league IDs standardized in `_config.py`:
 - WhoScored: 10 second minimum
 - Block pauses: 30-60 minutes between leagues
 
-### Claude Memory System
-
-- Use `#` to save project preferences automatically
-- CLAUDE.md files are hierarchical (project level takes precedence over subdirectories)
-- Local preferences in `.claude/memory` (git-ignored)
-- Global preferences apply across all projects
-
 ## Development Tools
 
 ### Package Management (Poetry)
@@ -266,17 +300,6 @@ poetry add --dev pytest
 # Update dependencies
 poetry update
 ```
-
-### Common Tasks (Makefile)
-
-```bash
-make setup          # Initial setup
-make test          # Run tests
-make lint          # Code quality checks
-make format        # Auto-format code
-make clean         # Remove artifacts
-```
-
 ### Database Tasks
 
 ```bash
@@ -363,12 +386,6 @@ git commit -m "docs: update wrappers API documentation"
 git commit -m "refactor(viz): simplify pass network calculation"
 ```
 
-### Merge Strategy
-
-- **Squash and merge**: For feature branches with multiple small commits
-- **Rebase and merge**: For clean, logical commit history
-- **Merge commit**: Only for major branches or releases
-
 ### Protected Branch Rules
 
 Main branch protection:
@@ -436,22 +453,6 @@ Each record includes:
 - `processing_warnings`: List of issues found
 - `last_updated`: Timestamp of last update
 - `source_reliability`: Source-specific confidence
-
-## Performance Optimization
-
-### Batch Processing
-
-- Use `extract_multiple()` for bulk operations
-- Process entire leagues before moving to next
-- Implement random delays between requests
-- Maximum 10 retries for failed requests
-
-### Database Optimization
-
-- Connection pooling (max 5 connections)
-- Batch inserts (1000 records at a time)
-- Index on commonly queried fields
-- Partitioning by season for large tables
 
 ## Security Considerations
 
