@@ -79,7 +79,7 @@ def plot_shot_report(csv_path, home_logo_path=None, away_logo_path=None, season=
     if len(teams) != 2:
         return print("Error: Need exactly 2 teams in data")
     
-    home_team, away_team = teams[0], teams[1]
+    home_team, away_team = teams[1], teams[0]
     
     # Separate shots by team
     home_shots = shots_df[shots_df['team'] == home_team].copy()

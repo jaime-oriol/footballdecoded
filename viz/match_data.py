@@ -651,7 +651,7 @@ def _add_action_classifications(events: pd.DataFrame) -> pd.DataFrame:
     return events
 
 def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced xG merging with better team/player matching"""
+    """Enhanced xG merging with flexible team name matching"""
     if us_shots.empty:
         events['xg'] = 0.0
         return events
@@ -659,41 +659,80 @@ def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame
     events['xg'] = 0.0
     shot_events = events[events['event_type'].str.contains('Shot|Goal', case=False, na=False)]
     
+    # Team name mapping for better matching
+    def _match_team_flexible(whoscored_team: str, understat_team: str) -> bool:
+        """Flexible team matching to handle name variations"""
+        ws_team = whoscored_team.lower().strip()
+        us_team = understat_team.lower().strip()
+        
+        # Exact match
+        if ws_team == us_team:
+            return True
+            
+        # Handle Atletico/Atletico Madrid variants
+        if ('atletico' in ws_team and 'atletico' in us_team) or \
+           ('atlético' in ws_team and 'atlético' in us_team):
+            return True
+            
+        # Handle other common variants
+        team_mappings = {
+            'real madrid': ['madrid', 'real'],
+            'barcelona': ['barça', 'fc barcelona', 'barca'],
+            'athletic bilbao': ['athletic', 'bilbao'],
+            'real sociedad': ['sociedad'],
+            'valencia': ['valencia cf'],
+            'sevilla': ['sevilla fc']
+        }
+        
+        # Check both directions
+        for full_name, variants in team_mappings.items():
+            if (ws_team in [full_name] + variants and us_team in [full_name] + variants):
+                return True
+        
+        # Check if one team name contains the other (last resort)
+        if ws_team in us_team or us_team in ws_team:
+            return True
+            
+        return False
+    
     for idx, shot in shot_events.iterrows():
         minute = shot['minute']
         team = shot['team']
         player = shot['player']
         
-        # Multi-level matching strategy
+        # Multi-level matching strategy with flexible team matching
         matches = []
         
-        # 1. Exact match (minute + team + player)
+        # 1. Exact match (minute + flexible team + player)
         if pd.notna(player):
             player_last_name = str(player).split()[-1] if player else ""
-            exact = us_shots[
-                (abs(us_shots['minute'] - minute) <= 1) & 
-                (us_shots['team'] == team) &
-                (us_shots['player'].str.contains(player_last_name, case=False, na=False))
-            ]
-            if not exact.empty:
-                matches.append(('exact', exact))
+            for _, us_shot in us_shots.iterrows():
+                if (abs(us_shot['minute'] - minute) <= 1 and
+                    _match_team_flexible(team, us_shot['team']) and
+                    player_last_name.lower() in us_shot['player'].lower()):
+                    matches.append(('exact', pd.DataFrame([us_shot])))
+                    break
         
-        # 2. Time + team match (when player names differ)
-        time_team = us_shots[
-            (abs(us_shots['minute'] - minute) <= 2) & 
-            (us_shots['team'] == team)
-        ]
-        if not time_team.empty:
-            matches.append(('time_team', time_team))
+        # 2. Time + flexible team match
+        time_team_matches = []
+        for _, us_shot in us_shots.iterrows():
+            if (abs(us_shot['minute'] - minute) <= 2 and
+                _match_team_flexible(team, us_shot['team'])):
+                time_team_matches.append(us_shot)
         
-        # 3. Team + result match (for goals)
+        if time_team_matches:
+            matches.append(('time_team', pd.DataFrame(time_team_matches)))
+        
+        # 3. Flexible team + result match (for goals)
         if shot.get('is_goal', False) or 'Goal' in shot.get('event_type', ''):
-            goal_match = us_shots[
-                (us_shots['team'] == team) &
-                (us_shots['result'] == 'Goal')
-            ]
-            if not goal_match.empty:
-                matches.append(('goal', goal_match))
+            goal_matches = []
+            for _, us_shot in us_shots.iterrows():
+                if (_match_team_flexible(team, us_shot['team']) and
+                    us_shot['result'] == 'Goal'):
+                    goal_matches.append(us_shot)
+            
+            if goal_matches:
+                matches.append(('goal', pd.DataFrame(goal_matches)))
         
         # Use best match
         for match_type, match_df in matches:

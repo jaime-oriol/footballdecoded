@@ -639,7 +639,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.18, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.20, result_y-0.025, 0.104, 0.104])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -648,7 +648,7 @@ def plot_pass_network(network_csv_path, info_csv_path, aggregates_csv_path,
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.67, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.69, result_y-0.025, 0.104, 0.104])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -1000,7 +1000,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.18, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.20, result_y-0.025, 0.104, 0.104])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -1009,7 +1009,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.67, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.69, result_y-0.025, 0.104, 0.104])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -1359,7 +1359,7 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     if home_logo_path and os.path.exists(home_logo_path):
         try:
             logo = Image.open(home_logo_path)
-            logo_ax = fig.add_axes([0.18, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.20, result_y-0.025, 0.104, 0.104])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
@@ -1368,7 +1368,7 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     if away_logo_path and os.path.exists(away_logo_path):
         try:
             logo = Image.open(away_logo_path)
-            logo_ax = fig.add_axes([0.67, result_y-0.045, 0.135, 0.135])
+            logo_ax = fig.add_axes([0.69, result_y-0.025, 0.104, 0.104])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:

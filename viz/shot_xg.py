@@ -53,7 +53,7 @@ import os
 BACKGROUND_COLOR = '#313332'  # Professional dark theme
 PITCH_COLOR = '#313332'       # Seamless pitch integration
 
-def plot_shot_xg(csv_path, filter_by='all', logo_path=None, 
+def plot_shot_xg(csv_path, filter_by='all', invert_filter=False, logo_path=None, 
                  title_text=None, subtitle_text=None, subsubtitle_text=None):
     """
     Create focused xG visualization with flexible filtering options.
@@ -72,6 +72,7 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     Args:
         csv_path: Path to shots CSV file from match data processing
         filter_by: Filter criteria ('all', team name, or player name)
+        invert_filter: If True, inverts the filter (show everything EXCEPT filter_by)
         logo_path: Optional path to team/player logo image
         title_text: Custom title (auto-generated if None)
         subtitle_text: Custom subtitle (auto-generated if None) 
@@ -101,16 +102,22 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     teams = shots_df['team'].unique()
     comp_name = f"{teams[0]} vs {teams[1]}" if len(teams) == 2 else teams[0]
     
-    # DYNAMIC FILTERING SYSTEM: Support all/team/player analysis
+    # DYNAMIC FILTERING SYSTEM: Support all/team/player analysis with optional inversion
     comp_selected = 0  # Flag for title generation logic
     if filter_by.lower() == 'all':
         selected_shots = shots_df
         comp_selected = 1  # Competition-level analysis
     elif filter_by in shots_df['team'].values:
-        selected_shots = shots_df[shots_df['team'] == filter_by]
+        if invert_filter:
+            selected_shots = shots_df[shots_df['team'] != filter_by]
+        else:
+            selected_shots = shots_df[shots_df['team'] == filter_by]
         comp_selected = 0  # Team-level analysis
     elif filter_by in shots_df['player'].values:
-        selected_shots = shots_df[shots_df['player'] == filter_by]
+        if invert_filter:
+            selected_shots = shots_df[shots_df['player'] != filter_by]
+        else:
+            selected_shots = shots_df[shots_df['player'] == filter_by]
         comp_selected = 0  # Player-level analysis
     else:
         return print(f"No data found for: {filter_by}")
@@ -144,10 +151,10 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
     fig.set_size_inches(9, 7)
     fig.set_facecolor(BACKGROUND_COLOR)
     
-    # FOOT SHOT ATTEMPTS: Transparent to show density without overwhelming goals
+    # FOOT SHOT ATTEMPTS: Semi-transparent to show density while remaining visible
     if not selected_ground_shots.empty:
         ax['pitch'].scatter(selected_ground_shots['y'], selected_ground_shots['x'], 
-                           marker='h', s=200, alpha=0.2, c=selected_ground_shots['xg'], 
+                           marker='h', s=200, alpha=0.5, c=selected_ground_shots['xg'], 
                            edgecolors='w', vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
     # FOOT GOALS: Full opacity with white outline for emphasis
@@ -156,10 +163,10 @@ def plot_shot_xg(csv_path, filter_by='all', logo_path=None,
                                 marker='h', s=200, c=selected_ground_goals['xg'], 
                                 edgecolors='w', lw=2, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
-    # HEADER ATTEMPTS: Transparent circular markers
+    # HEADER ATTEMPTS: Semi-transparent circular markers
     if not selected_headers.empty:
         ax['pitch'].scatter(selected_headers['y'], selected_headers['x'], 
-                           marker='o', s=200, alpha=0.2, c=selected_headers['xg'], 
+                           marker='o', s=200, alpha=0.5, c=selected_headers['xg'], 
                            edgecolors='w', vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
     
     # HEADER GOALS: Full opacity circular markers with outline
