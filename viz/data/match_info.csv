@@ -1,0 +1,93 @@
+info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
+match_metadata,match_id,Atletico_vs_Elche_2025-08-17,,,,,,,,
+match_metadata,home_team,Atletico,,,,,,,,
+match_metadata,away_team,Elche,,,,,,,,
+match_metadata,match_date,2025-08-17,,,,,,,,
+match_metadata,league,ESP-La Liga,,,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1945,,,,,,,,
+match_metadata,match_duration_minutes,97,,,,,,,,
+team_stats,total_events,1108,Atletico,1108.0,,,,,,
+team_stats,possession_pct,57.0,Atletico,57.0,,,,,,
+team_stats,passes_attempted,605,Atletico,605.0,,,,,,
+team_stats,passes_completed,496,Atletico,496.0,,,,,,
+team_stats,pass_accuracy,82.0,Atletico,82.0,,,,,,
+team_stats,xthreat_total,23.558,Atletico,23.558,,,,,,
+team_stats,progressive_actions,101,Atletico,101.0,,,,,,
+team_stats,box_entries,28,Atletico,28.0,,,,,,
+team_stats,shots,13,Atletico,13.0,,,,,,
+team_stats,xg_total,1.68,Atletico,1.68,,,,,,
+team_stats,total_events,837,Elche,837.0,,,,,,
+team_stats,possession_pct,43.0,Elche,43.0,,,,,,
+team_stats,passes_attempted,437,Elche,437.0,,,,,,
+team_stats,passes_completed,352,Elche,352.0,,,,,,
+team_stats,pass_accuracy,80.5,Elche,80.5,,,,,,
+team_stats,xthreat_total,17.325,Elche,17.325,,,,,,
+team_stats,progressive_actions,47,Elche,47.0,,,,,,
+team_stats,box_entries,7,Elche,7.0,,,,,,
+team_stats,shots,6,Elche,6.0,,,,,,
+team_stats,xg_total,0.31,Elche,0.31,,,,,,
+player_participation,player_activity,Pablo Barrios,Atletico,130.0,0.0,96.0,96.0,,,
+player_participation,player_activity,Giuliano Simeone,Atletico,67.0,0.0,74.0,74.0,,,
+player_participation,player_activity,Marcos Llorente,Atletico,117.0,0.0,96.0,96.0,,,
+player_participation,player_activity,Robin Le Normand,Atletico,127.0,0.0,94.5,94.5,,,
+player_participation,player_activity,Matteo Ruggeri,Atletico,94.0,0.0,74.0,74.0,,,
+player_participation,player_activity,Dávid Hancko,Atletico,98.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Thiago Almada,Atletico,84.0,0.0,67.0,67.0,,,
+player_participation,player_activity,Alexander Sørloth,Atletico,47.0,0.0,67.0,67.0,,,
+player_participation,player_activity,Julián Alvarez,Atletico,60.0,2.0,95.0,93.0,,,
+player_participation,player_activity,Jan Oblak,Atletico,49.0,6.0,97.0,91.0,,,
+player_participation,player_activity,Johnny Cardoso,Atletico,78.0,10.0,67.0,57.0,,,
+player_participation,player_activity,Antoine Griezmann,Atletico,28.0,67.0,96.0,29.0,,,
+player_participation,player_activity,Conor Gallagher,Atletico,37.0,67.0,96.0,29.0,,,
+player_participation,player_activity,Giacomo Raspadori,Atletico,20.0,67.0,96.0,29.0,,,
+player_participation,player_activity,Javi Galán,Atletico,25.0,74.0,97.0,23.0,,,
+player_participation,player_activity,Nahuel Molina,Atletico,39.0,74.0,96.0,22.0,,,
+player_participation,player_activity,Rodrigo Mendoza,Elche,60.0,0.0,67.0,67.0,,,
+player_participation,player_activity,Matías Dituro,Elche,106.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Álvaro Rodríguez,Elche,59.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Germán Valera,Elche,91.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Pedro Bigas,Elche,76.0,0.0,81.0,81.0,,,
+player_participation,player_activity,David Affengruber,Elche,91.0,1.0,92.0,91.0,,,
+player_participation,player_activity,Marc Aguado,Elche,68.0,1.0,85.0,84.0,,,
+player_participation,player_activity,Rafa Mir,Elche,31.0,1.0,66.0,65.0,,,
+player_participation,player_activity,John Donald,Elche,32.0,1.0,49.0,48.0,,,
+player_participation,player_activity,Álvaro Núñez,Elche,64.0,2.0,96.0,94.0,,,
+player_participation,player_activity,Aleix Febas,Elche,64.0,2.0,95.0,93.0,,,
+player_participation,player_activity,Victor Chust,Elche,34.0,45.0,93.0,48.0,,,
+player_participation,player_activity,André Silva,Elche,17.0,66.0,85.0,19.0,,,
+player_participation,player_activity,Martim Neto,Elche,18.0,67.0,92.0,25.0,,,
+player_participation,player_activity,Léo Pétrot,Elche,6.0,81.0,95.0,14.0,,,
+player_participation,player_activity,Federico Redondo,Elche,12.0,85.0,96.0,11.0,,,
+timeline,key_event,Goal - Alexander Sørloth,Atletico,7.0,,,,Goal,7.0,FirstHalf
+timeline,key_event,Goal - Rafa Mir,Elche,14.0,,,,Goal,14.0,FirstHalf
+timeline,key_event,Card - Aleix Febas,Elche,28.0,,,,Card,28.0,FirstHalf
+timeline,key_event,Card - Rodrigo Mendoza,Elche,44.0,,,,Card,44.0,FirstHalf
+timeline,key_event,SubstitutionOff - John Donald,Elche,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Victor Chust,Elche,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Rafa Mir,Elche,66.0,,,,SubstitutionOff,66.0,SecondHalf
+timeline,key_event,SubstitutionOn - André Silva,Elche,66.0,,,,SubstitutionOn,66.0,SecondHalf
+timeline,key_event,SubstitutionOff - Rodrigo Mendoza,Elche,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Martim Neto,Elche,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Johnny Cardoso,Atletico,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Antoine Griezmann,Atletico,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Thiago Almada,Atletico,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Conor Gallagher,Atletico,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Alexander Sørloth,Atletico,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Giacomo Raspadori,Atletico,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Matteo Ruggeri,Atletico,74.0,,,,SubstitutionOff,74.0,SecondHalf
+timeline,key_event,SubstitutionOn - Javi Galán,Atletico,74.0,,,,SubstitutionOn,74.0,SecondHalf
+timeline,key_event,SubstitutionOff - Giuliano Simeone,Atletico,74.0,,,,SubstitutionOff,74.0,SecondHalf
+timeline,key_event,SubstitutionOn - Nahuel Molina,Atletico,74.0,,,,SubstitutionOn,74.0,SecondHalf
+timeline,key_event,SubstitutionOff - Pedro Bigas,Elche,81.0,,,,SubstitutionOff,81.0,SecondHalf
+timeline,key_event,SubstitutionOn - Léo Pétrot,Elche,81.0,,,,SubstitutionOn,81.0,SecondHalf
+timeline,key_event,SubstitutionOff - Marc Aguado,Elche,85.0,,,,SubstitutionOff,85.0,SecondHalf
+timeline,key_event,SubstitutionOn - Federico Redondo,Elche,85.0,,,,SubstitutionOn,85.0,SecondHalf
+timeline,key_event,Card - Matías Dituro,Elche,89.0,,,,Card,89.0,SecondHalf
+timeline,key_event,Card - nan,Atletico,94.0,,,,Card,94.0,SecondHalf
+data_quality,events_with_coordinates,1945,,1945.0,,,,,,
+data_quality,events_with_xthreat,596,,596.0,,,,,,
+data_quality,events_with_outcome,1945,,1945.0,,,,,,
+data_quality,successful_events,1592,,1592.0,,,,,,
+data_quality,unique_players,32,,32.0,,,,,,
+data_quality,periods_played,4,,4.0,,,,,,
