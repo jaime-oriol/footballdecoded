@@ -52,6 +52,15 @@ import os
 # Visual configuration consistent with FootballDecoded standards
 BACKGROUND_COLOR = '#313332'
 
+def _detect_id_column(df_data):
+    """Detect whether dataframe uses player or team IDs."""
+    if 'unique_player_id' in df_data.columns:
+        return 'unique_player_id'
+    elif 'unique_team_id' in df_data.columns:
+        return 'unique_team_id'
+    else:
+        raise ValueError("DataFrame must contain either 'unique_player_id' or 'unique_team_id' column")
+
 # Fixed dimensions for radar integration compatibility
 # These ensure perfect alignment when combining with radar visualizations
 
@@ -115,11 +124,12 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ])
     percentile_norm = Normalize(vmin=0, vmax=100)  # 0-100 percentile scale
     
-    # Extract player data from dataset
-    p1 = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]  # Primary player
+    # Detect ID column type and extract data from dataset
+    id_column = _detect_id_column(df_data)
+    p1 = df_data[df_data[id_column] == player_1_id].iloc[0]  # Primary player/team
     p2 = None
     if player_2_id is not None:
-        p2 = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]  # Comparison player
+        p2 = df_data[df_data[id_column] == player_2_id].iloc[0]  # Comparison player/team
     
     # Figure setup with consistent FootballDecoded styling
     fig = plt.figure(figsize=(7.5, 8.5), facecolor=BACKGROUND_COLOR)
@@ -148,37 +158,41 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     p2_pct_x = 7.1      # Second player percentile X
     
     # PLAYER 1 HEADER: Logo and identification
-    if team_logos and p1['team'] in team_logos:
+    team1_name = p1.get('team') or p1.get('team_name', '')
+    if team_logos and team1_name in team_logos:
         try:
-            logo = Image.open(team_logos[p1['team']])
+            logo = Image.open(team_logos[team1_name])
             # Positioning: convert layout coords to figure fractions
             logo_ax = fig.add_axes([logo1_x/10, (y_start-0.8)/15, 0.08, 0.08])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except Exception as e:
-            print(f"Error cargando logo para {p1['team']}: {e}")
-            print(f"Ruta: {team_logos[p1['team']]}")  # Graceful failure if logo unavailable
+            print(f"Error cargando logo para {team1_name}: {e}")
+            print(f"Ruta: {team_logos[team1_name]}")  # Graceful failure if logo unavailable
     
     # Player 1 name and context
-    ax.text(text1_x, y_start, p1['player_name'], 
+    name1 = p1.get('player_name') or p1.get('team_name', 'Unknown')
+    ax.text(text1_x, y_start, name1, 
             fontweight='bold', fontsize=14, color=team_colors[0], ha='left', va='center', family='DejaVu Sans')
     ax.text(text1_x, y_start - 0.425, f"{p1['league']} {p1['season']}", 
             fontsize=10, color='white', alpha=0.9, ha='left', fontweight='regular', family='DejaVu Sans')
     
     # PLAYER 2 HEADER: Logo and identification (only show if P2 exists)
     if p2 is not None:
-        if team_logos and p2['team'] in team_logos:
+        team2_name = p2.get('team') or p2.get('team_name', '')
+        if team_logos and team2_name in team_logos:
             try:
-                logo = Image.open(team_logos[p2['team']])
+                logo = Image.open(team_logos[team2_name])
                 logo_ax = fig.add_axes([logo2_x/10, (y_start-0.8)/15, 0.08, 0.08])
                 logo_ax.imshow(logo)
                 logo_ax.axis('off')
             except Exception as e:
-                print(f"Error cargando logo para {p2['team']}: {e}")
-                print(f"Ruta: {team_logos[p2['team']]}")  # Graceful failure if logo unavailable
+                print(f"Error cargando logo para {team2_name}: {e}")
+                print(f"Ruta: {team_logos[team2_name]}")  # Graceful failure if logo unavailable
         
         # Player 2 name and context
-        ax.text(text2_x, y_start, p2['player_name'],
+        name2 = p2.get('player_name') or p2.get('team_name', 'Unknown')
+        ax.text(text2_x, y_start, name2,
                 fontweight='bold', fontsize=14, color=team_colors[1], ha='left', va='center', family='DejaVu Sans')
         ax.text(text2_x, y_start - 0.425, f"{p2['league']} {p2['season']}", 
                 fontsize=10, color='white', alpha=0.9, ha='left', fontweight='regular', family='DejaVu Sans')

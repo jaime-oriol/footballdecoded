@@ -75,6 +75,15 @@ except ImportError:
 # Visual configuration consistent with FootballDecoded standards
 BACKGROUND_COLOR = '#313332'  # Professional dark theme across all modules
 
+def _detect_id_column(df_data):
+    """Detect whether dataframe uses player or team IDs."""
+    if 'unique_player_id' in df_data.columns:
+        return 'unique_player_id'
+    elif 'unique_team_id' in df_data.columns:
+        return 'unique_team_id'
+    else:
+        raise ValueError("DataFrame must contain either 'unique_player_id' or 'unique_team_id' column")
+
 def create_player_radar(df_data, 
                        player_1_id,
                        metrics,
@@ -148,22 +157,23 @@ def create_player_radar(df_data,
     else:
         colors = team_colors  # Use team-based color scheme
     
-    # Extract player data from dataset
-    player_1_data = df_data[df_data['unique_player_id'] == player_1_id].iloc[0]
+    # Detect ID column type and extract data from dataset
+    id_column = _detect_id_column(df_data)
+    player_1_data = df_data[df_data[id_column] == player_1_id].iloc[0]
     player_2_data = None
     if player_2_id:
-        player_2_data = df_data[df_data['unique_player_id'] == player_2_id].iloc[0]
+        player_2_data = df_data[df_data[id_column] == player_2_id].iloc[0]
     
     # Route to appropriate visualization mode
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                           colors, save_path, show_plot)
+                           colors, save_path, show_plot, id_column)
     else:
         _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                                 colors, save_path, show_plot)
+                                 colors, save_path, show_plot, id_column)
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                       colors, save_path, show_plot):
+                       colors, save_path, show_plot, id_column):
     """
     Create advanced swarm radar with integrated distribution context.
     
@@ -189,12 +199,12 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         show_plot: Display flag
     """
     
-    comparison_df = df_data[['unique_player_id'] + metrics].copy()
+    comparison_df = df_data[[id_column] + metrics].copy()
     
     comparison_df['Primary Player'] = 'Untagged'
-    comparison_df.loc[comparison_df['unique_player_id'] == player_1_data['unique_player_id'], 'Primary Player'] = 'Primary 1'
+    comparison_df.loc[comparison_df[id_column] == player_1_data[id_column], 'Primary Player'] = 'Primary 1'
     if player_2_data is not None:
-        comparison_df.loc[comparison_df['unique_player_id'] == player_2_data['unique_player_id'], 'Primary Player'] = 'Primary 2'
+        comparison_df.loc[comparison_df[id_column] == player_2_data[id_column], 'Primary Player'] = 'Primary 2'
     
     comparison_df = comparison_df.sort_values('Primary Player')
     
@@ -332,7 +342,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
             os.remove(temp_file)
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                             colors, save_path, show_plot):
+                             colors, save_path, show_plot, id_column):
     """
     Create traditional geometric radar chart with advanced color systems.
     
