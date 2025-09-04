@@ -835,7 +835,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     max_connection_xt = 0.2
     min_player_xt = 0.0
     max_player_xt = 0.08
-    min_passes = 3  # Reducido para primer tiempo
+    min_passes = 4  # Reducido para primer tiempo
 
     # Configurar figura
     plt.style.use('default')
@@ -1050,7 +1050,7 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
             fontsize=6, font=font, color='white')
     
     # Valores de leyenda
-    fig.text(x=0.13, y=0.07, s="3 to 9+", va="bottom", ha="center",
+    fig.text(x=0.13, y=0.07, s="4 to 10+", va="bottom", ha="center",
             fontsize=5, font=font, color='white')
     fig.text(x=0.37, y=0.07, s="-0.1 to 0.2+", va="bottom", ha="center",
             fontsize=5, font=font, color='white')
@@ -1194,7 +1194,7 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     max_connection_xt = 0.2
     min_player_xt = 0.0
     max_player_xt = 0.08
-    min_passes = 3  # Reducido para segundo tiempo
+    min_passes = 4  # Reducido para segundo tiempo
 
     # Configurar figura
     plt.style.use('default')
@@ -1409,7 +1409,7 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
             fontsize=6, font=font, color='white')
     
     # Valores de leyenda
-    fig.text(x=0.13, y=0.07, s="3 to 9+", va="bottom", ha="center",
+    fig.text(x=0.13, y=0.07, s="4 to 10+", va="bottom", ha="center",
             fontsize=5, font=font, color='white')
     fig.text(x=0.37, y=0.07, s="-0.1 to 0.2+", va="bottom", ha="center",
             fontsize=5, font=font, color='white')
