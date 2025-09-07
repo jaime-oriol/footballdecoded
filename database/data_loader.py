@@ -58,7 +58,8 @@ AVAILABLE_COMPETITIONS = [
     ('ITA-Serie A', 'domestic'), 
     ('GER-Bundesliga', 'domestic'),
     ('FRA-Ligue 1', 'domestic'),
-    ('INT-Champions League', 'european')
+    ('INT-Champions League', 'european'),
+    ('POR-Primeira Liga', 'extras')
 ]
 
 METRIC_RANGES = {
@@ -105,6 +106,10 @@ BLOCK_2_COMPETITIONS = [
     ('GER-Bundesliga', 'domestic'),
     ('FRA-Ligue 1', 'domestic'),
     ('INT-Champions League', 'european')
+]
+
+BLOCK_3_COMPETITIONS = [
+    ('POR-Primeira Liga', 'extras')
 ]
 
 # ====================================================================
@@ -696,8 +701,8 @@ def process_single_entity(args: Tuple[str, str, str, str, DataValidator, str]) -
         if not fbref_data:
             return False, {}, entity_context, "Failed - No FBref data"
         
-        # Extraer datos de Understat si es liga doméstica
-        if table_type == 'domestic':
+        # Extraer datos de Understat si es liga doméstica o extras
+        if table_type in ['domestic', 'extras']:
             if entity_type == 'player':
                 understat_data = understat_get_player(entity_name, competition, season)
             else:
@@ -876,8 +881,15 @@ def load_teams(competition: str, season: str, table_type: str, logger: LogManage
 
 def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[str, int]]:
     """Load complete competition."""
-    table_type = 'domestic' if competition != 'INT-Champions League' else 'european'
-    data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
+    if competition == 'INT-Champions League':
+        table_type = 'european'
+        data_source = "FBref only"
+    elif competition == 'POR-Primeira Liga':
+        table_type = 'extras'
+        data_source = "FBref + Understat"
+    else:
+        table_type = 'domestic'
+        data_source = "FBref + Understat"
     
     logger = LogManager()
     logger.header(competition, season, data_source)
@@ -886,7 +898,7 @@ def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[s
     team_stats = load_teams(competition, season, table_type, logger)
     
     understat_coverage = None
-    if table_type == 'domestic':
+    if table_type in ['domestic', 'extras']:
         understat_coverage = {'players': 0, 'teams': 0}
     
     summary_stats = {
@@ -957,18 +969,19 @@ def main():
     print("\n1. Load competition data (players + teams)")
     print("2. Load Block 1: ENG + ESP + ITA")
     print("3. Load Block 2: GER + FRA + Champions")
-    print("4. Test database connection")
-    print("5. Setup database schema")
-    print("6. Clear all existing data")
-    print("7. Check database status")
+    print("4. Load Block 3: Extras (POR)")
+    print("5. Test database connection")
+    print("6. Setup database schema")
+    print("7. Clear all existing data")
+    print("8. Check database status")
     
-    choice = input("\nSelect option (1-7): ").strip()
+    choice = input("\nSelect option (1-8): ").strip()
     
     if choice == "1":
         print("\nAvailable competitions:")
-        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS
+        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS + BLOCK_3_COMPETITIONS
         for i, (comp_name, comp_type) in enumerate(all_competitions, 1):
-            data_source = "FBref + Understat" if comp_type == 'domestic' else "FBref only"
+            data_source = "FBref + Understat" if comp_type in ['domestic', 'extras'] else "FBref only"
             print(f"   {i}. {comp_name} ({data_source})")
         
         try:
@@ -1043,6 +1056,28 @@ def main():
             print("Invalid season format")
     
     elif choice == "4":
+        season = input("Enter season for Block 3 load (e.g., 24-25): ").strip()
+        if season:
+            print(f"\nBLOCK 3 LOAD CONFIGURATION")
+            print("═" * 50)
+            print(f"Season: {season}")
+            print("Competitions: POR-Primeira Liga")
+            print(f"Data sources: FBref + Understat")
+            print(f"Estimated duration: 0.5 hours")
+            print()
+            
+            confirm = input(f"Proceed with Block 3 load? (y/N): ").strip().lower()
+            if confirm == 'y':
+                print(f"\nStarting Block 3 load for {season}...")
+                print()
+                
+                load_competition_block(BLOCK_3_COMPETITIONS, "Block 3", season)
+            else:
+                print("Block 3 load cancelled")
+        else:
+            print("Invalid season format")
+    
+    elif choice == "5":
         print("\nTesting database connection...")
         try:
             from database.connection import test_connection
@@ -1052,7 +1087,7 @@ def main():
         except Exception as e:
             print(f"Connection test error: {e}")
     
-    elif choice == "5":
+    elif choice == "6":
         confirm = input("Setup database schema? This will create/recreate tables (y/N): ").strip().lower()
         if confirm == 'y':
             print("\nSetting up database schema...")
@@ -1066,7 +1101,7 @@ def main():
         else:
             print("Schema setup cancelled")
     
-    elif choice == "6":
+    elif choice == "7":
         confirm = input("Clear ALL data? (type 'YES' to confirm): ").strip()
         if confirm == "YES":
             try:
@@ -1080,6 +1115,8 @@ def main():
                     conn.execute(text("DELETE FROM footballdecoded.teams_domestic"))
                     conn.execute(text("DELETE FROM footballdecoded.players_european"))
                     conn.execute(text("DELETE FROM footballdecoded.teams_european"))
+                    conn.execute(text("DELETE FROM footballdecoded.players_extras"))
+                    conn.execute(text("DELETE FROM footballdecoded.teams_extras"))
                 
                 print("All data cleared successfully")
                 db.close()
@@ -1088,7 +1125,7 @@ def main():
         else:
             print("Clear operation cancelled")
     
-    elif choice == "7":
+    elif choice == "8":
         print("\nChecking database status...")
         try:
             from database.database_checker import check_database_status
@@ -1099,7 +1136,7 @@ def main():
             print(f"Error checking database: {e}")
     
     else:
-        print("Invalid option. Please select 1-7.")
+        print("Invalid option. Please select 1-8.")
 
 
 if __name__ == "__main__":

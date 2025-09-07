@@ -409,14 +409,17 @@ class DatabaseManager:
         except Exception:
             return pd.DataFrame()
     
-    def query_players(self, league: str = None, season: str = None, team: str = None) -> pd.DataFrame:
+    def query_players(self, league: str = None, season: str = None, team: str = None, table_type: str = 'domestic') -> pd.DataFrame:
         """Consultar jugadores con filtros opcionales."""
         try:
-            query = "SELECT * FROM footballdecoded.players_domestic WHERE 1=1"
+            table_name = f"footballdecoded.players_{table_type}"
+            league_field = 'competition' if table_type == 'european' else 'league'
+            
+            query = f"SELECT * FROM {table_name} WHERE 1=1"
             params = {}
             
             if league:
-                query += " AND league = %(league)s"
+                query += f" AND {league_field} = %(league)s"
                 params['league'] = league
             if season:
                 query += " AND season = %(season)s"  
@@ -466,6 +469,18 @@ class DatabaseManager:
                 self.engine
             )
             counts['unique_european_teams'] = result.iloc[0]['count']
+            
+            result = pd.read_sql(
+                "SELECT COUNT(DISTINCT unique_player_id) as count FROM footballdecoded.players_extras", 
+                self.engine
+            )
+            counts['unique_extras_players'] = result.iloc[0]['count']
+            
+            result = pd.read_sql(
+                "SELECT COUNT(DISTINCT unique_team_id) as count FROM footballdecoded.teams_extras", 
+                self.engine
+            )
+            counts['unique_extras_teams'] = result.iloc[0]['count']
             
             return counts
             

@@ -170,6 +170,14 @@ LEAGUE_DICT = {
         "WhoScored": "International - FIFA Women's World Cup",
         "season_code": "single-year",
     },
+    "POR-Primeira Liga": {
+        "FBref": "Primeira Liga",
+        "WhoScored": "Portugal - Liga Portugal",
+        "Understat": "Liga Portugal",
+        "FotMob": "POR-Primeira Liga",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
 }
 _f_custom_league_dict = CONFIG_DIR / "league_dict.json"
 if _f_custom_league_dict.is_file():

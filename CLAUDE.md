@@ -39,7 +39,8 @@ FootballDecoded/
 │   ├── connection.py       # DatabaseManager class, connection pooling
 │   ├── data_loader.py      # Bulk data loading with progress tracking
 │   ├── database_checker.py # Database status and integrity checks
-│   └── setup.sql           # Schema definition (players, teams tables)
+│   ├── setup.sql           # Schema definition (players, teams tables)
+│   └── setup_extras.sql    # Schema for extras tables (Portuguese Liga, etc.)
 │
 ├── viz/                    # Visualization system (see viz/README.md)
 │   ├── downloaded_files/   # Selenium temporary files and locks
@@ -72,7 +73,8 @@ FootballDecoded/
 │   │   ├── PL/            # Premier League team logos
 │   │   ├── Bundesliga/    # German league team logos
 │   │   ├── Ligue 1/       # French league team logos
-│   │   └── Serie A/       # Italian league team logos
+│   │   ├── Serie A/       # Italian league team logos
+│   │   └── Primeira Liga/ # Portuguese league team logos
 │   └── notebooks/         # Analysis notebooks for blog posts (empty)
 │
 ├── .checkpoints/          # Jupyter checkpoint files
@@ -136,11 +138,16 @@ Orchestrates bulk data loading with:
 Database health monitoring. Checks table existence, data completeness, and generates statistics reports.
 
 **setup.sql**
-Schema definition with four main tables:
-- `players_domestic`: Domestic league player stats
-- `teams_domestic`: Domestic league team stats
+Schema definition with main tables:
+- `players_domestic`: Domestic league player stats (BIG5)
+- `teams_domestic`: Domestic league team stats (BIG5)
 - `players_european`: European competition player stats
 - `teams_european`: European competition team stats
+
+**setup_extras.sql**
+Schema definition for additional leagues:
+- `players_extras`: Extra league player stats (Portuguese Liga, etc.)
+- `teams_extras`: Extra league team stats (Portuguese Liga, etc.)
 
 ### Visualization Module
 
@@ -309,10 +316,11 @@ python database/data_loader.py
 # 1. Load single competition
 # 2. Load Block 1 (ENG, ESP, ITA)
 # 3. Load Block 2 (GER, FRA, Champions)
-# 4. Test connection
-# 5. Setup schema
-# 6. Clear data
-# 7. Check status
+# 4. Load Block 3: Extras (POR)
+# 5. Test connection
+# 6. Setup schema
+# 7. Clear data
+# 8. Check status
 ```
 
 ## Git Workflow
