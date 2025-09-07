@@ -237,12 +237,12 @@ class DatabaseManager:
             
             table_name = f"footballdecoded.players_{table_type}"
             
-            if table_type == 'domestic':
+            if table_type in ['domestic', 'extras']:
                 basic_fields = ['unique_player_id', 'player_name', 'league', 'season', 'team', 'nationality', 
                             'position', 'age', 'birth_year', 'fbref_official_name', 
                             'understat_official_name', 'normalized_name', 'teams_played', 
                             'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
-            else:
+            else:  # european
                 basic_fields = ['unique_player_id', 'player_name', 'competition', 'season', 'team', 'nationality', 
                             'position', 'age', 'birth_year', 'fbref_official_name', 
                             'normalized_name', 'teams_played', 
@@ -288,10 +288,10 @@ class DatabaseManager:
             
             table_name = f"footballdecoded.teams_{table_type}"
             
-            if table_type == 'domestic':
+            if table_type in ['domestic', 'extras']:
                 basic_fields = ['unique_team_id', 'team_name', 'league', 'season', 'normalized_name', 
                                'fbref_official_name', 'understat_official_name']
-            else:
+            else:  # european
                 basic_fields = ['unique_team_id', 'team_name', 'competition', 'season', 'normalized_name', 
                                'fbref_official_name']
             
