@@ -59,7 +59,13 @@ AVAILABLE_COMPETITIONS = [
     ('GER-Bundesliga', 'domestic'),
     ('FRA-Ligue 1', 'domestic'),
     ('INT-Champions League', 'european'),
-    ('POR-Primeira Liga', 'extras')
+    ('POR-Primeira Liga', 'extras'),
+    ('NED-Eredivisie', 'extras'),
+    ('BEL-Pro League', 'extras'),
+    ('TUR-Süper Lig', 'extras'),
+    ('ARG-Primera División', 'extras'),
+    ('BRA-Serie A', 'extras'),
+    ('MEX-Liga MX', 'extras')
 ]
 
 METRIC_RANGES = {
@@ -110,6 +116,15 @@ BLOCK_2_COMPETITIONS = [
 
 BLOCK_3_COMPETITIONS = [
     ('POR-Primeira Liga', 'extras')
+]
+
+BLOCK_4_COMPETITIONS = [
+    ('NED-Eredivisie', 'extras'),
+    ('BEL-Pro League', 'extras'),
+    ('TUR-Süper Lig', 'extras'),
+    ('ARG-Primera División', 'extras'),
+    ('BRA-Serie A', 'extras'),
+    ('MEX-Liga MX', 'extras')
 ]
 
 # ====================================================================
@@ -970,16 +985,17 @@ def main():
     print("2. Load Block 1: ENG + ESP + ITA")
     print("3. Load Block 2: GER + FRA + Champions")
     print("4. Load Block 3: Extras (POR)")
-    print("5. Test database connection")
-    print("6. Setup database schema")
-    print("7. Clear all existing data")
-    print("8. Check database status")
+    print("5. Load Block 4: More Extras (NED, BEL, TUR, ARG, BRA, MEX)")
+    print("6. Test database connection")
+    print("7. Setup database schema")
+    print("8. Clear all existing data")
+    print("9. Check database status")
     
-    choice = input("\nSelect option (1-8): ").strip()
+    choice = input("\nSelect option (1-9): ").strip()
     
     if choice == "1":
         print("\nAvailable competitions:")
-        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS + BLOCK_3_COMPETITIONS
+        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS + BLOCK_3_COMPETITIONS + BLOCK_4_COMPETITIONS
         for i, (comp_name, comp_type) in enumerate(all_competitions, 1):
             data_source = "FBref + Understat" if comp_type in ['domestic', 'extras'] else "FBref only"
             print(f"   {i}. {comp_name} ({data_source})")
@@ -1078,6 +1094,29 @@ def main():
             print("Invalid season format")
     
     elif choice == "5":
+        season = input("Enter season for Block 4 load (e.g., 24-25): ").strip()
+        if season:
+            print(f"\nBLOCK 4 LOAD CONFIGURATION")
+            print("═" * 50)
+            print(f"Season: {season}")
+            print("Competitions: NED-Eredivisie, BEL-Pro League, TUR-Süper Lig")
+            print("             ARG-Primera División, BRA-Serie A, MEX-Liga MX")
+            print(f"Data sources: FBref only")
+            print(f"Estimated duration: 2-3 hours")
+            print()
+            
+            confirm = input(f"Proceed with Block 4 load? (y/N): ").strip().lower()
+            if confirm == 'y':
+                print(f"\nStarting Block 4 load for {season}...")
+                print()
+                
+                load_competition_block(BLOCK_4_COMPETITIONS, "Block 4", season)
+            else:
+                print("Block 4 load cancelled")
+        else:
+            print("Invalid season format")
+    
+    elif choice == "6":
         print("\nTesting database connection...")
         try:
             from database.connection import test_connection
@@ -1087,7 +1126,7 @@ def main():
         except Exception as e:
             print(f"Connection test error: {e}")
     
-    elif choice == "6":
+    elif choice == "7":
         confirm = input("Setup database schema? This will create/recreate tables (y/N): ").strip().lower()
         if confirm == 'y':
             print("\nSetting up database schema...")
@@ -1101,7 +1140,7 @@ def main():
         else:
             print("Schema setup cancelled")
     
-    elif choice == "7":
+    elif choice == "8":
         confirm = input("Clear ALL data? (type 'YES' to confirm): ").strip()
         if confirm == "YES":
             try:
@@ -1125,7 +1164,7 @@ def main():
         else:
             print("Clear operation cancelled")
     
-    elif choice == "8":
+    elif choice == "9":
         print("\nChecking database status...")
         try:
             from database.database_checker import check_database_status
@@ -1136,7 +1175,7 @@ def main():
             print(f"Error checking database: {e}")
     
     else:
-        print("Invalid option. Please select 1-8.")
+        print("Invalid option. Please select 1-9.")
 
 
 if __name__ == "__main__":

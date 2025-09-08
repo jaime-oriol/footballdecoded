@@ -178,6 +178,48 @@ LEAGUE_DICT = {
         "season_start": "Aug",
         "season_end": "May",
     },
+    "NED-Eredivisie": {
+        "FBref": "Eredivisie",
+        "WhoScored": "Netherlands - Eredivisie",
+        "FotMob": "NED-Eredivisie",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
+    "BEL-Pro League": {
+        "FBref": "Belgian Pro League",
+        "WhoScored": "Belgium - Pro League",
+        "FotMob": "BEL-Pro League",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
+    "TUR-Süper Lig": {
+        "FBref": "Süper Lig",
+        "WhoScored": "Turkey - Super Lig",
+        "FotMob": "TUR-Super Lig",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
+    "ARG-Primera División": {
+        "FBref": "Liga Profesional de Fútbol Argentina",
+        "WhoScored": "Argentina - Primera División",
+        "FotMob": "ARG-Primera Division",
+        "season_start": "Jan",
+        "season_end": "Dec",
+    },
+    "BRA-Serie A": {
+        "FBref": "Campeonato Brasileiro Série A",
+        "WhoScored": "Brazil - Brasileirão",
+        "FotMob": "BRA-Serie A",
+        "season_start": "Apr",
+        "season_end": "Dec",
+    },
+    "MEX-Liga MX": {
+        "FBref": "Liga MX",
+        "WhoScored": "Mexico - Liga MX",
+        "FotMob": "MEX-Liga MX",
+        "season_start": "Jan",
+        "season_end": "Dec",
+    },
 }
 _f_custom_league_dict = CONFIG_DIR / "league_dict.json"
 if _f_custom_league_dict.is_file():
