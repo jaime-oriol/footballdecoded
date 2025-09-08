@@ -55,6 +55,7 @@ except ImportError:
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import FBref
+from scrappers._config import LEAGUE_DICT
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -115,15 +116,12 @@ def _validate_inputs(entity_name: str, entity_type: str, league: str, season: st
 
 def _validate_league_codes() -> Dict[str, str]:
     """Obtener códigos de liga válidos para validación."""
-    valid_leagues = {
-        'ESP-La Liga': 'Spanish La Liga',
-        'ENG-Premier League': 'English Premier League', 
-        'ITA-Serie A': 'Italian Serie A',
-        'GER-Bundesliga': 'German Bundesliga',
-        'FRA-Ligue 1': 'French Ligue 1',
-        'INT-Champions League': 'Champions League',
-        'INT-Europa League': 'Europa League'
-    }
+    # Use dynamic league configuration from LEAGUE_DICT
+    valid_leagues = {}
+    for league_code, league_config in LEAGUE_DICT.items():
+        if 'FBref' in league_config:
+            fbref_name = league_config['FBref']
+            valid_leagues[league_code] = fbref_name
     return valid_leagues
 
 def validate_inputs_with_suggestions(entity_name: str, entity_type: str, league: str, season: str) -> Dict[str, Any]:

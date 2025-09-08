@@ -60,6 +60,7 @@ except ImportError:
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import Understat
+from scrappers._config import LEAGUE_DICT
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -114,7 +115,8 @@ def validate_inputs_with_suggestions(entity_name: str, entity_type: str, league:
         if 'season' in str(e) and 'format' in str(e):
             result['suggestions'].append("Use season format like '23-24', '22-23', etc.")
         if 'league' in str(e):
-            result['suggestions'].append("Valid leagues: ESP-La Liga, ENG-Premier League, etc.")
+            valid_leagues = [league for league in LEAGUE_DICT.keys() if 'Understat' in LEAGUE_DICT[league]]
+            result['suggestions'].append(f"Valid leagues for Understat: {', '.join(valid_leagues[:3])}{'...' if len(valid_leagues) > 3 else ''}")
     
     return result
 

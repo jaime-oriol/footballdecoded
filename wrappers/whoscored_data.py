@@ -53,6 +53,7 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import WhoScored
+from scrappers._config import LEAGUE_DICT
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -106,7 +107,8 @@ def validate_match_inputs_with_suggestions(match_id: int, league: str, season: s
         if 'season' in str(e) and 'format' in str(e):
             result['suggestions'].append("Use season format like '23-24', '22-23', etc.")
         if 'league' in str(e):
-            result['suggestions'].append("Valid leagues: ESP-La Liga, ENG-Premier League, etc.")
+            valid_leagues = [league for league in LEAGUE_DICT.keys() if 'WhoScored' in LEAGUE_DICT[league]]
+            result['suggestions'].append(f"Valid leagues: {', '.join(valid_leagues[:3])}{'...' if len(valid_leagues) > 3 else ''}")
     
     return result
 

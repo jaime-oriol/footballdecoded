@@ -65,7 +65,8 @@ AVAILABLE_COMPETITIONS = [
     ('TUR-Süper Lig', 'extras'),
     ('ARG-Primera División', 'extras'),
     ('BRA-Serie A', 'extras'),
-    ('MEX-Liga MX', 'extras')
+    ('MEX-Liga MX', 'extras'),
+    ('USA-MLS', 'extras')
 ]
 
 METRIC_RANGES = {
@@ -287,7 +288,12 @@ class LogManager:
             db_status = "Connected"
             schema = "footballdecoded"
             
-            table_type = 'domestic' if competition != 'INT-Champions League' else 'european'
+            # Get table_type from AVAILABLE_COMPETITIONS
+            table_type = 'domestic'  # default
+            for comp, ttype in AVAILABLE_COMPETITIONS:
+                if comp == competition:
+                    table_type = ttype
+                    break
             existing_records = self._count_existing_records(db, competition, season, table_type)
             
             db.close()
@@ -896,14 +902,16 @@ def load_teams(competition: str, season: str, table_type: str, logger: LogManage
 
 def load_complete_competition(competition: str, season: str) -> Dict[str, Dict[str, int]]:
     """Load complete competition."""
-    if competition == 'INT-Champions League':
-        table_type = 'european'
+    # Get table_type from AVAILABLE_COMPETITIONS
+    table_type = 'domestic'  # default
+    for comp, ttype in AVAILABLE_COMPETITIONS:
+        if comp == competition:
+            table_type = ttype
+            break
+    
+    if table_type == 'european':
         data_source = "FBref only"
-    elif competition == 'POR-Primeira Liga':
-        table_type = 'extras'
-        data_source = "FBref + Understat"
     else:
-        table_type = 'domestic'
         data_source = "FBref + Understat"
     
     logger = LogManager()
@@ -939,7 +947,7 @@ def load_competition_block(block_competitions: List[Tuple[str, str]], block_name
     start_time = datetime.now()
     
     for i, (competition, table_type) in enumerate(block_competitions, 1):
-        data_source = "FBref + Understat" if table_type == 'domestic' else "FBref only"
+        data_source = "FBref only" if table_type == 'european' else "FBref + Understat"
         
         logger.competition_start(i, len(block_competitions), competition, data_source)
         
