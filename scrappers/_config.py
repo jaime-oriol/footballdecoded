@@ -227,6 +227,42 @@ LEAGUE_DICT = {
         "season_start": "Feb",
         "season_end": "Nov",
     },
+    "INT-Copa America": {
+        "FBref": "Copa América",
+        "season_start": "Jun",
+        "season_end": "Jul",
+        "season_code": "single-year",
+    },
+    "ESP-Copa del Rey": {
+        "FBref": "Copa del Rey",
+        "season_start": "Oct",
+        "season_end": "May",
+    },
+    "ENG-FA Cup": {
+        "FBref": "FA Cup",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
+    "ENG-EFL Cup": {
+        "FBref": "EFL Cup",
+        "season_start": "Aug",
+        "season_end": "Feb",
+    },
+    "FRA-Coupe de France": {
+        "FBref": "Coupe de France",
+        "season_start": "Sep",
+        "season_end": "May",
+    },
+    "GER-DFB-Pokal": {
+        "FBref": "DFB-Pokal",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
+    "ITA-Coppa Italia": {
+        "FBref": "Coppa Italia",
+        "season_start": "Aug",
+        "season_end": "May",
+    },
 }
 _f_custom_league_dict = CONFIG_DIR / "league_dict.json"
 if _f_custom_league_dict.is_file():
