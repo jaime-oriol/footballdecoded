@@ -316,10 +316,10 @@ def _create_actions_field(
     
     # Title and legend - ADJUSTED positioning (same as passes)
     ax.set_title(title, color='white', fontsize=12, pad=3, family='DejaVu Sans')
-    
+
     # Simple legend at bottom - SAME position as passes
     legend_text = f"Won: {len(successful)} | Lost: {len(failed)}"
-    fig.text(0.5, 0.0, legend_text, ha='center', va='bottom', 
+    fig.text(0.5, 0.0, legend_text, ha='center', va='bottom',
              fontsize=10, color='white', family='DejaVu Sans')
     
     plt.tight_layout()
@@ -371,22 +371,18 @@ def _create_passes_field(
     successful = passes[passes['is_successful'] == True]
     failed = passes[passes['is_successful'] == False]
     
-    # Draw arrows for successful passes (sample to avoid clutter)
+    # Draw arrows for ALL successful passes
     if len(successful) > 0:
-        sample_size = min(15, len(successful))
-        sample_passes = successful.sample(sample_size)
-        for _, pass_event in sample_passes.iterrows():
-            ax.annotate('', 
-                       xy=(pass_event['end_y'], pass_event['end_x']), 
+        for _, pass_event in successful.iterrows():
+            ax.annotate('',
+                       xy=(pass_event['end_y'], pass_event['end_x']),
                        xytext=(pass_event['y'], pass_event['x']),
-                       arrowprops=dict(arrowstyle='->', color=success_color, 
+                       arrowprops=dict(arrowstyle='->', color=success_color,
                                      alpha=0.9, lw=2.0, connectionstyle="arc3,rad=0.05"))
-    
-    # Draw arrows for failed passes (smaller sample)
+
+    # Draw arrows for ALL failed passes
     if len(failed) > 0:
-        sample_size = min(8, len(failed))
-        sample_fails = failed.sample(sample_size)
-        for _, pass_event in sample_fails.iterrows():
+        for _, pass_event in failed.iterrows():
             # Black outline for visibility
             ax.annotate('', 
                        xy=(pass_event['end_y'], pass_event['end_x']), 
