@@ -229,16 +229,16 @@ def _create_spatial_fields_2x2(events_df: pd.DataFrame, player_name: str) -> dic
         events_df, player_name, 1, 44, 'temp_actions_1st.png', 'Actions 1st Half'
     )
     
-    # 2. Passes 1st half (minutes 1-44)  
+    # 2. Passes 1st half (minutes 1-44)
     paths['passes_1st'] = _create_passes_field(
         events_df, player_name, 1, 44, 'temp_passes_1st.png', 'Passes 1st Half'
     )
-    
+
     # 3. Actions 2nd half (minutes 46-90)
     paths['actions_2nd'] = _create_actions_field(
         events_df, player_name, 46, 90, 'temp_actions_2nd.png', 'Actions 2nd Half'
     )
-    
+
     # 4. Passes 2nd half (minutes 46-90)
     paths['passes_2nd'] = _create_passes_field(
         events_df, player_name, 46, 90, 'temp_passes_2nd.png', 'Passes 2nd Half'
@@ -279,16 +279,24 @@ def _create_actions_field(
     fig, ax = pitch.draw(figsize=(2.5, 3.5))
     fig.set_facecolor(BACKGROUND_COLOR)
     
-    # Add KDE heatmap as background
-    if len(actions) > 0:
-        pitch.kdeplot(actions['x'], actions['y'],
+    # Add KDE heatmap as background using ALL touches (not just actions)
+    all_touches = events_df[
+        (events_df['player'] == player_name) &
+        (events_df['minute'] >= min_minute) &
+        (events_df['minute'] <= max_minute) &
+        (events_df['x'].notna()) &
+        (events_df['y'].notna())
+    ].copy()
+
+    if len(all_touches) > 0:
+        pitch.kdeplot(all_touches['x'], all_touches['y'],
                       fill=True, levels=80, shade_lowest=True,
                       cmap='viridis', cut=8, alpha=1,
                       antialiased=True, zorder=0, ax=ax)
 
-    # Colors from pass_network.py
-    success_color = 'deepskyblue'  # Ganadas
-    failure_color = 'white'        # Perdidas
+    # Colors from TEAM_COLORS palette
+    success_color = '#00BFFF'   # Deep Sky Blue
+    failure_color = '#FF6B6B'   # Coral Red
 
     # Separate successful vs failed actions
     successful = actions[actions['is_successful'] == True]
@@ -323,7 +331,8 @@ def _create_actions_field(
 def _create_passes_field(
     events_df: pd.DataFrame,
     player_name: str,
-    period: str,
+    min_minute: int,
+    max_minute: int,
     save_path: str,
     title: str
 ) -> str:
@@ -331,11 +340,12 @@ def _create_passes_field(
     # Filter player pass events with coordinates and time period
     passes = events_df[
         (events_df['player'] == player_name) &
-        (events_df['period'] == period) &
+        (events_df['minute'] >= min_minute) &
+        (events_df['minute'] <= max_minute) &
         (events_df['event_type'] == 'Pass') &
-        (events_df['x'].notna()) & 
+        (events_df['x'].notna()) &
         (events_df['y'].notna()) &
-        (events_df['end_x'].notna()) & 
+        (events_df['end_x'].notna()) &
         (events_df['end_y'].notna())
     ].copy()
     
@@ -353,9 +363,9 @@ def _create_passes_field(
     fig, ax = pitch.draw(figsize=(2.5, 3.5))
     fig.set_facecolor(BACKGROUND_COLOR)
     
-    # Colors from pass_network.py
-    success_color = 'deepskyblue'  # Precisos
-    failure_color = 'white'        # No precisos
+    # Colors from TEAM_COLORS palette
+    success_color = '#00BFFF'   # Deep Sky Blue
+    failure_color = '#FF6B6B'   # Coral Red
     
     # Separate successful vs failed passes
     successful = passes[passes['is_successful'] == True]
