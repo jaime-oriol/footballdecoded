@@ -279,10 +279,17 @@ def _create_actions_field(
     fig, ax = pitch.draw(figsize=(2.5, 3.5))
     fig.set_facecolor(BACKGROUND_COLOR)
     
+    # Add KDE heatmap as background
+    if len(actions) > 0:
+        pitch.kdeplot(actions['x'], actions['y'],
+                      fill=True, levels=80, shade_lowest=True,
+                      cmap='viridis', cut=8, alpha=1,
+                      antialiased=True, zorder=0, ax=ax)
+
     # Colors from pass_network.py
     success_color = 'deepskyblue'  # Ganadas
     failure_color = 'white'        # Perdidas
-    
+
     # Separate successful vs failed actions
     successful = actions[actions['is_successful'] == True]
     failed = actions[actions['is_successful'] == False]

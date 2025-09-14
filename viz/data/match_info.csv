@@ -1,0 +1,95 @@
+info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
+match_metadata,match_id,Atletico_vs_Villarreal_2025-09-13,,,,,,,,
+match_metadata,home_team,Atletico,,,,,,,,
+match_metadata,away_team,Villarreal,,,,,,,,
+match_metadata,match_date,2025-09-13,,,,,,,,
+match_metadata,league,ESP-La Liga,,,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1884,,,,,,,,
+match_metadata,match_duration_minutes,95,,,,,,,,
+team_stats,total_events,1069,Atletico,1069.0,,,,,,
+team_stats,possession_pct,56.7,Atletico,56.7,,,,,,
+team_stats,passes_attempted,658,Atletico,658.0,,,,,,
+team_stats,passes_completed,579,Atletico,579.0,,,,,,
+team_stats,pass_accuracy,88.0,Atletico,88.0,,,,,,
+team_stats,xthreat_total,22.428,Atletico,22.428,,,,,,
+team_stats,progressive_actions,61,Atletico,61.0,,,,,,
+team_stats,box_entries,12,Atletico,12.0,,,,,,
+team_stats,shots,8,Atletico,8.0,,,,,,
+team_stats,xg_total,1.51,Atletico,1.51,,,,,,
+team_stats,total_events,815,Villarreal,815.0,,,,,,
+team_stats,possession_pct,43.3,Villarreal,43.3,,,,,,
+team_stats,passes_attempted,434,Villarreal,434.0,,,,,,
+team_stats,passes_completed,363,Villarreal,363.0,,,,,,
+team_stats,pass_accuracy,83.6,Villarreal,83.6,,,,,,
+team_stats,xthreat_total,16.15,Villarreal,16.15,,,,,,
+team_stats,progressive_actions,60,Villarreal,60.0,,,,,,
+team_stats,box_entries,8,Villarreal,8.0,,,,,,
+team_stats,shots,8,Villarreal,8.0,,,,,,
+team_stats,xg_total,0.67,Villarreal,0.67,,,,,,
+player_participation,player_activity,Antoine Griezmann,Atletico,83.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Clément Lenglet,Atletico,110.0,0.0,89.0,89.0,,,
+player_participation,player_activity,Nico González,Atletico,56.0,0.0,75.0,75.0,,,
+player_participation,player_activity,Marcos Llorente,Atletico,146.0,0.0,94.0,94.0,,,
+player_participation,player_activity,Robin Le Normand,Atletico,97.0,0.0,76.0,76.0,,,
+player_participation,player_activity,Pablo Barrios,Atletico,111.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Giuliano Simeone,Atletico,88.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Matteo Ruggeri,Atletico,84.0,0.0,75.0,75.0,,,
+player_participation,player_activity,Koke,Atletico,121.0,1.0,93.0,92.0,,,
+player_participation,player_activity,Julián Alvarez,Atletico,49.0,1.0,45.0,44.0,,,
+player_participation,player_activity,Jan Oblak,Atletico,60.0,1.0,91.0,90.0,,,
+player_participation,player_activity,Alexander Sørloth,Atletico,27.0,45.0,93.0,48.0,,,
+player_participation,player_activity,Conor Gallagher,Atletico,8.0,75.0,89.0,14.0,,,
+player_participation,player_activity,Dávid Hancko,Atletico,5.0,75.0,82.0,7.0,,,
+player_participation,player_activity,Marc Pubill,Atletico,11.0,76.0,92.0,16.0,,,
+player_participation,player_activity,Javi Galán,Atletico,6.0,82.0,94.0,12.0,,,
+player_participation,player_activity,Thomas Partey,Villarreal,54.0,0.0,63.0,63.0,,,
+player_participation,player_activity,Georges Mikautadze,Villarreal,34.0,0.0,78.0,78.0,,,
+player_participation,player_activity,Sergi Cardona,Villarreal,67.0,0.0,78.0,78.0,,,
+player_participation,player_activity,Luiz Júnior,Villarreal,41.0,0.0,94.0,94.0,,,
+player_participation,player_activity,Renato Veiga,Villarreal,90.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Juan Foyth,Villarreal,84.0,1.0,94.0,93.0,,,
+player_participation,player_activity,Santiago Mouriño,Villarreal,123.0,1.0,94.0,93.0,,,
+player_participation,player_activity,Tajon Buchanan,Villarreal,66.0,1.0,94.0,93.0,,,
+player_participation,player_activity,Alberto Moleiro,Villarreal,41.0,1.0,63.0,62.0,,,
+player_participation,player_activity,Nicolas Pépé,Villarreal,46.0,1.0,63.0,62.0,,,
+player_participation,player_activity,Dani Parejo,Villarreal,86.0,2.0,95.0,93.0,,,
+player_participation,player_activity,Ayoze Pérez,Villarreal,10.0,63.0,94.0,31.0,,,
+player_participation,player_activity,Santi Comesaña,Villarreal,22.0,63.0,95.0,32.0,,,
+player_participation,player_activity,Pape Gueye,Villarreal,20.0,63.0,95.0,32.0,,,
+player_participation,player_activity,Tani Oluwaseyi,Villarreal,8.0,78.0,90.0,12.0,,,
+player_participation,player_activity,Alfonso Pedraza,Villarreal,16.0,78.0,93.0,15.0,,,
+timeline,key_event,Goal - Pablo Barrios,Atletico,8.0,,,,Goal,8.0,FirstHalf
+timeline,key_event,Card - Dani Parejo,Villarreal,23.0,,,,Card,23.0,FirstHalf
+timeline,key_event,Card - Julián Alvarez,Atletico,31.0,,,,Card,31.0,FirstHalf
+timeline,key_event,SubstitutionOff - Julián Alvarez,Atletico,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Alexander Sørloth,Atletico,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,Goal - Nico González,Atletico,51.0,,,,Goal,51.0,SecondHalf
+timeline,key_event,SubstitutionOff - Nicolas Pépé,Villarreal,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Ayoze Pérez,Villarreal,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,SubstitutionOff - Alberto Moleiro,Villarreal,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Santi Comesaña,Villarreal,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,SubstitutionOff - Thomas Partey,Villarreal,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Pape Gueye,Villarreal,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,Card - Renato Veiga,Villarreal,64.0,,,,Card,64.0,SecondHalf
+timeline,key_event,Card - Matteo Ruggeri,Atletico,72.0,,,,Card,72.0,SecondHalf
+timeline,key_event,SubstitutionOff - Nico González,Atletico,75.0,,,,SubstitutionOff,75.0,SecondHalf
+timeline,key_event,SubstitutionOn - Conor Gallagher,Atletico,75.0,,,,SubstitutionOn,75.0,SecondHalf
+timeline,key_event,SubstitutionOff - Matteo Ruggeri,Atletico,75.0,,,,SubstitutionOff,75.0,SecondHalf
+timeline,key_event,SubstitutionOn - Dávid Hancko,Atletico,75.0,,,,SubstitutionOn,75.0,SecondHalf
+timeline,key_event,SubstitutionOff - Robin Le Normand,Atletico,76.0,,,,SubstitutionOff,76.0,SecondHalf
+timeline,key_event,SubstitutionOn - Marc Pubill,Atletico,76.0,,,,SubstitutionOn,76.0,SecondHalf
+timeline,key_event,SubstitutionOff - Georges Mikautadze,Villarreal,78.0,,,,SubstitutionOff,78.0,SecondHalf
+timeline,key_event,SubstitutionOn - Tani Oluwaseyi,Villarreal,78.0,,,,SubstitutionOn,78.0,SecondHalf
+timeline,key_event,SubstitutionOff - Sergi Cardona,Villarreal,78.0,,,,SubstitutionOff,78.0,SecondHalf
+timeline,key_event,SubstitutionOn - Alfonso Pedraza,Villarreal,78.0,,,,SubstitutionOn,78.0,SecondHalf
+timeline,key_event,SubstitutionOff - Dávid Hancko,Atletico,82.0,,,,SubstitutionOff,82.0,SecondHalf
+timeline,key_event,SubstitutionOn - Javi Galán,Atletico,82.0,,,,SubstitutionOn,82.0,SecondHalf
+timeline,key_event,Card - Santiago Mouriño,Villarreal,83.0,,,,Card,83.0,SecondHalf
+timeline,key_event,Card - Alfonso Pedraza,Villarreal,93.0,,,,Card,93.0,SecondHalf
+data_quality,events_with_coordinates,1884,,1884.0,,,,,,
+data_quality,events_with_xthreat,638,,638.0,,,,,,
+data_quality,events_with_outcome,1884,,1884.0,,,,,,
+data_quality,successful_events,1608,,1608.0,,,,,,
+data_quality,unique_players,32,,32.0,,,,,,
+data_quality,periods_played,4,,4.0,,,,,,
