@@ -66,13 +66,36 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     y_pct_col = f"{y_metric}_pct"
 
     if x_pct_col in df.columns and y_pct_col in df.columns:
-        # Usar percentiles: jugadores con percentil 97+ en AMBAS métricas
-        plot_player = df[(df[x_pct_col] >= 98) | (df[y_pct_col] >= 98)]
+        # Sistema de fallback escalonado para garantizar jugadores
+        plot_player = df[(df[x_pct_col] >= 98) & (df[y_pct_col] >= 98)]
+
+        # Fallback a percentil 95+ si no hay suficientes
+        if len(plot_player) < 3:
+            plot_player = df[(df[x_pct_col] >= 95) & (df[y_pct_col] >= 95)]
+
+        # Fallback a percentil 90+ si aún no hay suficientes
+        if len(plot_player) < 3:
+            plot_player = df[(df[x_pct_col] >= 90) & (df[y_pct_col] >= 90)]
+
+        # Último recurso: top 10 por suma de percentiles
+        if len(plot_player) < 3:
+            df_temp = df.copy()
+            df_temp['_total_pct'] = df_temp[x_pct_col] + df_temp[y_pct_col]
+            plot_player = df_temp.nlargest(10, '_total_pct').drop(columns=['_total_pct'])
+
+        # Limitar a máximo 10 jugadores en todos los casos
+        if len(plot_player) > 10:
+            plot_player_temp = plot_player.copy()
+            plot_player_temp['_total_pct'] = plot_player_temp[x_pct_col] + plot_player_temp[y_pct_col]
+            plot_player = plot_player_temp.nlargest(10, '_total_pct').drop(columns=['_total_pct'])
     else:
         # Fallback al método original si no hay percentiles
         plot_quantile_left = left_ax_norm_plot.quantile([0, 0.5, 0.9]).tolist()
         plot_quantile_right = right_ax_norm_plot.quantile([0, 0.5, 0.9]).tolist()
         plot_player = df[(left_ax_norm_plot > plot_quantile_left[2]) | (right_ax_norm_plot > plot_quantile_right[2])]
+        # También limitar a 10 en el fallback
+        if len(plot_player) > 10:
+            plot_player = plot_player.head(10)
 
     # Set-up figure
     fig = plt.figure(figsize=(8.5, 9), facecolor=BACKGROUND_COLOR)
@@ -158,35 +181,98 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
                    c=left_ax_norm_plot + right_ax_norm_plot,
                    cmap=node_cmap, edgecolor='white', s=50, lw=0.5, zorder=2, alpha=0.7)
 
-    # Add text annotations for top players
-    text = list()
+    # Add text annotations for top players with connecting lines - CLOSE TO POINTS
+    if len(plot_player) > 0:
+        n_players = len(plot_player)
+        label_distance = 0.08  # Much closer to points
 
-    for i, player in plot_player.iterrows():
-        # Format player name
-        if 'player_name' in player:
-            name = player['player_name']
-        elif 'name' in player:
-            name = player['name']
-        else:
-            name = str(i)  # fallback to index
+        # Store label positions to avoid overlaps
+        used_positions = []
 
-        if len(name.split(' ')) > 1:
-            format_name = name.split(' ')[0][0] + " " + name.split(' ')[-1]
-        else:
-            format_name = name
+        # Define 8 possible directions around each point
+        directions = [
+            (0, 1),      # North
+            (0.707, 0.707),  # NE
+            (1, 0),      # East
+            (0.707, -0.707), # SE
+            (0, -1),     # South
+            (-0.707, -0.707), # SW
+            (-1, 0),     # West
+            (-0.707, 0.707)   # NW
+        ]
 
-        text.append(aux_ax.text(right_ax_norm_plot.loc[i] + 0.01, left_ax_norm_plot.loc[i],
-                               format_name, color='yellow', fontsize=8, zorder=3,
-                               fontweight='bold', fontfamily=FONT_FAMILY,
-                               bbox=dict(boxstyle='round,pad=0.2', facecolor=BACKGROUND_COLOR,
-                                        edgecolor='yellow', alpha=0.8),
-                               ha='center', va='center'))
+        def check_overlap(new_pos, used_positions, min_distance=0.12):
+            """Check if new position overlaps with existing labels"""
+            for used_pos in used_positions:
+                distance = np.sqrt((new_pos[0] - used_pos[0])**2 + (new_pos[1] - used_pos[1])**2)
+                if distance < min_distance:
+                    return True
+            return False
 
-    try:
-        adjustText.adjust_text(text, ax=ax)
-    except:
-        # If adjustText fails, keep manual positioning
-        pass
+        def find_best_position(point_x, point_y, used_positions):
+            """Find the best position around a point that doesn't overlap"""
+            best_pos = None
+            best_distance = 0
+
+            # Try each direction
+            for dx, dy in directions:
+                label_x = point_x + dx * label_distance
+                label_y = point_y + dy * label_distance
+
+                # Keep within bounds
+                label_x = np.clip(label_x, 0.05, 0.95)
+                label_y = np.clip(label_y, 0.05, 0.95)
+
+                candidate_pos = (label_x, label_y)
+
+                # If no overlap, use this position
+                if not check_overlap(candidate_pos, used_positions):
+                    return candidate_pos
+
+                # If there's overlap, calculate distance to nearest label
+                min_dist_to_used = min([np.sqrt((label_x - used[0])**2 + (label_y - used[1])**2)
+                                       for used in used_positions] or [float('inf')])
+
+                # Keep track of position with maximum distance to other labels
+                if min_dist_to_used > best_distance:
+                    best_distance = min_dist_to_used
+                    best_pos = candidate_pos
+
+            return best_pos or (point_x + label_distance, point_y + label_distance)
+
+        for idx, (i, player) in enumerate(plot_player.iterrows()):
+            # Format player name
+            if 'player_name' in player:
+                name = player['player_name']
+            elif 'name' in player:
+                name = player['name']
+            else:
+                name = str(i)  # fallback to index
+
+            if len(name.split(' ')) > 1:
+                format_name = name.split(' ')[0][0] + " " + name.split(' ')[-1]
+            else:
+                format_name = name
+
+            # Player point coordinates (normalized)
+            point_x = right_ax_norm_plot.loc[i]
+            point_y = left_ax_norm_plot.loc[i]
+
+            # Find best label position near the point
+            label_x, label_y = find_best_position(point_x, point_y, used_positions)
+            used_positions.append((label_x, label_y))
+
+            # Add annotation with connecting line
+            aux_ax.annotate(format_name,
+                           xy=(point_x, point_y),  # Point location
+                           xytext=(label_x, label_y),  # Label location (close!)
+                           color='yellow', fontsize=8, fontweight='bold',
+                           fontfamily=FONT_FAMILY, zorder=4,
+                           bbox=dict(boxstyle='round,pad=0.2', facecolor=BACKGROUND_COLOR,
+                                   edgecolor='yellow', alpha=0.95, linewidth=1),
+                           ha='center', va='center',
+                           arrowprops=dict(arrowstyle='-', color='yellow', alpha=0.9,
+                                         linewidth=1.2, connectionstyle='arc3,rad=0.05'))
 
     # Add axis shading (20th-80th percentiles)
     aux_ax.fill([right_ax_quantile[0], right_ax_quantile[0], right_ax_quantile[2], right_ax_quantile[2]],
