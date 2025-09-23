@@ -1,22 +1,22 @@
 info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
-match_metadata,match_id,Osasuna_vs_Atletico Madrid_2025-05-15 17:00:00,,,,,,,,
-match_metadata,home_team,Osasuna,,,,,,,,
+match_metadata,match_id,Girona_vs_Atletico Madrid_2025-05-25 12:00:00,,,,,,,,
+match_metadata,home_team,Girona,,,,,,,,
 match_metadata,away_team,Atletico Madrid,,,,,,,,
-match_metadata,match_date,2025-05-15 17:00:00,,,,,,,,
+match_metadata,match_date,2025-05-25 12:00:00,,,,,,,,
 match_metadata,league,ESP-La Liga,,,,,,,,
 match_metadata,season,24-25,,,,,,,,
-match_metadata,total_events,1751,,,,,,,,
-match_metadata,match_duration_minutes,97,,,,,,,,
-team_stats,total_events,669,Osasuna,669.0,,,,,,
-team_stats,possession_pct,38.2,Osasuna,38.2,,,,,,
-team_stats,passes_attempted,325,Osasuna,325.0,,,,,,
-team_stats,passes_completed,243,Osasuna,243.0,,,,,,
-team_stats,pass_accuracy,74.8,Osasuna,74.8,,,,,,
-team_stats,xthreat_total,12.101,Osasuna,12.101,,,,,,
-team_stats,progressive_actions,48,Osasuna,48.0,,,,,,
-team_stats,box_entries,9,Osasuna,9.0,,,,,,
-team_stats,shots,9,Osasuna,9.0,,,,,,
-team_stats,xg_total,0.86,Osasuna,0.86,,,,,,
+match_metadata,total_events,1930,,,,,,,,
+match_metadata,match_duration_minutes,92,,,,,,,,
+team_stats,total_events,842,Girona,842.0,,,,,,
+team_stats,possession_pct,43.6,Girona,43.6,,,,,,
+team_stats,passes_attempted,456,Girona,456.0,,,,,,
+team_stats,passes_completed,383,Girona,383.0,,,,,,
+team_stats,pass_accuracy,84.0,Girona,84.0,,,,,,
+team_stats,xthreat_total,20.509,Girona,20.509,,,,,,
+team_stats,progressive_actions,65,Girona,65.0,,,,,,
+team_stats,box_entries,8,Girona,8.0,,,,,,
+team_stats,shots,2,Girona,2.0,,,,,,
+team_stats,xg_total,0.05,Girona,0.05,,,,,,
 team_stats,total_events,0,Atletico Madrid,0.0,,,,,,
 team_stats,possession_pct,0.0,Atletico Madrid,0.0,,,,,,
 team_stats,passes_attempted,0,Atletico Madrid,0.0,,,,,,
@@ -27,54 +27,50 @@ team_stats,progressive_actions,0,Atletico Madrid,0.0,,,,,,
 team_stats,box_entries,0,Atletico Madrid,0.0,,,,,,
 team_stats,shots,0,Atletico Madrid,0.0,,,,,,
 team_stats,xg_total,0.0,Atletico Madrid,0.0,,,,,,
-player_participation,player_activity,Bryan Zaragoza,Osasuna,43.0,0.0,70.0,70.0,,,
-player_participation,player_activity,Aimar Oroz,Osasuna,51.0,0.0,87.0,87.0,,,
-player_participation,player_activity,Jesús Areso,Osasuna,81.0,0.0,96.0,96.0,,,
-player_participation,player_activity,Enzo Boyomo,Osasuna,80.0,0.0,96.0,96.0,,,
-player_participation,player_activity,Alejandro Catena,Osasuna,76.0,0.0,93.0,93.0,,,
-player_participation,player_activity,Juan Cruz,Osasuna,59.0,1.0,80.0,79.0,,,
-player_participation,player_activity,Sergio Herrera,Osasuna,78.0,1.0,97.0,96.0,,,
-player_participation,player_activity,Pablo Ibáñez,Osasuna,49.0,2.0,70.0,68.0,,,
-player_participation,player_activity,Lucas Torró,Osasuna,38.0,2.0,91.0,89.0,,,
-player_participation,player_activity,Rubén Peña,Osasuna,24.0,2.0,59.0,57.0,,,
-player_participation,player_activity,Ante Budimir,Osasuna,29.0,10.0,87.0,77.0,,,
-player_participation,player_activity,Kike Barja,Osasuna,8.0,59.0,93.0,34.0,,,
-player_participation,player_activity,Jon Moncayola,Osasuna,11.0,70.0,90.0,20.0,,,
-player_participation,player_activity,Iker Muñoz,Osasuna,11.0,70.0,93.0,23.0,,,
-player_participation,player_activity,Abel Bretones,Osasuna,7.0,80.0,93.0,13.0,,,
-player_participation,player_activity,Moi Gómez,Osasuna,5.0,87.0,95.0,8.0,,,
-player_participation,player_activity,Raúl García,Osasuna,12.0,87.0,95.0,8.0,,,
-timeline,key_event,Goal - Alejandro Catena,Osasuna,24.0,,,,Goal,24.0,FirstHalf
-timeline,key_event,Card - Rodrigo De Paul,Atletico,24.0,,,,Card,24.0,FirstHalf
-timeline,key_event,Card - Pablo Ibáñez,Osasuna,39.0,,,,Card,39.0,FirstHalf
-timeline,key_event,SubstitutionOff - Javi Galán,Atletico,45.0,,,,SubstitutionOff,45.0,SecondHalf
-timeline,key_event,SubstitutionOn - César Azpilicueta,Atletico,45.0,,,,SubstitutionOn,45.0,SecondHalf
-timeline,key_event,SubstitutionOff - Giuliano Simeone,Atletico,45.0,,,,SubstitutionOff,45.0,SecondHalf
-timeline,key_event,SubstitutionOn - Samuel Lino,Atletico,45.0,,,,SubstitutionOn,45.0,SecondHalf
-timeline,key_event,SubstitutionOff - Pablo Barrios,Atletico,51.0,,,,SubstitutionOff,51.0,SecondHalf
-timeline,key_event,SubstitutionOn - Nahuel Molina,Atletico,51.0,,,,SubstitutionOn,51.0,SecondHalf
-timeline,key_event,SubstitutionOff - Rubén Peña,Osasuna,59.0,,,,SubstitutionOff,59.0,SecondHalf
-timeline,key_event,SubstitutionOn - Kike Barja,Osasuna,59.0,,,,SubstitutionOn,59.0,SecondHalf
-timeline,key_event,SubstitutionOff - Julián Alvarez,Atletico,63.0,,,,SubstitutionOff,63.0,SecondHalf
-timeline,key_event,SubstitutionOn - Antoine Griezmann,Atletico,63.0,,,,SubstitutionOn,63.0,SecondHalf
-timeline,key_event,SubstitutionOff - Koke,Atletico,63.0,,,,SubstitutionOff,63.0,SecondHalf
-timeline,key_event,SubstitutionOn - Ángel Correa,Atletico,63.0,,,,SubstitutionOn,63.0,SecondHalf
-timeline,key_event,SubstitutionOff - Alexander Sørloth,Atletico,66.0,,,,SubstitutionOff,66.0,SecondHalf
-timeline,key_event,SubstitutionOn - Conor Gallagher,Atletico,66.0,,,,SubstitutionOn,66.0,SecondHalf
-timeline,key_event,SubstitutionOff - Pablo Ibáñez,Osasuna,70.0,,,,SubstitutionOff,70.0,SecondHalf
-timeline,key_event,SubstitutionOn - Jon Moncayola,Osasuna,70.0,,,,SubstitutionOn,70.0,SecondHalf
-timeline,key_event,SubstitutionOff - Bryan Zaragoza,Osasuna,70.0,,,,SubstitutionOff,70.0,SecondHalf
-timeline,key_event,SubstitutionOn - Iker Muñoz,Osasuna,70.0,,,,SubstitutionOn,70.0,SecondHalf
-timeline,key_event,SubstitutionOff - Juan Cruz,Osasuna,80.0,,,,SubstitutionOff,80.0,SecondHalf
-timeline,key_event,SubstitutionOn - Abel Bretones,Osasuna,80.0,,,,SubstitutionOn,80.0,SecondHalf
-timeline,key_event,Goal - Ante Budimir,Osasuna,81.0,,,,Goal,81.0,SecondHalf
-timeline,key_event,SubstitutionOff - Aimar Oroz,Osasuna,87.0,,,,SubstitutionOff,87.0,SecondHalf
-timeline,key_event,SubstitutionOn - Moi Gómez,Osasuna,87.0,,,,SubstitutionOn,87.0,SecondHalf
-timeline,key_event,SubstitutionOff - Ante Budimir,Osasuna,87.0,,,,SubstitutionOff,87.0,SecondHalf
-timeline,key_event,SubstitutionOn - Raúl García,Osasuna,87.0,,,,SubstitutionOn,87.0,SecondHalf
-data_quality,events_with_coordinates,1751,,1751.0,,,,,,
-data_quality,events_with_xthreat,577,,577.0,,,,,,
-data_quality,events_with_outcome,1751,,1751.0,,,,,,
-data_quality,successful_events,1475,,1475.0,,,,,,
-data_quality,unique_players,34,,34.0,,,,,,
+player_participation,player_activity,Viktor Tsygankov,Girona,66.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Yangel Herrera,Girona,62.0,0.0,72.0,72.0,,,
+player_participation,player_activity,Arnau Martínez,Girona,92.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Alejandro Francés,Girona,77.0,0.0,63.0,63.0,,,
+player_participation,player_activity,Vladyslav Krapyvtsov,Girona,72.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Ladislav Krejcí,Girona,78.0,0.0,90.0,90.0,,,
+player_participation,player_activity,Daley Blind,Girona,102.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Yáser Asprilla,Girona,71.0,0.0,90.0,90.0,,,
+player_participation,player_activity,Arthur,Girona,81.0,0.0,72.0,72.0,,,
+player_participation,player_activity,Cristhian Stuani,Girona,34.0,2.0,88.0,86.0,,,
+player_participation,player_activity,Portu,Girona,10.0,6.0,63.0,57.0,,,
+player_participation,player_activity,Iván Martín,Girona,23.0,63.0,91.0,28.0,,,
+player_participation,player_activity,Juanpe,Girona,26.0,63.0,91.0,28.0,,,
+player_participation,player_activity,Oriol Romeu,Girona,24.0,72.0,91.0,19.0,,,
+player_participation,player_activity,Abel Ruiz,Girona,9.0,72.0,91.0,19.0,,,
+player_participation,player_activity,Jhon Solís,Girona,6.0,88.0,91.0,3.0,,,
+timeline,key_event,Card - nan,Atletico,45.0,,,,Card,45.0,FirstHalf
+timeline,key_event,SubstitutionOff - Nahuel Molina,Atletico,61.0,,,,SubstitutionOff,61.0,SecondHalf
+timeline,key_event,SubstitutionOn - Giuliano Simeone,Atletico,61.0,,,,SubstitutionOn,61.0,SecondHalf
+timeline,key_event,SubstitutionOff - Antoine Griezmann,Atletico,61.0,,,,SubstitutionOff,61.0,SecondHalf
+timeline,key_event,SubstitutionOn - Alexander Sørloth,Atletico,61.0,,,,SubstitutionOn,61.0,SecondHalf
+timeline,key_event,SubstitutionOff - Portu,Girona,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Iván Martín,Girona,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,SubstitutionOff - Alejandro Francés,Girona,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Juanpe,Girona,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,Goal - Alexander Sørloth,Atletico,67.0,,,,Goal,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Samuel Lino,Atletico,69.0,,,,SubstitutionOff,69.0,SecondHalf
+timeline,key_event,SubstitutionOn - Ángel Correa,Atletico,69.0,,,,SubstitutionOn,69.0,SecondHalf
+timeline,key_event,SubstitutionOff - Koke,Atletico,70.0,,,,SubstitutionOff,70.0,SecondHalf
+timeline,key_event,SubstitutionOn - Conor Gallagher,Atletico,70.0,,,,SubstitutionOn,70.0,SecondHalf
+timeline,key_event,SubstitutionOff - Arthur,Girona,72.0,,,,SubstitutionOff,72.0,SecondHalf
+timeline,key_event,SubstitutionOn - Oriol Romeu,Girona,72.0,,,,SubstitutionOn,72.0,SecondHalf
+timeline,key_event,SubstitutionOff - Yangel Herrera,Girona,72.0,,,,SubstitutionOff,72.0,SecondHalf
+timeline,key_event,SubstitutionOn - Abel Ruiz,Girona,72.0,,,,SubstitutionOn,72.0,SecondHalf
+timeline,key_event,SubstitutionOff - Rodrigo De Paul,Atletico,77.0,,,,SubstitutionOff,77.0,SecondHalf
+timeline,key_event,SubstitutionOn - Pablo Barrios,Atletico,77.0,,,,SubstitutionOn,77.0,SecondHalf
+timeline,key_event,Goal - Clément Lenglet,Atletico,86.0,,,,Goal,86.0,SecondHalf
+timeline,key_event,SubstitutionOff - Cristhian Stuani,Girona,88.0,,,,SubstitutionOff,88.0,SecondHalf
+timeline,key_event,SubstitutionOn - Jhon Solís,Girona,88.0,,,,SubstitutionOn,88.0,SecondHalf
+timeline,key_event,Goal - Alexander Sørloth,Atletico,89.0,,,,Goal,89.0,SecondHalf
+timeline,key_event,Goal - Alexander Sørloth,Atletico,92.0,,,,Goal,92.0,SecondHalf
+data_quality,events_with_coordinates,1930,,1930.0,,,,,,
+data_quality,events_with_xthreat,650,,650.0,,,,,,
+data_quality,events_with_outcome,1930,,1930.0,,,,,,
+data_quality,successful_events,1674,,1674.0,,,,,,
+data_quality,unique_players,32,,32.0,,,,,,
 data_quality,periods_played,4,,4.0,,,,,,
