@@ -159,29 +159,26 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # Layout positioning coordinates (optimized for readability)
     y_start = 14.5      # Top position for player headers
     # Player 1 positions
-    logo1_x = 3.2      # Logo X coordinate (moved right +0.05)
+    logo1_x = 3.1      # Logo X coordinate (moved right +0.05)
     text1_x = 3.4       # Name text X coordinate
     p1_value_x = 4.1    # Statistical value X coordinate
     p1_pct_x = 4.5      # Percentile value X coordinate
     
     # Player 2 positions (when comparing two players)
-    logo2_x = 6.4       # Second player logo X (moved left to avoid overlap)
+    logo2_x = 6.3       # Second player logo X (moved left to avoid overlap)
     text2_x = 6.2       # Second player name X
     p2_value_x = 6.7    # Second player value X
     p2_pct_x = 7.1      # Second player percentile X
     
     # PLAYER 1 HEADER: Logo and identification
     team1_name = p1.get('team') or p1.get('team_name', '')
-    print(f"DEBUG Player 1 - Team: '{team1_name}', team_logos keys: {list(team_logos.keys()) if team_logos else None}")
     if team_logos and team1_name in team_logos:
         try:
-            print(f"DEBUG P1 - Loading logo from: {team_logos[team1_name]}")
             logo = Image.open(team_logos[team1_name])
             # Positioning: convert layout coords to figure fractions
             logo_ax = fig.add_axes([logo1_x/10, (y_start-0.8)/15, 0.08, 0.08])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
-            print(f"DEBUG P1 - Logo loaded successfully for {team1_name}")
         except Exception as e:
             print(f"Error cargando logo para {team1_name}: {e}")
             print(f"Ruta: {team_logos[team1_name]}")  # Graceful failure if logo unavailable
@@ -197,15 +194,12 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # PLAYER 2 HEADER: Logo and identification (only show if P2 exists)
     if p2 is not None:
         team2_name = p2.get('team') or p2.get('team_name', '')
-        print(f"DEBUG Player 2 - Team: '{team2_name}', team_logos keys: {list(team_logos.keys()) if team_logos else None}")
         if team_logos and team2_name in team_logos:
             try:
-                print(f"DEBUG P2 - Loading logo from: {team_logos[team2_name]}")
                 logo = Image.open(team_logos[team2_name])
                 logo_ax = fig.add_axes([logo2_x/10, (y_start-0.8)/15, 0.08, 0.08])
                 logo_ax.imshow(logo)
                 logo_ax.axis('off')
-                print(f"DEBUG P2 - Logo loaded successfully for {team2_name}")
             except Exception as e:
                 print(f"Error cargando logo para {team2_name}: {e}")
                 print(f"Ruta: {team_logos[team2_name]}")  # Graceful failure if logo unavailable
