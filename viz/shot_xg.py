@@ -161,28 +161,34 @@ def plot_shot_xg(csv_path, filter_by='all', invert_filter=False, logo_path=None,
     fig.set_facecolor(BACKGROUND_COLOR)
     
     # FOOT SHOT ATTEMPTS: Semi-transparent to show density while remaining visible
+    cbar_ref = None
     if not selected_ground_shots.empty:
-        ax['pitch'].scatter(selected_ground_shots['y'], selected_ground_shots['x'], 
-                           marker='h', s=200, alpha=0.5, c=selected_ground_shots['xg'], 
+        cbar_ref = ax['pitch'].scatter(selected_ground_shots['y'], selected_ground_shots['x'],
+                           marker='h', s=200, alpha=0.5, c=selected_ground_shots['xg'],
                            edgecolors='w', vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
-    
+
     # FOOT GOALS: Full opacity with white outline for emphasis
     if not selected_ground_goals.empty:
-        p1 = ax['pitch'].scatter(selected_ground_goals['y'], selected_ground_goals['x'], 
-                                marker='h', s=200, c=selected_ground_goals['xg'], 
+        p1 = ax['pitch'].scatter(selected_ground_goals['y'], selected_ground_goals['x'],
+                                marker='h', s=200, c=selected_ground_goals['xg'],
                                 edgecolors='w', lw=2, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
-    
+        cbar_ref = p1
+
     # HEADER ATTEMPTS: Semi-transparent circular markers
     if not selected_headers.empty:
-        ax['pitch'].scatter(selected_headers['y'], selected_headers['x'], 
-                           marker='o', s=200, alpha=0.5, c=selected_headers['xg'], 
+        header_scatter = ax['pitch'].scatter(selected_headers['y'], selected_headers['x'],
+                           marker='o', s=200, alpha=0.5, c=selected_headers['xg'],
                            edgecolors='w', vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
-    
+        if cbar_ref is None:
+            cbar_ref = header_scatter
+
     # HEADER GOALS: Full opacity circular markers with outline
     if not selected_headed_goals.empty:
-        ax['pitch'].scatter(selected_headed_goals['y'], selected_headed_goals['x'], 
-                           marker='o', s=200, c=selected_headed_goals['xg'], 
+        header_goals = ax['pitch'].scatter(selected_headed_goals['y'], selected_headed_goals['x'],
+                           marker='o', s=200, c=selected_headed_goals['xg'],
                            edgecolors='w', lw=2, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=2)
+        if cbar_ref is None:
+            cbar_ref = header_goals
     
     # EXTREME HIGHLIGHT: Highest xG miss with maximum color intensity
     if not highest_xg_miss.empty:
@@ -209,9 +215,9 @@ def plot_shot_xg(csv_path, filter_by='all', invert_filter=False, logo_path=None,
                            lw=2.5, vmin=-0.04, vmax=1.0, cmap=node_cmap, zorder=3)
     
     # xG COLOR SCALE: Horizontal colorbar for value reference
-    if 'p1' in locals():
+    if cbar_ref is not None:
         cb_ax = fig.add_axes([0.53, 0.107, 0.35, 0.03])
-        cbar = fig.colorbar(p1, cax=cb_ax, orientation='horizontal')
+        cbar = fig.colorbar(cbar_ref, cax=cb_ax, orientation='horizontal')
         cbar.outline.set_edgecolor('w')
         cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
     

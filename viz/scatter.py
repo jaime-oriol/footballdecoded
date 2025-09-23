@@ -335,9 +335,7 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     except:
         fig.text(0.6, 0.02, "Football Decoded", fontweight='bold', fontsize=14,
                  color="white", fontfamily=FONT_FAMILY)
-
-    plt.tight_layout()
-
+        
     # Save figure
     save_path = f'figures/{save_filename}'
     fig.savefig(save_path, dpi=300, facecolor=BACKGROUND_COLOR, bbox_inches='tight', edgecolor='none')
