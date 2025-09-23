@@ -120,12 +120,21 @@ def plot_shot_xg(csv_path, filter_by='all', invert_filter=False, logo_path=None,
             selected_shots = shots_df[shots_df['player'] == filter_by]
         comp_selected = 0  # Player-level analysis
     else:
-        return print(f"No data found for: {filter_by}")
+        player_matches = shots_df[shots_df['player'].str.contains(filter_by, case=False, na=False)]
+        if not player_matches.empty:
+            if invert_filter:
+                selected_shots = shots_df[~shots_df['player'].str.contains(filter_by, case=False, na=False)]
+            else:
+                selected_shots = player_matches
+            comp_selected = 0
+        else:
+            print(f"No data found for: {filter_by}")
+            return None
     
     # PREPARE DATA: Add computed fields for visualization logic
     selected_shots = selected_shots.copy()
     selected_shots['header_tag'] = (selected_shots['body_part'] == 'Head').astype(int)  # Header identification
-    selected_shots['goal'] = selected_shots['is_goal'].astype(int)                      # Goal flag for filtering
+    selected_shots['goal'] = selected_shots['is_goal'].fillna(0).astype(int)           # Goal flag for filtering
     
     # DATA SEGMENTATION: Separate by shot type and outcome for layered visualization
     selected_ground_shots = selected_shots[selected_shots['header_tag']==0]           # Foot shots

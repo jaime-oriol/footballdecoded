@@ -159,13 +159,13 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # Layout positioning coordinates (optimized for readability)
     y_start = 14.5      # Top position for player headers
     # Player 1 positions
-    logo1_x = 3.1      # Logo X coordinate (moved right +0.05)
+    logo1_x = 3.0      # Logo X coordinate (moved right +0.05)
     text1_x = 3.4       # Name text X coordinate
     p1_value_x = 4.1    # Statistical value X coordinate
     p1_pct_x = 4.5      # Percentile value X coordinate
     
     # Player 2 positions (when comparing two players)
-    logo2_x = 6.3       # Second player logo X (moved left to avoid overlap)
+    logo2_x = 6.2      # Second player logo X (moved left to avoid overlap)
     text2_x = 6.2       # Second player name X
     p2_value_x = 6.7    # Second player value X
     p2_pct_x = 7.1      # Second player percentile X
