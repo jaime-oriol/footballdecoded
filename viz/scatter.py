@@ -77,17 +77,12 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     y_pct_col = f"{y_metric}_pct"
 
     if x_pct_col in df.columns and y_pct_col in df.columns:
-        # NUEVA LÓGICA: Mínimo percentil 70 en ambas, luego TOP 10 por suma
-        plot_player = df[(df[x_pct_col] >= 70) & (df[y_pct_col] >= 70)]
+        # NUEVA LÓGICA: Mínimo percentil 81 en ambas, luego TOP 10 por suma
+        plot_player = df[(df[x_pct_col] >= 81) & (df[y_pct_col] >= 81)]
 
-        # Si no hay suficientes con 70+, bajar gradualmente
+        # Si no hay suficientes con 81+, bajar
         if len(plot_player) < 5:
-            plot_player = df[(df[x_pct_col] >= 65) & (df[y_pct_col] >= 65)]
-        if len(plot_player) < 5:
-            plot_player = df[(df[x_pct_col] >= 60) & (df[y_pct_col] >= 60)]
-        if len(plot_player) < 5:
-            plot_player = df[(df[x_pct_col] >= 50) & (df[y_pct_col] >= 50)]
-
+            plot_player = df[(df[x_pct_col] >= 75) & (df[y_pct_col] >= 75)]
         # Seleccionar TOP 10 por suma de percentiles
         if len(plot_player) > 0:
             plot_player_temp = plot_player.copy()
