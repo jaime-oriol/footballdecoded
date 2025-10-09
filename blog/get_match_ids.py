@@ -128,7 +128,7 @@ def get_match_ids(
     if 'WhoScored' in LEAGUE_DICT[league]:
         try:
             if verbose:
-                print("📊 Extrayendo de WhoScored...")
+                print("Extrayendo de WhoScored...")
 
             ws = WhoScored(leagues=[league], seasons=[season])
             ws_schedule = ws.read_schedule()
@@ -158,7 +158,7 @@ def get_match_ids(
     if 'Understat' in LEAGUE_DICT[league]:
         try:
             if verbose:
-                print("\n📊 Extrayendo de Understat...")
+                print("\nExtrayendo de Understat...")
 
             us = Understat(leagues=[league], seasons=[season])
             us_schedule = us.read_schedule()
@@ -200,7 +200,7 @@ def get_match_ids(
         merged['whoscored_id'] = None
     else:
         if verbose:
-            print("\n❌ No se encontraron partidos en ninguna fuente")
+            print("\nNo se encontraron partidos en ninguna fuente")
         return pd.DataFrame(columns=['date', 'home_team', 'away_team', 'whoscored_id', 'understat_id', 'league', 'season'])
 
     merged['league'] = league
@@ -210,7 +210,7 @@ def get_match_ids(
 
     if verbose:
         print(f"\n{'='*60}")
-        print(f"✅ RESUMEN:")
+        print(f"RESUMEN:")
         print(f"   Total partidos encontrados: {len(merged)}")
 
         ws_count = merged['whoscored_id'].notna().sum()
@@ -241,7 +241,7 @@ def main():
         # Guardar a CSV
         output_file = "atm_match_ids_24-25.csv"
         atm_ids.to_csv(output_file, index=False)
-        print(f"\n💾 Guardado en: {output_file}")
+        print(f"\nGuardado en: {output_file}")
 
     # Ejemplo 2: Barcelona temporada 23-24
     print("\n" + "="*60 + "\n")
