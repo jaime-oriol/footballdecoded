@@ -18,7 +18,9 @@ classifiers = [
 ]
 packages = [
     {include = "scrappers"},
-    {include = "wrappers"}
+    {include = "wrappers"},
+    {include = "viz"},
+    {include = "database"}
 ]
 
 [tool.poetry.urls]
@@ -42,9 +44,13 @@ unidecode = "^1.4.0"
 selenium = "^4.15.0"
 seleniumbase = "^4.21.0"
 # Visualization
-matplotlib = "3.7.4"
-seaborn = "0.12.2"
-plotly = "5.17.0"
+matplotlib = "^3.7.0"
+seaborn = "^0.12.0"
+plotly = "^5.17.0"
+scipy = "^1.13.0"
+shapely = "^2.0.0"
+mplsoccer = "^1.5.0"
+pillow = "^11.0.0"
 # Optional
 socceraction = {version = "1.5.3", optional = true}
 

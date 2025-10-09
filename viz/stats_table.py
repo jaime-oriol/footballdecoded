@@ -33,6 +33,38 @@ from typing import List, Tuple
 # Visual configuration consistent with FootballDecoded standards
 BACKGROUND_COLOR = '#313332'
 
+def _format_player_name(name: str, max_length: int = 17) -> str:
+    """
+    Format player name to fit in header.
+    If name is too long, use Initial + Last Name format.
+
+    Args:
+        name: Full player name (e.g., "Georges Mikautadze")
+        max_length: Maximum characters before shortening (default: 17)
+
+    Returns:
+        Formatted name (e.g., "G. Mikautadze" if too long)
+
+    Examples:
+        "Vinicius Jr" → "Vinicius Jr" (short enough)
+        "Georges Mikautadze" → "G. Mikautadze" (too long)
+        "Arnau Tenas" → "Arnau Tenas" (short enough)
+    """
+    if len(name) <= max_length:
+        return name
+
+    # Split name into parts
+    parts = name.split()
+
+    if len(parts) < 2:
+        return name  # Single name, return as is
+
+    # Format as "Initial. LastName"
+    first_initial = parts[0][0].upper()
+    last_name = ' '.join(parts[1:])  # Handle multiple last names
+
+    return f"{first_initial}. {last_name}"
+
 def create_player_analysis_complete(
     player_name: str,
     team_name: str,
@@ -172,7 +204,8 @@ def _create_large_stats_table(
     ax.axis('off')
     
     # Header with player and team - ADJUSTED positioning
-    ax.text(1.5, len(enriched_metrics) + 1.5, player_name, fontsize=15, color='white',
+    formatted_name = _format_player_name(player_name)
+    ax.text(1.5, len(enriched_metrics) + 1.5, formatted_name, fontsize=15, color='white',
             fontweight='bold', ha='left', va='center', family='DejaVu Sans')
     ax.text(1.5, len(enriched_metrics) + 1.2, team_name, fontsize=12, color='white',
             ha='left', va='center', family='DejaVu Sans')
@@ -266,7 +299,7 @@ def _create_actions_field(
     ].copy()
     
     if len(actions) == 0:
-        return None  # No data for this period
+        return _create_blank_field_file(save_path, title)
     
     # Setup pitch
     pitch = VerticalPitch(
@@ -350,7 +383,7 @@ def _create_passes_field(
     ].copy()
     
     if len(passes) == 0:
-        return None  # No data for this period
+        return _create_blank_field_file(save_path, title)
     
     # Setup pitch
     pitch = VerticalPitch(
@@ -477,3 +510,23 @@ def _create_blank_field() -> Image.Image:
     """Create blank field placeholder when no data available."""
     blank = Image.new('RGB', (500, 700), color=BACKGROUND_COLOR)
     return blank
+
+def _create_blank_field_file(save_path: str, title: str) -> str:
+    """Create blank field file when no data available."""
+    pitch = VerticalPitch(
+        pitch_color=BACKGROUND_COLOR,
+        line_color='white',
+        linewidth=2,
+        pitch_type='opta'
+    )
+    fig, ax = pitch.draw(figsize=(2.5, 3.5))
+    fig.set_facecolor(BACKGROUND_COLOR)
+    ax.set_title(title, color='white', fontsize=12, pad=3, family='DejaVu Sans')
+
+    fig.text(0.5, 0.0, "No data", ha='center', va='bottom',
+             fontsize=10, color='white', family='DejaVu Sans')
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
+    plt.close()
+    return save_path
