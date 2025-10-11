@@ -107,6 +107,7 @@ class FBref(BaseRequestsReader):
         )
         # FBref requires 7-second delays to avoid being blocked
         self.rate_limit = 7
+        self.max_delay = 3
         self.seasons = seasons  # type: ignore
         # Check if user is trying to scrape all Big 5 leagues individually
         if (
