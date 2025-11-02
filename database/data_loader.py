@@ -35,6 +35,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 from pathlib import Path
 import logging
+import warnings
+
+# Suppress HTML parsing warnings that include raw HTML content
+warnings.filterwarnings('ignore', category=UserWarning, module='lxml')
+warnings.filterwarnings('ignore', category=UserWarning, module='html5lib')
+warnings.filterwarnings('ignore', category=FutureWarning, module='pandas')
 
 # Configure logging
 logging.basicConfig(

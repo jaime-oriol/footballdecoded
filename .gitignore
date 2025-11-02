@@ -35,6 +35,11 @@ pip-log.txt
 # Data
 .ipynb_checkpoints
 
+# Conda environments
+envs/
+conda-meta/
+.conda/
+
 # Sphinx documentation
 
 # Hidden files
@@ -43,6 +48,7 @@ pip-log.txt
 # ...except these
 !.gitignore
 !.travis.yml
+!.env
 
 # Football data folders (PRIVATE)
 # viz/

@@ -1,0 +1,69 @@
+name: footballdecoded
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Python version
+  - python>=3.9,<3.13
+
+  # Core dependencies
+  - numpy>=1.24.0,<2.0.0
+  - pandas>=2.2.0,<3.0.0
+  - lxml>=4.9.3,<5.0.0
+  - html5lib>=1.1,<2.0
+  - urllib3>=1.26.0,<2.0
+  - tqdm>=4.67.1
+  - rich>=14.2.0
+
+  # Selenium and web scraping
+  - selenium>=4.15.0
+  - requests>=2.32.0
+  - beautifulsoup4>=4.13.3
+
+  # Visualization
+  - matplotlib>=3.7.0
+  - seaborn>=0.12.0
+  - plotly>=5.17.0
+  - scipy>=1.13.0
+  - shapely>=2.0.0
+  - pillow>=11.0.0
+
+  # Database
+  - sqlalchemy>=2.0.0
+  - psycopg2>=2.9.0
+  - python-dotenv>=1.0.0
+
+  # Development tools
+  - jupyter>=1.0.0
+  - ipykernel>=6.0.0
+  - pygments>=2.13.0
+  - ruff
+  - mypy
+  - pep8-naming>=0.15.0
+  - pre-commit>=4.0.0
+
+  # Testing
+  - pytest>=8.0.0
+  - pytest-mock>=3.10.0
+  - coverage>=7.0
+
+  # Documentation
+  - sphinx>=7.0.0
+  - nbsphinx>=0.9.0
+
+  # pip-only packages (not available in conda)
+  - pip
+  - pip:
+    - unidecode>=1.4.0
+    - wrapper-tls-requests>=1.1.4,<2.0.0
+    - seleniumbase>=4.21.0
+    - mplsoccer>=1.5.0
+    - socceraction==1.5.3
+    - pytest-deadfixtures>=2.2.1
+    - time-machine>=2.8.2
+    - bumpversion>=0.6.0
+    - darglint>=1.8.1
+    - pre-commit-hooks>=5.0.0
+    - furo>=2024.0.0
+    - sphinx-autobuild>=2024.0.0

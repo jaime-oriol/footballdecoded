@@ -599,11 +599,12 @@ class BaseRequestsReader(BaseReader):
                     with filepath.open(mode="wb") as fh:
                         fh.write(payload)
                 return io.BytesIO(payload)
-            except Exception:
-                logger.exception(
-                    "Error scraping %s (attempt %d/5)",
+            except Exception as e:
+                logger.error(
+                    "Error scraping %s (attempt %d/5): %s",
                     url,
                     i + 1,
+                    str(e)[:100],
                 )
                 self._session = self._init_session()
                 continue
@@ -696,12 +697,13 @@ class BaseSeleniumReader(BaseReader):
                     with filepath.open(mode="wb") as fh:
                         fh.write(response)
                 return io.BytesIO(response)
-            except Exception:
-                logger.exception(
-                    "Error scraping %s (attempt %d/5, retry in %ds)",
+            except Exception as e:
+                logger.error(
+                    "Error scraping %s (attempt %d/5, retry in %ds): %s",
                     url,
                     i + 1,
                     i * 10,
+                    str(e)[:100],
                 )
                 time.sleep(i * 10)
                 self._driver = self._init_webdriver()

@@ -82,8 +82,8 @@ FootballDecoded/
 │   └── settings.local.json
 ├── .env                   # Environment variables (git-ignored)
 ├── .gitignore            # Git ignore patterns
-├── pyproject.toml        # Poetry dependencies and project metadata
-├── poetry.lock           # Locked dependency versions
+├── environment.yml       # Conda environment specification
+├── CONDA_SETUP.md        # Complete Conda installation and usage guide
 ├── Makefile             # Common tasks automation
 ├── LICENSE.rst          # Project license
 ├── README.rst           # Project overview (if exists)
@@ -292,21 +292,51 @@ All league IDs standardized in `_config.py`:
 
 ## Development Tools
 
-### Package Management (Poetry)
+### Environment Management (Conda)
+
+**Instalación inicial**: Ver `CONDA_SETUP.md` para guía completa de instalación de Anaconda.
 
 ```bash
-# Install dependencies
-poetry install
+# Crear el entorno (primera vez)
+conda env create -f environment.yml
 
-# Add new package
-poetry add package-name
+# Activar el entorno
+conda activate footballdecoded
 
-# Development dependency
-poetry add --dev pytest
+# Desactivar el entorno
+conda deactivate
 
-# Update dependencies
-poetry update
+# Actualizar entorno tras cambios en environment.yml
+conda env update -f environment.yml --prune
+
+# Ver paquetes instalados
+conda list
+
+# Instalar nuevo paquete
+conda install nombre_paquete
+
+# Instalar paquete específico (si no está en conda)
+pip install nombre_paquete
+
+# Actualizar paquete
+conda update nombre_paquete
+
+# Exportar entorno
+conda env export > environment_backup.yml
+
+# Eliminar entorno
+conda env remove -n footballdecoded
 ```
+
+**Workflow diario**:
+1. Activar entorno: `conda activate footballdecoded`
+2. Trabajar en el proyecto
+3. Desactivar al terminar: `conda deactivate`
+
+**Nota importante**: Siempre activa el entorno antes de trabajar. Verás `(footballdecoded)` en tu prompt.
+
+Para más detalles, troubleshooting y comandos avanzados, consulta `CONDA_SETUP.md`.
+
 ### Database Tasks
 
 ```bash
