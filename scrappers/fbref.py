@@ -6,6 +6,8 @@ special cases like "Big 5 European Leagues Combined" for efficiency.
 """
 
 import warnings
+import sys
+import os
 from datetime import datetime, timezone
 from functools import reduce
 from pathlib import Path
@@ -14,6 +16,15 @@ from typing import Callable, Optional, Union
 # Third-party imports
 import pandas as pd
 from lxml import etree, html
+
+# Suppress lxml HTML parsing errors that print raw HTML to stderr
+# lxml is a C library and prints directly to stderr, bypassing Python's warning system
+import contextlib
+import io
+from functools import wraps
+
+# Set environment variable to disable lxml error logging before importing
+os.environ['LIBXML_DEBUG_XPATH'] = '0'
 
 from ._common import (
     BaseRequestsReader,
@@ -1237,7 +1248,9 @@ def _parse_table(html_table: html.HtmlElement) -> pd.DataFrame:
         elem.getparent().remove(elem)
     
     # Convert cleaned HTML to DataFrame
-    (df_table,) = pd.read_html(html.tostring(html_table), flavor="lxml")
+    # Suppress lxml stderr output (HTML parsing errors)
+    with contextlib.redirect_stderr(io.StringIO()):
+        (df_table,) = pd.read_html(html.tostring(html_table), flavor="lxml")
     return df_table.convert_dtypes()
 
 

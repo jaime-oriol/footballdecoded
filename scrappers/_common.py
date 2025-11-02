@@ -17,7 +17,21 @@ from typing import IO, Callable, Optional, Union
 import numpy as np
 import pandas as pd
 import seleniumbase as sb
+
+# Silence verbose tls_requests output during import and usage
+import sys
+_original_stdout = sys.stdout
+sys.stdout = io.StringIO()  # Temporarily redirect stdout
 import tls_requests
+sys.stdout = _original_stdout  # Restore stdout
+
+# Monkey-patch print in tls_requests library module to prevent future prints
+try:
+    import tls_requests.models.libraries as _tls_lib
+    _tls_lib.print = lambda *args, **kwargs: None
+except (ImportError, AttributeError):
+    pass  # If module structure changes, silently continue
+
 from dateutil.relativedelta import relativedelta
 from lxml.etree import _Element
 from selenium.common.exceptions import JavascriptException, WebDriverException

@@ -49,6 +49,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress verbose logging from third-party libraries
+logging.getLogger('tls_requests').setLevel(logging.CRITICAL)
+logging.getLogger('wrapper_tls_requests').setLevel(logging.CRITICAL)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
                      understat_get_player, understat_get_team)
