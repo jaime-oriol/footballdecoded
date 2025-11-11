@@ -1,0 +1,89 @@
+info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
+match_metadata,match_id,Rayo Vallecano_vs_Real Madrid_2025-11-09,,,,,,,,
+match_metadata,home_team,Rayo Vallecano,,,,,,,,
+match_metadata,away_team,Real Madrid,,,,,,,,
+match_metadata,match_date,2025-11-09,,,,,,,,
+match_metadata,league,ESP-La Liga,,,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1780,,,,,,,,
+match_metadata,match_duration_minutes,95,,,,,,,,
+team_stats,total_events,836,Rayo Vallecano,836.0,,,,,,
+team_stats,possession_pct,47.0,Rayo Vallecano,47.0,,,,,,
+team_stats,passes_attempted,417,Rayo Vallecano,417.0,,,,,,
+team_stats,passes_completed,336,Rayo Vallecano,336.0,,,,,,
+team_stats,pass_accuracy,80.6,Rayo Vallecano,80.6,,,,,,
+team_stats,xthreat_total,17.696,Rayo Vallecano,17.696,,,,,,
+team_stats,progressive_actions,73,Rayo Vallecano,73.0,,,,,,
+team_stats,box_entries,14,Rayo Vallecano,14.0,,,,,,
+team_stats,shots,13,Rayo Vallecano,13.0,,,,,,
+team_stats,xg_total,1.61,Rayo Vallecano,1.61,,,,,,
+team_stats,total_events,944,Real Madrid,944.0,,,,,,
+team_stats,possession_pct,53.0,Real Madrid,53.0,,,,,,
+team_stats,passes_attempted,497,Real Madrid,497.0,,,,,,
+team_stats,passes_completed,414,Real Madrid,414.0,,,,,,
+team_stats,pass_accuracy,83.3,Real Madrid,83.3,,,,,,
+team_stats,xthreat_total,22.537,Real Madrid,22.537,,,,,,
+team_stats,progressive_actions,81,Real Madrid,81.0,,,,,,
+team_stats,box_entries,20,Real Madrid,20.0,,,,,,
+team_stats,shots,21,Real Madrid,21.0,,,,,,
+team_stats,xg_total,0.68,Real Madrid,0.68,,,,,,
+player_participation,player_activity,Pathé Ciss,Rayo Vallecano,86.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Pep Chavarría,Rayo Vallecano,105.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Álvaro García,Rayo Vallecano,40.0,0.0,82.0,82.0,,,
+player_participation,player_activity,Nobel Mendy,Rayo Vallecano,88.0,1.0,93.0,92.0,,,
+player_participation,player_activity,Isi Palazón,Rayo Vallecano,49.0,1.0,70.0,69.0,,,
+player_participation,player_activity,Andrei Ratiu,Rayo Vallecano,90.0,1.0,93.0,92.0,,,
+player_participation,player_activity,Unai López,Rayo Vallecano,89.0,1.0,82.0,81.0,,,
+player_participation,player_activity,Augusto Batalla,Rayo Vallecano,75.0,2.0,95.0,93.0,,,
+player_participation,player_activity,Florian Lejeune,Rayo Vallecano,44.0,2.0,88.0,86.0,,,
+player_participation,player_activity,Pedro Díaz,Rayo Vallecano,26.0,3.0,26.0,23.0,,,
+player_participation,player_activity,Jorge de Frutos,Rayo Vallecano,34.0,3.0,70.0,67.0,,,
+player_participation,player_activity,Pacha Espino,Rayo Vallecano,55.0,26.0,92.0,66.0,,,
+player_participation,player_activity,Fran Pérez,Rayo Vallecano,21.0,70.0,91.0,21.0,,,
+player_participation,player_activity,Óscar Valentín,Rayo Vallecano,15.0,70.0,94.0,24.0,,,
+player_participation,player_activity,Alemão,Rayo Vallecano,2.0,82.0,93.0,11.0,,,
+player_participation,player_activity,Gerard Gumbau,Rayo Vallecano,9.0,82.0,92.0,10.0,,,
+player_participation,player_activity,Kylian Mbappé,Real Madrid,36.0,0.0,91.0,91.0,,,
+player_participation,player_activity,Thibaut Courtois,Real Madrid,82.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Dean Huijsen,Real Madrid,45.0,0.0,48.0,48.0,,,
+player_participation,player_activity,Raúl Asencio,Real Madrid,93.0,0.0,90.0,90.0,,,
+player_participation,player_activity,Federico Valverde,Real Madrid,100.0,0.0,82.0,82.0,,,
+player_participation,player_activity,Arda Güler,Real Madrid,111.0,0.0,94.0,94.0,,,
+player_participation,player_activity,Álvaro Carreras,Real Madrid,103.0,1.0,91.0,90.0,,,
+player_participation,player_activity,Brahim Díaz,Real Madrid,46.0,1.0,70.0,69.0,,,
+player_participation,player_activity,Eduardo Camavinga,Real Madrid,68.0,2.0,78.0,76.0,,,
+player_participation,player_activity,Vinícius Júnior,Real Madrid,81.0,3.0,91.0,88.0,,,
+player_participation,player_activity,Jude Bellingham,Real Madrid,72.0,3.0,94.0,91.0,,,
+player_participation,player_activity,Éder Militão,Real Madrid,35.0,45.0,92.0,47.0,,,
+player_participation,player_activity,Dani Ceballos,Real Madrid,43.0,70.0,93.0,23.0,,,
+player_participation,player_activity,Rodrygo,Real Madrid,9.0,78.0,84.0,6.0,,,
+player_participation,player_activity,Trent Alexander-Arnold,Real Madrid,12.0,82.0,92.0,10.0,,,
+timeline,key_event,Card - Andrei Ratiu,Rayo Vallecano,14.0,,,,Card,14.0,FirstHalf
+timeline,key_event,SubstitutionOff - Pedro Díaz,Rayo Vallecano,26.0,,,,SubstitutionOff,26.0,FirstHalf
+timeline,key_event,SubstitutionOn - Pacha Espino,Rayo Vallecano,26.0,,,,SubstitutionOn,26.0,FirstHalf
+timeline,key_event,Card - Álvaro García,Rayo Vallecano,32.0,,,,Card,32.0,FirstHalf
+timeline,key_event,Card - Dean Huijsen,Real Madrid,35.0,,,,Card,35.0,FirstHalf
+timeline,key_event,Card - Brahim Díaz,Real Madrid,43.0,,,,Card,43.0,FirstHalf
+timeline,key_event,SubstitutionOff - Dean Huijsen,Real Madrid,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Éder Militão,Real Madrid,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,Card - Jorge de Frutos,Rayo Vallecano,47.0,,,,Card,47.0,FirstHalf
+timeline,key_event,SubstitutionOff - Isi Palazón,Rayo Vallecano,70.0,,,,SubstitutionOff,70.0,SecondHalf
+timeline,key_event,SubstitutionOn - Fran Pérez,Rayo Vallecano,70.0,,,,SubstitutionOn,70.0,SecondHalf
+timeline,key_event,SubstitutionOff - Brahim Díaz,Real Madrid,70.0,,,,SubstitutionOff,70.0,SecondHalf
+timeline,key_event,SubstitutionOn - Dani Ceballos,Real Madrid,70.0,,,,SubstitutionOn,70.0,SecondHalf
+timeline,key_event,SubstitutionOff - Jorge de Frutos,Rayo Vallecano,70.0,,,,SubstitutionOff,70.0,SecondHalf
+timeline,key_event,SubstitutionOn - Óscar Valentín,Rayo Vallecano,70.0,,,,SubstitutionOn,70.0,SecondHalf
+timeline,key_event,SubstitutionOff - Eduardo Camavinga,Real Madrid,78.0,,,,SubstitutionOff,78.0,SecondHalf
+timeline,key_event,SubstitutionOn - Rodrygo,Real Madrid,78.0,,,,SubstitutionOn,78.0,SecondHalf
+timeline,key_event,SubstitutionOff - Federico Valverde,Real Madrid,82.0,,,,SubstitutionOff,82.0,SecondHalf
+timeline,key_event,SubstitutionOn - Trent Alexander-Arnold,Real Madrid,82.0,,,,SubstitutionOn,82.0,SecondHalf
+timeline,key_event,SubstitutionOff - Álvaro García,Rayo Vallecano,82.0,,,,SubstitutionOff,82.0,SecondHalf
+timeline,key_event,SubstitutionOn - Alemão,Rayo Vallecano,82.0,,,,SubstitutionOn,82.0,SecondHalf
+timeline,key_event,SubstitutionOff - Unai López,Rayo Vallecano,82.0,,,,SubstitutionOff,82.0,SecondHalf
+timeline,key_event,SubstitutionOn - Gerard Gumbau,Rayo Vallecano,82.0,,,,SubstitutionOn,82.0,SecondHalf
+data_quality,events_with_coordinates,1780,,1780.0,,,,,,
+data_quality,events_with_xthreat,533,,533.0,,,,,,
+data_quality,events_with_outcome,1780,,1780.0,,,,,,
+data_quality,successful_events,1448,,1448.0,,,,,,
+data_quality,unique_players,31,,31.0,,,,,,
+data_quality,periods_played,4,,4.0,,,,,,

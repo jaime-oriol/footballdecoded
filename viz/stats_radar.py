@@ -172,16 +172,19 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     
     # PLAYER 1 HEADER: Logo and identification
     team1_name = p1.get('team') or p1.get('team_name', '')
-    if team_logos and team1_name in team_logos:
+    player1_id = p1.get('unique_player_id', '')
+    # Try player ID first, then team name (for same-team comparisons)
+    logo_key = player1_id if (team_logos and player1_id in team_logos) else team1_name
+    if team_logos and logo_key in team_logos:
         try:
-            logo = Image.open(team_logos[team1_name])
+            logo = Image.open(team_logos[logo_key])
             # Positioning: convert layout coords to figure fractions
             logo_ax = fig.add_axes([logo1_x/10, (y_start-0.8)/15, 0.08, 0.08])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except Exception as e:
-            print(f"Error cargando logo para {team1_name}: {e}")
-            print(f"Ruta: {team_logos[team1_name]}")  # Graceful failure if logo unavailable
+            print(f"Error cargando logo para {logo_key}: {e}")
+            print(f"Ruta: {team_logos[logo_key]}")  # Graceful failure if logo unavailable
     
     # Player 1 name and context
     name1 = p1.get('player_name') or p1.get('team_name', 'Unknown')
@@ -194,15 +197,18 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     # PLAYER 2 HEADER: Logo and identification (only show if P2 exists)
     if p2 is not None:
         team2_name = p2.get('team') or p2.get('team_name', '')
-        if team_logos and team2_name in team_logos:
+        player2_id = p2.get('unique_player_id', '')
+        # Try player ID first, then team name (for same-team comparisons)
+        logo_key2 = player2_id if (team_logos and player2_id in team_logos) else team2_name
+        if team_logos and logo_key2 in team_logos:
             try:
-                logo = Image.open(team_logos[team2_name])
+                logo = Image.open(team_logos[logo_key2])
                 logo_ax = fig.add_axes([logo2_x/10, (y_start-0.8)/15, 0.08, 0.08])
                 logo_ax.imshow(logo)
                 logo_ax.axis('off')
             except Exception as e:
-                print(f"Error cargando logo para {team2_name}: {e}")
-                print(f"Ruta: {team_logos[team2_name]}")  # Graceful failure if logo unavailable
+                print(f"Error cargando logo para {logo_key2}: {e}")
+                print(f"Ruta: {team_logos[logo_key2]}")  # Graceful failure if logo unavailable
         
         # Player 2 name and context
         name2 = p2.get('player_name') or p2.get('team_name', 'Unknown')
