@@ -197,7 +197,7 @@ class PlayerSimilarity:
         df_results = pd.merge(
             df_scores,
             self.embedding_df[['unique_player_id', 'player_name', 'team',
-                              'league', 'position']],
+                              'league', 'season', 'position']],
             left_on='idx',
             right_index=True
         )
