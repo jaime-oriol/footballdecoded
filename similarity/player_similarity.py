@@ -246,20 +246,26 @@ class PlayerSimilarity:
         """
         # Obtener features (excluir metadata)
         metadata_cols = ['unique_player_id', 'player_name', 'team', 'league',
-                        'season', 'position', 'is_outlier']
+                        'season', 'position', 'age', 'is_outlier']
         feature_cols = [col for col in self.feature_df.columns
                        if col not in metadata_cols]
 
         # Seleccionar top_k features por varianza (más discriminativas)
         if not hasattr(self, '_top_features'):
-            variances = self.feature_df[feature_cols].var()
-            self._top_features = variances.nlargest(top_k_features).index.tolist()
+            # Filtrar solo columnas numéricas
+            numeric_feature_cols = self.feature_df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
+            if len(numeric_feature_cols) == 0:
+                return 0.0
+            variances = self.feature_df[numeric_feature_cols].var()
+            self._top_features = variances.nlargest(min(top_k_features, len(numeric_feature_cols))).index.tolist()
 
         # Vectores features
         vec1 = self.feature_df.loc[idx1, self._top_features].values
         vec2 = self.feature_df.loc[idx2, self._top_features].values
 
-        # Manejar NaN
+        # Convertir a float y manejar NaN
+        vec1 = pd.to_numeric(vec1, errors='coerce')
+        vec2 = pd.to_numeric(vec2, errors='coerce')
         mask = ~(np.isnan(vec1) | np.isnan(vec2))
         if mask.sum() < 5:  # Muy pocos features válidos
             return 0.0
@@ -574,7 +580,7 @@ class PlayerSimilarity:
 
         # Análisis features
         metadata_cols = ['unique_player_id', 'player_name', 'team', 'league',
-                        'season', 'position', 'is_outlier']
+                        'season', 'position', 'age', 'is_outlier']
         feature_cols = [col for col in self.feature_df.columns
                        if col not in metadata_cols]
 

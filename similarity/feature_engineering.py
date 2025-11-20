@@ -136,7 +136,7 @@ class FeatureEngineer:
 
         # Separar metadata de features numéricas
         metadata_cols = ['unique_player_id', 'player_name', 'team', 'league',
-                        'season', 'position', 'is_outlier']
+                        'season', 'position', 'age', 'is_outlier']
         feature_cols = [col for col in df.columns if col not in metadata_cols]
 
         # Excluir métricas portero si especificado

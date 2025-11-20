@@ -121,7 +121,7 @@ class DataPreparator:
             query_parts.append(f"AND position LIKE '{position_filter}%'")
 
         if max_age:
-            query_parts.append(f"AND CAST(age AS INTEGER) <= {max_age}")
+            query_parts.append(f"AND (age IS NULL OR CAST(age AS INTEGER) <= {max_age})")
 
         query_parts.append(f"ORDER BY {league_col}, team, player_name")
 
@@ -147,6 +147,28 @@ class DataPreparator:
         logger.info(f"Loaded {len(self.df_raw)} players matching criteria")
 
         return self.df_raw
+
+    def set_raw_data(self, df: pd.DataFrame) -> None:
+        """
+        Establece df_raw manualmente con un DataFrame concatenado.
+
+        Util cuando se cargan multiples temporadas por separado y se
+        necesita combinarlas antes de procesar.
+
+        Parameters:
+            df: DataFrame concatenado con estructura compatible
+
+        Raises:
+            ValueError: Si el DataFrame no tiene columnas requeridas
+        """
+        required_cols = ['unique_player_id', 'player_name', 'fbref_metrics']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+
+        if missing_cols:
+            raise ValueError(f"DataFrame must contain columns: {missing_cols}")
+
+        self.df_raw = df.copy()
+        logger.info(f"Raw data manually set with {len(self.df_raw)} players")
 
     def extract_all_metrics(self) -> pd.DataFrame:
         """
@@ -203,6 +225,11 @@ class DataPreparator:
             fbref_per90,
             understat_per90
         ], axis=1)
+
+        # Convertir age a numérico para evitar errores de tipo
+        if 'age' in self.df_clean.columns:
+            self.df_clean['age'] = pd.to_numeric(self.df_clean['age'], errors='coerce')
+            logger.debug(f"Converted 'age' column to numeric type")
 
         logger.info(f"Final DataFrame: {self.df_clean.shape[0]} players, "
                    f"{self.df_clean.shape[1]} total columns")
@@ -338,15 +365,20 @@ class DataPreparator:
         numeric_cols = [col for col in self.df_clean.columns
                        if col not in metadata_cols]
 
+        # Diagnostico inicial
+        logger.info(f"Input shape: {self.df_clean.shape} ({len(self.df_clean)} rows, {len(numeric_cols)} numeric cols)")
+
         # Eliminar columnas con demasiados missing
         missing_pct = self.df_clean[numeric_cols].isna().sum() / len(self.df_clean)
         cols_to_keep = missing_pct[missing_pct <= max_missing_pct].index.tolist()
         cols_removed = len(numeric_cols) - len(cols_to_keep)
 
         if cols_removed > 0:
-            logger.info(f"Removed {cols_removed} columns with >{max_missing_pct*100}% missing")
+            logger.warning(f"Removed {cols_removed} columns with >{max_missing_pct*100}% missing")
+            logger.info(f"Numeric columns remaining: {len(cols_to_keep)}")
 
         df_result = self.df_clean[metadata_cols + cols_to_keep].copy()
+        logger.info(f"Output shape: {df_result.shape}")
 
         # Aplicar estrategia imputation
         if strategy in ['median_by_position', 'mean_by_position']:
@@ -414,6 +446,15 @@ class DataPreparator:
                         'season', 'position']
         numeric_cols = [col for col in self.df_clean.columns
                        if col not in metadata_cols]
+
+        # Validacion critica
+        if len(self.df_clean) == 0:
+            raise ValueError("Cannot detect outliers: DataFrame is empty (0 rows)")
+
+        if len(numeric_cols) == 0:
+            raise ValueError("Cannot detect outliers: No numeric columns found")
+
+        logger.info(f"Processing {len(self.df_clean)} players with {len(numeric_cols)} numeric features")
 
         X = self.df_clean[numeric_cols].values
 
