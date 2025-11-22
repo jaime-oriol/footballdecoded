@@ -1,92 +1,79 @@
 info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
-match_metadata,match_id,Burnley_vs_Arsenal_2025-11-01 15:00:00,,,,,,,,
-match_metadata,home_team,Burnley,,,,,,,,
+match_metadata,match_id,Sunderland_vs_Arsenal_2025-11-08 15:00:00,,,,,,,,
+match_metadata,home_team,Sunderland,,,,,,,,
 match_metadata,away_team,Arsenal,,,,,,,,
-match_metadata,match_date,2025-11-01 15:00:00,,,,,,,,
+match_metadata,match_date,2025-11-08 15:00:00,,,,,,,,
 match_metadata,league,ENG-Premier League,,,,,,,,
 match_metadata,season,25-26,,,,,,,,
-match_metadata,total_events,1843,,,,,,,,
-match_metadata,match_duration_minutes,96,,,,,,,,
-team_stats,total_events,842,Burnley,842.0,,,,,,
-team_stats,possession_pct,45.7,Burnley,45.7,,,,,,
-team_stats,passes_attempted,462,Burnley,462.0,,,,,,
-team_stats,passes_completed,365,Burnley,365.0,,,,,,
-team_stats,pass_accuracy,79.0,Burnley,79.0,,,,,,
-team_stats,xthreat_total,16.947,Burnley,16.947,,,,,,
-team_stats,progressive_actions,49,Burnley,49.0,,,,,,
-team_stats,box_entries,6,Burnley,6.0,,,,,,
-team_stats,shots,3,Burnley,3.0,,,,,,
-team_stats,xg_total,0.68,Burnley,0.68,,,,,,
-team_stats,total_events,1001,Arsenal,1001.0,,,,,,
-team_stats,possession_pct,54.3,Arsenal,54.3,,,,,,
-team_stats,passes_attempted,533,Arsenal,533.0,,,,,,
-team_stats,passes_completed,448,Arsenal,448.0,,,,,,
-team_stats,pass_accuracy,84.1,Arsenal,84.1,,,,,,
-team_stats,xthreat_total,24.652,Arsenal,24.652,,,,,,
-team_stats,progressive_actions,58,Arsenal,58.0,,,,,,
-team_stats,box_entries,12,Arsenal,12.0,,,,,,
-team_stats,shots,12,Arsenal,12.0,,,,,,
-team_stats,xg_total,2.52,Arsenal,2.52,,,,,,
-player_participation,player_activity,Kyle Walker,Burnley,89.0,0.0,93.0,93.0,,,
-player_participation,player_activity,Martin Dúbravka,Burnley,60.0,0.0,91.0,91.0,,,
-player_participation,player_activity,Josh Cullen,Burnley,55.0,0.0,81.0,81.0,,,
-player_participation,player_activity,Axel Tuanzebe,Burnley,99.0,0.0,92.0,92.0,,,
-player_participation,player_activity,Zian Flemming,Burnley,47.0,1.0,75.0,74.0,,,
-player_participation,player_activity,Florentino,Burnley,89.0,2.0,92.0,90.0,,,
-player_participation,player_activity,Quilindschy Hartman,Burnley,76.0,3.0,91.0,88.0,,,
-player_participation,player_activity,Jaidon Anthony,Burnley,42.0,5.0,61.0,56.0,,,
-player_participation,player_activity,Maxime Estève,Burnley,78.0,5.0,91.0,86.0,,,
-player_participation,player_activity,Josh Laurent,Burnley,58.0,5.0,75.0,70.0,,,
-player_participation,player_activity,Lesley Ugochukwu,Burnley,32.0,8.0,61.0,53.0,,,
-player_participation,player_activity,Jacob Bruun Larsen,Burnley,31.0,61.0,94.0,33.0,,,
-player_participation,player_activity,Loum Tchaouna,Burnley,26.0,61.0,89.0,28.0,,,
-player_participation,player_activity,Armando Broja,Burnley,7.0,75.0,85.0,10.0,,,
-player_participation,player_activity,Hannibal Mejbri,Burnley,33.0,75.0,96.0,21.0,,,
-player_participation,player_activity,Marcus Edwards,Burnley,11.0,81.0,96.0,15.0,,,
-player_participation,player_activity,Eberechi Eze,Arsenal,51.0,0.0,71.0,71.0,,,
-player_participation,player_activity,David Raya,Arsenal,49.0,0.0,91.0,91.0,,,
-player_participation,player_activity,Martín Zubimendi,Arsenal,111.0,0.0,76.0,76.0,,,
-player_participation,player_activity,Gabriel Magalhães,Arsenal,103.0,0.0,94.0,94.0,,,
-player_participation,player_activity,Bukayo Saka,Arsenal,47.0,0.0,93.0,93.0,,,
-player_participation,player_activity,Riccardo Calafiori,Arsenal,77.0,2.0,71.0,69.0,,,
-player_participation,player_activity,Leandro Trossard,Arsenal,76.0,2.0,90.0,88.0,,,
-player_participation,player_activity,Viktor Gyökeres,Arsenal,26.0,2.0,45.0,43.0,,,
-player_participation,player_activity,William Saliba,Arsenal,143.0,2.0,91.0,89.0,,,
-player_participation,player_activity,Declan Rice,Arsenal,141.0,3.0,94.0,91.0,,,
-player_participation,player_activity,Jurriën Timber,Arsenal,74.0,3.0,88.0,85.0,,,
-player_participation,player_activity,Mikel Merino,Arsenal,31.0,45.0,91.0,46.0,,,
-player_participation,player_activity,Ethan Nwaneri,Arsenal,21.0,71.0,93.0,22.0,,,
-player_participation,player_activity,Piero Hincapié,Arsenal,17.0,71.0,87.0,16.0,,,
-player_participation,player_activity,Christian Nørgaard,Arsenal,20.0,76.0,96.0,20.0,,,
-player_participation,player_activity,Myles Lewis-Skelly,Arsenal,6.0,90.0,96.0,6.0,,,
-timeline,key_event,Goal - Viktor Gyökeres,Arsenal,13.0,,,,Goal,13.0,FirstHalf
-timeline,key_event,Card - Josh Cullen,Burnley,26.0,,,,Card,26.0,FirstHalf
-timeline,key_event,Goal - Declan Rice,Arsenal,34.0,,,,Goal,34.0,FirstHalf
-timeline,key_event,SubstitutionOff - Viktor Gyökeres,Arsenal,45.0,,,,SubstitutionOff,45.0,SecondHalf
-timeline,key_event,SubstitutionOn - Mikel Merino,Arsenal,45.0,,,,SubstitutionOn,45.0,SecondHalf
-timeline,key_event,Card - Zian Flemming,Burnley,54.0,,,,Card,54.0,SecondHalf
-timeline,key_event,SubstitutionOff - Lesley Ugochukwu,Burnley,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Jacob Bruun Larsen,Burnley,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Jaidon Anthony,Burnley,61.0,,,,SubstitutionOff,61.0,SecondHalf
-timeline,key_event,SubstitutionOn - Loum Tchaouna,Burnley,61.0,,,,SubstitutionOn,61.0,SecondHalf
-timeline,key_event,SubstitutionOff - Eberechi Eze,Arsenal,71.0,,,,SubstitutionOff,71.0,SecondHalf
-timeline,key_event,SubstitutionOn - Ethan Nwaneri,Arsenal,71.0,,,,SubstitutionOn,71.0,SecondHalf
-timeline,key_event,SubstitutionOff - Riccardo Calafiori,Arsenal,71.0,,,,SubstitutionOff,71.0,SecondHalf
-timeline,key_event,SubstitutionOn - Piero Hincapié,Arsenal,71.0,,,,SubstitutionOn,71.0,SecondHalf
-timeline,key_event,SubstitutionOff - Zian Flemming,Burnley,75.0,,,,SubstitutionOff,75.0,SecondHalf
-timeline,key_event,SubstitutionOn - Armando Broja,Burnley,75.0,,,,SubstitutionOn,75.0,SecondHalf
-timeline,key_event,SubstitutionOff - Josh Laurent,Burnley,75.0,,,,SubstitutionOff,75.0,SecondHalf
-timeline,key_event,SubstitutionOn - Hannibal Mejbri,Burnley,75.0,,,,SubstitutionOn,75.0,SecondHalf
-timeline,key_event,SubstitutionOff - Martín Zubimendi,Arsenal,76.0,,,,SubstitutionOff,76.0,SecondHalf
-timeline,key_event,SubstitutionOn - Christian Nørgaard,Arsenal,76.0,,,,SubstitutionOn,76.0,SecondHalf
-timeline,key_event,SubstitutionOff - Josh Cullen,Burnley,81.0,,,,SubstitutionOff,81.0,SecondHalf
-timeline,key_event,SubstitutionOn - Marcus Edwards,Burnley,81.0,,,,SubstitutionOn,81.0,SecondHalf
-timeline,key_event,SubstitutionOff - Leandro Trossard,Arsenal,90.0,,,,SubstitutionOff,90.0,SecondHalf
-timeline,key_event,SubstitutionOn - Myles Lewis-Skelly,Arsenal,90.0,,,,SubstitutionOn,90.0,SecondHalf
-timeline,key_event,Card - Gabriel Magalhães,Arsenal,94.0,,,,Card,94.0,SecondHalf
-data_quality,events_with_coordinates,1843,,1843.0,,,,,,
-data_quality,events_with_xthreat,608,,608.0,,,,,,
-data_quality,events_with_outcome,1843,,1843.0,,,,,,
-data_quality,successful_events,1517,,1517.0,,,,,,
-data_quality,unique_players,32,,32.0,,,,,,
+match_metadata,total_events,1671,,,,,,,,
+match_metadata,match_duration_minutes,98,,,,,,,,
+team_stats,total_events,684,Sunderland,684.0,,,,,,
+team_stats,possession_pct,40.9,Sunderland,40.9,,,,,,
+team_stats,passes_attempted,318,Sunderland,318.0,,,,,,
+team_stats,passes_completed,235,Sunderland,235.0,,,,,,
+team_stats,pass_accuracy,73.9,Sunderland,73.9,,,,,,
+team_stats,xthreat_total,12.502,Sunderland,12.502,,,,,,
+team_stats,progressive_actions,45,Sunderland,45.0,,,,,,
+team_stats,box_entries,13,Sunderland,13.0,,,,,,
+team_stats,shots,6,Sunderland,6.0,,,,,,
+team_stats,xg_total,1.2,Sunderland,1.2,,,,,,
+team_stats,total_events,987,Arsenal,987.0,,,,,,
+team_stats,possession_pct,59.1,Arsenal,59.1,,,,,,
+team_stats,passes_attempted,574,Arsenal,574.0,,,,,,
+team_stats,passes_completed,484,Arsenal,484.0,,,,,,
+team_stats,pass_accuracy,84.3,Arsenal,84.3,,,,,,
+team_stats,xthreat_total,21.446,Arsenal,21.446,,,,,,
+team_stats,progressive_actions,61,Arsenal,61.0,,,,,,
+team_stats,box_entries,23,Arsenal,23.0,,,,,,
+team_stats,shots,17,Arsenal,17.0,,,,,,
+team_stats,xg_total,2.59,Arsenal,2.59,,,,,,
+player_participation,player_activity,Granit Xhaka,Sunderland,79.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Robin Roefs,Sunderland,72.0,0.0,98.0,98.0,,,
+player_participation,player_activity,Trai Hume,Sunderland,39.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Noah Sadiki,Sunderland,57.0,0.0,93.0,93.0,,,
+player_participation,player_activity,Enzo Le Fée,Sunderland,55.0,0.0,63.0,63.0,,,
+player_participation,player_activity,Reinildo Mandava,Sunderland,67.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Lutsharel Geertruida,Sunderland,61.0,0.0,86.0,86.0,,,
+player_participation,player_activity,Dan Ballard,Sunderland,68.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Nordi Mukiele,Sunderland,67.0,2.0,97.0,95.0,,,
+player_participation,player_activity,Bertrand Traoré,Sunderland,27.0,2.0,63.0,61.0,,,
+player_participation,player_activity,Wilson Isidor,Sunderland,36.0,5.0,62.0,57.0,,,
+player_participation,player_activity,Brian Brobbey,Sunderland,13.0,62.0,97.0,35.0,,,
+player_participation,player_activity,Simon Adingra,Sunderland,21.0,63.0,97.0,34.0,,,
+player_participation,player_activity,Chemsdine Talbi,Sunderland,13.0,63.0,97.0,34.0,,,
+player_participation,player_activity,Eliezer Mayenda,Sunderland,2.0,86.0,92.0,6.0,,,
+player_participation,player_activity,Riccardo Calafiori,Arsenal,74.0,0.0,96.0,96.0,,,
+player_participation,player_activity,Martín Zubimendi,Arsenal,128.0,0.0,96.0,96.0,,,
+player_participation,player_activity,Gabriel Magalhães,Arsenal,108.0,1.0,97.0,96.0,,,
+player_participation,player_activity,David Raya,Arsenal,27.0,1.0,95.0,94.0,,,
+player_participation,player_activity,William Saliba,Arsenal,125.0,2.0,98.0,96.0,,,
+player_participation,player_activity,Bukayo Saka,Arsenal,94.0,2.0,97.0,95.0,,,
+player_participation,player_activity,Declan Rice,Arsenal,118.0,2.0,98.0,96.0,,,
+player_participation,player_activity,Jurriën Timber,Arsenal,93.0,2.0,95.0,93.0,,,
+player_participation,player_activity,Mikel Merino,Arsenal,69.0,3.0,98.0,95.0,,,
+player_participation,player_activity,Leandro Trossard,Arsenal,76.0,3.0,96.0,93.0,,,
+player_participation,player_activity,Eberechi Eze,Arsenal,60.0,5.0,87.0,82.0,,,
+player_participation,player_activity,Cristhian Mosquera,Arsenal,8.0,87.0,98.0,11.0,,,
+timeline,key_event,Card - Martín Zubimendi,Arsenal,35.0,,,,Card,35.0,FirstHalf
+timeline,key_event,Goal - Dan Ballard,Sunderland,35.0,,,,Goal,35.0,FirstHalf
+timeline,key_event,Card - Granit Xhaka,Sunderland,45.0,,,,Card,45.0,FirstHalf
+timeline,key_event,Goal - Bukayo Saka,Arsenal,53.0,,,,Goal,53.0,SecondHalf
+timeline,key_event,SubstitutionOff - Wilson Isidor,Sunderland,62.0,,,,SubstitutionOff,62.0,SecondHalf
+timeline,key_event,SubstitutionOn - Brian Brobbey,Sunderland,62.0,,,,SubstitutionOn,62.0,SecondHalf
+timeline,key_event,SubstitutionOff - Enzo Le Fée,Sunderland,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Simon Adingra,Sunderland,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,SubstitutionOff - Bertrand Traoré,Sunderland,63.0,,,,SubstitutionOff,63.0,SecondHalf
+timeline,key_event,SubstitutionOn - Chemsdine Talbi,Sunderland,63.0,,,,SubstitutionOn,63.0,SecondHalf
+timeline,key_event,Card - Reinildo Mandava,Sunderland,71.0,,,,Card,71.0,SecondHalf
+timeline,key_event,Goal - Leandro Trossard,Arsenal,73.0,,,,Goal,73.0,SecondHalf
+timeline,key_event,SubstitutionOff - Lutsharel Geertruida,Sunderland,86.0,,,,SubstitutionOff,86.0,SecondHalf
+timeline,key_event,SubstitutionOn - Eliezer Mayenda,Sunderland,86.0,,,,SubstitutionOn,86.0,SecondHalf
+timeline,key_event,SubstitutionOff - Eberechi Eze,Arsenal,87.0,,,,SubstitutionOff,87.0,SecondHalf
+timeline,key_event,SubstitutionOn - Cristhian Mosquera,Arsenal,87.0,,,,SubstitutionOn,87.0,SecondHalf
+timeline,key_event,Goal - Brian Brobbey,Sunderland,93.0,,,,Goal,93.0,SecondHalf
+data_quality,events_with_coordinates,1671,,1671.0,,,,,,
+data_quality,events_with_xthreat,524,,524.0,,,,,,
+data_quality,events_with_outcome,1671,,1671.0,,,,,,
+data_quality,successful_events,1359,,1359.0,,,,,,
+data_quality,unique_players,27,,27.0,,,,,,
 data_quality,periods_played,4,,4.0,,,,,,
