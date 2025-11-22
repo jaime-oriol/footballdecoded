@@ -45,7 +45,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as mcolors
-from mplsoccer.pitch import VerticalPitch
+from mplsoccer import VerticalPitch
 from PIL import Image
 import os
 
@@ -133,7 +133,7 @@ def plot_shot_xg(csv_path, filter_by='all', invert_filter=False, logo_path=None,
     
     # PREPARE DATA: Add computed fields for visualization logic
     selected_shots = selected_shots.copy()
-    selected_shots['header_tag'] = (selected_shots['body_part'] == 'Head').astype(int)  # Header identification
+    selected_shots['header_tag'] = (selected_shots['shot_body_part'] == 'Head').astype(int)  # Header identification
     selected_shots['goal'] = selected_shots['is_goal'].fillna(0).astype(int)           # Goal flag for filtering
     
     # DATA SEGMENTATION: Separate by shot type and outcome for layered visualization
