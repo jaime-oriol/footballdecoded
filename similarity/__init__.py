@@ -21,8 +21,9 @@ Uso rápido:
     >>> # Preparar datos
     >>> db = get_db_manager()
     >>> prep = DataPreparator(db, table_type='domestic')
-    >>> df = prep.load_players(['ESP-La Liga'], '2526', 'FW', min_minutes=600)
+    >>> df = prep.load_players(['ESP-La Liga'], '2526', 'FW', min_minutes=200)
     >>> df = prep.extract_all_metrics()
+    >>> df = prep.filter_per90_only()  # CRÍTICO: Usar solo métricas per90
     >>> df = prep.handle_missing_values()
     >>> df = prep.detect_outliers()
     >>>

@@ -338,6 +338,54 @@ class DataPreparator:
 
         return fbref_per90, understat_per90
 
+    def filter_per90_only(self) -> pd.DataFrame:
+        """
+        Filtra DataFrame para usar SOLO métricas per90 + ratios/porcentajes.
+
+        CRÍTICO para comparaciones justas independientes de minutos jugados.
+        Las métricas absolutas sesgan la similitud hacia jugadores con más minutos.
+
+        Returns:
+            DataFrame con solo métricas per90 + ratios + metadata
+
+        Notes:
+            Debe llamarse DESPUÉS de extract_all_metrics() pero ANTES de
+            handle_missing_values(). Reemplaza df_clean con versión filtrada.
+        """
+        if self.df_clean is None:
+            raise ValueError("Must call extract_all_metrics() first")
+
+        logger.info("Filtering to use ONLY per90 metrics + ratios...")
+
+        # Columnas metadata a mantener
+        metadata_cols = ['unique_player_id', 'player_name', 'team', 'league',
+                        'season', 'position', 'age']
+
+        # Identificar columnas per90
+        per90_cols = [col for col in self.df_clean.columns if col.endswith('_per90')]
+
+        # Identificar ratios/porcentajes (no necesitan normalización per90)
+        ratio_indicators = ['%', '_pct', '/90', 'SCA90', 'GCA90', '/Sh', 'xG+xAG']
+        ratio_cols = [col for col in self.df_clean.columns
+                     if any(indicator in col for indicator in ratio_indicators)
+                     and col not in per90_cols]  # Evitar duplicados
+
+        # Combinar todas las columnas a mantener
+        feature_cols = list(set(per90_cols + ratio_cols))
+        keep_cols = [col for col in metadata_cols if col in self.df_clean.columns] + feature_cols
+
+        # Filtrar DataFrame
+        df_filtered = self.df_clean[keep_cols].copy()
+
+        logger.info(f"Filtered: {len(feature_cols)} features "
+                   f"({len(per90_cols)} per90, {len(ratio_cols)} ratios)")
+        logger.info(f"Removed {len(self.df_clean.columns) - len(keep_cols)} absolute metrics")
+
+        # Actualizar df_clean
+        self.df_clean = df_filtered
+
+        return self.df_clean
+
     def handle_missing_values(self, strategy: str = 'median_by_position',
                              max_missing_pct: float = 0.4) -> pd.DataFrame:
         """

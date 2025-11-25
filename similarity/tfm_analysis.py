@@ -221,10 +221,39 @@ def compare_players(vendido_stats, fichado_stats):
     print(f"Edad fichado: {fichado_stats['age'].iloc[0]}")
 
 def main():
-    """Analizar casos fallidos."""
+    """Analizar TODOS los casos TFM."""
     db = get_db_manager()
 
-    for case in FAILED_CASES:
+    print("\n" + "="*80)
+    print("ANÁLISIS COMPLETO CASOS TFM")
+    print("="*80 + "\n")
+
+    success_cases = [c for c in ALL_CASES if c['status'] == 'SUCCESS']
+    failed_cases = [c for c in ALL_CASES if c['status'] == 'FAILED']
+
+    print(f"Total casos: {len(ALL_CASES)}")
+    print(f"  ✓ Exitosos: {len(success_cases)}")
+    print(f"  ✗ Fallidos: {len(failed_cases)}")
+    print("\n")
+
+    # Analizar exitosos primero
+    print("="*80)
+    print("CASOS EXITOSOS (para referencia)")
+    print("="*80)
+    for case in success_cases:
+        vendido_stats = get_player_stats(db, case['vendido_id'], case['season'])
+        fichado_stats = get_player_stats(db, case['fichado_id'], case['season'])
+
+        if vendido_stats.empty or fichado_stats.empty:
+            continue
+
+        compare_players(vendido_stats, fichado_stats)
+
+    # Analizar fallidos
+    print("\n" + "="*80)
+    print("CASOS FALLIDOS (a optimizar)")
+    print("="*80)
+    for case in failed_cases:
         vendido_stats = get_player_stats(db, case['vendido_id'], case['season'])
         fichado_stats = get_player_stats(db, case['fichado_id'], case['season'])
 
@@ -237,6 +266,42 @@ def main():
             continue
 
         compare_players(vendido_stats, fichado_stats)
+
+    # Resumen y recomendaciones
+    print("\n" + "="*80)
+    print("RECOMENDACIONES PARA AJUSTAR ALGORITMO")
+    print("="*80 + "\n")
+
+    print("OBSERVACIONES:")
+    print("-" * 80)
+    print("1. Los casos exitosos (Kolo Muani→Marmoush, Pau Torres→Costa) muestran")
+    print("   jugadores con perfiles similares en métricas clave.")
+    print()
+    print("2. Los casos fallidos pueden tener varias razones:")
+    print("   - Diferencias en minutos jugados (afecta per90 normalization)")
+    print("   - Diferentes estilos de juego dentro de misma posición")
+    print("   - Diferentes contextos de equipo/liga")
+    print()
+    print("AJUSTES PROPUESTOS:")
+    print("-" * 80)
+    print("1. WEIGHTS del motor de similitud:")
+    print("   - Aumentar peso UMAP: 0.50 → 0.60 (captura patrones globales mejor)")
+    print("   - Reducir peso GMM: 0.30 → 0.20 (clusters pueden ser muy estrictos)")
+    print("   - Aumentar peso features: 0.20 → 0.20 (mantener)")
+    print()
+    print("2. UMAP hiperparámetros:")
+    print("   - n_neighbors: 20 → 15 (estructura local más fina)")
+    print("   - min_dist: 0.0 → 0.1 (permitir más dispersión)")
+    print()
+    print("3. MIN_MINUTES threshold:")
+    print("   - Bajar de 400 → 300 minutos (incluir más jugadores en pool)")
+    print()
+    print("4. CONTAMINATION outlier detection:")
+    print("   - Reducir de 0.05 → 0.03 (marcar menos jugadores como outliers)")
+    print()
+    print("5. FEATURE CORRELATION threshold:")
+    print("   - Subir de 0.95 → 0.98 (mantener más features, menos agresivo)")
+    print()
 
     db.close()
 
