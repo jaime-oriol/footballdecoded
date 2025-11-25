@@ -56,7 +56,7 @@ logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wrappers import (fbref_get_player, fbref_get_team, fbref_get_league_players,
-                     understat_get_player, understat_get_team)
+                     understat_get_player, understat_get_team, transfermarkt_get_player)
 from database.connection import DatabaseManager, get_db_manager
 
 # ====================================================================
@@ -739,14 +739,23 @@ def process_single_entity(args: Tuple[str, str, str, str, DataValidator, str]) -
                 understat_data = understat_get_player(entity_name, competition, season)
             else:
                 understat_data = understat_get_team(entity_name, competition, season)
-            
+
             if understat_data:
                 for key, value in understat_data.items():
                     if key.startswith('understat_'):
                         fbref_data[key] = value
                     else:
                         fbref_data[f"understat_{key}"] = value
-        
+
+        # Extraer datos de Transfermarkt para jugadores
+        if entity_type == 'player':
+            birth_year = fbref_data.get('birth_year')
+            transfermarkt_data = transfermarkt_get_player(entity_name, competition, season, birth_year=birth_year)
+
+            if transfermarkt_data:
+                for key, value in transfermarkt_data.items():
+                    fbref_data[key] = value
+
         # Validar y limpiar datos
         cleaned_data, quality_score, warnings = validator.validate_record(fbref_data, entity_type)
         cleaned_data['data_quality_score'] = quality_score

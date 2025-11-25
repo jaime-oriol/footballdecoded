@@ -104,6 +104,15 @@ from .whoscored_data import (
 )
 
 # ====================================================================
+# TRANSFERMARKT WRAPPER IMPORTS
+# ====================================================================
+
+from .transfermarkt_data import (
+    transfermarkt_get_player,
+    clear_cache as transfermarkt_clear_cache
+)
+
+# ====================================================================
 # ALL AVAILABLE FUNCTIONS
 # ====================================================================
 
@@ -124,7 +133,7 @@ __all__ = [
     "fbref_get_league_players",
     "fbref_get_match_data",
     "fbref_get_schedule",
-    
+
     # Understat wrapper functions
     "understat_extract_data",
     "understat_extract_multiple",
@@ -140,7 +149,7 @@ __all__ = [
     "understat_get_players",
     "understat_get_teams",
     "understat_get_shots",
-    
+
     # WhoScored wrapper functions
     "whoscored_extract_match_events",
     "whoscored_extract_pass_network",
@@ -161,7 +170,11 @@ __all__ = [
     "whoscored_get_shot_map",
     "whoscored_get_field_occupation",
     "whoscored_get_schedule",
-    "whoscored_get_missing_players"
+    "whoscored_get_missing_players",
+
+    # Transfermarkt wrapper functions
+    "transfermarkt_get_player",
+    "transfermarkt_clear_cache"
 ]
 
 # ====================================================================
