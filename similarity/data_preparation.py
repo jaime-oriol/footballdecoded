@@ -242,15 +242,14 @@ class DataPreparator:
 
         Implementa conversión robusta string->float y filtrado por valores válidos.
         """
-        result = pd.DataFrame(index=df.index)
-
         # Obtener todas las keys únicas
         all_keys = set()
         for _, row in df.iterrows():
             if isinstance(row[col_name], dict):
                 all_keys.update(row[col_name].keys())
 
-        # Extraer cada métrica
+        # Construir dict de columnas en lugar de asignar una por una
+        columns_dict = {}
         for key in all_keys:
             values = []
             for _, row in df.iterrows():
@@ -264,7 +263,10 @@ class DataPreparator:
             # Solo incluir si >= 5 valores válidos
             valid_count = pd.Series(values).notna().sum()
             if valid_count >= 5:
-                result[key] = values
+                columns_dict[key] = values
+
+        # Crear DataFrame de una sola vez (evita fragmentación)
+        result = pd.DataFrame(columns_dict, index=df.index)
 
         return result
 
