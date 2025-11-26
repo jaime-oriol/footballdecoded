@@ -435,66 +435,69 @@ def merge_with_fbref(
     data_type: str = 'player',
     show_progress: bool = True,
     fallback_matching: bool = True
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, Dict]:
     """
     Fusionar datos de FBref con métricas de Understat con robustez mejorada al 100%.
-    
+
     Args:
         fbref_data: DataFrame o Dict de FBref
-        league: Identificador de liga  
+        league: Identificador de liga
         season: Identificador de temporada
         data_type: 'player' o 'team'
         show_progress: Mostrar progreso de la fusión (default: True)
         fallback_matching: Usar matching alternativo si falla el estándar (default: True)
-        
+
     Returns:
-        DataFrame con métricas combinadas FBref + Understat
+        DataFrame o Dict con métricas combinadas FBref + Understat (mismo tipo que entrada)
     """
     # Validación de entrada
     if fbref_data is None:
         if show_progress:
             print("Warning: No FBref data provided")
         return pd.DataFrame()
-    
-    if isinstance(fbref_data, dict):
+
+    # Track if input was dict to return same type
+    input_was_dict = isinstance(fbref_data, dict)
+
+    if input_was_dict:
         fbref_df = pd.DataFrame([fbref_data])
     else:
         fbref_df = fbref_data.copy()
-    
+
     if fbref_df.empty:
         if show_progress:
             print("Warning: Empty FBref DataFrame provided")
-        return fbref_df
+        return fbref_data if input_was_dict else fbref_df
     
     # Determinar clave de merge y entidades
     if data_type == 'player':
         if 'player_name' not in fbref_df.columns:
             if show_progress:
                 print("Error: 'player_name' column not found in FBref data")
-            return fbref_df
+            return fbref_data if input_was_dict else fbref_df
         entities = fbref_df['player_name'].unique().tolist()
         merge_key = 'player_name'
     else:
         if 'team_name' not in fbref_df.columns:
             if show_progress:
                 print("Error: 'team_name' column not found in FBref data")
-            return fbref_df
+            return fbref_data if input_was_dict else fbref_df
         entities = fbref_df['team_name'].unique().tolist()
         merge_key = 'team_name'
-    
+
     if show_progress:
         print(f"Merging {len(entities)} {data_type}s with Understat data...")
-    
+
     # Extraer datos de Understat
     understat_df = extract_multiple(
-        entities, data_type, league, season, 
+        entities, data_type, league, season,
         show_progress=show_progress
     )
-    
+
     if understat_df.empty:
         if show_progress:
             print("Warning: No Understat data found for any entities")
-        return fbref_df
+        return fbref_data if input_was_dict else fbref_df
     
     # Intentar merge estándar
     try:
@@ -557,14 +560,17 @@ def merge_with_fbref(
                 merged_df = fallback_df
                 if show_progress:
                     print(f"Fallback matching improved success to {fallback_successful_merges}/{len(fbref_df)} entities")
-        
+
+        # Return same type as input
+        if input_was_dict:
+            return merged_df.iloc[0].to_dict()
         return merged_df
-        
+
     except Exception as e:
         if show_progress:
             print(f"Error during merge: {e}")
             print("Returning original FBref data without Understat metrics")
-        return fbref_df
+        return fbref_data if input_was_dict else fbref_df
 
 
 # ====================================================================

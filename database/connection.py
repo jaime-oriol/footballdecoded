@@ -240,49 +240,46 @@ class DatabaseManager:
             if table_type in ['domestic', 'extras']:
                 basic_fields = ['unique_player_id', 'player_name', 'league', 'season', 'team', 'nationality',
                             'position', 'age', 'birth_year', 'fbref_official_name',
-                            'understat_official_name', 'normalized_name', 'teams_played',
-                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count',
-                            'position_specific', 'primary_foot', 'transfermarkt_player_id']
+                            'understat_official_name', 'transfermarkt_official_name', 'normalized_name', 'teams_played',
+                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
             else:  # european
                 basic_fields = ['unique_player_id', 'player_name', 'competition', 'season', 'team', 'nationality',
                             'position', 'age', 'birth_year', 'fbref_official_name',
-                            'normalized_name', 'teams_played',
-                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count',
-                            'position_specific', 'primary_foot', 'transfermarkt_player_id']
-            
+                            'transfermarkt_official_name', 'normalized_name', 'teams_played',
+                            'data_quality_score', 'processing_warnings', 'is_transfer', 'transfer_count']
+
             # Procesar datos para estructura de BD
             processed_data = validated_data.copy()
             if table_type == 'european' and 'league' in processed_data:
                 processed_data['competition'] = processed_data['league']
-            
+
             # Separar datos básicos de métricas
             basic_data = {k: v for k, v in processed_data.items() if k in basic_fields}
 
-            # Extraer campos de Transfermarkt
-            basic_data['position_specific'] = processed_data.get('transfermarkt_position_specific')
-            basic_data['primary_foot'] = processed_data.get('transfermarkt_primary_foot')
-            basic_data['transfermarkt_player_id'] = processed_data.get('transfermarkt_transfermarkt_player_id')
-
+            # Separar métricas por fuente
             fbref_metrics = {k: v for k, v in processed_data.items()
                         if k not in basic_fields and not k.startswith('understat_') and not k.startswith('transfermarkt_')}
+
+            understat_metrics = {k: v for k, v in processed_data.items() if k.startswith('understat_')}
+
+            transfermarkt_metrics = {k: v for k, v in processed_data.items() if k.startswith('transfermarkt_')}
 
             # Serializar métricas a JSON
             basic_data['fbref_metrics'] = json.dumps(self._serialize_for_json(fbref_metrics))
 
-            # Añadir métricas de Understat si es liga doméstica
-            if table_type == 'domestic':
-                understat_metrics = {k: v for k, v in processed_data.items() if k.startswith('understat_')}
+            # Añadir métricas de Understat si es liga doméstica o extras
+            if table_type in ['domestic', 'extras']:
                 basic_data['understat_metrics'] = json.dumps(self._serialize_for_json(understat_metrics))
+
+            # Añadir métricas de Transfermarkt si existen
+            if transfermarkt_metrics:
+                basic_data['transfermarkt_metrics'] = json.dumps(self._serialize_for_json(transfermarkt_metrics))
 
             # Insertar en base de datos
             df = pd.DataFrame([basic_data])
             df.to_sql(table_name.split('.')[1], self.engine, schema='footballdecoded',
                     if_exists='append', index=False, method='multi')
 
-            # Insertar en tabla de auditoría si hay datos de Transfermarkt
-            if basic_data.get('transfermarkt_player_id'):
-                self._insert_market_history(processed_data, basic_data, table_type)
-            
             logger.debug(f"Successfully inserted player: {validated_data.get('player_name')}")
             return True
 
@@ -290,60 +287,6 @@ class DatabaseManager:
             logger.error(f"Failed to insert player data: {e}")
             raise
 
-    def _insert_market_history(self, processed_data: Dict[str, Any], basic_data: Dict[str, Any], table_type: str):
-        """Insert market value and contract data into audit table."""
-        try:
-            from datetime import datetime
-
-            market_value = processed_data.get('transfermarkt_market_value_eur')
-            contract_start = processed_data.get('transfermarkt_contract_start_date')
-            contract_end = processed_data.get('transfermarkt_contract_end_date')
-
-            contract_status = None
-            if contract_end:
-                try:
-                    end_date = datetime.strptime(contract_end, '%Y-%m-%d')
-                    if end_date < datetime.now():
-                        contract_status = 'Expired'
-                    elif (end_date - datetime.now()).days < 180:
-                        contract_status = 'Expiring'
-                    else:
-                        contract_status = 'Active'
-                except ValueError:
-                    pass
-
-            market_data = {
-                'unique_player_id': basic_data['unique_player_id'],
-                'transfermarkt_player_id': basic_data['transfermarkt_player_id'],
-                'market_value_eur': market_value,
-                'contract_start_date': contract_start,
-                'contract_end_date': contract_end,
-                'contract_status': contract_status,
-                'season': basic_data.get('season') or basic_data.get('competition')
-            }
-
-            with self.engine.begin() as conn:
-                query = text("""
-                    INSERT INTO footballdecoded.player_market_history
-                    (unique_player_id, transfermarkt_player_id, market_value_eur,
-                     contract_start_date, contract_end_date, contract_status, season)
-                    VALUES (:unique_player_id, :transfermarkt_player_id, :market_value_eur,
-                            :contract_start_date, :contract_end_date, :contract_status, :season)
-                    ON CONFLICT (unique_player_id, season, source) DO UPDATE SET
-                        transfermarkt_player_id = EXCLUDED.transfermarkt_player_id,
-                        market_value_eur = EXCLUDED.market_value_eur,
-                        contract_start_date = EXCLUDED.contract_start_date,
-                        contract_end_date = EXCLUDED.contract_end_date,
-                        contract_status = EXCLUDED.contract_status,
-                        recorded_at = NOW()
-                """)
-                conn.execute(query, market_data)
-
-            logger.debug(f"Inserted market history for {basic_data['player_name']}")
-
-        except Exception as e:
-            logger.warning(f"Failed to insert market history: {e}")
-    
     @retry_on_failure(max_retries=2, delay=0.5)
     def insert_team_data(self, team_data: Dict[str, Any], table_type: str = 'domestic') -> bool:
         """Insertar datos de equipo con validación y retry automático."""

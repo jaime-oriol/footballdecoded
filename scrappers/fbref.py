@@ -195,7 +195,15 @@ class FBref(BaseRequestsReader):
 
         # Combine all domestic league data
         if dfs:
-            df = pd.concat(dfs)
+            # Filter out empty dataframes and drop all-NA columns to avoid FutureWarning
+            filtered_dfs = []
+            for d in dfs:
+                if not d.empty:
+                    # Drop all-NA columns
+                    d_cleaned = d.dropna(axis=1, how='all')
+                    if not d_cleaned.empty:
+                        filtered_dfs.append(d_cleaned)
+            df = pd.concat(filtered_dfs, sort=False) if filtered_dfs else pd.DataFrame()
         else:
             df = pd.DataFrame()
         
@@ -286,7 +294,7 @@ class FBref(BaseRequestsReader):
                 df_table["Format"] = "round-robin"   # League competitions
             seasons.append(df_table)
 
-        df = pd.concat(seasons).pipe(standardize_colnames)
+        df = pd.concat(seasons, sort=False).pipe(standardize_colnames)
         df = df.rename(columns={"competition_name": "league"})
         df["season"] = df["season"].apply(self._season_code.parse)
         # if both a 20xx and 19xx season are available, drop the 19xx season
@@ -1363,7 +1371,37 @@ def _concat(dfs: list[pd.DataFrame], key: list[str]) -> pd.DataFrame:
                 # Different column count - reindex to match standard structure
                 dfs[i] = df.reindex(columns=column_idx, fill_value=None)
 
-    return pd.concat(dfs)
+    # Filter out empty dataframes
+    non_empty_dfs = [df for df in dfs if not df.empty]
+
+    if not non_empty_dfs:
+        return pd.DataFrame()
+
+    # Find columns that are all-NA across all dataframes
+    # and remove them to avoid FutureWarning
+    all_columns = non_empty_dfs[0].columns
+    columns_to_keep = []
+
+    for col in all_columns:
+        # Keep column if at least one df has non-NA values in it
+        has_data = False
+        for df in non_empty_dfs:
+            if col in df.columns and not df[col].isna().all():
+                has_data = True
+                break
+        if has_data:
+            columns_to_keep.append(col)
+
+    # Keep only columns with data
+    if columns_to_keep:
+        cleaned_dfs = [df[columns_to_keep] if set(columns_to_keep).issubset(df.columns)
+                      else df.reindex(columns=columns_to_keep)
+                      for df in non_empty_dfs]
+    else:
+        cleaned_dfs = non_empty_dfs
+
+    # Use sort=False to maintain column order
+    return pd.concat(cleaned_dfs, sort=False)
 
 
 def _fix_nation_col(df_table: pd.DataFrame) -> pd.DataFrame:

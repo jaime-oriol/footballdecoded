@@ -66,7 +66,7 @@ from database.connection import DatabaseManager, get_db_manager
 AVAILABLE_COMPETITIONS = [
     ('ENG-Premier League', 'domestic'),
     ('ESP-La Liga', 'domestic'),
-    ('ITA-Serie A', 'domestic'), 
+    ('ITA-Serie A', 'domestic'),
     ('GER-Bundesliga', 'domestic'),
     ('FRA-Ligue 1', 'domestic'),
     ('INT-Champions League', 'european'),
@@ -74,9 +74,8 @@ AVAILABLE_COMPETITIONS = [
     ('NED-Eredivisie', 'extras'),
     ('BEL-Pro League', 'extras'),
     ('TUR-Süper Lig', 'extras'),
-    ('ARG-Primera División', 'extras'),
-    ('BRA-Serie A', 'extras'),
-    ('MEX-Liga MX', 'extras'),
+    ('SCO-Premiership', 'extras'),
+    ('SUI-Super League', 'extras'),
     ('USA-MLS', 'extras')
 ]
 
@@ -126,17 +125,14 @@ BLOCK_2_COMPETITIONS = [
     ('INT-Champions League', 'european')
 ]
 
-BLOCK_3_COMPETITIONS = [
-    ('POR-Primeira Liga', 'extras')
-]
-
-BLOCK_4_COMPETITIONS = [
+BLOCK_3_EXTRAS = [
+    ('POR-Primeira Liga', 'extras'),
     ('NED-Eredivisie', 'extras'),
     ('BEL-Pro League', 'extras'),
     ('TUR-Süper Lig', 'extras'),
-    ('ARG-Primera División', 'extras'),
-    ('BRA-Serie A', 'extras'),
-    ('MEX-Liga MX', 'extras')
+    ('SCO-Premiership', 'extras'),
+    ('SUI-Super League', 'extras'),
+    ('USA-MLS', 'extras')
 ]
 
 # ====================================================================
@@ -1012,18 +1008,17 @@ def main():
     print("\n1. Load competition data (players + teams)")
     print("2. Load Block 1: ENG + ESP + ITA")
     print("3. Load Block 2: GER + FRA + Champions")
-    print("4. Load Block 3: Extras (POR)")
-    print("5. Load Block 4: More Extras (NED, BEL, TUR, ARG, BRA, MEX)")
-    print("6. Test database connection")
-    print("7. Setup database schema")
-    print("8. Clear all existing data")
-    print("9. Check database status")
-    
-    choice = input("\nSelect option (1-9): ").strip()
+    print("4. Load Extras (POR, NED, BEL, TUR, SCO, SUI, USA)")
+    print("5. Test database connection")
+    print("6. Setup database schema")
+    print("7. Clear all existing data")
+    print("8. Check database status")
+
+    choice = input("\nSelect option (1-8): ").strip()
     
     if choice == "1":
         print("\nAvailable competitions:")
-        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS + BLOCK_3_COMPETITIONS + BLOCK_4_COMPETITIONS
+        all_competitions = BLOCK_1_COMPETITIONS + BLOCK_2_COMPETITIONS + BLOCK_3_EXTRAS
         for i, (comp_name, comp_type) in enumerate(all_competitions, 1):
             data_source = "FBref + Understat" if comp_type in ['domestic', 'extras'] else "FBref only"
             print(f"   {i}. {comp_name} ({data_source})")
@@ -1100,51 +1095,36 @@ def main():
             print("Invalid season format")
     
     elif choice == "4":
-        season = input("Enter season for Block 3 load (e.g., 24-25): ").strip()
+        season = input("Enter season for Extras load (e.g., 24-25): ").strip()
         if season:
-            print(f"\nBLOCK 3 LOAD CONFIGURATION")
+            print(f"\nEXTRAS LOAD CONFIGURATION")
             print("═" * 50)
             print(f"Season: {season}")
-            print("Competitions: POR-Primeira Liga")
+            print("Competitions: POR-Primeira Liga, NED-Eredivisie, BEL-Pro League")
+            print("             TUR-Süper Lig, SCO-Premiership, SUI-Super League, USA-MLS")
             print(f"Data sources: FBref + Understat")
-            print(f"Estimated duration: 0.5 hours")
+            print(f"Random pauses: {LOAD_CONFIG['block_pause_min']}-{LOAD_CONFIG['block_pause_max']} minutes between leagues")
+
+            avg_pause = (LOAD_CONFIG['block_pause_min'] + LOAD_CONFIG['block_pause_max']) / 2
+            estimated_hours = (avg_pause * (len(BLOCK_3_EXTRAS) - 1)) / 60
+            estimated_hours += 2.0
+            print(f"Estimated duration: {estimated_hours:.1f} hours")
+            print(f"IP safety: Random timing approach")
             print()
-            
-            confirm = input(f"Proceed with Block 3 load? (y/N): ").strip().lower()
+
+            confirm = input(f"Proceed with Extras load? (y/N): ").strip().lower()
             if confirm == 'y':
-                print(f"\nStarting Block 3 load for {season}...")
+                print(f"\nStarting Extras load for {season}...")
+                print("IMPORTANT: Random pauses between leagues (10-20 min)")
                 print()
-                
-                load_competition_block(BLOCK_3_COMPETITIONS, "Block 3", season)
+
+                load_competition_block(BLOCK_3_EXTRAS, "Extras", season)
             else:
-                print("Block 3 load cancelled")
+                print("Extras load cancelled")
         else:
             print("Invalid season format")
-    
+
     elif choice == "5":
-        season = input("Enter season for Block 4 load (e.g., 24-25): ").strip()
-        if season:
-            print(f"\nBLOCK 4 LOAD CONFIGURATION")
-            print("═" * 50)
-            print(f"Season: {season}")
-            print("Competitions: NED-Eredivisie, BEL-Pro League, TUR-Süper Lig")
-            print("             ARG-Primera División, BRA-Serie A, MEX-Liga MX")
-            print(f"Data sources: FBref only")
-            print(f"Estimated duration: 2-3 hours")
-            print()
-            
-            confirm = input(f"Proceed with Block 4 load? (y/N): ").strip().lower()
-            if confirm == 'y':
-                print(f"\nStarting Block 4 load for {season}...")
-                print()
-                
-                load_competition_block(BLOCK_4_COMPETITIONS, "Block 4", season)
-            else:
-                print("Block 4 load cancelled")
-        else:
-            print("Invalid season format")
-    
-    elif choice == "6":
         print("\nTesting database connection...")
         try:
             from database.connection import test_connection
@@ -1153,8 +1133,8 @@ def main():
             print(f"Database connection {status}")
         except Exception as e:
             print(f"Connection test error: {e}")
-    
-    elif choice == "7":
+
+    elif choice == "6":
         confirm = input("Setup database schema? This will create/recreate tables (y/N): ").strip().lower()
         if confirm == 'y':
             print("\nSetting up database schema...")
@@ -1167,8 +1147,8 @@ def main():
                 print(f"Schema setup error: {e}")
         else:
             print("Schema setup cancelled")
-    
-    elif choice == "8":
+
+    elif choice == "7":
         confirm = input("Clear ALL data? (type 'YES' to confirm): ").strip()
         if confirm == "YES":
             try:
@@ -1192,7 +1172,7 @@ def main():
         else:
             print("Clear operation cancelled")
     
-    elif choice == "9":
+    elif choice == "8":
         print("\nChecking database status...")
         try:
             from database.database_checker import check_database_status
@@ -1201,9 +1181,9 @@ def main():
             print("database_checker.py not found")
         except Exception as e:
             print(f"Error checking database: {e}")
-    
+
     else:
-        print("Invalid option. Please select 1-9.")
+        print("Invalid option. Please select 1-8.")
 
 
 if __name__ == "__main__":

@@ -173,7 +173,6 @@ LEAGUE_DICT = {
     "POR-Primeira Liga": {
         "FBref": "Primeira Liga",
         "WhoScored": "Portugal - Liga Portugal",
-        "Understat": "Liga Portugal",
         "FotMob": "POR-Primeira Liga",
         "season_start": "Aug",
         "season_end": "May",
@@ -199,26 +198,19 @@ LEAGUE_DICT = {
         "season_start": "Aug",
         "season_end": "May",
     },
-    "ARG-Primera División": {
-        "FBref": "Liga Profesional de Fútbol Argentina",
-        "WhoScored": "Argentina - Primera División",
-        "FotMob": "ARG-Primera Division",
-        "season_start": "Jan",
-        "season_end": "Dec",
+    "SCO-Premiership": {
+        "FBref": "Scottish Premiership",
+        "WhoScored": "Scottish Premiership",
+        "FotMob": "SCO-Premiership",
+        "season_start": "Aug",
+        "season_end": "May",
     },
-    "BRA-Serie A": {
-        "FBref": "Campeonato Brasileiro Série A",
-        "WhoScored": "Brazil - Brasileirão",
-        "FotMob": "BRA-Serie A",
-        "season_start": "Apr",
-        "season_end": "Dec",
-    },
-    "MEX-Liga MX": {
-        "FBref": "Liga MX",
-        "WhoScored": "Mexico - Liga MX",
-        "FotMob": "MEX-Liga MX",
-        "season_start": "Jan",
-        "season_end": "Dec",
+    "SUI-Super League": {
+        "FBref": "Swiss Super League",
+        "WhoScored": "Swiss Super League",
+        "FotMob": "SUI-Super League",
+        "season_start": "Jul",
+        "season_end": "May",
     },
     "USA-MLS": {
         "FBref": "Major League Soccer",
