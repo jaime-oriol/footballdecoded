@@ -78,8 +78,11 @@ class Transfermarkt(BaseRequestsReader):
             no_store=no_store,
             data_dir=data_dir,
         )
-        self.rate_limit = 3
-        self.max_delay = 2
+        # Transfermarkt rate limiting - adjusted to avoid 429 errors
+        # Based on FBref's conservative approach (7s) but slightly faster
+        # Total delay: 6-9 seconds per request
+        self.rate_limit = 6       # 6-second minimum delay (conservative approach)
+        self.max_delay = 3        # Additional random delay 0-3s for realistic timing
 
     def search_player(
         self, player_name: str, birth_year: Optional[int] = None
