@@ -26,12 +26,16 @@ def transfermarkt_get_player(
     Args:
         player_name: Player name to search
         league: League code (for context, not directly used)
-        season: Season string (for context, not directly used)
+        season: Season string in YY-YY format (e.g., '24-25', '25-26')
         birth_year: Optional birth year for filtering search results
 
     Returns:
         Dictionary with Transfermarkt data prefixed with 'transfermarkt_'
         or None if player not found
+
+    Notes:
+        - For season '25-26' (2025-2026) and later: uses CURRENT market value
+        - For earlier seasons: uses HISTORICAL market value from season end
 
     Example:
         data = transfermarkt_get_player("Vinicius Junior", "ESP-La Liga", "24-25", 2000)
@@ -67,7 +71,26 @@ def transfermarkt_get_player(
 
     try:
         tm = Transfermarkt()
-        profile = tm.read_player_profile(player_id, season=season)
+
+        # Determine if we should use current or historical market value
+        # For season 25-26 and later, use current value (season=None)
+        # For earlier seasons, use historical value
+        # Note: season format is "YY-YY" (e.g., "24-25", "25-26")
+        use_current_value = False
+        if season:
+            try:
+                # Extract first year from season (e.g., "25-26" -> 25)
+                first_year = int(season.split('-')[0])
+                use_current_value = first_year >= 25  # Season 25-26 and later
+            except (ValueError, IndexError):
+                logger.warning(f"Invalid season format: {season}, using historical value")
+
+        if use_current_value:
+            profile = tm.read_player_profile(player_id, season=None)
+            logger.debug(f"Using CURRENT market value for {player_name} (season {season})")
+        else:
+            profile = tm.read_player_profile(player_id, season=season)
+            logger.debug(f"Using HISTORICAL market value for {player_name} (season {season})")
 
         if not profile:
             logger.debug(f"Could not extract profile for player_id: {player_id}")
