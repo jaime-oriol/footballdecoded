@@ -610,6 +610,7 @@ class BaseRequestsReader(BaseReader):
                 else:
                     payload = response.content
                 if not self.no_store and filepath is not None:
+                    filepath.parent.mkdir(parents=True, exist_ok=True)
                     with filepath.open(mode="wb") as fh:
                         fh.write(payload)
                 return io.BytesIO(payload)
