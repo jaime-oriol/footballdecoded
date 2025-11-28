@@ -132,7 +132,11 @@ def _ensure_cache_dir():
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 def _generate_cache_key(entity_name: str, entity_type: str, league: str, season: str, **kwargs) -> str:
-    """Generar clave única para cache."""
+    """Generar clave única para cache.
+
+    Incluye team_name en la clave para evitar colisiones cuando hay jugadores
+    con nombres similares en equipos diferentes.
+    """
     cache_data = f"{entity_name}:{entity_type}:{league}:{season}:{str(sorted(kwargs.items()))}"
     return hashlib.md5(cache_data.encode()).hexdigest()
 
@@ -203,18 +207,20 @@ def extract_data(
     entity_type: str,
     league: str,
     season: str,
-    use_cache: bool = True
+    use_cache: bool = True,
+    team_name: Optional[str] = None
 ) -> Optional[Dict]:
     """
     Motor de extracción unificado para métricas avanzadas de Understat con cache.
-    
+
     Args:
         entity_name: Nombre del jugador o equipo
         entity_type: 'player' o 'team'
         league: ID de liga
         season: ID de temporada
         use_cache: Usar sistema de cache (default: True)
-        
+        team_name: Nombre del equipo para desambiguar jugadores con nombres similares (opcional)
+
     Returns:
         Dict con métricas únicas de Understat (NO en FBref)
     """
@@ -230,9 +236,10 @@ def extract_data(
                 print(f"  - {suggestion}")
         return None
     
-    # Generar clave de cache
-    cache_key = _generate_cache_key(entity_name, entity_type, league, season)
-    
+    # Generar clave de cache (incluye team_name para evitar colisiones)
+    cache_kwargs = {'team_name': team_name} if team_name else {}
+    cache_key = _generate_cache_key(entity_name, entity_type, league, season, **cache_kwargs)
+
     # Intentar cargar desde cache
     if use_cache:
         cached_data = _load_from_cache(cache_key)
@@ -245,8 +252,8 @@ def extract_data(
         
         if entity_type == 'player':
             stats = understat.read_player_season_stats()
-            entity_row = _find_entity(stats, entity_name, 'player')
-            
+            entity_row = _find_entity(stats, entity_name, 'player', team_name=team_name)
+
             if entity_row is None:
                 return None
             
@@ -577,26 +584,82 @@ def merge_with_fbref(
 # CORE PROCESSING FUNCTIONS
 # ====================================================================
 
-def _find_entity(stats: pd.DataFrame, entity_name: str, entity_type: str) -> Optional[pd.DataFrame]:
-    """Encontrar entidad con coincidencia flexible de nombres."""
+def _find_entity(stats: pd.DataFrame, entity_name: str, entity_type: str,
+                 team_name: Optional[str] = None) -> Optional[pd.DataFrame]:
+    """Encontrar entidad con coincidencia flexible de nombres y equipo.
+
+    Args:
+        stats: DataFrame con estadísticas de Understat
+        entity_name: Nombre del jugador o equipo a buscar
+        entity_type: Tipo de entidad ('player' o 'team')
+        team_name: Nombre del equipo para desambiguar (opcional)
+
+    Returns:
+        DataFrame con los datos de la entidad encontrada, o None
+
+    Notes:
+        Usa matching flexible con prioridad:
+        1. Match exacto de nombre + equipo (si team_name proporcionado)
+        2. Match exacto de nombre solo
+        3. Match parcial de nombre + equipo (si team_name proporcionado)
+        4. Match parcial de nombre solo (fallback)
+    """
     if stats is None or stats.empty:
         return None
-    
+
     variations = _generate_name_variations(entity_name)
     index_level = entity_type
-    
+    all_matches = []
+
+    # Buscar matches exactos por nombre
     for variation in variations:
         matches = stats[stats.index.get_level_values(index_level).str.lower() == variation.lower()]
         if not matches.empty:
-            return matches
-    
-    for variation in variations:
-        matches = stats[stats.index.get_level_values(index_level).str.contains(
-            variation, case=False, na=False, regex=False)]
-        if not matches.empty:
-            return matches
-    
-    return None
+            all_matches.append(matches)
+
+    # Si no hay matches exactos, buscar con contains
+    if not all_matches:
+        for variation in variations:
+            matches = stats[stats.index.get_level_values(index_level).str.contains(
+                variation, case=False, na=False, regex=False)]
+            if not matches.empty:
+                all_matches.append(matches)
+
+    # Si no hay matches, retornar None
+    if not all_matches:
+        return None
+
+    # Combinar todos los matches
+    combined_matches = pd.concat(all_matches).drop_duplicates()
+
+    # Si solo hay un match, devolverlo
+    if len(combined_matches) == 1:
+        return combined_matches
+
+    # Si hay múltiples matches y tenemos team_name, desambiguar por equipo
+    if len(combined_matches) > 1 and team_name:
+        team_variations = _generate_name_variations(team_name)
+
+        for team_var in team_variations:
+            team_matches = combined_matches[
+                combined_matches.index.get_level_values('team').str.contains(
+                    team_var, case=False, na=False, regex=False
+                )
+            ]
+            if not team_matches.empty:
+                # Match encontrado con equipo correcto
+                return team_matches.iloc[:1]
+
+        # Si no se encontró match con el equipo, usar primer match pero con warning
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            f"Multiple matches found for '{entity_name}', team '{team_name}' not matched. "
+            f"Using first match: {combined_matches.iloc[0].name}"
+        )
+
+    # Devolver primer match (ya sea porque no hay team_name o no se pudo desambiguar)
+    return combined_matches.iloc[:1]
 
 
 def _find_team_matches(stats: pd.DataFrame, team_name: str) -> Optional[pd.DataFrame]:
@@ -1033,9 +1096,22 @@ def search_team_id(team_name: str, league: str, season: str) -> Optional[Dict[st
 # QUICK ACCESS FUNCTIONS - SIMPLIFIED API
 # ====================================================================
 
-def get_player(player_name: str, league: str, season: str, use_cache: bool = True) -> Optional[Dict]:
-    """Extracción rápida de métricas avanzadas de jugador."""
-    return extract_data(player_name, 'player', league, season, use_cache=use_cache)
+def get_player(player_name: str, league: str, season: str, use_cache: bool = True,
+               team_name: Optional[str] = None) -> Optional[Dict]:
+    """Extracción rápida de métricas avanzadas de jugador.
+
+    Args:
+        player_name: Nombre del jugador
+        league: Código de liga
+        season: Temporada en formato YY-YY
+        use_cache: Usar cache (default: True)
+        team_name: Nombre del equipo para desambiguar (opcional, recomendado)
+
+    Returns:
+        Dict con métricas de Understat o None
+    """
+    return extract_data(player_name, 'player', league, season, use_cache=use_cache,
+                        team_name=team_name)
 
 def get_team(team_name: str, league: str, season: str, use_cache: bool = True) -> Optional[Dict]:
     """Extracción rápida de métricas avanzadas de equipo."""

@@ -96,6 +96,11 @@ def transfermarkt_get_player(
             logger.debug(f"Could not extract profile for player_id: {player_id}")
             return None
 
+        # Añadir indicador de si los datos de contrato son actuales o históricos
+        # Nota: Transfermarkt API no proporciona historial de contratos, solo de valores de mercado
+        # Por lo tanto, contract_start_date y contract_end_date son siempre actuales
+        profile['contract_is_current'] = use_current_value
+
         prefixed_data = {f"transfermarkt_{k}": v for k, v in profile.items()}
 
         return prefixed_data

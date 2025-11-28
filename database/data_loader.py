@@ -732,7 +732,11 @@ def process_single_entity(args: Tuple[str, str, str, str, DataValidator, str]) -
         # Extraer datos de Understat si es liga doméstica o extras
         if table_type in ['domestic', 'extras']:
             if entity_type == 'player':
-                understat_data = understat_get_player(entity_name, competition, season)
+                # Pasar team_name desde FBref para mejorar matching y evitar confusiones
+                # con jugadores de nombres similares en equipos diferentes
+                team_name_for_matching = fbref_data.get('team')
+                understat_data = understat_get_player(entity_name, competition, season,
+                                                      team_name=team_name_for_matching)
             else:
                 understat_data = understat_get_team(entity_name, competition, season)
 
