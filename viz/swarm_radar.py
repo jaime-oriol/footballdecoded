@@ -84,7 +84,7 @@ def _detect_id_column(df_data):
     else:
         raise ValueError("DataFrame must contain either 'unique_player_id' or 'unique_team_id' column")
 
-def create_player_radar(df_data, 
+def create_player_radar(df_data,
                        player_1_id,
                        metrics,
                        metric_titles,
@@ -95,6 +95,7 @@ def create_player_radar(df_data,
                        radar_title='Player Comparison',
                        radar_description='Statistical comparison of selected players',
                        negative_metrics=None,
+                       inverse_metrics=None,
                        save_path='player_radar.png',
                        show_plot=True,
                        use_swarm=True,
@@ -146,7 +147,11 @@ def create_player_radar(df_data,
     # Legacy parameter maintained for backward compatibility
     if negative_metrics is None:
         negative_metrics = []
-    
+
+    # Inverse metrics: lower values = better performance
+    if inverse_metrics is None:
+        inverse_metrics = []
+
     # Validate radar geometry requirements
     if len(metrics) != 10 or len(metric_titles) != 10:
         raise ValueError("Must provide exactly 10 metrics and 10 titles")
@@ -167,13 +172,13 @@ def create_player_radar(df_data,
     # Route to appropriate visualization mode
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                           colors, save_path, show_plot, id_column)
+                           colors, save_path, show_plot, id_column, inverse_metrics)
     else:
         _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                                 colors, save_path, show_plot, id_column)
+                                 colors, save_path, show_plot, id_column, inverse_metrics)
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                       colors, save_path, show_plot, id_column):
+                       colors, save_path, show_plot, id_column, inverse_metrics=None):
     """
     Create advanced swarm radar with integrated distribution context.
     
@@ -342,7 +347,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
             os.remove(temp_file)
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
-                             colors, save_path, show_plot, id_column):
+                             colors, save_path, show_plot, id_column, inverse_metrics=None):
     """
     Create traditional geometric radar chart with advanced color systems.
     
@@ -437,11 +442,14 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
     
     # 7 valores en círculos - CORREGIDO PARA USAR MISMOS RANGES QUE EL POLÍGONO
     range_radius = [4.25, 6.75, 9.25, 11.75, 14.25, 16.75, 19.25]
-    
+
+    if inverse_metrics is None:
+        inverse_metrics = []
+
     for rad_idx, rad in enumerate(range_radius):
         for i, (angle, metric) in enumerate(zip(angles, reordered_metrics)):
             min_val, max_val = ranges[i]
-            
+
             # Calcular valor usando divisiones lineales del rango del polígono
             range_total = max_val - min_val
             if range_total == 0:
@@ -449,11 +457,18 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             else:
                 # Convertir radio a posición en el rango [0, 1]
                 rad_normalized = (rad - 3) / (20.5 - 3)  # 3 es radio mínimo, 20.5 máximo
-                val = min_val + rad_normalized * range_total
-            
+
+                # INVERTIR si la métrica está en la lista de inversas
+                if metric in inverse_metrics:
+                    # Para métricas inversas: centro=max, extremo=min
+                    val = max_val - rad_normalized * range_total
+                else:
+                    # Normal: centro=min, extremo=max
+                    val = min_val + rad_normalized * range_total
+
             x = rad * np.sin(angle)
             y = rad * np.cos(angle)
-            
+
             # Formatear valor
             if val < 0.01:
                 label = f'{val:.3f}'
@@ -463,33 +478,44 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
                 label = f'{val:.1f}'
             else:
                 label = f'{int(val)}'
-            
+
             ax.text(x, y, label, ha='center', va='center', size=7, color='white',  # Reducido de 8 a 7
-                   bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR, 
+                   bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR,
                            edgecolor='none', alpha=0.9), family='DejaVu Sans')  # Añadido family='DejaVu Sans'
     
     # Función para convertir valor a coordenada (rango más pequeño)
-    def get_radar_coordinates(values, ranges):
+    def get_radar_coordinates(values, ranges, inverse_metrics_list=None):
+        if inverse_metrics_list is None:
+            inverse_metrics_list = []
+
         vertices = []
         for i, (value, (min_val, max_val)) in enumerate(zip(values, ranges)):
+            metric_name = reordered_metrics[i]
+
             # Normalizar valor al rango 3-20.5
             if max_val == min_val:
                 norm_value = 11.75  # Punto medio
             else:
-                norm_value = 3 + (value - min_val) / (max_val - min_val) * 17.5
-            
+                # INVERTIR si la métrica está en la lista de inversas
+                if metric_name in inverse_metrics_list:
+                    # Invertir: valor bajo (bueno) -> radar alto (extremo)
+                    norm_value = 3 + (max_val - value) / (max_val - min_val) * 17.5
+                else:
+                    # Normal: valor alto -> radar alto
+                    norm_value = 3 + (value - min_val) / (max_val - min_val) * 17.5
+
             # Limitar al rango de círculos
             norm_value = max(3, min(20.5, norm_value))
-            
+
             angle = angles[i]
             x = norm_value * np.sin(angle)
             y = norm_value * np.cos(angle)
             vertices.append([x, y])
-        
+
         return vertices
     
     # Polígono jugador 1
-    vertices_1 = get_radar_coordinates(player_1_values, ranges)
+    vertices_1 = get_radar_coordinates(player_1_values, ranges, inverse_metrics)
     
     if player_2_data is None:
         # Solo un jugador - alternar colores por ANILLOS dentro del polígono
@@ -547,7 +573,7 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         ax.plot(x_coords_1, y_coords_1, color=colors[0], linewidth=3, zorder=3)
         
         # Polígono jugador 2
-        vertices_2 = get_radar_coordinates(player_2_values, ranges)
+        vertices_2 = get_radar_coordinates(player_2_values, ranges, inverse_metrics)
         polygon_2 = Polygon(vertices_2, fc=colors[1], alpha=0.35, zorder=2)
         ax.add_patch(polygon_2)
         
