@@ -1,0 +1,96 @@
+info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
+match_metadata,match_id,Levante_vs_Barcelona_2025-08-23,,,,,,,,
+match_metadata,home_team,Levante,,,,,,,,
+match_metadata,away_team,Barcelona,,,,,,,,
+match_metadata,match_date,2025-08-23,,,,,,,,
+match_metadata,league,ESP-La Liga,,,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1952,,,,,,,,
+match_metadata,match_duration_minutes,98,,,,,,,,
+team_stats,total_events,540,Levante,540.0,,,,,,
+team_stats,possession_pct,27.7,Levante,27.7,,,,,,
+team_stats,passes_attempted,190,Levante,190.0,,,,,,
+team_stats,passes_completed,118,Levante,118.0,,,,,,
+team_stats,pass_accuracy,62.1,Levante,62.1,,,,,,
+team_stats,xthreat_total,3.202,Levante,3.202,,,,,,
+team_stats,progressive_actions,32,Levante,32.0,,,,,,
+team_stats,box_entries,7,Levante,7.0,,,,,,
+team_stats,shots,9,Levante,9.0,,,,,,
+team_stats,xg_total,3.19,Levante,3.19,,,,,,
+team_stats,total_events,1412,Barcelona,1412.0,,,,,,
+team_stats,possession_pct,72.3,Barcelona,72.3,,,,,,
+team_stats,passes_attempted,816,Barcelona,816.0,,,,,,
+team_stats,passes_completed,732,Barcelona,732.0,,,,,,
+team_stats,pass_accuracy,89.7,Barcelona,89.7,,,,,,
+team_stats,xthreat_total,40.104,Barcelona,40.104,,,,,,
+team_stats,progressive_actions,116,Barcelona,116.0,,,,,,
+team_stats,box_entries,32,Barcelona,32.0,,,,,,
+team_stats,shots,26,Barcelona,26.0,,,,,,
+team_stats,xg_total,2.48,Barcelona,2.48,,,,,,
+player_participation,player_activity,Jeremy Toljan,Levante,51.0,0.0,85.0,85.0,,,
+player_participation,player_activity,Manu Sánchez,Levante,42.0,1.0,74.0,73.0,,,
+player_participation,player_activity,José Luis Morales,Levante,28.0,1.0,58.0,57.0,,,
+player_participation,player_activity,Oriol Rey,Levante,47.0,1.0,95.0,94.0,,,
+player_participation,player_activity,Pablo Martínez,Levante,54.0,1.0,95.0,94.0,,,
+player_participation,player_activity,Iván Romero,Levante,31.0,1.0,74.0,73.0,,,
+player_participation,player_activity,Jorge Cabello,Levante,24.0,2.0,93.0,91.0,,,
+player_participation,player_activity,Adrián de la Fuente,Levante,63.0,3.0,92.0,89.0,,,
+player_participation,player_activity,Roger Brugué,Levante,25.0,4.0,74.0,70.0,,,
+player_participation,player_activity,Pablo Campos,Levante,69.0,4.0,97.0,93.0,,,
+player_participation,player_activity,Unai Elgezabal,Levante,28.0,4.0,96.0,92.0,,,
+player_participation,player_activity,Carlos Álvarez,Levante,20.0,58.0,94.0,36.0,,,
+player_participation,player_activity,Iker Losada,Levante,15.0,74.0,95.0,21.0,,,
+player_participation,player_activity,Carlos Espí,Levante,12.0,74.0,97.0,23.0,,,
+player_participation,player_activity,Diego Pampín,Levante,13.0,74.0,95.0,21.0,,,
+player_participation,player_activity,Víctor García,Levante,8.0,85.0,97.0,12.0,,,
+player_participation,player_activity,Ferran Torres,Barcelona,49.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Marc Casadó,Barcelona,91.0,0.0,45.0,45.0,,,
+player_participation,player_activity,Pau Cubarsí,Barcelona,154.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Alejandro Balde,Barcelona,134.0,0.0,75.0,75.0,,,
+player_participation,player_activity,Ronald Araujo,Barcelona,110.0,0.0,75.0,75.0,,,
+player_participation,player_activity,Eric García,Barcelona,148.0,0.0,84.0,84.0,,,
+player_participation,player_activity,Lamine Yamal,Barcelona,124.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Pedri,Barcelona,194.0,0.0,97.0,97.0,,,
+player_participation,player_activity,Marcus Rashford,Barcelona,53.0,0.0,45.0,45.0,,,
+player_participation,player_activity,Raphinha,Barcelona,96.0,1.0,97.0,96.0,,,
+player_participation,player_activity,Joan García,Barcelona,50.0,6.0,97.0,91.0,,,
+player_participation,player_activity,Gavi,Barcelona,86.0,45.0,97.0,52.0,,,
+player_participation,player_activity,Dani Olmo,Barcelona,50.0,45.0,96.0,51.0,,,
+player_participation,player_activity,Andreas Christensen,Barcelona,35.0,75.0,96.0,21.0,,,
+player_participation,player_activity,Robert Lewandowski,Barcelona,9.0,75.0,94.0,19.0,,,
+player_participation,player_activity,Jules Koundé,Barcelona,20.0,84.0,96.0,12.0,,,
+timeline,key_event,Goal - Iván Romero,Levante,14.0,,,,Goal,14.0,FirstHalf
+timeline,key_event,Card - Alejandro Balde,Barcelona,43.0,,,,Card,43.0,FirstHalf
+timeline,key_event,SubstitutionOff - Marc Casadó,Barcelona,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Gavi,Barcelona,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,SubstitutionOff - Marcus Rashford,Barcelona,45.0,,,,SubstitutionOff,45.0,SecondHalf
+timeline,key_event,SubstitutionOn - Dani Olmo,Barcelona,45.0,,,,SubstitutionOn,45.0,SecondHalf
+timeline,key_event,Card - José Luis Morales,Levante,45.0,,,,Card,45.0,SecondHalf
+timeline,key_event,Card - Pablo Martínez,Levante,47.0,,,,Card,47.0,FirstHalf
+timeline,key_event,Goal - Pedri,Barcelona,48.0,,,,Goal,48.0,SecondHalf
+timeline,key_event,Goal - Ferran Torres,Barcelona,51.0,,,,Goal,51.0,SecondHalf
+timeline,key_event,Goal - José Luis Morales,Levante,51.0,,,,Goal,51.0,FirstHalf
+timeline,key_event,SubstitutionOff - José Luis Morales,Levante,58.0,,,,SubstitutionOff,58.0,SecondHalf
+timeline,key_event,SubstitutionOn - Carlos Álvarez,Levante,58.0,,,,SubstitutionOn,58.0,SecondHalf
+timeline,key_event,SubstitutionOff - Iván Romero,Levante,74.0,,,,SubstitutionOff,74.0,SecondHalf
+timeline,key_event,SubstitutionOn - Iker Losada,Levante,74.0,,,,SubstitutionOn,74.0,SecondHalf
+timeline,key_event,SubstitutionOff - Roger Brugué,Levante,74.0,,,,SubstitutionOff,74.0,SecondHalf
+timeline,key_event,SubstitutionOn - Carlos Espí,Levante,74.0,,,,SubstitutionOn,74.0,SecondHalf
+timeline,key_event,SubstitutionOff - Manu Sánchez,Levante,74.0,,,,SubstitutionOff,74.0,SecondHalf
+timeline,key_event,SubstitutionOn - Diego Pampín,Levante,74.0,,,,SubstitutionOn,74.0,SecondHalf
+timeline,key_event,SubstitutionOff - Ronald Araujo,Barcelona,75.0,,,,SubstitutionOff,75.0,SecondHalf
+timeline,key_event,SubstitutionOn - Andreas Christensen,Barcelona,75.0,,,,SubstitutionOn,75.0,SecondHalf
+timeline,key_event,SubstitutionOff - Alejandro Balde,Barcelona,75.0,,,,SubstitutionOff,75.0,SecondHalf
+timeline,key_event,SubstitutionOn - Robert Lewandowski,Barcelona,75.0,,,,SubstitutionOn,75.0,SecondHalf
+timeline,key_event,SubstitutionOff - Eric García,Barcelona,84.0,,,,SubstitutionOff,84.0,SecondHalf
+timeline,key_event,SubstitutionOn - Jules Koundé,Barcelona,84.0,,,,SubstitutionOn,84.0,SecondHalf
+timeline,key_event,SubstitutionOff - Jeremy Toljan,Levante,85.0,,,,SubstitutionOff,85.0,SecondHalf
+timeline,key_event,SubstitutionOn - Víctor García,Levante,85.0,,,,SubstitutionOn,85.0,SecondHalf
+timeline,key_event,Card - Diego Pampín,Levante,88.0,,,,Card,88.0,SecondHalf
+timeline,key_event,Goal - Unai Elgezabal,Levante,90.0,,,,Goal,90.0,SecondHalf
+data_quality,events_with_coordinates,1952,,1952.0,,,,,,
+data_quality,events_with_xthreat,623,,623.0,,,,,,
+data_quality,events_with_outcome,1952,,1952.0,,,,,,
+data_quality,successful_events,1650,,1650.0,,,,,,
+data_quality,unique_players,32,,32.0,,,,,,
+data_quality,periods_played,4,,4.0,,,,,,
