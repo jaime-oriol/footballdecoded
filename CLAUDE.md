@@ -322,7 +322,7 @@ ORDER BY season DESC;
 ┌─────────────────────────────────────────────────────────────┐
 │                    1. DATA SOURCES                          │
 ├─────────────────────────────────────────────────────────────┤
-│  FBref.com          Understat.com      WhoScored.com       │
+│  FBref.com          Understat.com      WhoScored.com        │
 │  - 11 stat types    - xG metrics      - Event data          │
 │  - Season stats     - PPDA            - x/y coordinates     │
 │  - Match stats      - xG Chain        - Qualifiers          │
@@ -332,17 +332,17 @@ ORDER BY season DESC;
 ┌─────────────────────────────────────────────────────────────┐
 │              2. EXTRACTION (scrappers/)                     │
 ├─────────────────────────────────────────────────────────────┤
-│  BaseRequestsReader (FBref, Understat, Transfermarkt)      │
+│  BaseRequestsReader (FBref, Understat, Transfermarkt)       │
 │  - HTTP requests with TLS fingerprinting                    │
 │  - Rate limiting: 5-7s between requests                     │
 │  - User-Agent rotation (15 variants)                        │
 │  - Automatic retry (5 attempts)                             │
-│                                                              │
+│                                                             │
 │  BaseSeleniumReader (WhoScored)                             │
-│  - JavaScript rendering                                      │
+│  - JavaScript rendering                                     │
 │  - Undetected ChromeDriver                                  │
 │  - Incapsula blocking detection                             │
-│                                                              │
+│                                                             │
 │  Cache System (~/soccerdata/data/)                          │
 │  - 30 day expiration (configurable)                         │
 │  - Per-source directories                                   │
@@ -354,26 +354,26 @@ ORDER BY season DESC;
 │            3. SIMPLIFICATION (wrappers/)                    │
 ├─────────────────────────────────────────────────────────────┤
 │  51 High-Level Functions:                                   │
-│                                                              │
+│                                                             │
 │  FBref (15 functions)                                       │
 │  - get_player() / get_team()                                │
 │  - get_players() with parallel processing                   │
 │  - extract_league_players()                                 │
-│  Returns: 153 fields for players, 190+ for teams           │
-│                                                              │
+│  Returns: 153 fields for players, 190+ for teams            │
+│                                                             │
 │  Understat (16 functions)                                   │
 │  - get_player() / get_team()                                │
-│  - merge_with_fbref() [automatic integration]              │
+│  - merge_with_fbref() [automatic integration]               │
 │  - get_shots() with coordinates                             │
-│  Returns: 15 exclusive metrics (xG Chain, PPDA, etc.)      │
-│                                                              │
+│  Returns: 15 exclusive metrics (xG Chain, PPDA, etc.)       │
+│                                                             │
 │  WhoScored (18 functions)                                   │
-│  - get_match_events() [all actions with x/y]               │
-│  - get_pass_network() [connections + positions]            │
+│  - get_match_events() [all actions with x/y]                │
+│  - get_pass_network() [connections + positions]             │
 │  - get_player_heatmap()                                     │
-│  Returns: 42 columns with spatial data                     │
-│                                                              │
-│  Cache: ~/.footballdecoded_cache/ (24h expiry)             │
+│  Returns: 42 columns with spatial data                      │
+│                                                             │
+│  Cache: ~/.footballdecoded_cache/ (24h expiry)              │
 └──────────────┬──────────────────────────────┬──────────────┘
                │                              │
                ▼                              ▼
@@ -387,28 +387,28 @@ ORDER BY season DESC;
 │  - teams_european                                           │
 │  - players_extras    (Portugal, Netherlands, etc.)          │
 │  - teams_extras                                             │
-│                                                              │
+│                                                             │
 │  Unique ID System (SHA256):                                 │
-│  - Players: hash(name + birth_year + nationality)          │
-│  - Teams: hash(team_name + league)                         │
-│  - 16-char hexadecimal identifiers                         │
-│  - Enables multi-season tracking and transfer detection    │
-│                                                              │
+│  - Players: hash(name + birth_year + nationality)           │
+│  - Teams: hash(team_name + league)                          │
+│  - 16-char hexadecimal identifiers                          │
+│  - Enables multi-season tracking and transfer detection     │
+│                                                             │
 │  JSONB Fields:                                              │
 │  - fbref_metrics: 145+ metrics                              │
 │  - understat_metrics: 15 metrics                            │
 │  - transfermarkt_metrics: 9 fields                          │
-│                                                              │
+│                                                             │
 │  Data Quality:                                              │
-│  - data_quality_score: 0.0-1.0                             │
+│  - data_quality_score: 0.0-1.0                              │
 │  - processing_warnings: TEXT[]                              │
 │  - Validation on insert                                     │
-│                                                              │
+│                                                             │
 │  Loading Strategy:                                          │
 │  - Parallel processing (3 workers)                          │
 │  - Checkpoints every 25 records                             │
 │  - Adaptive rate limiting (0.5-3.0s)                        │
-│  - Block loading with pauses (10-20 min between leagues)   │
+│  - Block loading with pauses (10-20 min between leagues)    │
 └──────────────┬──────────────────────────────┬──────────────┘
                │                              │
                ▼                              ▼
@@ -416,7 +416,7 @@ ORDER BY season DESC;
 │           5. ANALYSIS & VISUALIZATION (viz/)                │
 ├─────────────────────────────────────────────────────────────┤
 │  match_data.py - 10-Step Enrichment Pipeline:               │
-│  1. Carries detection                                        │
+│  1. Carries detection                                       │
 │  2. xThreat calculation (12x8 grid)                         │
 │  3. Pre-assists identification                              │
 │  4. Possession chains                                       │
@@ -426,23 +426,23 @@ ORDER BY season DESC;
 │  8. Action type classification                              │
 │  9. Zone classification (18 zones)                          │
 │  10. xG merge with Understat                                │
-│                                                              │
+│                                                             │
 │  Output: 5 Optimized CSVs                                   │
 │  - match_events.csv (55 cols)                               │
 │  - match_aggregates.csv (36 cols)                           │
 │  - player_network.csv (18 cols)                             │
 │  - spatial_analysis.csv (29 cols)                           │
 │  - match_info.csv (11 cols)                                 │
-│                                                              │
+│                                                             │
 │  Visualizations:                                            │
 │  - Pass networks with player positions                      │
 │  - xG maps with shot outcomes                               │
 │  - Player radars with swarm plots                           │
 │  - Statistical comparison tables                            │
-│                                                              │
+│                                                             │
 │  Design System:                                             │
-│  - Unified colormap (deepskyblue → tomato)                 │
-│  - Background: #313332                                      │
+│  - Unified colormap (deepskyblue → tomato)                  │
+│  - Background: #313332                                    │
 │  - Typography: DejaVu Sans                                  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -525,7 +525,7 @@ python database/database_checker.py --quick
 
 # Output:
 # ┌─────────────────────────────────────────────────────┐
-# │ ENG-Premier League 2024-25: 647 players | 20 teams │
+# │ ENG-Premier League 2024-25: 647 players | 20 teams  │
 # │ Understat coverage: 98.5%                           │
 # │ Unique player IDs: 621                              │
 # │ Transfer detection: 26 players with multiple teams  │
