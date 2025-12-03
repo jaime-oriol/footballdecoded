@@ -25,6 +25,54 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 
 
+def _validate_target_metrics(
+    df: pd.DataFrame,
+    target_player_id: str,
+    feature_cols: List[str]
+) -> None:
+    """
+    Valida que el target tenga valores válidos (no NaN) en features críticos.
+
+    Args:
+        df: DataFrame con todas las columnas (antes de dropna)
+        target_player_id: ID del target
+        feature_cols: Lista de features que se usarán
+
+    Raises:
+        ValueError: Si faltan métricas críticas en target (con mensaje claro)
+    """
+    if target_player_id not in df['unique_player_id'].values:
+        raise ValueError(f"Target {target_player_id} not found in DataFrame")
+
+    target_row = df[df['unique_player_id'] == target_player_id].iloc[0]
+
+    # Identificar features críticos (FBref, excluyendo Understat que puede ser 0)
+    critical_features = [col for col in feature_cols if 'understat' not in col.lower()]
+
+    missing = []
+    for col in critical_features:
+        if pd.isna(target_row[col]):
+            missing.append(col)
+
+    if missing:
+        raise ValueError(
+            f"\n{'='*60}\n"
+            f"ERROR: Target player missing {len(missing)} critical FBref metrics\n"
+            f"{'='*60}\n"
+            f"Missing metrics (first 10): {missing[:10]}\n"
+            f"Total missing: {len(missing)}/{len(critical_features)}\n\n"
+            f"Possible causes:\n"
+            f"  1. Target from incompatible league/season (missing FBref coverage)\n"
+            f"  2. Target has insufficient playing time\n"
+            f"  3. Database extraction error\n\n"
+            f"Solutions:\n"
+            f"  - Use validate_required_metrics() before calling algorithm\n"
+            f"  - Check target has min_minutes >= 300\n"
+            f"  - Verify target league in FBref coverage\n"
+            f"{'='*60}"
+        )
+
+
 def find_similar_players_kmeans(
     df: pd.DataFrame,
     target_player_id: str,
@@ -68,44 +116,69 @@ def find_similar_players_kmeans(
     # ========== 2. SELECCIONAR FEATURES AUTOMÁTICAMENTE ==========
     basic_cols = ['unique_player_id', 'player_name', 'team', 'league', 'season', 'position']
 
-    # Todas las _per90
+    # SOLO columnas _per90 (métricas normalizadas)
     per90_cols = [col for col in df.columns if col.endswith('_per90')]
 
-    # Porcentajes y ratios
-    pct_cols = [col for col in df.columns
-                if any(x in col for x in ['%', '_pct', '/Sh', 'AvgLen', 'AvgDist'])]
+    # FILTRAR métricas de GK (irrelevantes para jugadores de campo)
+    gk_keywords = ['Save', 'PSxG', 'CS_per90', 'CS%', 'GA90', 'SoTA', 'Goal Kicks',
+                   'Launched', 'Passes_Att (GK)', 'Sweeper', 'Penalty Kicks_PK']
+    per90_cols = [col for col in per90_cols
+                  if not any(kw in col for kw in gk_keywords)]
 
-    # Understat ratios especiales
-    understat_ratios = [col for col in df.columns
-                        if 'understat_buildup_involvement_pct' in col]
+    feature_cols = [c for c in per90_cols if c not in basic_cols]
 
-    # Combinar y limpiar
-    feature_cols = list(set(per90_cols + pct_cols + understat_ratios))
-    feature_cols = [c for c in feature_cols if c not in basic_cols]
-
-    print(f"Features seleccionados automáticamente: {len(feature_cols)}")
+    print(f"Features seleccionados automáticamente: {len(feature_cols)} (solo _per90, excl. GK)")
 
     if len(feature_cols) == 0:
-        raise ValueError("No se encontraron features válidos (per90, porcentajes, ratios)")
+        raise ValueError("No se encontraron features válidos (columnas _per90)")
 
-    # ========== 3. MANEJAR NaNs ==========
+    # ========== 3. MANEJAR NaNs INTELIGENTEMENTE ==========
     df_work = df.copy()
 
-    # Understat faltante → imputar 0
+    # Understat faltante → imputar 0 (siempre opcional)
     understat_cols = [c for c in feature_cols if 'understat' in c.lower()]
     for col in understat_cols:
         if col in df_work.columns:
             df_work[col] = df_work[col].fillna(0)
 
-    # FBref NaNs → eliminar filas (son errores)
+    # Clasificar métricas FBref por importancia
     fbref_cols = [c for c in feature_cols if c not in understat_cols]
-    df_clean = df_work.dropna(subset=fbref_cols)
 
-    print(f"Jugadores tras limpieza: {len(df_clean)} (eliminados {len(df_work) - len(df_clean)} con NaNs)")
+    # Métricas CORE (si faltan → eliminar jugador) - usar nombres EXACTOS de BD
+    core_keywords = ['goals_per90', 'assists_per90', 'shots_per90',
+                     'passes_attempted_per90', 'passes_completed_per90',
+                     'Touches_Touches_per90', 'Tackles_Tkl_per90', 'interceptions_per90',
+                     'Carries_Carries_per90', 'non_penalty_expected_goals_per90',
+                     'expected_assists_per90', 'SCA_SCA_per90', 'GCA_GCA_per90']
+    core_metrics = [c for c in fbref_cols if c in core_keywords]
+
+    # Métricas SECUNDARIAS (si faltan → fillna(0), son métricas de equipo o eventos raros)
+    secondary_keywords = ['wins', 'draws', 'losses', 'Goals_CK', 'Goals_GA', 'Goals_PKA',
+                         'Crosses_Stp', 'Crosses_Opp', 'Launch', 'errors', 'OG', 'PKcon', 'PKwon']
+    secondary_metrics = [c for c in fbref_cols if any(kw in c for kw in secondary_keywords)]
+
+    # Imputar 0 en métricas secundarias (eventos raros o team records)
+    for col in secondary_metrics:
+        if col in df_work.columns:
+            df_work[col] = df_work[col].fillna(0)
+
+    # Imputar 0 en TODAS las métricas NO-CORE de FBref (pueden faltar en algunas ligas)
+    other_metrics = [c for c in fbref_cols if c not in core_metrics and c not in secondary_metrics]
+    for col in other_metrics:
+        if col in df_work.columns:
+            df_work[col] = df_work[col].fillna(0)
+
+    # Solo eliminar jugadores con NaNs en métricas CORE
+    df_clean = df_work.dropna(subset=core_metrics).reset_index(drop=True)
+
+    print(f"Jugadores tras limpieza: {len(df_clean)} (eliminados {len(df_work) - len(df_clean)} con NaNs en métricas CORE)")
 
     # Verificar que target sigue en df_clean
     if target_player_id not in df_clean['unique_player_id'].values:
         raise ValueError(f"Target {target_player_id} fue eliminado por NaNs. Revisa datos.")
+
+    # Validar métricas del target
+    _validate_target_metrics(df_clean, target_player_id, feature_cols)
 
     # ========== 4. EXTRAER MATRIZ ==========
     X = df_clean[feature_cols].values
