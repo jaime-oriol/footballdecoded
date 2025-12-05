@@ -114,11 +114,13 @@ _El diseño metodológico de este trabajo combina análisis descriptivo de caden
 
 **Selección de variables.** _El conjunto de métricas empleado abarca cinco dimensiones del rendimiento posicional: producción ofensiva (goles, asistencias, xG, xA por 90'), contribución en construcción (pases progresivos, pases al área rival, creación de ocasiones), eficiencia técnica (porcentaje de pases completados, toques en área rival), trabajo defensivo (recuperaciones, intercepciones, duelos ganados) y métricas físicas (distancia recorrida, sprints). La selección específica de variables se ajusta por demarcación: para delanteros centro se prioriza finalización y movimientos en área; para defensas centrales, métricas de duelo aéreo y anticipación; para mediocampistas, progresión y distribución. Este enfoque posicional evita comparaciones espurias entre perfiles funcionalmente distintos._
 
-**Algoritmo 1: K-Means Clustering con Validación Intra-Cluster.** _El primer método implementa clustering no supervisado mediante K-Means para identificar agrupaciones naturales de jugadores con perfiles estadísticos similares. El algoritmo segmenta la población de jugadores (filtrada por posición y liga) en k clusters utilizando distancia euclidiana como métrica de similitud. Para cada cadena de sustitución documentada, se verifica: (a) si el jugador vendido y su reemplazo pertenecen al mismo cluster, indicando proximidad en el espacio multidimensional de rendimiento; (b) la distancia euclidiana entre ambos perfiles, cuantificando el grado de similitud independientemente de la asignación de cluster. Un reemplazo exitoso debería mostrar co-pertenencia al mismo cluster y distancia euclidiana reducida. Este método proporciona validación categórica (mismo/diferente cluster) complementada con medida continua de similitud._
+**Algoritmo: PCA con Similitud Coseno.** _El método emplea Análisis de Componentes Principales (PCA) para proyectar el espacio de alta dimensionalidad (141 variables per90) a un subespacio reducido (20-29 componentes) que retiene 85% de la varianza explicada. Esta reducción dimensional elimina redundancias estadísticas entre métricas correlacionadas (ej: xG y goles, pases completados y asistencias) conservando la información discriminante entre perfiles. Sobre esta representación simplificada se calcula la similitud coseno entre el vector del jugador vendido y cada jugador del pool de análisis. La similitud coseno cuantifica la proximidad angular entre vectores independientemente de su magnitud, oscilando entre -1 (perfiles completamente opuestos) y 1 (perfiles idénticos en proporciones relativas). Valores >0.5 indican similitud fuerte; valores entre 0.3-0.5 similitud moderada; valores <0.3 perfiles estadísticamente distantes._
 
-**Algoritmo 2: PCA con Similitud Coseno.** _El segundo enfoque emplea Análisis de Componentes Principales (PCA) para proyectar el espacio de alta dimensionalidad (30-50 variables) a un subespacio reducido (5-10 componentes principales) que retiene >85% de la varianza explicada. Sobre esta representación simplificada se calcula la similitud coseno entre el vector del jugador vendido y el del fichado, métrica que cuantifica la proximidad angular entre perfiles independientemente de su magnitud. La similitud coseno oscila entre 0 (perfiles ortogonales, completamente distintos) y 1 (perfiles colineales, idénticos en proporciones relativas). Adicionalmente, para cada jugador vendido se genera un ranking de los N jugadores más similares en la base de datos, permitiendo evaluar si el reemplazo ejecutado figura entre las opciones estadísticamente óptimas. Este método ofrece un score cuantitativo continuo de similitud y permite análisis comparativo contra alternativas no ejecutadas._
+**Sistema de validación por ranking.** _Para cada jugador vendido se genera un ranking completo de similitud coseno sobre la población filtrada (posición, liga Big 5, edad <30 años, valor mercado <30M EUR, minutos >1250). El sistema clasifica el reemplazo ejecutado en tres categorías: (a) VALIDADO si figura en posiciones 1-10 del ranking, demostrando que el club identificó una de las opciones estadísticamente óptimas; (b) PARCIAL si figura en posiciones 11-30, indicando similitud moderada pero existencia de alternativas superiores no ejecutadas; (c) NO_VALIDADO si figura en posición >30, señalando que el fichaje responde a criterios no estadísticos (oportunidad de mercado, potencial proyectado, factores cualitativos). Este sistema cuantifica el grado de fundamentación data-driven de cada decisión._
 
-**Triangulación metodológica.** _La convergencia de resultados entre ambos algoritmos fortalece la validez de las conclusiones. Si tanto K-Means (enfoque de agrupación) como PCA-Coseno (enfoque de similitud directa) confirman proximidad estadística entre jugador vendido y reemplazo, la evidencia de fundamentación data-driven resulta robusta. Divergencias entre métodos señalan casos ambiguos que requieren inspección cualitativa adicional, como los fichajes fallidos de Bentaleb/Miramón en Lille tras la cadena exitosa Soumaré→Onana→Baleba._
+**Criterios de interpretación.** _Un reemplazo clasificado como VALIDADO confirma que el departamento de scouting identificó correctamente un perfil estadísticamente equivalente al vendido, demostrando proceso analítico robusto. Un reemplazo PARCIAL sugiere que, aunque existe similitud cuantificable, el club pudo haber optimizado la decisión considerando alternativas de mayor proximidad estadística. Un reemplazo NO_VALIDADO no implica fracaso deportivo, sino que la decisión priorizó factores no capturados por métricas de rendimiento: precio de oportunidad (agente libre, fin de contrato), potencial de desarrollo (juveniles), encaje táctico específico, o restricciones económicas que limitaron el universo de targets viables. El algoritmo valida la fundamentación estadística de decisiones ejecutadas, no predice éxito futuro ni considera viabilidad real de fichajes alternativos._
+
+**Limitaciones del método.** _El algoritmo retiene 85% de varianza explicada mediante PCA, descartando 15% de información presente en el espacio original de 141 dimensiones. Esta compresión puede eliminar matices distintivos entre perfiles híbridos o roles tácticos específicos. Adicionalmente, la similitud coseno mide proporciones relativas entre métricas, no magnitudes absolutas: dos jugadores con similitud 0.9 pueden tener volúmenes de producción diferentes (uno promedia 3 goles/90 y otro 6 goles/90, pero ambos distribuyen su producción proporcionalmente igual entre goles, asistencias, y creación). Finalmente, el método no captura factores cualitativos determinantes: intensidad defensiva sin balón, liderazgo, adaptación a sistemas tácticos específicos, o compatibilidad con compañeros de línea._
 
 **Limitaciones reconocidas.** _Este diseño no permite identificar el universo completo de alternativas que los clubes consideraron durante el proceso de fichaje, solo valida la fundamentación estadística de las decisiones ejecutadas. Asimismo, el análisis cuantitativo no captura factores cualitativos determinantes en contexto real: viabilidad económica del traspaso, disposición del jugador a fichar, encaje con filosofía del entrenador, o consideraciones extradeportivas (edad, situación contractual, potencial de reventa). La metodología debe interpretarse como condición necesaria pero no suficiente: la similitud estadística entre vendido y fichado demuestra criterio analítico, pero no garantiza éxito deportivo ni explica por qué un club seleccionó ese target específico entre múltiples opciones estadísticamente equivalentes._
 
@@ -509,3 +511,269 @@ Esta evidencia empírica refuta la narrativa de que la generación de plusvalía
 | 23 | Arsenal FC | 823,90 mill. € | 65 | 187,09 mill. € | 61 | **-636,81 mill. €** |
 | 24 | Manchester United | 950,85 mill. € | 64 | 278,82 mill. € | 70 | **-672,02 mill. €** |
 | 25 | Chelsea FC | 1,72 mil mill. € | 116 | 918,71 mill. € | 113 | **-796,69 mill. €** |
+---
+
+## ANEXO A: Métricas Disponibles
+
+Este anexo documenta las 169+ métricas empleadas en el análisis cuantitativo de similitud entre jugadores. Las métricas provienen de tres fuentes complementarias: FBref (estadísticas avanzadas derivadas de StatsBomb), Understat (métricas xG granulares), y Transfermarkt (información contractual y de mercado).
+
+### A.1. FBref - Estadísticas Avanzadas (185 métricas totales, 153 per90)
+
+**Categoría A: Goles y Finalización**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| goals | per90 | Big 5 + Extras |
+| non_penalty_goals | per90 | Big 5 + Extras |
+| penalty_kicks_made | per90 | Big 5 + Extras |
+| penalty_kicks_attempted | per90 | Big 5 + Extras |
+| shots | per90 | Big 5 + Extras |
+| shots_on_target | per90 | Big 5 + Extras |
+| shots_on_target_pct | NO (porcentaje) | Big 5 + Extras |
+| avg_shot_distance | NO (métrica absoluta) | Big 5 + Extras |
+| shots_free_kicks | per90 | Big 5 + Extras |
+| penalty_kicks_won | per90 | Big 5 + Extras |
+| penalty_kicks_conceded | per90 | Big 5 + Extras |
+
+**Categoría B: Pases**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| passes_completed | per90 | Big 5 + Extras |
+| passes_attempted | per90 | Big 5 + Extras |
+| pass_completion_pct | NO (porcentaje) | Big 5 + Extras |
+| passes_total_distance | per90 | Big 5 + Extras |
+| passes_progressive_distance | per90 | Big 5 + Extras |
+| passes_completed_short | per90 | Big 5 + Extras |
+| passes_attempted_short | per90 | Big 5 + Extras |
+| passes_completed_medium | per90 | Big 5 + Extras |
+| passes_attempted_medium | per90 | Big 5 + Extras |
+| passes_completed_long | per90 | Big 5 + Extras |
+| passes_attempted_long | per90 | Big 5 + Extras |
+| assists | per90 | Big 5 + Extras |
+| expected_assists | per90 | Big 5 + Extras |
+| key_passes | per90 | Big 5 + Extras |
+| passes_into_final_third | per90 | Big 5 + Extras |
+| passes_into_penalty_area | per90 | Big 5 + Extras |
+| crosses_into_penalty_area | per90 | Big 5 + Extras |
+| progressive_passes | per90 | Big 5 + Extras |
+
+**Categoría C: Tipos de Pase (Pass Types)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| passes_live | per90 | Big 5 + Extras |
+| passes_dead | per90 | Big 5 + Extras |
+| passes_from_free_kicks | per90 | Big 5 + Extras |
+| through_balls | per90 | Big 5 + Extras |
+| switches | per90 | Big 5 + Extras |
+| crosses | per90 | Big 5 + Extras |
+| throw_ins | per90 | Big 5 + Extras |
+| corner_kicks | per90 | Big 5 + Extras |
+| corner_kicks_inswinging | per90 | Big 5 + Extras |
+| corner_kicks_outswinging | per90 | Big 5 + Extras |
+| corner_kicks_straight | per90 | Big 5 + Extras |
+| passes_offside | per90 | Big 5 + Extras |
+| passes_blocked | per90 | Big 5 + Extras |
+
+**Categoría D: Creación de Ocasiones (Goal and Shot Creation - SCA/GCA)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| SCA_SCA | per90 | Big 5 + Extras |
+| SCA_PassLive | per90 | Big 5 + Extras |
+| SCA_PassDead | per90 | Big 5 + Extras |
+| SCA_TO | per90 | Big 5 + Extras |
+| SCA_Sh | per90 | Big 5 + Extras |
+| SCA_Fld | per90 | Big 5 + Extras |
+| SCA_Def | per90 | Big 5 + Extras |
+| GCA_GCA | per90 | Big 5 + Extras |
+| GCA_PassLive | per90 | Big 5 + Extras |
+| GCA_PassDead | per90 | Big 5 + Extras |
+| GCA_TO | per90 | Big 5 + Extras |
+| GCA_Sh | per90 | Big 5 + Extras |
+| GCA_Fld | per90 | Big 5 + Extras |
+| GCA_Def | per90 | Big 5 + Extras |
+
+**Categoría E: Acciones Defensivas**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| tackles | per90 | Big 5 + Extras |
+| tackles_won | per90 | Big 5 + Extras |
+| tackles_def_3rd | per90 | Big 5 + Extras |
+| tackles_mid_3rd | per90 | Big 5 + Extras |
+| tackles_att_3rd | per90 | Big 5 + Extras |
+| challenge_tackles | per90 | Big 5 + Extras |
+| challenges | per90 | Big 5 + Extras |
+| challenge_tackles_pct | NO (porcentaje) | Big 5 + Extras |
+| challenges_lost | per90 | Big 5 + Extras |
+| blocked_shots | per90 | Big 5 + Extras |
+| blocked_passes | per90 | Big 5 + Extras |
+| interceptions | per90 | Big 5 + Extras |
+| clearances | per90 | Big 5 + Extras |
+| errors | per90 | Big 5 + Extras |
+
+**Categoría F: Posesión y Toques (Possession)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| touches | per90 | Big 5 + Extras |
+| touches_def_pen_area | per90 | Big 5 + Extras |
+| touches_def_3rd | per90 | Big 5 + Extras |
+| touches_mid_3rd | per90 | Big 5 + Extras |
+| touches_att_3rd | per90 | Big 5 + Extras |
+| touches_att_pen_area | per90 | Big 5 + Extras |
+| touches_live_ball | per90 | Big 5 + Extras |
+| take_ons_attempted | per90 | Big 5 + Extras |
+| take_ons_successful | per90 | Big 5 + Extras |
+| take_ons_successful_pct | NO (porcentaje) | Big 5 + Extras |
+| take_ons_tackled | per90 | Big 5 + Extras |
+| carries | per90 | Big 5 + Extras |
+| carries_total_distance | per90 | Big 5 + Extras |
+| carries_progressive_distance | per90 | Big 5 + Extras |
+| progressive_carries | per90 | Big 5 + Extras |
+| carries_into_final_third | per90 | Big 5 + Extras |
+| carries_into_penalty_area | per90 | Big 5 + Extras |
+| miscontrols | per90 | Big 5 + Extras |
+| dispossessed | per90 | Big 5 + Extras |
+| passes_received | per90 | Big 5 + Extras |
+| progressive_passes_received | per90 | Big 5 + Extras |
+
+**Categoría G: Duelos Aéreos**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| aerials_won | per90 | Big 5 + Extras |
+| aerials_lost | per90 | Big 5 + Extras |
+| aerials_won_pct | NO (porcentaje) | Big 5 + Extras |
+
+**Categoría H: Disciplina**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| fouls_committed | per90 | Big 5 + Extras |
+| fouls_drawn | per90 | Big 5 + Extras |
+| offsides | per90 | Big 5 + Extras |
+| yellow_cards | per90 | Big 5 + Extras |
+| red_cards | per90 | Big 5 + Extras |
+| second_yellow_cards | per90 | Big 5 + Extras |
+
+**Categoría I: Expected Goals (xG)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| expected_goals | per90 | Big 5 + Extras |
+| non_penalty_expected_goals | per90 | Big 5 + Extras |
+| non_penalty_expected_goals_plus_assists | NO (suma compuesta) | Big 5 + Extras |
+| expected_goals_on_target | per90 | Big 5 + Extras |
+| expected_goals_buildup | per90 | Big 5 + Extras |
+
+**Categoría J: Porteros (excluidas del análisis outfield)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| saves | per90 | Big 5 + Extras |
+| save_pct | NO (porcentaje) | Big 5 + Extras |
+| clean_sheets | NO (absoluto) | Big 5 + Extras |
+| goals_against_per_90 | Ya per90 | Big 5 + Extras |
+| psxg_minus_goals_allowed | per90 | Big 5 + Extras |
+| launched_passes_completed | per90 | Big 5 + Extras |
+| goal_kicks_launched | per90 | Big 5 + Extras |
+| sweeper_defensive_actions_outside_pen_area | per90 | Big 5 + Extras |
+
+**Categoría K: Métricas de Equipo (Team Success)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| on_goals_for | NO (contexto) | Big 5 + Extras |
+| on_goals_against | NO (contexto) | Big 5 + Extras |
+| plus_minus | NO (diferencial) | Big 5 + Extras |
+| on_xg_for | NO (contexto) | Big 5 + Extras |
+| on_xg_against | NO (contexto) | Big 5 + Extras |
+| xg_plus_minus | NO (diferencial) | Big 5 + Extras |
+
+**Categoría L: Participación (Playing Time)**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| minutes_played | NO (base normalización) | Big 5 + Extras |
+| games | NO (absoluto) | Big 5 + Extras |
+| games_started | NO (absoluto) | Big 5 + Extras |
+| minutes_per_game | NO (promedio) | Big 5 + Extras |
+| games_subs | NO (absoluto) | Big 5 + Extras |
+| unused_sub | NO (absoluto) | Big 5 + Extras |
+| points_per_game | NO (métrica equipo) | Big 5 + Extras |
+
+**Categoría M: Resultados de Equipo**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| wins | NO (absoluto) | Big 5 + Extras |
+| draws | NO (absoluto) | Big 5 + Extras |
+| losses | NO (absoluto) | Big 5 + Extras |
+
+**Categoría N: Eventos Específicos**
+| Métrica | Normalización | Disponibilidad |
+|---------|---------------|----------------|
+| own_goals | per90 | Big 5 + Extras |
+| goals_against | per90 | Big 5 + Extras |
+| goals_from_penalties | per90 | Big 5 + Extras |
+| goals_from_free_kicks | per90 | Big 5 + Extras |
+| goals_from_corners | per90 | Big 5 + Extras |
+
+### A.2. Understat - Métricas xG Granulares (10 métricas totales, 7 per90)
+
+| Métrica | Normalización | Disponibilidad | Descripción |
+|---------|---------------|----------------|-------------|
+| understat_xg | per90 | Big 5 | xG total acumulado (shots xG) |
+| understat_xg_assist | per90 | Big 5 | xA total (expected assists) |
+| understat_xg_chain | per90 | Big 5 | xG generado en cadenas ofensivas donde participó |
+| understat_xg_buildup | per90 | Big 5 | xG generado en buildups donde participó (excluye shot y key pass) |
+| understat_shots | per90 | Big 5 | Total de tiros registrados |
+| understat_key_passes | per90 | Big 5 | Pases clave que generan shot |
+| understat_npxg | per90 | Big 5 | Non-penalty xG |
+| understat_buildup_involvement_pct | NO (porcentaje) | Big 5 | % de buildups del equipo donde participó |
+| understat_player_id | NO (ID) | Big 5 | Identificador interno Understat |
+| understat_team_id | NO (ID) | Big 5 | Identificador equipo Understat |
+
+**Nota:** Understat solo cubre las Big 5 leagues (ENG, ESP, ITA, GER, FRA). Ligas extras (Portugal, Países Bajos, etc.) NO tienen datos Understat. El algoritmo rellena con 0 las métricas Understat faltantes para evitar exclusión de jugadores de ligas secundarias.
+
+### A.3. Transfermarkt - Información Contractual y de Mercado (9 campos)
+
+| Campo | Tipo | Disponibilidad | Descripción |
+|-------|------|----------------|-------------|
+| transfermarkt_player_id | ID | Todas | Identificador único Transfermarkt |
+| transfermarkt_market_value_eur | Numérico | Todas | Valor de mercado en EUR (actualizado semestralmente) |
+| transfermarkt_birth_date | Fecha | Todas | Fecha nacimiento (YYYY-MM-DD) |
+| transfermarkt_club | String | Todas | Club actual según Transfermarkt |
+| transfermarkt_contract_start_date | Fecha | Todas | Inicio contrato actual |
+| transfermarkt_contract_end_date | Fecha | Todas | Fin contrato actual |
+| transfermarkt_contract_is_current | Boolean | Todas | Si contrato sigue vigente |
+| transfermarkt_position_specific | String | Todas | Posición específica (CB, LW, ST, CAM, etc.) |
+| transfermarkt_primary_foot | String | Todas | Pie dominante (left, right, both) |
+
+**Uso en análisis:** Los campos Transfermarkt se emplean para filtrado pre-algoritmo (max_market_value, max_age, positions) pero NO se normalizan per90 ni se incluyen en el cálculo de similitud. Solo las métricas de rendimiento (FBref + Understat) participan en PCA + Cosine.
+
+### A.4. Métricas Derivadas Generadas en el Pipeline
+
+Durante el procesamiento se generan métricas adicionales:
+
+| Métrica | Fuente | Descripción |
+|---------|--------|-------------|
+| age | Transfermarkt | Edad calculada desde birth_date |
+| unique_player_id | Hash | SHA256(name + birth_year + nationality) → 16 chars |
+| data_quality_score | Interno | 0.0-1.0, mide completitud de métricas |
+| is_transfer | Interno | Boolean, detecta cambios de equipo entre temporadas |
+| transfer_count | Interno | Número de transferencias detectadas |
+
+### A.5. Exclusiones del Análisis
+
+**Métricas excluidas de normalización per90:**
+- Porcentajes inherentes: `pass_completion_pct`, `shots_on_target_pct`, `take_ons_successful_pct`, `aerials_won_pct`, `save_pct`
+- Métricas ya normalizadas: `goals_against_per_90`, `plus_minus_per90`, `xg_plus_minus_per90`
+- Ratios y promedios: `npxG/Sh`, `avg_shot_distance`, `minutes_per_game`
+- Métricas contextuales de equipo: `on_goals_for`, `on_xg_for`, `points_per_game`, `wins`, `draws`, `losses`
+- IDs y metadata: `understat_player_id`, `transfermarkt_player_id`, `birth_date`
+
+**Métricas de portero excluidas para outfield players:**
+Todas las métricas que contienen keywords GK: `['Save', 'PSxG', 'CS_per90', 'CS%', 'GA90', 'SoTA', 'Goal Kicks', 'Launched', 'Passes_Att (GK)', 'Sweeper', 'Penalty Kicks_PK']`
+
+### A.6. Total de Métricas por Fase
+
+| Fase | FBref | Understat | Transfermarkt | Total |
+|------|-------|-----------|---------------|-------|
+| Raw JSONB | 185 | 10 | 9 | 204 |
+| Post per90 | 153 | 7 | 0 (filtro) | 160 |
+| Post excl. GK | 141 | 7 | 0 | 148 |
+| Input PCA | 141 per90 | + metadata (position, league, season) |
+
+**Nota final:** La reducción de 148 métricas a 141 se debe a la exclusión automática de columnas con <5 valores válidos en el pool analizado, lo cual varía por posición y temporada.
+

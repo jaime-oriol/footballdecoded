@@ -469,3 +469,255 @@ def validate_required_metrics(
         raise ValueError(error_msg)
 
     return missing
+
+
+def validate_replacement(
+    vendido_name: str,
+    reemplazo_name: str,
+    season: str,
+    positions: List[str],
+    vendido_team: Optional[str] = None,
+    reemplazo_team: Optional[str] = None,
+    max_market_value: int = 30_000_000,
+    max_age: int = 30,
+    min_minutes: int = 1250,
+    n_similar: int = 30,
+    pca_variance: float = 0.85,
+    robust_scaling: bool = False
+) -> Dict:
+    """
+    Wrapper completo para validar sustitución de jugadores.
+
+    Ejecuta todo el pipeline:
+    1. Query pool con filtros Transfermarkt
+    2. Añadir jugador vendido como exógeno si necesario
+    3. Extraer métricas JSONB a columnas
+    4. Calcular métricas per90
+    5. Ejecutar PCA + Cosine Similarity
+    6. Devolver resultado con validación
+
+    Args:
+        vendido_name: Nombre del jugador vendido
+        reemplazo_name: Nombre del reemplazo
+        season: Temporada de análisis (formato '2324', '2425', etc.)
+        positions: Lista de posiciones Transfermarkt (['LW', 'RW'], ['CB'], etc.)
+        vendido_team: Equipo del vendido (si múltiples coincidencias)
+        reemplazo_team: Equipo del reemplazo (si múltiples coincidencias)
+        max_market_value: Valor máximo mercado en EUR (default: 30M)
+        max_age: Edad máxima (default: 30)
+        min_minutes: Minutos mínimos (default: 1250)
+        n_similar: Número de similares a devolver (default: 30)
+        pca_variance: Varianza PCA (default: 0.85)
+        robust_scaling: Usar RobustScaler (default: False)
+
+    Returns:
+        Dict con resultado de find_similar_players_cosine:
+        - target_info: Info del jugador vendido
+        - replacement_info: Info y ranking del reemplazo
+        - similar_players: DataFrame con TOP-N
+        - score_distribution: Estadísticas de similitud
+        - pca_info: Información PCA
+        - metadata: Metadata del proceso
+
+    Raises:
+        ValueError: Si jugadores no encontrados o datos insuficientes
+
+    Example:
+        >>> result = validate_replacement(
+        ...     vendido_name='Pau Torres',
+        ...     reemplazo_name='Logan Costa',
+        ...     season='2324',
+        ...     positions=['CB'],
+        ...     max_market_value=30_000_000,
+        ...     max_age=30,
+        ...     min_minutes=1250
+        ... )
+        >>> print(result['replacement_info']['validation_status'])
+        'VALIDADO'
+    """
+    import numpy as np
+    from tfm.algorithms import find_similar_players_cosine
+
+    # Helper para extraer métricas JSONB
+    def _extract_metrics(df, col_name):
+        result = pd.DataFrame(index=df.index)
+        all_keys = set()
+        for _, row in df.iterrows():
+            if isinstance(row[col_name], dict):
+                all_keys.update(row[col_name].keys())
+
+        for key in all_keys:
+            values = []
+            for _, row in df.iterrows():
+                if isinstance(row[col_name], dict) and key in row[col_name]:
+                    raw_value = row[col_name][key]
+                    converted_value = _convert_to_float(raw_value)
+                    values.append(converted_value)
+                else:
+                    values.append(np.nan)
+
+            valid_count = pd.Series(values).notna().sum()
+            if valid_count >= 5:
+                result[key] = values
+
+        return result
+
+    # Helper para convertir a float
+    def _convert_to_float(value):
+        if isinstance(value, (int, float)):
+            return float(value)
+        if value is None or pd.isna(value):
+            return np.nan
+        if isinstance(value, str):
+            if value.strip() == '' or value.lower().strip() in ['nan', 'none', 'null', '-']:
+                return np.nan
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return np.nan
+        return np.nan
+
+    print(f"\n{'='*80}")
+    print(f"VALIDACIÓN: {vendido_name} → {reemplazo_name}")
+    print(f"{'='*80}")
+
+    # 1. Query pool de todas las Big 5
+    print(f"\n1. Query pool (season={season}, positions={positions})")
+
+    big5_leagues = [
+        'ENG-Premier League',
+        'ESP-La Liga',
+        'ITA-Serie A',
+        'GER-Bundesliga',
+        'FRA-Ligue 1'
+    ]
+
+    pools = []
+    for league in big5_leagues:
+        try:
+            league_pool = query_player_pool(
+                league=league,
+                season=season,
+                positions=positions,
+                max_market_value=max_market_value,
+                max_age=max_age,
+                min_minutes=min_minutes,
+                table_type='domestic'
+            )
+            if len(league_pool) > 0:
+                pools.append(league_pool)
+        except Exception as e:
+            print(f"   WARNING: {league} error: {e}")
+
+    if len(pools) == 0:
+        raise ValueError("No players found in Big 5 leagues with specified filters")
+
+    pool = pd.concat(pools, ignore_index=True)
+    print(f"   Pool: {len(pool)} jugadores (Big 5)")
+
+    # 2. Buscar vendido en pool
+    vendido_in_pool = pool[pool['player_name'].str.contains(vendido_name, case=False, na=False)]
+    if vendido_team:
+        vendido_in_pool = vendido_in_pool[vendido_in_pool['team'] == vendido_team]
+
+    if len(vendido_in_pool) == 0:
+        print(f"   Target '{vendido_name}' no en pool, añadiendo como exógeno")
+        # Buscar en otras ligas/temporadas
+        try:
+            full_df = add_exogenous_player(pool, vendido_name, 'ESP-La Liga', season, vendido_team)
+        except ValueError:
+            raise ValueError(f"Target '{vendido_name}' no encontrado en BD")
+    else:
+        print(f"   Target '{vendido_name}' ya en pool")
+        full_df = pool
+
+    # 3. Buscar reemplazo en pool
+    reemplazo_rows = full_df[full_df['player_name'].str.contains(reemplazo_name, case=False, na=False)]
+    if reemplazo_team:
+        reemplazo_rows = reemplazo_rows[reemplazo_rows['team'] == reemplazo_team]
+
+    if len(reemplazo_rows) == 0:
+        raise ValueError(f"Reemplazo '{reemplazo_name}' no encontrado en pool")
+    elif len(reemplazo_rows) > 1:
+        teams = reemplazo_rows['team'].unique().tolist()
+        raise ValueError(
+            f"Múltiples '{reemplazo_name}' encontrados: {teams}. "
+            f"Especificar reemplazo_team"
+        )
+
+    vendido_id = vendido_in_pool.iloc[0]['unique_player_id'] if len(vendido_in_pool) > 0 else \
+                 full_df[full_df['player_name'].str.contains(vendido_name, case=False, na=False)].iloc[0]['unique_player_id']
+    reemplazo_id = reemplazo_rows.iloc[0]['unique_player_id']
+
+    print(f"   Vendido ID: {vendido_id}")
+    print(f"   Reemplazo ID: {reemplazo_id}")
+
+    # 4. Extraer métricas JSONB
+    print(f"\n2. Extraer métricas JSONB")
+    fbref_df = _extract_metrics(full_df, 'fbref_metrics')
+    understat_df = _extract_metrics(full_df, 'understat_metrics')
+    transfermarkt_df = _extract_metrics(full_df, 'transfermarkt_metrics')
+
+    print(f"   FBref: {len(fbref_df.columns)} columnas")
+    print(f"   Understat: {len(understat_df.columns)} columnas")
+    print(f"   Transfermarkt: {len(transfermarkt_df.columns)} columnas")
+
+    # 5. Calcular per90
+    print(f"\n3. Calcular métricas per90")
+
+    exclude_per90 = {
+        'minutes_played', 'age', 'birth_year', 'games_started', 'minutes_per_game',
+        'minutes_per_start', 'games', 'games_subs', 'unused_sub', 'points_per_game',
+        'on_goals_for', 'on_goals_against', 'plus_minus', 'plus_minus_per90',
+        'plus_minus_wowy', 'on_xg_for', 'on_xg_against', 'xg_plus_minus',
+        'xg_plus_minus_per90', 'xg_plus_minus_wowy'
+    }
+
+    fbref_nums = fbref_df.select_dtypes(include=[np.number])
+    understat_nums = understat_df.select_dtypes(include=[np.number])
+
+    fbref_per90 = fbref_nums.loc[:, ~fbref_nums.columns.isin(exclude_per90)]
+    fbref_per90 = (fbref_per90.div(fbref_nums['minutes_played'], axis=0) * 90).round(3)
+    fbref_per90.columns = [f'{col}_per90' for col in fbref_per90.columns]
+
+    understat_per90 = understat_nums.loc[:, ~understat_nums.columns.isin(exclude_per90)]
+    understat_per90 = (understat_per90.div(fbref_nums['minutes_played'], axis=0) * 90).round(3)
+    understat_per90.columns = [f'{col}_per90' for col in understat_per90.columns]
+
+    print(f"   FBref per90: {len(fbref_per90.columns)} columnas")
+    print(f"   Understat per90: {len(understat_per90.columns)} columnas")
+
+    # 6. Concatenar todo
+    df_final = pd.concat([
+        full_df[['unique_player_id', 'player_name', 'team', 'league', 'season', 'position']],
+        fbref_df,
+        understat_df,
+        transfermarkt_df,
+        fbref_per90,
+        understat_per90
+    ], axis=1)
+
+    print(f"   DataFrame final: {len(df_final)} filas x {len(df_final.columns)} columnas")
+
+    # 7. Ejecutar algoritmo
+    print(f"\n4. Ejecutar PCA + Cosine Similarity")
+    result = find_similar_players_cosine(
+        df=df_final,
+        target_player_id=vendido_id,
+        n_similar=n_similar,
+        pca_variance=pca_variance,
+        return_all_scores=False,
+        replacement_id=reemplazo_id,
+        robust_scaling=robust_scaling
+    )
+
+    print(f"\n{'='*80}")
+    print(f"RESULTADO")
+    print(f"{'='*80}")
+    print(f"Reemplazo: {result['replacement_info']['player_name']}")
+    print(f"Posición: #{result['replacement_info']['rank']}")
+    print(f"Similitud: {result['replacement_info']['cosine_similarity']:.4f}")
+    print(f"Status: {result['replacement_info']['validation_status']}")
+    print(f"{'='*80}\n")
+
+    return result
