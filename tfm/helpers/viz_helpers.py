@@ -1,0 +1,210 @@
+"""
+Visualización helpers para TFM
+
+Funciones de visualización siguiendo el estilo FootballDecoded para generar
+imágenes de rankings y comparaciones de jugadores.
+"""
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from PIL import Image
+import os
+from typing import Dict
+import pandas as pd
+
+BACKGROUND_COLOR = '#313332'
+FONT_FAMILY = 'DejaVu Sans'
+
+
+def plot_top10_ranking(
+    result: Dict,
+    df_data: pd.DataFrame,
+    save_path: str = 'top10_ranking.png',
+    target_face_path: str = None,
+    highlight_target: bool = True,
+    dpi: int = 300
+) -> str:
+    """
+    Genera imagen PNG del TOP 10 ranking con estilo FootballDecoded.
+
+    Args:
+        result: Dict retornado por find_similar_players_cosine()
+        df_data: DataFrame original con datos completos
+        save_path: Ruta de salida PNG
+        target_face_path: Ruta a la foto del target (opcional)
+        highlight_target: Si True, destaca fila del target
+        dpi: Resolución imagen
+
+    Returns:
+        Ruta absoluta del archivo PNG generado
+    """
+    # Extraer datos
+    similar_df = result['similar_players'].head(10).copy()
+    target_info = result['target_info']
+    replacement_info = result.get('replacement_info')
+
+    # Enriquecer con age y market_value
+    similar_df = similar_df.merge(
+        df_data[['unique_player_id', 'age', 'transfermarkt_metrics']],
+        on='unique_player_id',
+        how='left'
+    )
+
+    def extract_market_value(row):
+        if pd.notna(row.get('transfermarkt_metrics')) and isinstance(row['transfermarkt_metrics'], dict):
+            val = row['transfermarkt_metrics'].get('transfermarkt_market_value_eur')
+            if val:
+                try:
+                    return float(val) / 1_000_000
+                except:
+                    return None
+        return None
+
+    similar_df['market_value_m'] = similar_df.apply(extract_market_value, axis=1)
+
+    # Setup figura
+    num_rows = len(similar_df)
+    has_footer = replacement_info and replacement_info.get('rank', 0) > 10
+    fig_height = 2.5 + (num_rows * 0.65) + (1.2 if has_footer else 0.5)
+
+    fig, ax = plt.subplots(figsize=(12, fig_height), facecolor=BACKGROUND_COLOR)
+    ax.set_facecolor(BACKGROUND_COLOR)
+    ax.set_xlim(0, 12)
+    y_max = 2.5 + (num_rows * 0.65) + (0.5 if has_footer else 0.3)
+    ax.set_ylim(0, y_max)
+    ax.axis('off')
+
+    y_top = y_max - 0.3
+    y_header_pos = y_top - 1.5
+    y_separator = y_header_pos - 0.2
+    y_rows_start = y_separator - 0.3
+
+    # Foto del target
+    target_name = target_info['player_name']
+    if target_face_path and os.path.exists(target_face_path):
+        try:
+            face_img = Image.open(target_face_path)
+            face_y_frac = (y_top - 1.25) / y_max
+            face_ax = fig.add_axes([0.05, face_y_frac, 0.12, 0.12])
+            face_ax.imshow(face_img)
+            face_ax.axis('off')
+        except:
+            pass
+
+    # Header
+    ax.text(
+        2, y_top - 0.4, "TOP 10 - Most Similar Players",
+        fontsize=18, fontweight='bold', color='white',
+        ha='left', va='center', family=FONT_FAMILY
+    )
+
+    target_season = target_info['season']
+    target_team = target_info.get('team', '')
+    ax.text(
+        2, y_top - 0.7, f"Target: {target_name} ({target_team}, {target_season})",
+        fontsize=14, color='white', ha='left', va='center', family=FONT_FAMILY
+    )
+
+    # Logo FootballDecoded
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Subir desde tfm/helpers/ hasta data/
+        data_root = os.path.dirname(os.path.dirname(current_dir))
+        logo_path = os.path.join(data_root, "blog", "logo", "Logo-blanco.png")
+
+        if os.path.exists(logo_path):
+            logo = Image.open(logo_path)
+            logo_y_frac = (y_top - 1.3) / y_max
+            logo_ax = fig.add_axes([0.675, logo_y_frac, 0.31, 0.145])
+            logo_ax.imshow(logo)
+            logo_ax.axis('off')
+    except:
+        pass
+
+    # Column headers
+    y_header = y_header_pos
+    ax.text(0.8, y_header, "Rank", fontsize=14, fontweight='bold',
+            color='white', family=FONT_FAMILY, va='center')
+    ax.text(1.8, y_header, "Player", fontsize=14, fontweight='bold',
+            color='white', family=FONT_FAMILY, va='center')
+    ax.text(5.5, y_header, "Team", fontsize=14, fontweight='bold',
+            color='white', family=FONT_FAMILY, va='center')
+    ax.text(8.0, y_header, "Age", fontsize=14, fontweight='bold',
+            color='white', ha='center', family=FONT_FAMILY, va='center')
+    ax.text(9.5, y_header, "Value (M€)", fontsize=14, fontweight='bold',
+            color='white', ha='right', family=FONT_FAMILY, va='center')
+    ax.text(11.2, y_header, "Similarity", fontsize=14, fontweight='bold',
+            color='white', ha='right', family=FONT_FAMILY, va='center')
+
+    # Header separator
+    ax.plot([0.5, 11.5], [y_separator, y_separator], color='grey', linewidth=0.5, alpha=0.6)
+
+    # Rows
+    y_start = y_rows_start
+    row_height = 0.65
+    replacement_id = replacement_info['unique_player_id'] if replacement_info else None
+
+    for idx, row in similar_df.iterrows():
+        y_pos = y_start - (idx * row_height)
+        player_id = row['unique_player_id']
+
+        if idx % 2 == 0:
+            rect = Rectangle(
+                (0.5, y_pos - 0.32), 11.0, row_height,
+                facecolor='white', alpha=0.05,
+                edgecolor='none'
+            )
+            ax.add_patch(rect)
+
+        is_target = (highlight_target and replacement_id and player_id == replacement_id)
+        if is_target:
+            # Fondo azul
+            rect_hl = Rectangle(
+                (0.5, y_pos - 0.32), 11.0, row_height,
+                facecolor='deepskyblue', alpha=0.15,
+                edgecolor='none', linewidth=0
+            )
+            ax.add_patch(rect_hl)
+            # Recuadro blanco grueso
+            rect_border = Rectangle(
+                (0.5, y_pos - 0.32), 11.0, row_height,
+                facecolor='none',
+                edgecolor='white', linewidth=2.5
+            )
+            ax.add_patch(rect_border)
+
+        rank = int(row['rank'])
+        player_name = str(row['player_name'])[:22]
+        team = str(row['team'])[:18]
+        similarity = float(row['cosine_similarity'])
+        age = int(row['age']) if pd.notna(row.get('age')) else '-'
+        market_val = row.get('market_value_m')
+        market_str = f"{market_val:.1f}" if pd.notna(market_val) else '-'
+
+        ax.text(0.8, y_pos, str(rank), fontsize=12, color='white',
+                family=FONT_FAMILY, va='center')
+        ax.text(1.8, y_pos, player_name, fontsize=12, color='white',
+                family=FONT_FAMILY, va='center')
+        ax.text(5.5, y_pos, team, fontsize=12, color='white',
+                family=FONT_FAMILY, va='center')
+        ax.text(8.0, y_pos, str(age), fontsize=12, color='white',
+                ha='center', family=FONT_FAMILY, va='center')
+        ax.text(9.5, y_pos, market_str, fontsize=12, color='white',
+                ha='right', family=FONT_FAMILY, va='center')
+        ax.text(11.2, y_pos, f"{similarity:.3f}", fontsize=12,
+                color='white', ha='right', family=FONT_FAMILY, va='center')
+
+    # Footer
+    if replacement_info and replacement_info.get('rank'):
+        target_rank = int(replacement_info['rank'])
+        if target_rank > 10:
+            y_footer = y_rows_start - (num_rows * row_height) - 0.5
+            footer_text = f"Target position in full ranking: #{target_rank}"
+            ax.text(6, y_footer, footer_text, fontsize=9, color='white',
+                    ha='center', va='center', style='italic', family=FONT_FAMILY)
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=dpi, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
+    plt.close()
+
+    return os.path.abspath(save_path)
