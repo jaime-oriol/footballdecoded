@@ -62,10 +62,44 @@ def plot_top10_ranking(
 
     similar_df['market_value_m'] = similar_df.apply(extract_market_value, axis=1)
 
+    # Si replacement no está en top-10, añadirlo al final
+    add_replacement_row = False
+    if replacement_info and replacement_info.get('rank', 0) > 10:
+        replacement_id = replacement_info['unique_player_id']
+        # Buscar el replacement en el resultado completo
+        full_results = result['similar_players']
+        replacement_row = full_results[full_results['unique_player_id'] == replacement_id]
+
+        if not replacement_row.empty:
+            replacement_row = replacement_row.copy()
+            # Enriquecer con datos adicionales
+            replacement_data = df_data[df_data['unique_player_id'] == replacement_id]
+            if not replacement_data.empty:
+                replacement_row.loc[replacement_row.index[0], 'age'] = replacement_data['age'].iloc[0]
+                tm_metrics = replacement_data['transfermarkt_metrics'].iloc[0]
+                replacement_row.loc[replacement_row.index[0], 'transfermarkt_metrics'] = tm_metrics
+
+                # Calcular market_value_m correctamente
+                if pd.notna(tm_metrics) and isinstance(tm_metrics, dict):
+                    val = tm_metrics.get('transfermarkt_market_value_eur')
+                    if val:
+                        try:
+                            replacement_row.loc[replacement_row.index[0], 'market_value_m'] = float(val) / 1_000_000
+                        except:
+                            replacement_row.loc[replacement_row.index[0], 'market_value_m'] = None
+                    else:
+                        replacement_row.loc[replacement_row.index[0], 'market_value_m'] = None
+                else:
+                    replacement_row.loc[replacement_row.index[0], 'market_value_m'] = None
+
+                # Añadir al dataframe
+                similar_df = pd.concat([similar_df, replacement_row], ignore_index=True)
+                add_replacement_row = True
+
     # Setup figura
     num_rows = len(similar_df)
-    has_footer = replacement_info and replacement_info.get('rank', 0) > 10
-    fig_height = 2.5 + (num_rows * 0.65) + (1.2 if has_footer else 0.5)
+    has_footer = False  # Ya no necesitamos footer si añadimos la fila
+    fig_height = 2.5 + (num_rows * 0.65) + 0.5
 
     fig, ax = plt.subplots(figsize=(12, fig_height), facecolor=BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
@@ -145,6 +179,12 @@ def plot_top10_ranking(
     replacement_id = replacement_info['unique_player_id'] if replacement_info else None
 
     for idx, row in similar_df.iterrows():
+        # Si es el replacement añadido (último y fuera del top-10), añadir separador
+        if add_replacement_row and idx == len(similar_df) - 1:
+            y_separator_replacement = y_start - ((idx - 0.3) * row_height)
+            ax.plot([0.5, 11.5], [y_separator_replacement, y_separator_replacement],
+                    color='grey', linewidth=1.5, linestyle='--', alpha=0.8)
+
         y_pos = y_start - (idx * row_height)
         player_id = row['unique_player_id']
 
@@ -193,15 +233,6 @@ def plot_top10_ranking(
                 ha='right', family=FONT_FAMILY, va='center')
         ax.text(11.2, y_pos, f"{similarity:.3f}", fontsize=12,
                 color='white', ha='right', family=FONT_FAMILY, va='center')
-
-    # Footer
-    if replacement_info and replacement_info.get('rank'):
-        target_rank = int(replacement_info['rank'])
-        if target_rank > 10:
-            y_footer = y_rows_start - (num_rows * row_height) - 0.5
-            footer_text = f"Target position in full ranking: #{target_rank}"
-            ax.text(6, y_footer, footer_text, fontsize=9, color='white',
-                    ha='center', va='center', style='italic', family=FONT_FAMILY)
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=dpi, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
