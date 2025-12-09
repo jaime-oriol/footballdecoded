@@ -70,7 +70,7 @@ XT_GRID = np.array([
 # MAIN EXTRACTION FUNCTION
 # ====================================================================
 
-def extract_match_complete(ws_id: int, us_id: int, league: str, season: str,
+def extract_match_complete(ws_id: int, us_id: Optional[int], league: str, season: str,
                           home_team: str, away_team: str, match_date: str) -> Dict[str, pd.DataFrame]:
     """
     Complete match data extraction and processing pipeline.
@@ -171,20 +171,23 @@ def _get_whoscored_data(match_id: int, league: str, season: str) -> Dict:
         print(f"WhoScored error: {e}")
         return {}
 
-def _get_understat_data_direct(match_id: int, league: str, home_team: str, away_team: str) -> Dict:
+def _get_understat_data_direct(match_id: Optional[int], league: str, home_team: str, away_team: str) -> Dict:
     """
     Universal Understat xG extractor bypassing broken schedule.
     Works for ALL leagues and ALL teams in current season.
-    
+
     Args:
-        match_id: Understat match ID
+        match_id: Understat match ID (or None if not available)
         league: League identifier (ESP-La Liga, ENG-Premier League, etc.)
         home_team: Home team name for validation
-        away_team: Away team name for validation
-        
+        away_team: Away_team name for validation
+
     Returns:
         Dictionary with 'shots' key containing xG-enhanced DataFrame
     """
+    if match_id is None:
+        return {}
+
     try:
         # Get league mapping for proper initialization
         from scrappers._config import LEAGUE_DICT

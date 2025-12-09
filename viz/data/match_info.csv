@@ -1,0 +1,77 @@
+info_category,info_key,info_value,team,numeric_value,first_minute,last_minute,minutes_active,event_type,minute,period
+match_metadata,match_id,Inter Miami CF_vs_Vancouver Whitecaps_2025-12-06,,,,,,,,
+match_metadata,home_team,Inter Miami CF,,,,,,,,
+match_metadata,away_team,Vancouver Whitecaps,,,,,,,,
+match_metadata,match_date,2025-12-06,,,,,,,,
+match_metadata,league,USA-MLS,,,,,,,,
+match_metadata,season,25-26,,,,,,,,
+match_metadata,total_events,1633,,,,,,,,
+match_metadata,match_duration_minutes,98,,,,,,,,
+team_stats,total_events,647,Inter Miami CF,647.0,,,,,,
+team_stats,possession_pct,39.6,Inter Miami CF,39.6,,,,,,
+team_stats,passes_attempted,295,Inter Miami CF,295.0,,,,,,
+team_stats,passes_completed,231,Inter Miami CF,231.0,,,,,,
+team_stats,pass_accuracy,78.3,Inter Miami CF,78.3,,,,,,
+team_stats,xthreat_total,11.166,Inter Miami CF,11.166,,,,,,
+team_stats,progressive_actions,48,Inter Miami CF,48.0,,,,,,
+team_stats,box_entries,7,Inter Miami CF,7.0,,,,,,
+team_stats,shots,8,Inter Miami CF,8.0,,,,,,
+team_stats,xg_total,0.0,Inter Miami CF,0.0,,,,,,
+team_stats,total_events,0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,possession_pct,0.0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,passes_attempted,0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,passes_completed,0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,pass_accuracy,0.0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,xthreat_total,0.0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,progressive_actions,0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,box_entries,0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,shots,0,Vancouver Whitecaps,0.0,,,,,,
+team_stats,xg_total,0.0,Vancouver Whitecaps,0.0,,,,,,
+player_participation,player_activity,Lionel Messi,Inter Miami CF,62.0,0.0,98.0,98.0,,,
+player_participation,player_activity,Sergio Busquets,Inter Miami CF,57.0,0.0,98.0,98.0,,,
+player_participation,player_activity,Baltasar Rodríguez,Inter Miami CF,37.0,0.0,55.0,55.0,,,
+player_participation,player_activity,Maximiliano Falcón,Inter Miami CF,52.0,0.0,87.0,87.0,,,
+player_participation,player_activity,Noah Allen,Inter Miami CF,54.0,0.0,95.0,95.0,,,
+player_participation,player_activity,Jordi Alba,Inter Miami CF,64.0,1.0,98.0,97.0,,,
+player_participation,player_activity,Rodrigo De Paul,Inter Miami CF,70.0,1.0,95.0,94.0,,,
+player_participation,player_activity,Ian Fray,Inter Miami CF,62.0,1.0,90.0,89.0,,,
+player_participation,player_activity,Rocco Ríos Novo,Inter Miami CF,60.0,2.0,97.0,95.0,,,
+player_participation,player_activity,Mateo Silvetti,Inter Miami CF,24.0,2.0,77.0,75.0,,,
+player_participation,player_activity,Tadeo Allende,Inter Miami CF,46.0,3.0,97.0,94.0,,,
+player_participation,player_activity,Telasco Segovia,Inter Miami CF,32.0,55.0,98.0,43.0,,,
+player_participation,player_activity,Yannick Bright,Inter Miami CF,13.0,77.0,95.0,18.0,,,
+player_participation,player_activity,Marcelo Weigandt,Inter Miami CF,5.0,90.0,94.0,4.0,,,
+timeline,key_event,Goal - Édier Ocampo,Vancouver,7.0,,,,Goal,7.0,FirstHalf
+timeline,key_event,Card - Baltasar Rodríguez,Inter Miami CF,12.0,,,,Card,12.0,FirstHalf
+timeline,key_event,Card - Brian White,Vancouver,16.0,,,,Card,16.0,FirstHalf
+timeline,key_event,Card - Édier Ocampo,Vancouver,44.0,,,,Card,44.0,FirstHalf
+timeline,key_event,Card - Maximiliano Falcón,Inter Miami CF,47.0,,,,Card,47.0,SecondHalf
+timeline,key_event,SubstitutionOff - Baltasar Rodríguez,Inter Miami CF,55.0,,,,SubstitutionOff,55.0,SecondHalf
+timeline,key_event,SubstitutionOn - Telasco Segovia,Inter Miami CF,55.0,,,,SubstitutionOn,55.0,SecondHalf
+timeline,key_event,Goal - Ali Ahmed,Vancouver,59.0,,,,Goal,59.0,SecondHalf
+timeline,key_event,Card - Tristan Blackmon,Vancouver,65.0,,,,Card,65.0,SecondHalf
+timeline,key_event,SubstitutionOff - Ali Ahmed,Vancouver,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Ryan Gauld,Vancouver,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,SubstitutionOff - Ralph Priso,Vancouver,67.0,,,,SubstitutionOff,67.0,SecondHalf
+timeline,key_event,SubstitutionOn - Joedrick Pupe,Vancouver,67.0,,,,SubstitutionOn,67.0,SecondHalf
+timeline,key_event,Goal - Rodrigo De Paul,Inter Miami CF,70.0,,,,Goal,70.0,SecondHalf
+timeline,key_event,Card - Andrés Cubas,Vancouver,73.0,,,,Card,73.0,SecondHalf
+timeline,key_event,SubstitutionOff - Mateo Silvetti,Inter Miami CF,77.0,,,,SubstitutionOff,77.0,SecondHalf
+timeline,key_event,SubstitutionOn - Yannick Bright,Inter Miami CF,77.0,,,,SubstitutionOn,77.0,SecondHalf
+timeline,key_event,SubstitutionOff - Andrés Cubas,Vancouver,81.0,,,,SubstitutionOff,81.0,SecondHalf
+timeline,key_event,SubstitutionOn - Kenji Cabrera,Vancouver,81.0,,,,SubstitutionOn,81.0,SecondHalf
+timeline,key_event,Card - Rodrigo De Paul,Inter Miami CF,85.0,,,,Card,85.0,SecondHalf
+timeline,key_event,Card - Mathías Laborda,Vancouver,85.0,,,,Card,85.0,SecondHalf
+timeline,key_event,SubstitutionOff - Emmanuel Sabbi,Vancouver,90.0,,,,SubstitutionOff,90.0,SecondHalf
+timeline,key_event,SubstitutionOn - Jayden Nelson,Vancouver,90.0,,,,SubstitutionOn,90.0,SecondHalf
+timeline,key_event,SubstitutionOff - Ian Fray,Inter Miami CF,90.0,,,,SubstitutionOff,90.0,SecondHalf
+timeline,key_event,SubstitutionOn - Marcelo Weigandt,Inter Miami CF,90.0,,,,SubstitutionOn,90.0,SecondHalf
+timeline,key_event,Card - Sebastian Berhalter,Vancouver,93.0,,,,Card,93.0,SecondHalf
+timeline,key_event,Goal - Tadeo Allende,Inter Miami CF,95.0,,,,Goal,95.0,SecondHalf
+timeline,key_event,Card - Rocco Ríos Novo,Inter Miami CF,97.0,,,,Card,97.0,SecondHalf
+data_quality,events_with_coordinates,1633,,1633.0,,,,,,
+data_quality,events_with_xthreat,490,,490.0,,,,,,
+data_quality,events_with_outcome,1633,,1633.0,,,,,,
+data_quality,successful_events,1330,,1330.0,,,,,,
+data_quality,unique_players,29,,29.0,,,,,,
+data_quality,periods_played,4,,4.0,,,,,,

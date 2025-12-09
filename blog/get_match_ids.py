@@ -47,6 +47,7 @@ def _normalize_team_name(team_name: str) -> list[str]:
         'Manchester United': ['Man United', 'Manchester Utd'],
         'Manchester City': ['Man City'],
         'Tottenham': ['Tottenham Hotspur', 'Spurs'],
+        'Inter Miami': ['Inter Miami CF', 'Miami', 'Inter Miami C.F.'],
     }
 
     for key, values in common_mappings.items():
