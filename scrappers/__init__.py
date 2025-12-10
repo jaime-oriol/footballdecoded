@@ -6,8 +6,10 @@ __all__ = [
     "FBref",
     "Understat",
     "WhoScored",
+    "SofaScore",
 ]
 
 from .fbref import FBref
 from .understat import Understat
 from .whoscored import WhoScored
+from .sofascore import SofaScore

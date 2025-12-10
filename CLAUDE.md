@@ -18,18 +18,20 @@ Antes de realizar cualquier tarea, revisa cuidadosamente el archivo CLAUDE.md.
 
 ```
 FootballDecoded/
-├── scrappers/              # Data extraction (~4,100 lines)
+├── scrappers/              # Data extraction (~4,400 lines)
 │   ├── _common.py          # Base classes (880 lines)
 │   ├── _config.py          # LEAGUE_DICT with 30+ leagues (268 lines)
 │   ├── fbref.py            # 15 methods, 11 stat types (1,440 lines)
-│   ├── understat.py        # xG specialist, 5 leagues (727 lines)
+│   ├── understat.py        # xG specialist, Big 5 only (727 lines)
+│   ├── sofascore.py        # xG data, all leagues (285 lines)
 │   ├── whoscored.py        # Spatial events with x/y coords (853 lines)
 │   └── transfermarkt.py    # Player profiles, market values
 │
-├── wrappers/               # Simplified API (~3,260 lines)
+├── wrappers/               # Simplified API (~3,400 lines)
 │   ├── README.md           # Complete API documentation
 │   ├── fbref_data.py       # 15 functions, 24h cache (762 lines)
 │   ├── understat_data.py   # 16 functions, merge capabilities (1,130 lines)
+│   ├── sofascore_data.py   # Shot events with xG (115 lines)
 │   ├── whoscored_data.py   # 18 functions, spatial analysis (1,250 lines)
 │   └── transfermarkt_data.py  # 2 functions (118 lines)
 │
@@ -40,16 +42,18 @@ FootballDecoded/
 │   ├── setup.sql           # 4 tables, 28 indices
 │   └── setup_extras.sql    # 2 extras tables
 │
-├── viz/                    # Visualization (~3,500 lines)
+├── viz/                    # Visualization (~4,800 lines)
 │   ├── templates/          # 6 Jupyter notebooks
-│   ├── match_data.py       # 10-step pipeline, 5 CSV outputs
+│   ├── match_data.py       # 10-step pipeline, 5 CSV outputs (Understat)
+│   ├── match_data_v2.py    # 10-step pipeline, 5 CSV outputs (SofaScore)
 │   ├── pass_network.py     # Network plots
 │   ├── shot_xg.py          # xG maps
 │   └── swarm_radar.py      # Player comparison radars
 │
-└── blog/                   # Assets
+└── blog/                   # Assets & Utilities
     ├── logos/              # Team logos (6 leagues)
-    └── notebooks/          # Analysis notebooks
+    ├── notebooks/          # Analysis notebooks
+    └── get_match_ids.py    # Match ID extractor (WhoScored/Understat)
 ```
 
 ## Quick Start
@@ -91,6 +95,7 @@ python database/data_loader.py
 
 ### 4. First Visualization
 
+**Big 5 Leagues (use Understat for xG):**
 ```python
 from viz.match_data import extract_match_complete
 
@@ -99,14 +104,33 @@ result = extract_match_complete(
     ws_id=1821769,
     us_id=16364,
     league="ESP-La Liga",
-    season="2024-25",
+    season="24-25",
     home_team="Athletic Club",
     away_team="Barcelona",
     match_date="2024-08-24"
 )
 # Generates 5 CSVs: events, aggregates, network, spatial, info
+```
 
-# Generate visualization
+**Other Leagues like MLS (use SofaScore for xG):**
+```python
+from viz.match_data_v2 import extract_match_complete_v2
+
+# Process match
+result = extract_match_complete_v2(
+    ws_id=1953302,
+    ss_id=14924703,  # SofaScore event ID
+    league="USA-MLS",
+    season="25-26",
+    home_team="Inter Miami CF",
+    away_team="Vancouver Whitecaps",
+    match_date="2024-12-06"
+)
+# Generates 5 CSVs: events, aggregates, network, spatial, info
+```
+
+**Generate visualization:**
+```python
 from viz.pass_network import plot_pass_network
 fig = plot_pass_network(
     csv_path='viz/data/player_network.csv',
@@ -118,7 +142,7 @@ fig.savefig('barcelona_network.png', dpi=300)
 ## Data Pipeline Architecture
 
 ```
-DATA SOURCES (FBref, Understat, WhoScored, Transfermarkt)
+DATA SOURCES (FBref, Understat, SofaScore, WhoScored, Transfermarkt)
     ↓
 EXTRACTION (scrappers/)
     - Rate limiting: 5-7s between requests
@@ -126,7 +150,7 @@ EXTRACTION (scrappers/)
     - TLS fingerprinting, User-Agent rotation
     ↓
 SIMPLIFICATION (wrappers/)
-    - 51 high-level functions
+    - 53 high-level functions
     - 24h cache
     - Parallel processing
     ↓
@@ -142,6 +166,10 @@ VISUALIZATION (viz/)
     - Professional plots
 ```
 
+**xG Data Source Selection:**
+- **Big 5 Leagues**: Use Understat (match_data.py) - More accurate xG models
+- **Other Leagues** (MLS, Portugal, etc.): Use SofaScore (match_data_v2.py) - Broader coverage
+
 ## Module Overview
 
 ### Scrapers (scrappers/)
@@ -154,6 +182,7 @@ VISUALIZATION (viz/)
 **Sources**:
 - **FBref** (fbref.py): 11 stat types, comprehensive coverage
 - **Understat** (understat.py): xG Chain, PPDA, xG Buildup (Big 5 only)
+- **SofaScore** (sofascore.py): xG/xgot data, all leagues (Selenium + API)
 - **WhoScored** (whoscored.py): Event data with x/y coordinates
 - **Transfermarkt** (transfermarkt.py): Market values, positions
 
@@ -175,6 +204,13 @@ VISUALIZATION (viz/)
 - `get_player()`, `get_team()`: Exclusive metrics
 - `merge_with_fbref()`: Auto-enrichment (KEY FUNCTION)
 - Returns: 15 exclusive metrics
+- **Coverage**: Big 5 leagues only
+
+**SofaScore** (sofascore_data.py):
+- `extract_shot_events()`: Shot data with xG/xgot values
+- `get_match_xg_summary()`: xG summary by team
+- Returns: 18 columns with shot data
+- **Coverage**: All major leagues (MLS, Big 5, Portugal, etc.)
 
 **WhoScored** (whoscored_data.py):
 - `get_match_events()`: All events with coords
@@ -224,9 +260,15 @@ python database/database_checker.py --full     # Complete analysis
 
 **See viz/README.md for complete documentation**
 
-**match_data.py** - Core Processing:
+**match_data.py** - Core Processing (Understat xG):
 - 10-step enrichment pipeline
 - Outputs 5 CSVs: events (55 cols), aggregates (36), network (18), spatial (29), info (11)
+- **Use for**: Big 5 leagues
+
+**match_data_v2.py** - Core Processing (SofaScore xG):
+- Same 10-step enrichment pipeline
+- Outputs same 5 CSVs with identical structure
+- **Use for**: MLS, Portugal, and other non-Big 5 leagues
 
 **Plots**:
 - `pass_network.py`: Network with positions
@@ -240,6 +282,25 @@ python database/database_checker.py --full     # Complete analysis
 - Typography: DejaVu Sans
 
 **Templates**: 6 Jupyter notebooks in viz/templates/
+
+### Utilities (blog/)
+
+**get_match_ids.py** - Match ID Extractor:
+- Extracts match IDs from WhoScored and Understat
+- Supports team name variations and fuzzy matching
+- **Usage**:
+  ```python
+  from blog.get_match_ids import extract_match_ids
+
+  ids = extract_match_ids(
+      team_name="Inter Miami",
+      league="USA-MLS",
+      season="2025",
+      sources=['whoscored']  # or ['understat'] for Big 5
+  )
+  ```
+- Returns: DataFrame with match_id, date, home_team, away_team, league, season
+- Handles both WhoScored slugs and Understat numeric IDs
 
 ## Supported Competitions
 
