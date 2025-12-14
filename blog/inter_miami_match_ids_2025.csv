@@ -1,41 +1,41 @@
-date,home_team,away_team,whoscored_id,stage,home_score,away_score,status,league,season
-2025-02-23 00:30:00,Inter Miami CF,New York City FC,1876813,Major League Soccer,2,2,6,USA-MLS,25-26
-2025-03-03 00:00:00,Houston Dynamo FC,Inter Miami CF,1876890,Major League Soccer,1,4,6,USA-MLS,25-26
-2025-03-09 20:00:00,Inter Miami CF,Charlotte FC,1876837,Major League Soccer,1,0,6,USA-MLS,25-26
-2025-03-16 23:00:00,Atlanta United,Inter Miami CF,1876903,Major League Soccer,1,2,6,USA-MLS,25-26
-2025-03-29 23:30:00,Inter Miami CF,Philadelphia Union,1876849,Major League Soccer,2,1,6,USA-MLS,25-26
-2025-04-06 23:00:00,Inter Miami CF,Toronto FC,1876913,Major League Soccer,1,1,6,USA-MLS,25-26
-2025-04-13 20:30:00,Chicago Fire FC,Inter Miami CF,1876930,Major League Soccer,0,0,6,USA-MLS,25-26
-2025-04-19 20:30:00,Columbus Crew,Inter Miami CF,1876933,Major League Soccer,0,1,6,USA-MLS,25-26
-2025-04-27 21:00:00,Inter Miami CF,FC Dallas,1876954,Major League Soccer,3,4,6,USA-MLS,25-26
-2025-05-03 23:30:00,Inter Miami CF,New York Red Bulls,1876966,Major League Soccer,4,1,6,USA-MLS,25-26
-2025-05-10 20:30:00,Minnesota United,Inter Miami CF,1877162,Major League Soccer,4,1,6,USA-MLS,25-26
-2025-05-15 02:30:00,San Jose Earthquakes,Inter Miami CF,1877141,Major League Soccer,3,3,6,USA-MLS,25-26
-2025-05-18 23:00:00,Inter Miami CF,Orlando City,1877159,Major League Soccer,0,3,6,USA-MLS,25-26
-2025-05-24 23:30:00,Philadelphia Union,Inter Miami CF,1877173,Major League Soccer,3,3,6,USA-MLS,25-26
-2025-05-28 23:30:00,Inter Miami CF,CF Montreal,1876988,Major League Soccer,4,2,6,USA-MLS,25-26
-2025-05-31 23:30:00,Inter Miami CF,Columbus Crew,1877039,Major League Soccer,5,1,6,USA-MLS,25-26
-2025-07-05 23:30:00,CF Montreal,Inter Miami CF,1876999,Major League Soccer,1,4,6,USA-MLS,25-26
-2025-07-09 23:30:00,New England Revolution,Inter Miami CF,1877013,Major League Soccer,1,2,6,USA-MLS,25-26
-2025-07-12 23:45:00,Inter Miami CF,Nashville SC,1877021,Major League Soccer,2,1,6,USA-MLS,25-26
-2025-07-16 23:30:00,FC Cincinnati,Inter Miami CF,1877073,Major League Soccer,3,0,6,USA-MLS,25-26
-2025-07-19 23:30:00,New York Red Bulls,Inter Miami CF,1877090,Major League Soccer,1,5,6,USA-MLS,25-26
-2025-07-26 23:15:00,Inter Miami CF,FC Cincinnati,1877112,Major League Soccer,0,0,6,USA-MLS,25-26
-2025-08-11 00:00:00,Orlando City,Inter Miami CF,1877178,Major League Soccer,4,1,6,USA-MLS,25-26
-2025-08-16 23:30:00,Inter Miami CF,LA Galaxy,1877187,Major League Soccer,3,1,6,USA-MLS,25-26
-2025-08-23 23:30:00,DC United,Inter Miami CF,1877214,Major League Soccer,1,1,6,USA-MLS,25-26
-2025-09-13 23:30:00,Charlotte FC,Inter Miami CF,1877245,Major League Soccer,3,0,6,USA-MLS,25-26
-2025-09-16 23:30:00,Inter Miami CF,Seattle Sounders FC,1877270,Major League Soccer,3,1,6,USA-MLS,25-26
-2025-09-20 23:30:00,Inter Miami CF,DC United,1877280,Major League Soccer,3,2,6,USA-MLS,25-26
-2025-09-24 23:30:00,New York City FC,Inter Miami CF,1877309,Major League Soccer,0,4,6,USA-MLS,25-26
-2025-09-27 20:30:00,Toronto FC,Inter Miami CF,1877315,Major League Soccer,1,1,6,USA-MLS,25-26
-2025-09-30 23:30:00,Inter Miami CF,Chicago Fire FC,1877229,Major League Soccer,3,5,6,USA-MLS,25-26
-2025-10-04 23:30:00,Inter Miami CF,New England Revolution,1877267,Major League Soccer,4,1,6,USA-MLS,25-26
-2025-10-11 23:30:00,Inter Miami CF,Atlanta United,1877040,Major League Soccer,4,0,6,USA-MLS,25-26
-2025-10-18 22:00:00,Nashville SC,Inter Miami CF,1877307,Major League Soccer,2,5,6,USA-MLS,25-26
-2025-10-25 00:00:00,Inter Miami CF,Nashville SC,1951142,Major League Soccer Playoff,3,1,6,USA-MLS,25-26
-2025-11-01 23:30:00,Nashville SC,Inter Miami CF,1951143,Major League Soccer Playoff,2,1,6,USA-MLS,25-26
-2025-11-09 01:00:00,Inter Miami CF,Nashville SC,1951675,Major League Soccer Playoff,4,0,6,USA-MLS,25-26
-2025-11-23 22:00:00,FC Cincinnati,Inter Miami CF,1952056,Major League Soccer Playoff,0,4,6,USA-MLS,25-26
-2025-11-29 23:00:00,Inter Miami CF,New York City FC,1953168,Major League Soccer Playoff,5,1,6,USA-MLS,25-26
-2025-12-06 19:30:00,Inter Miami CF,Vancouver Whitecaps,1953302,Major League Soccer Playoff,3,1,6,USA-MLS,25-26
+date,home_team,away_team,whoscored_id,stage,home_score,away_score,status,league,season,sofascore_id
+2025-02-23 00:30:00,Inter Miami CF,New York City FC,1876813,Major League Soccer,2,2,6,USA-MLS,25-26,13268296
+2025-03-03 00:00:00,Houston Dynamo FC,Inter Miami CF,1876890,Major League Soccer,1,4,6,USA-MLS,25-26,13268324
+2025-03-09 20:00:00,Inter Miami CF,Charlotte FC,1876837,Major League Soccer,1,0,6,USA-MLS,25-26,13268341
+2025-03-16 23:00:00,Atlanta United,Inter Miami CF,1876903,Major League Soccer,1,2,6,USA-MLS,25-26,13268357
+2025-03-29 23:30:00,Inter Miami CF,Philadelphia Union,1876849,Major League Soccer,2,1,6,USA-MLS,25-26,13268376
+2025-04-06 23:00:00,Inter Miami CF,Toronto FC,1876913,Major League Soccer,1,1,6,USA-MLS,25-26,13299310
+2025-04-13 20:30:00,Chicago Fire FC,Inter Miami CF,1876930,Major League Soccer,0,0,6,USA-MLS,25-26,13299331
+2025-04-19 20:30:00,Columbus Crew,Inter Miami CF,1876933,Major League Soccer,0,1,6,USA-MLS,25-26,13299338
+2025-04-27 21:00:00,Inter Miami CF,FC Dallas,1876954,Major League Soccer,3,4,6,USA-MLS,25-26,13299372
+2025-05-03 23:30:00,Inter Miami CF,New York Red Bulls,1876966,Major League Soccer,4,1,6,USA-MLS,25-26,13299395
+2025-05-10 20:30:00,Minnesota United,Inter Miami CF,1877162,Major League Soccer,4,1,6,USA-MLS,25-26,13299413
+2025-05-15 02:30:00,San Jose Earthquakes,Inter Miami CF,1877141,Major League Soccer,3,3,6,USA-MLS,25-26,13299448
+2025-05-18 23:00:00,Inter Miami CF,Orlando City,1877159,Major League Soccer,0,3,6,USA-MLS,25-26,13299332
+2025-05-24 23:30:00,Philadelphia Union,Inter Miami CF,1877173,Major League Soccer,3,3,6,USA-MLS,25-26,13299369
+2025-05-28 23:30:00,Inter Miami CF,CF Montreal,1876988,Major League Soccer,4,2,6,USA-MLS,25-26,13299417
+2025-05-31 23:30:00,Inter Miami CF,Columbus Crew,1877039,Major League Soccer,5,1,6,USA-MLS,25-26,13299463
+2025-07-05 23:30:00,CF Montreal,Inter Miami CF,1876999,Major League Soccer,1,4,6,USA-MLS,25-26,13295810
+2025-07-09 23:30:00,New England Revolution,Inter Miami CF,1877013,Major League Soccer,1,2,6,USA-MLS,25-26,13295821
+2025-07-12 23:45:00,Inter Miami CF,Nashville SC,1877021,Major League Soccer,2,1,6,USA-MLS,25-26,13295824
+2025-07-16 23:30:00,FC Cincinnati,Inter Miami CF,1877073,Major League Soccer,3,0,6,USA-MLS,25-26,13295840
+2025-07-19 23:30:00,New York Red Bulls,Inter Miami CF,1877090,Major League Soccer,1,5,6,USA-MLS,25-26,13295856
+2025-07-26 23:15:00,Inter Miami CF,FC Cincinnati,1877112,Major League Soccer,0,0,6,USA-MLS,25-26,13295872
+2025-08-11 00:00:00,Orlando City,Inter Miami CF,1877178,Major League Soccer,4,1,6,USA-MLS,25-26,13295894
+2025-08-16 23:30:00,Inter Miami CF,LA Galaxy,1877187,Major League Soccer,3,1,6,USA-MLS,25-26,13295897
+2025-08-23 23:30:00,DC United,Inter Miami CF,1877214,Major League Soccer,1,1,6,USA-MLS,25-26,13265548
+2025-09-13 23:30:00,Charlotte FC,Inter Miami CF,1877245,Major League Soccer,3,0,6,USA-MLS,25-26,13299376
+2025-09-16 23:30:00,Inter Miami CF,Seattle Sounders FC,1877270,Major League Soccer,3,1,6,USA-MLS,25-26,13265522
+2025-09-20 23:30:00,Inter Miami CF,DC United,1877280,Major League Soccer,3,2,6,USA-MLS,25-26,13265490
+2025-09-24 23:30:00,New York City FC,Inter Miami CF,1877309,Major League Soccer,0,4,6,USA-MLS,25-26,13265523
+2025-09-27 20:30:00,Toronto FC,Inter Miami CF,1877315,Major League Soccer,1,1,6,USA-MLS,25-26,13265524
+2025-09-30 23:30:00,Inter Miami CF,Chicago Fire FC,1877229,Major League Soccer,3,5,6,USA-MLS,25-26,14541129
+2025-10-04 23:30:00,Inter Miami CF,New England Revolution,1877267,Major League Soccer,4,1,6,USA-MLS,25-26,13265568
+2025-10-11 23:30:00,Inter Miami CF,Atlanta United,1877040,Major League Soccer,4,0,6,USA-MLS,25-26,14053134
+2025-10-18 22:00:00,Nashville SC,Inter Miami CF,1877307,Major League Soccer,2,5,6,USA-MLS,25-26,13265487
+2025-10-25 00:00:00,Inter Miami CF,Nashville SC,1951142,Major League Soccer Playoff,3,1,6,USA-MLS,25-26,14917313
+2025-11-01 23:30:00,Nashville SC,Inter Miami CF,1951143,Major League Soccer Playoff,2,1,6,USA-MLS,25-26,14917327
+2025-11-09 01:00:00,Inter Miami CF,Nashville SC,1951675,Major League Soccer Playoff,4,0,6,USA-MLS,25-26,14917326
+2025-11-23 22:00:00,FC Cincinnati,Inter Miami CF,1952056,Major League Soccer Playoff,0,4,6,USA-MLS,25-26,14924705
+2025-11-29 23:00:00,Inter Miami CF,New York City FC,1953168,Major League Soccer Playoff,5,1,6,USA-MLS,25-26,14924707
+2025-12-06 19:30:00,Inter Miami CF,Vancouver Whitecaps,1953302,Major League Soccer Playoff,3,1,6,USA-MLS,25-26,14924703
