@@ -34,6 +34,9 @@ pip-log.txt
 
 # Data
 .ipynb_checkpoints
+blog/notebooks/data/
+blog/notebooks/processing_log.csv
+blog/notebooks/failed_matches.csv
 
 # Conda environments
 envs/

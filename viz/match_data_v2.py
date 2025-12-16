@@ -71,7 +71,8 @@ XT_GRID = np.array([
 # ====================================================================
 
 def extract_match_complete_v2(ws_id: int, ss_id: Optional[int], league: str, season: str,
-                          home_team: str, away_team: str, match_date: str) -> Dict[str, pd.DataFrame]:
+                          home_team: str, away_team: str, match_date: str,
+                          output_dir: Optional[str] = None) -> Dict[str, pd.DataFrame]:
     """
     Complete match data extraction and processing pipeline (V2 - SofaScore).
 
@@ -89,6 +90,7 @@ def extract_match_complete_v2(ws_id: int, ss_id: Optional[int], league: str, sea
         home_team: Home team name
         away_team: Away team name
         match_date: Match date in YYYY-MM-DD format
+        output_dir: Custom output directory for CSVs (default: ./viz/data/)
 
     Returns:
         Dictionary with processing status and event count
@@ -130,7 +132,7 @@ def extract_match_complete_v2(ws_id: int, ss_id: Optional[int], league: str, sea
     hull_data = _generate_team_hulls(events, home_team, away_team)
     
     # Export optimized CSV files for visualization consumption
-    _generate_validation_csvs(events, hull_data, home_team, away_team, match_date, league, season)
+    _generate_validation_csvs(events, hull_data, home_team, away_team, match_date, league, season, output_dir)
     
     # Summary
     shots = events[events['event_type'].str.contains('Shot|Goal', case=False, na=False)]
@@ -803,13 +805,16 @@ def _create_convex_hull(events_df: pd.DataFrame, team_name: str) -> Dict:
     except:
         return None
 
-def _generate_validation_csvs(events: pd.DataFrame, hull_data: pd.DataFrame, 
-                            home_team: str, away_team: str, match_date: str, 
-                            league: str, season: str):
+def _generate_validation_csvs(events: pd.DataFrame, hull_data: pd.DataFrame,
+                            home_team: str, away_team: str, match_date: str,
+                            league: str, season: str, output_dir: Optional[str] = None):
     """Generate 5 optimized validation CSVs for perfect visualizations"""
-    
+
     # Create simple data directory
-    base_dir = os.path.join(os.path.dirname(__file__), 'data')
+    if output_dir is None:
+        base_dir = os.path.join(os.path.dirname(__file__), 'data')
+    else:
+        base_dir = output_dir
     os.makedirs(base_dir, exist_ok=True)
     
     # 1. match_events.csv - TODOS los eventos enriquecidos
