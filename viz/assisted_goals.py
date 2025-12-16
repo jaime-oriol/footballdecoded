@@ -115,10 +115,10 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
 
     # Plot assist-to-shot connections (dotted lines)
     for _, shot in shots_df.iterrows():
-        if all(pd.notna(shot[[' x_assist', 'y_assist', 'x_shot', 'y_shot']])):
+        if all(pd.notna(shot[['x_assist', 'y_assist', 'x_shot', 'y_shot']])):
             pitch.lines(
-                shot['y_assist'], shot['x_assist'],
-                shot['y_shot'], shot['x_shot'],
+                shot['x_assist'], shot['y_assist'],
+                shot['x_shot'], shot['y_shot'],
                 linestyle='--',
                 color='white',
                 alpha=0.3,
@@ -140,13 +140,10 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
             # Border thickness: thicker for goals
             linewidth = 3 if is_goal else 1
 
-            # Size by xG
-            size = 200 + (xg_val * 600)
-
             # Plot shot
             pitch.scatter(
-                shot['y_shot'], shot['x_shot'],
-                s=size,
+                shot['x_shot'], shot['y_shot'],
+                s=200,
                 c=xg_val,
                 cmap=node_cmap,
                 vmin=0, vmax=0.8,

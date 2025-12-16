@@ -137,29 +137,21 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
     # xG COLOR SCALE: Horizontal colorbar
     sm = plt.cm.ScalarMappable(cmap=node_cmap, norm=plt.Normalize(vmin=0, vmax=0.8))
     sm.set_array([])
-    cb_ax = fig.add_axes([0.53, 0.107, 0.35, 0.03])
+    cb_ax = fig.add_axes([0.25, 0.07, 0.5, 0.025])
     cbar = fig.colorbar(sm, cax=cb_ax, orientation='horizontal')
     cbar.outline.set_edgecolor('w')
-    cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
+    cbar.ax.tick_params(labelsize=8, colors='w')
+    cbar.set_label("xG Generated", loc="center", color='w', fontweight='bold', fontsize=9)
 
-    # LEGEND: Arrow widths
-    legend_ax = fig.add_axes([0.075, 0.07, 0.45, 0.08])
+    # LEGEND: Arrow width explanation
+    legend_ax = fig.add_axes([0.075, 0.065, 0.15, 0.045])
     legend_ax.axis("off")
-    plt.xlim([0, 5])
-    plt.ylim([0, 1])
+    legend_ax.set_xlim([0, 1])
+    legend_ax.set_ylim([0, 1])
 
-    # Arrow width examples
-    legend_ax.arrow(0.1, 0.7, 0.4, 0, width=0.05, head_width=0.15,
-                   head_length=0.08, fc='w', ec='w')
-    legend_ax.text(0.6, 0.61, "Low xG", color="w", fontfamily=font, fontsize=9)
-
-    legend_ax.arrow(1.2, 0.5, 0.4, 0, width=0.10, head_width=0.20,
-                   head_length=0.08, fc='w', ec='w')
-    legend_ax.text(1.7, 0.41, "Medium xG", color="w", fontfamily=font, fontsize=9)
-
-    legend_ax.arrow(2.5, 0.3, 0.4, 0, width=0.15, head_width=0.25,
-                   head_length=0.08, fc='w', ec='w')
-    legend_ax.text(3.0, 0.21, "High xG", color="w", fontfamily=font, fontsize=9)
+    # Note about arrow width
+    legend_ax.text(0.5, 0.5, "Arrow width = xG", color="w", fontfamily=font,
+                  fontsize=9, ha='center', va='center', style='italic')
 
     # TITLES
     title_text = f"{player_name} - Assist Passes"

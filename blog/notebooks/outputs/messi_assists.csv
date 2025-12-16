@@ -1,58 +1,1492 @@
-game_id,period,minute,second,expanded_minute,type,outcome_type,team_id,team,player_id,player,x,y,end_x,end_y,goal_mouth_y,goal_mouth_z,blocked_x,blocked_y,qualifiers,is_touch,is_shot,is_goal,card_type,related_event_id,related_player_id,match_id,data_source,pass_length,is_longball,is_header,is_cross,is_through_ball,shot_body_part,is_assist,field_zone,is_successful,event_type,possession_sequence,next_player,distance_to_goal,pass_distance,event_id,take_ons_in_carry,xthreat,xthreat_gen,is_pre_assist,possession_id,possession_team,is_progressive,is_box_entry,pass_outcome,action_type,zone_id,xg,match_folder,match_date
-1876813,FirstHalf,4.0,35.0,4,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,99.5,0.5,87.3,11.9,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '2.60'}, {'type': {'displayName': 'CornerTaken', 'value': 6}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '11.9'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '15.0'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '87.3'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Right'}]",True,,,,,,1876813,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,32,David Ruíz,49.5,16.7,,,0.01409316349,0.01409316349,False,36,Inter Miami CF,False,False,Goal,Offensive,16,0.0,2025-02-23_InterMiamiCF_NewYorkCityFC,2025-02-23
-1876813,FirstHalf,4.0,37.0,4,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,79.7,14.6,73.9,36.6,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '73.9'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.96'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '16.2'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '36.6'}]",True,,,,,,1876813,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,32,Jordi Alba,40.81,22.75,,,0.0498591794799999,0.0498591794799999,False,36,Inter Miami CF,False,False,Goal,Offensive,13,0.0,2025-02-23_InterMiamiCF_NewYorkCityFC,2025-02-23
-1876813,FirstHalf,4.0,39.0,4,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,94.0,33.9,94.2,48.5,,,,,"[{'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '48.5'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '94.2'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.55'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '9.9'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'FromCorner', 'value': 25}}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1876813,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,32,Tomás Avilés,17.18,14.6,,,0.0204125982,0.0204125982,False,36,Inter Miami CF,False,False,Goal,Offensive,17,0.0,2025-02-23_InterMiamiCF_NewYorkCityFC,2025-02-23
-1876813,SecondHalf,99.0,23.0,108,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,78.1,37.2,90.7,37.4,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '13.2'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '90.7'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.01'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '37.4'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1876813,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,470,Telasco Segovia,25.37,12.6,,,-0.02618841174,0.0,False,524,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-02-23_InterMiamiCF_NewYorkCityFC,2025-02-23
-1876903,SecondHalf,88.0,0.0,92,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,87.1,3.2,78.5,5.9,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '9.2'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '5.9'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '2.94'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Right'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '78.5'}]",True,,,,,,1876903,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,380,Fafà Picault,48.55,9.01,,,0.0079744965599999,0.0079744965599999,False,401,Inter Miami CF,False,False,Goal,Offensive,16,0.0,2025-03-16_AtlantaUnited_InterMiamiCF,2025-03-16
-1876933,FirstHalf,29.0,27.0,29,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,29.8,10.0,12.6,37.0,,,,,"[{'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '37.0'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '25.8'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '2.35'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Back'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '12.6'}]",True,,,,,,1876933,whoscored,,False,False,False,False,,False,Defensive_Left,True,Pass,137,Gonzalo Luján,80.8,32.01,,,0.0027620211999999,0.0027620211999999,False,139,Inter Miami CF,False,False,Goal,Offensive,4,0.0,2025-04-19_ColumbusCrew_InterMiamiCF,2025-04-19
-1876966,FirstHalf,29.0,38.0,29,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,99.5,0.5,85.6,10.4,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '85.6'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '10.4'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '2.71'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '16.1'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Right'}, {'type': {'displayName': 'CornerTaken', 'value': 6}}]",True,,,,,,1876966,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,162,Marcelo Weigandt,49.5,17.07,,,0.01444209473,0.01444209473,False,164,Inter Miami CF,False,False,Goal,Offensive,16,0.0,2025-05-03_InterMiamiCF_NewYorkRedBulls,2025-05-03
-1876966,FirstHalf,38.0,40.0,38,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,53.3,32.5,75.8,18.9,,,,,"[{'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '18.9'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '75.8'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Right'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '25.4'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.91'}]",True,,,,,,1876966,whoscored,,False,False,False,False,,False,Middle_Left,True,Pass,206,Tadeo Allende,49.87,26.29,,,-0.0459428641399999,0.0,True,208,Inter Miami CF,True,False,Goal,Offensive,10,0.0,2025-05-03_InterMiamiCF_NewYorkRedBulls,2025-05-03
-1876966,SecondHalf,66.0,8.0,73,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,75.1,40.1,79.6,52.8,,,,,"[{'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '52.8'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '79.6'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.07'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '9.8'}]",True,,,,,,1876966,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,384,Telasco Segovia,26.8,13.47,,,0.02370598723,0.02370598723,False,439,Inter Miami CF,False,False,Goal,Offensive,14,0.0,2025-05-03_InterMiamiCF_NewYorkRedBulls,2025-05-03
-1876966,SecondHalf,66.0,10.0,73,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,78.1,41.8,78.8,51.3,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '6.5'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '51.3'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.46'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '78.8'}]",True,,,,,,1876966,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,384,Telasco Segovia,23.38,9.53,,,0.0279298285399999,0.0279298285399999,True,439,Inter Miami CF,False,False,Goal,Offensive,14,0.0,2025-05-03_InterMiamiCF_NewYorkRedBulls,2025-05-03
-1877141,FirstHalf,43.0,39.0,43,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,47.3,45.7,85.5,80.0,,,,,"[{'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '85.5'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '46.4'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Left'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '80.0'}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.53'}]",True,,,,,,1877141,whoscored,,True,False,False,False,,False,Middle_Center,True,Pass,249,Jordi Alba,52.88,51.34,,,0.0919170544900001,0.0919170544900001,True,251,Inter Miami CF,True,False,Goal,Offensive,8,0.0,2025-05-15_SanJoseEarthquakes_InterMiamiCF,2025-05-15
-1877141,SecondHalf,51.0,33.0,59,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,87.3,37.4,93.0,28.8,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.51'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '8.4'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '93.0'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '28.8'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}]",True,,,,,,1877141,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,349,Baltasar Rodríguez,17.89,10.32,,,-0.0215595428199999,0.0,False,389,Inter Miami CF,False,False,Goal,Offensive,17,0.0,2025-05-15_SanJoseEarthquakes_InterMiamiCF,2025-05-15
-1877173,SecondHalf,85.0,12.0,89,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,71.0,41.8,80.1,45.8,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.28'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '80.1'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '9.9'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '45.8'}]",True,,,,,,1877173,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,518,Luis Suárez,30.14,9.94,,,-0.0193768184599999,0.0,False,558,Inter Miami CF,True,False,Goal,Offensive,14,0.0,2025-05-24_PhiladelphiaUnion_InterMiamiCF,2025-05-24
-1877173,SecondHalf,94.0,0.0,98,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,72.1,83.5,75.5,82.7,,,,,"[{'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '82.7'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Left'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '3.6'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '6.13'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '75.5'}]",True,,,,,,1877173,whoscored,,False,False,False,False,,False,Attacking_Right,True,Pass,552,Fafà Picault,43.6,3.49,,,-0.0467288081000001,0.0,False,592,Inter Miami CF,False,False,Goal,Offensive,15,0.0,2025-05-24_PhiladelphiaUnion_InterMiamiCF,2025-05-24
-1876988,SecondHalf,67.0,30.0,75,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,80.7,23.4,78.1,36.6,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '9.4'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.87'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '36.6'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '78.1'}]",True,,,,,,1876988,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,316,Luis Suárez,32.86,13.45,,,0.02938331572,0.02938331572,False,350,Inter Miami CF,False,False,Goal,Offensive,13,0.0,2025-05-28_InterMiamiCF_CFMontreal,2025-05-28
-1876988,SecondHalf,67.0,38.0,75,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,95.7,24.7,91.0,55.5,,,,,"[{'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '55.5'}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '21.5'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '91.0'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.80'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1876988,whoscored,,False,False,False,False,,True,Attacking_Left,True,Pass,320,Luis Suárez,25.66,31.16,,,0.05461404222,0.05461404222,False,354,Inter Miami CF,False,False,Goal,Offensive,16,0.0,2025-05-28_InterMiamiCF_CFMontreal,2025-05-28
-1876988,SecondHalf,86.0,57.0,94,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,80.2,29.1,82.4,44.6,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '82.4'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.36'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '10.8'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '44.6'}]",True,,,,,,1876988,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,368,Luis Suárez,28.79,15.66,,,0.02661381006,0.02661381006,True,402,Inter Miami CF,False,False,Goal,Offensive,13,0.0,2025-05-28_InterMiamiCF_CFMontreal,2025-05-28
-1877039,FirstHalf,12.0,15.0,12,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,42.4,31.0,88.4,37.0,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.08'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '48.5'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '88.4'}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '37.0'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877039,whoscored,,True,False,False,False,,True,Middle_Left,True,Pass,56,Tadeo Allende,60.65,46.39,,,-0.0116762011999999,0.0,False,60,Inter Miami CF,True,True,Goal,Offensive,7,0.0,2025-05-31_InterMiamiCF_ColumbusCrew,2025-05-31
-1877039,SecondHalf,63.0,45.0,67,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,77.5,35.4,87.0,32.7,,,,,"[{'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '10.1'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '6.10'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '32.7'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '87.0'}]",True,,,,,,1877039,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,298,Marcelo Weigandt,26.82,9.88,,,-0.0248709725999999,0.0,False,332,Inter Miami CF,False,True,Goal,Offensive,14,0.0,2025-05-31_InterMiamiCF_ColumbusCrew,2025-05-31
-1877039,SecondHalf,63.0,49.0,67,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,85.4,40.3,87.5,51.0,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '7.6'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.28'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '87.5'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '51.0'}]",True,,,,,,1877039,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,298,Telasco Segovia,17.53,10.9,,,0.01919643608,0.01919643608,True,332,Inter Miami CF,False,False,Goal,Offensive,17,0.0,2025-05-31_InterMiamiCF_ColumbusCrew,2025-05-31
-1877039,SecondHalf,88.0,20.0,92,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,35.0,9.7,28.6,23.3,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '2.20'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '28.6'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '23.3'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Back'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '11.4'}]",True,,,,,,1877039,whoscored,,False,False,False,False,,False,Middle_Left,True,Pass,390,Benjamín Cremaschi,76.48,15.03,,,0.00187583532,0.00187583532,False,424,Inter Miami CF,False,False,Goal,Offensive,7,0.0,2025-05-31_InterMiamiCF_ColumbusCrew,2025-05-31
-1877039,SecondHalf,88.0,23.0,92,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,31.4,26.7,73.1,31.3,,,,,"[{'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '31.3'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '43.9'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '73.1'}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.07'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'FastBreak', 'value': 23}}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877039,whoscored,,True,False,False,False,,True,Defensive_Left,True,Pass,390,Fafà Picault,72.45,41.95,,,0.03698067391,0.03698067391,False,424,Inter Miami CF,True,False,Goal,Offensive,4,0.0,2025-05-31_InterMiamiCF_ColumbusCrew,2025-05-31
-1876999,FirstHalf,32.0,36.0,32,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,71.0,38.3,77.4,23.0,,,,,"[{'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.29'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '23.0'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '12.4'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '77.4'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1876999,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,174,Tadeo Allende,31.27,16.58,,,-0.0495004591,0.0,False,176,Inter Miami CF,False,False,Goal,Offensive,14,0.0,2025-07-05_CFMontreal_InterMiamiCF,2025-07-05
-1877090,FirstHalf,23.0,21.0,23,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,70.8,31.3,75.7,41.6,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.94'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '75.7'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '8.7'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '41.6'}]",True,,,,,,1877090,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,126,Luis Suárez,34.67,11.41,,,0.0124333747599999,0.0124333747599999,False,128,Inter Miami CF,False,False,Goal,Offensive,13,0.0,2025-07-19_NewYorkRedBulls_InterMiamiCF,2025-07-19
-1877090,FirstHalf,23.0,23.0,23,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,68.3,44.3,90.9,66.3,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.56'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '90.9'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '28.1'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '66.3'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877090,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,126,Jordi Alba,32.21,31.54,,,-0.0153882652599999,0.0,False,128,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-07-19_NewYorkRedBulls_InterMiamiCF,2025-07-19
-1877090,FirstHalf,26.0,13.0,26,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,75.6,44.2,91.8,68.8,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '23.9'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.78'}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '68.8'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '91.8'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}]",True,,,,,,1877090,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,138,Jordi Alba,25.08,29.46,,,0.0188015668,0.0188015668,True,140,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-07-19_NewYorkRedBulls_InterMiamiCF,2025-07-19
-1877187,SecondHalf,88.0,52.0,93,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,76.0,49.6,90.0,40.1,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '90.0'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '40.1'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.87'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '16.1'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877187,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,370,Luis Suárez,24.0,16.92,,,-0.0652395697999999,0.0,False,399,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-08-16_InterMiamiCF_LAGalaxy,2025-08-16
-1877270,FirstHalf,11.0,8.0,11,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,69.2,43.6,80.2,64.4,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '80.2'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '64.4'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '18.3'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.89'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877270,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,73,Jordi Alba,31.46,23.53,,,0.03630269776,0.03630269776,False,75,Inter Miami CF,True,False,Goal,Offensive,14,0.0,2025-09-16_InterMiamiCF_SeattleSoundersFC,2025-09-16
-1877270,SecondHalf,50.0,28.0,53,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,69.3,42.1,71.8,49.3,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '71.8'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '5.6'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.08'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '49.3'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '15'}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877270,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,249,Yannick Bright,31.7,7.62,,,0.0194482914899999,0.0194482914899999,False,274,Inter Miami CF,False,False,Goal,Offensive,14,0.0,2025-09-16_InterMiamiCF_SeattleSoundersFC,2025-09-16
-1877280,FirstHalf,34.0,45.0,34,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,36.6,56.2,83.5,56.4,,,,,"[{'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '56.4'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.00'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '49.2'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '83.5'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877280,whoscored,,True,False,False,False,,True,Middle_Center,True,Pass,201,Tadeo Allende,63.7,46.9,,,0.00147771244,0.00147771244,False,205,Inter Miami CF,True,True,Goal,Offensive,8,0.0,2025-09-20_InterMiamiCF_DCUnited,2025-09-20
-1877309,FirstHalf,42.0,6.0,42,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,55.4,56.4,74.1,55.0,,,,,"[{'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '55.0'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '74.1'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '19.7'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '6.23'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877309,whoscored,,False,False,False,False,,True,Middle_Center,True,Pass,199,Baltasar Rodríguez,45.06,18.75,,,-0.0521963109399999,0.0,False,201,Inter Miami CF,True,False,Goal,Offensive,11,0.0,2025-09-24_NewYorkCityFC_InterMiamiCF,2025-09-24
-1877309,SecondHalf,81.0,4.0,83,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,76.9,77.8,69.8,68.8,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '3.83'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '68.8'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '69.8'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '9.6'}, {'type': {'displayName': 'HeadPass', 'value': 3}}]",True,,,,,,1877309,whoscored,,False,False,False,False,,False,Attacking_Right,True,Pass,387,Sergio Busquets,36.14,11.46,,,0.0009260907400001,0.0009260907400001,False,402,Inter Miami CF,False,False,Goal,Offensive,15,0.0,2025-09-24_NewYorkCityFC_InterMiamiCF,2025-09-24
-1877309,SecondHalf,84.0,45.0,86,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,64.8,38.7,89.6,51.5,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '27.5'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '13'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.32'}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '51.5'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '89.6'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877309,whoscored,,False,False,False,False,,True,Middle_Center,True,Pass,391,Tadeo Allende,36.97,27.91,,,-0.0459308682399999,0.0,False,406,Inter Miami CF,True,True,Goal,Offensive,11,0.0,2025-09-24_NewYorkCityFC_InterMiamiCF,2025-09-24
-1877315,FirstHalf,45.0,12.0,45,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,67.4,37.4,81.1,78.5,,,,,"[{'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '78.5'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '31.4'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '81.1'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.10'}]",True,,,,,,1877315,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,188,Sergio Busquets,34.95,43.32,,,0.1227417430100001,0.1227417430100001,False,196,Inter Miami CF,False,False,Goal,Offensive,14,0.0,2025-09-27_TorontoFC_InterMiamiCF,2025-09-27
-1877229,FirstHalf,38.0,53.0,38,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,99.5,0.5,98.1,40.9,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '27.5'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '15'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '98.1'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '40.9'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'CornerTaken', 'value': 6}}, {'type': {'displayName': 'LeftFoot', 'value': 72}}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.62'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Cross', 'value': 2}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877229,whoscored,,False,False,True,False,,True,Attacking_Left,True,Pass,170,Sergio Busquets,49.5,40.42,,,0.0258364168,0.0258364168,False,172,Inter Miami CF,True,True,Goal,Offensive,16,0.0,2025-09-30_InterMiamiCF_ChicagoFireFC,2025-09-30
-1877229,SecondHalf,72.0,54.0,78,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,58.9,25.3,65.7,22.6,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '65.7'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '22.6'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '6.03'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '7.4'}]",True,,,,,,1877229,whoscored,,False,False,False,False,,False,Middle_Left,True,Pass,356,Rodrigo De Paul,47.95,7.32,,,-0.00728427883,0.0,False,386,Inter Miami CF,False,False,Goal,Offensive,10,0.0,2025-09-30_InterMiamiCF_ChicagoFireFC,2025-09-30
-1877267,FirstHalf,31.0,6.0,31,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,71.6,62.3,86.1,34.0,,,,,"[{'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '86.1'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '24.5'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '34.0'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.38'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877267,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,137,Tadeo Allende,30.95,31.8,,,-0.1543043826,0.0,False,141,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-10-04_InterMiamiCF_NewEnglandRevolution,2025-10-04
-1877267,FirstHalf,47.0,47.0,47,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,94.3,33.7,93.8,49.0,,,,,"[{'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '93.8'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '10.4'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '49.0'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.62'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877267,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,243,,17.27,15.31,,,0.02316046075,0.02316046075,False,263,Inter Miami CF,False,False,Goal,Offensive,17,0.0,2025-10-04_InterMiamiCF_NewEnglandRevolution,2025-10-04
-1877267,SecondHalf,59.0,1.0,64,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,40.0,27.2,76.5,29.7,,,,,"[{'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '29.7'}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '76.5'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.04'}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '38.4'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877267,whoscored,,True,False,False,False,,True,Middle_Left,True,Pass,303,Tadeo Allende,64.19,36.59,,,0.00978086255,0.00978086255,False,340,Inter Miami CF,True,False,Goal,Offensive,7,0.0,2025-10-04_InterMiamiCF_NewEnglandRevolution,2025-10-04
-1877040,SecondHalf,51.0,46.0,56,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,35.0,31.1,88.1,66.2,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '88.1'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '60.6'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.40'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '66.2'}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877040,whoscored,,True,False,False,False,,True,Middle_Left,True,Pass,294,Jordi Alba,67.69,63.65,,,0.0800809169,0.0800809169,False,330,Inter Miami CF,True,True,Goal,Offensive,7,0.0,2025-10-11_InterMiamiCF_AtlantaUnited,2025-10-11
-1877040,SecondHalf,60.0,13.0,65,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,65.5,49.0,77.0,63.3,,,,,"[{'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '15.5'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '77.0'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.68'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '63.3'}]",True,,,,,,1877040,whoscored,,False,False,False,False,,False,Middle_Center,True,Pass,324,Luis Suárez,34.51,18.35,,,0.0053974502999999,0.0053974502999999,False,360,Inter Miami CF,True,False,Goal,Offensive,11,0.0,2025-10-11_InterMiamiCF_AtlantaUnited,2025-10-11
-1877307,SecondHalf,61.0,9.0,69,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,75.2,51.6,86.7,64.6,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '86.7'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '15.0'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '64.6'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.63'}]",True,,,,,,1877307,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,292,Luis Suárez,24.85,17.36,,,-0.0014834540599999,0.0,False,352,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-10-18_NashvilleSC_InterMiamiCF,2025-10-18
-1877307,SecondHalf,66.0,34.0,74,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,76.8,40.1,92.4,44.2,,,,,"[{'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '15'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '92.4'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.17'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '44.2'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '16.6'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877307,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,300,Luis Suárez,25.22,16.13,,,-0.0300761352,0.0,False,360,Inter Miami CF,True,True,Goal,Offensive,14,0.0,2025-10-18_NashvilleSC_InterMiamiCF,2025-10-18
-1877307,SecondHalf,80.0,49.0,88,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,77.3,23.4,86.3,36.6,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.76'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '86.3'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '13.0'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '36.6'}]",True,,,,,,1877307,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,356,Ian Fray,34.97,15.98,,,0.00466523532,0.00466523532,True,416,Inter Miami CF,True,True,Goal,Offensive,13,0.0,2025-10-18_NashvilleSC_InterMiamiCF,2025-10-18
-1877307,SecondHalf,90.0,30.0,98,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,91.6,50.1,93.3,58.9,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.28'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'FastBreak', 'value': 23}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '93.3'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '6.2'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '58.9'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1877307,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,404,Telasco Segovia,8.4,8.96,,,0.0133512861199999,0.0133512861199999,False,464,Inter Miami CF,False,False,Goal,Offensive,17,0.0,2025-10-18_NashvilleSC_InterMiamiCF,2025-10-18
-1951675,SecondHalf,72.0,22.0,77,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,88.9,67.8,98.4,67.5,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '98.4'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '67.5'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '6.26'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '10.0'}]",True,,,,,,1951675,whoscored,,False,False,False,False,,False,Attacking_Right,True,Pass,360,Jordi Alba,20.98,9.5,,,-0.0470441739,0.0,True,375,Inter Miami CF,False,False,Goal,Offensive,18,0.0,2025-11-09_InterMiamiCF_NashvilleSC,2025-11-09
-1951675,SecondHalf,75.0,4.0,80,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,51.9,53.6,82.2,35.0,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '82.2'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.90'}, {'type': {'displayName': 'FastBreak', 'value': 23}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Longball', 'value': 1}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '35.0'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '34.2'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1951675,whoscored,,True,False,False,False,,True,Middle_Center,True,Pass,366,Tadeo Allende,48.23,35.55,,,-0.1116663864399999,0.0,False,381,Inter Miami CF,True,False,Goal,Offensive,11,0.0,2025-11-09_InterMiamiCF_NashvilleSC,2025-11-09
-1952056,FirstHalf,18.0,8.0,18,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,72.5,54.9,91.5,81.2,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.73'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '91.5'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '81.2'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Left'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '26.8'}]",True,,,,,,1952056,whoscored,,False,False,False,False,,False,Attacking_Center,True,Pass,89,Mateo Silvetti,27.93,32.45,,,0.01459909115,0.01459909115,True,91,Inter Miami CF,False,False,Goal,Offensive,14,0.0,2025-11-23_FCCincinnati_InterMiamiCF,2025-11-23
-1952056,SecondHalf,56.0,37.0,60,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,79.5,39.1,87.1,62.4,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '87.1'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '17.7'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'ThrowinSetPiece', 'value': 160}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '1.10'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '62.4'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1952056,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,277,Mateo Silvetti,23.22,24.51,,,0.04353823385,0.04353823385,False,316,Inter Miami CF,False,True,Goal,Offensive,14,0.0,2025-11-23_FCCincinnati_InterMiamiCF,2025-11-23
-1952056,SecondHalf,61.0,40.0,65,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,44.8,56.1,67.0,34.5,,,,,"[{'type': {'displayName': 'Length', 'value': 212}, 'value': '27.6'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '34.5'}, {'type': {'displayName': 'FastBreak', 'value': 23}}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '67.0'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.72'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1952056,whoscored,,False,False,False,False,,True,Middle_Center,True,Pass,293,Tadeo Allende,55.54,30.97,,,-0.0445580807399999,0.0,False,332,Inter Miami CF,True,False,Goal,Offensive,8,0.0,2025-11-23_FCCincinnati_InterMiamiCF,2025-11-23
-1952056,SecondHalf,73.0,20.0,77,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,43.0,26.7,70.3,21.6,,,,,"[{'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '70.3'}, {'type': {'displayName': 'FastBreak', 'value': 23}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '6.16'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '28.9'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '21.6'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1952056,whoscored,,False,False,False,False,,True,Middle_Left,True,Pass,331,Tadeo Allende,61.58,27.77,,,0.00362777726,0.00362777726,False,370,Inter Miami CF,True,False,Goal,Offensive,7,0.0,2025-11-23_FCCincinnati_InterMiamiCF,2025-11-23
-1953168,SecondHalf,66.0,42.0,73,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,77.0,20.1,86.1,9.1,,,,,"[{'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '9.1'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '12.1'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Right'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.62'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '86.1'}]",True,,,,,,1953168,whoscored,,False,False,False,False,,False,Attacking_Left,True,Pass,316,Rodrigo De Paul,37.72,14.28,,,-0.0215744755799999,0.0,False,357,Inter Miami CF,False,False,Goal,Offensive,13,0.0,2025-11-29_InterMiamiCF_NewYorkCityFC,2025-11-29
-1953168,SecondHalf,66.0,50.0,73,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,85.7,60.4,89.9,45.7,,,,,"[{'type': {'displayName': 'Angle', 'value': 213}, 'value': '5.13'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '45.7'}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '10.9'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '89.9'}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1953168,whoscored,,False,False,False,False,,True,Attacking_Center,True,Pass,316,Mateo Silvetti,17.68,15.29,,,-0.0519492807899999,0.0,False,357,Inter Miami CF,False,False,Goal,Offensive,17,0.0,2025-11-29_InterMiamiCF_NewYorkCityFC,2025-11-29
-1953168,SecondHalf,82.0,30.0,89,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,35.2,53.4,43.5,65.1,,,,,"[{'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '43.5'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Back'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '65.1'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.74'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '11.8'}]",True,,,,,,1953168,whoscored,,False,False,False,False,,False,Middle_Center,True,Pass,382,Telasco Segovia,64.89,14.35,,,0.0894948490099999,0.0894948490099999,False,423,Inter Miami CF,False,False,Goal,Offensive,8,0.0,2025-11-29_InterMiamiCF_NewYorkCityFC,2025-11-29
-1953168,SecondHalf,88.0,52.0,95,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,46.6,54.7,46.2,48.3,,,,,"[{'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Back'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '4.4'}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '4.62'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '48.3'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '46.2'}]",True,,,,,,1953168,whoscored,,False,False,False,False,,False,Middle_Center,True,Pass,406,Yannick Bright,53.61,6.41,,,-0.02678250196,0.0,True,447,Inter Miami CF,False,False,Goal,Offensive,8,0.0,2025-11-29_InterMiamiCF_NewYorkCityFC,2025-11-29
-1953302,SecondHalf,70.0,36.0,73,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,71.6,32.8,83.7,36.5,,,,,"[{'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '36.5'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '83.7'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.20'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '13.0'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1953302,whoscored,,False,False,False,False,,True,Attacking_Left,True,Pass,356,Rodrigo De Paul,33.2,12.65,,,-0.02223014537,0.0,False,363,Inter Miami CF,True,True,Goal,Offensive,13,0.0,2025-12-06_InterMiamiCF_VancouverWhitecaps,2025-12-06
-1953302,SecondHalf,95.0,19.0,98,Pass,Successful,28925,Inter Miami CF,11119.0,Lionel Messi,65.2,46.8,75.8,47.2,,,,,"[{'type': {'displayName': 'IntentionalAssist', 'value': 154}}, {'type': {'displayName': 'Chipped', 'value': 155}}, {'type': {'displayName': 'Angle', 'value': 213}, 'value': '0.02'}, {'type': {'displayName': 'ShotAssist', 'value': 210}, 'value': '16'}, {'type': {'displayName': 'Throughball', 'value': 4}}, {'type': {'displayName': 'RegularPlay', 'value': 22}}, {'type': {'displayName': 'PassEndX', 'value': 140}, 'value': '75.8'}, {'type': {'displayName': 'PassEndY', 'value': 141}, 'value': '47.2'}, {'type': {'displayName': 'Zone', 'value': 56}, 'value': 'Center'}, {'type': {'displayName': 'Length', 'value': 212}, 'value': '11.1'}, {'type': {'displayName': 'BigChanceCreated', 'value': 11112}}, {'type': {'displayName': 'IntentionalGoalAssist', 'value': 11111}}, {'type': {'displayName': 'KeyPass', 'value': 11113}}]",True,,,,,,1953302,whoscored,,False,False,False,False,,True,Middle_Center,True,Pass,480,Tadeo Allende,34.95,10.61,,,-0.0477972017599999,0.0,False,487,Inter Miami CF,True,False,Goal,Offensive,11,0.0,2025-12-06_InterMiamiCF_VancouverWhitecaps,2025-12-06
+x,y,end_x,end_y,xg,pass_length,receiver,pass_outcome
+70.0,46.0,23.6,66.9,0.0,4.92,Gonzalo Luján,Goal
+70.1,51.8,62.6,22.0,0.0,31.57,Telasco Segovia,Goal
+99.5,0.5,87.3,11.9,0.0,16.7,David Ruíz,Goal
+79.7,14.6,73.9,36.6,0.0,22.75,Jordi Alba,Goal
+94.0,33.9,92.3,47.9,0.4704110622406,14.6,Tomás Avilés,Goal
+70.0,17.1,22.3,31.8,0.0,21.25,Óscar Ustari,Goal
+72.0,22.1,60.5,47.0,0.0,20.67,Noah Allen,Goal
+47.4,43.1,44.3,44.9,0.0,3.58,Sergio Busquets,Goal
+51.6,59.4,55.9,64.5,0.0,8.01,David Ruíz,Goal
+46.8,45.1,64.3,80.2,0.0,40.86,Jordi Alba,Goal
+67.5,57.6,27.4,12.6,0.0,1.66,Benjamín Cremaschi,Goal
+60.4,3.7,76.9,17.4,0.0,19.13,Benjamín Cremaschi,Goal
+49.9,50.0,34.7,49.6,0.0,14.31,Sergio Busquets,Goal
+45.3,67.2,48.0,95.8,0.0,28.6,Benjamín Cremaschi,Goal
+52.5,42.8,38.6,17.3,0.0,26.44,Marcelo Weigandt,Goal
+60.4,71.2,73.7,88.4,0.0,24.36,Jordi Alba,Goal
+59.3,47.5,69.0,49.4,0.0,9.88,Robert Taylor,Goal
+77.5,48.7,89.0,59.0,0.0,14.92,Jordi Alba,Goal
+74.3,18.6,78.9,29.7,0.0,12.02,Benjamín Cremaschi,Goal
+71.6,27.7,70.6,44.5,0.0,16.82,Robert Taylor,Goal
+65.6,43.9,40.9,71.2,0.0,9.1,Sergio Busquets,Goal
+67.8,42.4,71.4,42.7,0.0,3.61,Luis Suárez,Goal
+70.0,57.2,33.8,45.6,0.0,14.32,Sergio Busquets,Goal
+59.1,64.8,58.7,59.3,0.0,6.12,Sergio Busquets,Goal
+68.4,68.4,68.3,77.6,0.0,9.2,Robert Taylor,Goal
+71.6,54.9,90.1,61.3,0.42619886994362,19.28,Robert Taylor,Goal
+77.6,13.2,21.6,61.8,0.0,57.08,Gonzalo Luján,Goal
+60.1,7.1,93.9,15.6,0.0,32.89,Marcelo Weigandt,Goal
+99.5,0.5,46.0,25.5,0.0,36.83,Yannick Bright,Goal
+99.5,0.5,32.8,86.5,0.0,50.71,Jordi Alba,Goal
+44.9,50.5,82.8,59.6,0.0,36.32,Robert Taylor,Goal
+99.5,99.5,83.4,90.6,0.0,15.15,Jordi Alba,Goal
+87.8,92.6,79.7,87.2,0.0,9.65,Jordi Alba,Goal
+56.5,13.2,52.6,13.4,0.0,4.31,Ian Fray,Goal
+52.4,25.6,70.3,94.1,0.0,61.44,Jordi Alba,Goal
+77.5,44.0,72.8,67.0,0.0,8.75,Ian Fray,Goal
+70.7,14.4,67.4,40.3,0.0,24.54,Sergio Busquets,Goal
+77.2,46.4,74.4,68.1,0.0,20.85,Sergio Busquets,Goal
+74.7,63.6,70.8,63.9,0.0,3.91,Federico Redondo,Goal
+77.6,29.3,84.9,40.9,0.0,13.87,Federico Redondo,Goal
+45.6,58.4,58.1,57.0,0.0,12.08,Telasco Segovia,Goal
+54.4,52.5,60.9,66.7,0.0,11.55,Telasco Segovia,Goal
+54.4,50.3,59.9,65.1,0.0,15.5,Sergio Busquets,Goal
+63.8,75.0,12.3,64.5,0.0,15.32,Sergio Busquets,Goal
+63.6,20.7,68.5,35.5,0.0,15.59,Sergio Busquets,Goal
+55.4,58.7,91.6,76.1,0.0,41.7,Jordi Alba,Goal
+72.0,38.2,73.2,49.1,0.0,11.11,Telasco Segovia,Goal
+84.8,61.1,95.2,69.4,0.0,12.66,Jordi Alba,Goal
+87.2,81.6,74.2,46.0,0.0,40.13,Jordi Alba,Goal
+69.1,37.7,88.4,13.5,0.0,30.04,Robert Taylor,Goal
+70.2,3.4,75.3,3.4,0.0,4.8,Robert Taylor,Goal
+86.2,0.0,91.7,26.8,0.0,27.55,Telasco Segovia,Goal
+78.1,37.2,90.7,36.0,0.42619886994362,12.6,Telasco Segovia,Goal
+73.2,20.9,26.4,37.3,0.0,12.8,Maximiliano Falcón,Goal
+70.2,10.5,66.4,23.3,0.0,14.91,Federico Redondo,Goal
+58.1,37.0,61.9,66.3,0.0,20.71,Telasco Segovia,Goal
+63.6,26.5,73.4,5.9,0.0,26.22,Tadeo Allende,Goal
+65.5,18.9,60.5,32.1,0.0,14.12,Sergio Busquets,Goal
+53.2,8.2,40.4,28.6,0.0,17.72,Maximiliano Falcón,Goal
+40.5,45.8,59.1,83.9,0.0,27.39,Telasco Segovia,Goal
+54.9,43.3,25.0,70.5,0.0,19.62,Federico Redondo,Goal
+40.4,75.3,73.5,23.9,0.0,61.14,Tadeo Allende,Goal
+74.9,39.2,96.4,89.6,0.0,54.37,Jordi Alba,Goal
+74.4,36.6,89.4,12.6,0.0,29.34,Tadeo Allende,Goal
+63.3,6.1,60.7,35.4,0.0,28.56,Sergio Busquets,Goal
+40.6,23.1,85.9,16.8,0.0,45.74,Tadeo Allende,Goal
+46.3,65.8,42.5,75.3,0.0,8.6,Yannick Bright,Goal
+58.2,29.1,73.0,11.6,0.0,11.0,Telasco Segovia,Goal
+43.1,46.9,12.8,28.0,0.0,52.51,Óscar Ustari,Goal
+56.4,90.0,57.6,81.4,0.0,8.68,Telasco Segovia,Goal
+50.3,90.5,32.5,59.0,0.0,24.26,Noah Allen,Goal
+40.0,76.4,31.4,58.8,0.0,19.42,Yannick Bright,Goal
+52.2,6.2,62.5,8.8,0.0,10.36,Tadeo Allende,Goal
+62.4,4.9,75.5,4.1,0.0,11.51,Tadeo Allende,Goal
+63.6,12.9,69.7,18.6,0.0,8.35,Sergio Busquets,Goal
+69.0,38.5,91.4,50.0,0.0,25.18,Luis Suárez,Goal
+68.5,22.4,61.1,48.1,0.0,22.42,Yannick Bright,Goal
+64.0,5.6,79.5,3.7,0.0,10.34,Tadeo Allende,Goal
+69.2,39.5,4.5,50.3,0.0,19.6,Maximiliano Falcón,Goal
+36.9,50.7,70.3,69.9,0.0,28.85,Federico Redondo,Goal
+69.6,21.3,77.3,8.3,0.0,16.62,Sergio Busquets,Goal
+73.1,32.2,22.3,73.5,0.0,15.58,Maximiliano Falcón,Goal
+69.0,13.5,40.4,64.6,0.0,14.8,Federico Redondo,Goal
+52.7,28.0,46.1,57.3,0.0,24.69,Yannick Bright,Goal
+73.8,28.6,87.8,63.8,0.0,21.88,Luis Suárez,Goal
+63.7,11.0,45.1,30.4,0.0,37.43,Benjamín Cremaschi,Goal
+81.8,32.8,90.0,46.4,0.0,15.88,Luis Suárez,Goal
+38.9,6.7,44.4,50.4,0.0,35.12,Federico Redondo,Goal
+67.1,52.8,94.8,29.3,0.055524900555611,26.8,Tadeo Allende,Goal
+88.4,7.3,82.0,14.3,0.0,9.48,Telasco Segovia,Goal
+80.9,10.4,27.2,71.1,0.0,62.77,Sergio Busquets,Goal
+68.6,46.1,69.7,53.1,0.0,7.09,Sergio Busquets,Goal
+70.0,48.8,93.8,67.8,0.0,29.22,Jordi Alba,Goal
+43.3,29.5,44.5,48.5,0.0,19.53,Sergio Busquets,Goal
+47.1,63.7,48.4,64.0,0.0,17.42,Luis Suárez,Goal
+69.2,50.1,76.4,55.6,0.0,11.41,Luis Suárez,Goal
+74.4,32.8,75.8,24.4,0.0,10.71,Luis Suárez,Goal
+37.8,15.8,61.2,12.3,0.0,20.97,Sergio Busquets,Goal
+55.8,30.7,53.2,69.1,0.0,33.82,Maximiliano Falcón,Goal
+73.5,49.0,83.4,73.8,0.0,26.33,Jordi Alba,Goal
+66.2,25.8,76.8,13.4,0.0,25.12,Tadeo Allende,Goal
+91.0,19.4,9.5,70.9,0.0,26.78,Maximiliano Falcón,Goal
+68.0,42.1,73.9,56.0,0.0,16.38,Luis Suárez,Goal
+29.6,8.5,3.6,57.9,0.0,9.63,Óscar Ustari,Goal
+87.1,3.2,81.5,7.6,0.0,9.01,Fafà Picault,Goal
+36.9,96.0,38.4,86.8,0.0,8.08,Federico Redondo,Goal
+44.1,62.3,63.3,74.5,0.0,25.51,Jordi Alba,Goal
+63.1,34.5,59.5,34.8,0.0,3.82,Sergio Busquets,Goal
+46.3,23.3,29.6,5.2,0.0,51.93,Sergio Busquets,Goal
+38.5,48.4,74.4,75.8,0.0,47.38,Jordi Alba,Goal
+45.5,30.4,46.9,48.5,0.0,20.92,Yannick Bright,Goal
+57.8,60.3,46.3,73.8,0.0,17.81,Maximiliano Falcón,Goal
+36.2,43.0,11.5,54.5,0.0,47.94,Fafà Picault,Goal
+76.0,19.5,65.1,34.2,0.0,15.66,Sergio Busquets,Goal
+73.3,32.5,14.8,54.2,0.0,10.57,Sergio Busquets,Goal
+46.3,49.1,75.0,80.0,0.0,45.16,Jordi Alba,Goal
+77.1,46.3,94.3,27.3,0.0,26.6,Fafà Picault,Goal
+57.5,74.1,59.9,58.7,0.0,19.12,Sergio Busquets,Goal
+80.8,87.1,35.1,37.3,0.0,22.97,Tomás Avilés,Goal
+33.2,55.4,55.6,44.9,0.0,19.37,Luis Suárez,Goal
+69.1,56.9,69.5,47.6,0.0,8.5,Yannick Bright,Goal
+70.2,56.2,64.4,51.6,0.0,9.46,Yannick Bright,Goal
+77.1,53.4,54.9,30.9,0.0,10.97,Gonzalo Luján,Goal
+70.9,31.9,81.1,60.5,0.21303568780422,29.82,Luis Suárez,Goal
+74.8,23.9,90.1,48.3,0.21303568780422,29.08,Luis Suárez,Goal
+78.6,56.7,92.4,73.8,0.0,22.24,Luis Suárez,Goal
+99.5,0.5,76.8,56.0,0.017107080668211,54.83,Jordi Alba,Goal
+99.4,0.5,83.0,10.6,0.0,18.06,Telasco Segovia,Goal
+92.6,8.8,23.3,73.0,0.0,30.1,Noah Allen,Goal
+69.2,13.5,62.5,22.2,0.0,13.24,Jordi Alba,Goal
+72.6,28.6,90.9,12.3,0.0,24.43,Robert Taylor,Goal
+69.1,31.6,90.1,74.1,0.0,47.41,Jordi Alba,Goal
+69.1,37.7,68.5,47.9,0.0,10.21,Federico Redondo,Goal
+74.8,46.6,74.3,68.8,0.0,22.41,Sergio Busquets,Goal
+60.9,9.2,68.3,6.8,0.0,17.16,Marcelo Weigandt,Goal
+70.7,20.3,48.4,34.3,0.0,29.14,Tomás Avilés,Goal
+23.2,63.4,27.1,77.5,0.0,14.63,Jordi Alba,Goal
+63.3,27.4,57.0,36.7,0.0,9.7,Sergio Busquets,Goal
+55.4,44.6,34.9,41.9,0.0,20.68,Tomás Avilés,Goal
+64.9,26.1,26.7,16.8,0.0,39.91,Gonzalo Luján,Goal
+99.5,99.5,82.0,83.0,0.0,24.05,Telasco Segovia,Goal
+66.5,19.2,51.1,31.5,0.0,12.58,Sergio Busquets,Goal
+70.1,55.1,76.9,62.0,0.0,9.69,Luis Suárez,Goal
+54.2,24.7,91.7,45.8,0.075186744332314,58.56,Benjamín Cremaschi,Goal
+75.0,45.7,79.1,65.8,0.0,20.51,Telasco Segovia,Goal
+71.2,70.3,86.6,78.5,0.0,17.45,Telasco Segovia,Goal
+67.6,40.3,77.6,37.6,0.0,10.26,Luis Suárez,Goal
+99.5,0.5,77.1,0.0,0.0,18.45,Marcelo Weigandt,Goal
+90.7,19.2,78.2,100.0,0.0,12.5,Jordi Alba,Goal
+61.3,3.2,68.2,20.0,0.0,18.14,Federico Redondo,Goal
+71.7,72.6,0.0,0.0,0.0,25.22,,Goal
+77.7,48.7,27.5,68.4,0.0,13.95,Maximiliano Falcón,Goal
+68.8,37.9,67.4,51.0,0.0,11.85,Federico Redondo,Goal
+67.5,42.7,79.7,62.9,0.0,21.84,Telasco Segovia,Goal
+39.1,31.2,53.3,42.1,0.0,18.41,Sergio Busquets,Goal
+57.8,13.2,72.2,11.6,0.0,14.62,Marcelo Weigandt,Goal
+75.9,27.0,88.0,34.6,0.035257007926702,14.86,Luis Suárez,Goal
+62.8,35.5,72.5,48.2,0.0,15.98,Jordi Alba,Goal
+67.9,52.7,70.5,62.1,0.0,9.75,Jordi Alba,Goal
+77.4,40.4,89.8,34.2,0.049558907747269,13.92,Fafà Picault,Goal
+71.6,51.3,81.0,49.0,0.0,9.68,Fafà Picault,Goal
+74.0,47.3,74.8,54.2,0.0,5.51,Luis Suárez,Goal
+61.2,66.9,83.1,84.1,0.0,17.51,Tadeo Allende,Goal
+66.2,31.5,67.2,46.6,0.0,11.72,Sergio Busquets,Goal
+61.2,44.9,71.3,57.6,0.0,15.45,Telasco Segovia,Goal
+99.5,0.5,30.9,40.9,0.0,49.81,Sergio Busquets,Goal
+52.3,50.3,60.4,44.6,0.0,10.2,Allen Obando,Goal
+76.1,60.9,26.9,29.4,0.0,12.98,Baltasar Rodríguez,Goal
+49.9,49.7,68.9,59.4,0.0,21.33,Santiago Morales,Goal
+68.4,27.0,64.6,8.8,0.0,18.59,Fafà Picault,Goal
+73.2,50.0,86.4,67.9,0.0,22.24,Jordi Alba,Goal
+67.6,33.1,66.2,0.0,0.0,6.28,Marcelo Weigandt,Goal
+70.7,31.2,76.4,62.1,0.0,29.66,Santiago Morales,Goal
+73.4,36.0,89.6,17.3,0.0,24.74,Fafà Picault,Goal
+99.5,0.5,85.4,12.6,0.0,16.48,Santiago Morales,Goal
+82.9,7.6,97.3,53.0,0.074009440839291,46.46,Fafà Picault,Goal
+75.1,15.7,37.7,11.1,0.0,33.82,Marcelo Weigandt,Goal
+72.1,76.9,97.6,34.6,0.0,35.68,Jordi Alba,Goal
+71.8,32.4,71.2,19.4,0.0,10.02,Benjamín Cremaschi,Goal
+78.6,33.0,68.3,6.8,0.0,2.1,Marcelo Weigandt,Goal
+64.7,56.9,59.8,12.3,0.0,19.24,Marcelo Weigandt,Goal
+60.7,34.5,35.2,15.6,0.0,19.82,Benjamín Cremaschi,Goal
+63.0,23.3,20.3,67.6,0.0,9.93,Jordi Alba,Goal
+67.0,30.8,78.0,62.4,0.0,5.51,Luis Suárez,Goal
+79.7,70.6,42.8,73.2,0.0,12.71,Leo Afonso,Goal
+54.5,26.6,27.5,68.4,0.0,14.53,Maximiliano Falcón,Goal
+99.5,0.5,24.2,60.2,0.0,68.8,Yannick Bright,Goal
+72.0,58.8,99.2,49.9,0.0,18.81,Tadeo Allende,Goal
+82.3,3.4,0.0,0.0,0.0,12.82,,Goal
+42.9,6.7,65.4,74.7,0.0,3.13,Jordi Alba,Goal
+28.2,24.7,46.4,64.5,0.0,21.4,Maximiliano Falcón,Goal
+38.9,63.5,3.1,50.3,0.0,20.03,Óscar Ustari,Goal
+46.4,31.9,32.5,67.8,0.0,6.53,Sergio Busquets,Goal
+45.5,53.4,51.9,0.0,0.0,54.67,Marcelo Weigandt,Goal
+32.2,31.7,2.0,54.0,0.0,46.73,Yannick Bright,Goal
+57.6,29.9,84.1,92.3,0.0,24.03,Telasco Segovia,Goal
+65.8,52.6,67.5,55.2,0.0,26.13,Yannick Bright,Goal
+43.6,57.0,88.8,74.8,0.0,47.32,Tadeo Allende,Goal
+36.8,27.1,41.7,62.9,0.0,9.04,Maximiliano Falcón,Goal
+71.0,55.2,87.1,66.3,0.0,19.56,Tadeo Allende,Goal
+52.5,44.8,87.5,71.7,0.0,44.14,Jordi Alba,Goal
+99.5,0.5,85.7,7.7,0.0,15.57,Benjamín Cremaschi,Goal
+64.6,40.0,73.1,45.2,0.0,10.21,Benjamín Cremaschi,Goal
+73.7,50.3,88.5,72.6,0.0,27.01,Jordi Alba,Goal
+43.5,27.9,37.5,29.5,0.0,6.21,Sergio Busquets,Goal
+59.5,32.5,69.7,76.7,0.0,45.36,Tadeo Allende,Goal
+29.8,10.0,12.3,37.0,0.0,32.01,Gonzalo Luján,Goal
+99.5,99.5,82.7,93.9,0.0,17.24,Benjamín Cremaschi,Goal
+82.5,93.6,75.2,86.3,0.0,10.32,Jordi Alba,Goal
+91.0,72.9,21.3,77.6,0.0,35.32,Maximiliano Falcón,Goal
+38.6,5.8,56.6,14.1,0.0,17.24,Tadeo Allende,Goal
+56.3,4.1,39.8,21.2,0.0,24.75,Sergio Busquets,Goal
+21.2,4.9,20.4,19.1,0.0,12.28,Sergio Busquets,Goal
+22.9,9.1,23.0,27.4,0.0,18.3,Sergio Busquets,Goal
+31.3,29.5,23.2,68.1,0.0,39.32,Noah Allen,Goal
+40.8,24.0,29.1,87.5,0.0,10.98,David Martínez,Goal
+47.5,63.1,57.0,78.4,0.0,17.72,Jordi Alba,Goal
+61.8,48.7,100.0,77.8,0.0,16.77,Fafà Picault,Goal
+74.4,70.8,99.5,99.5,0.0,9.79,Benjamín Cremaschi,Goal
+34.1,18.6,52.2,23.6,0.0,7.03,Yannick Bright,Goal
+99.5,0.5,74.7,54.8,0.014369950629771,61.57,Jordi Alba,Goal
+41.3,18.5,58.7,16.7,0.0,18.96,Marcelo Weigandt,Goal
+99.5,0.5,61.5,61.4,0.0,41.82,Tomás Avilés,Goal
+80.2,44.0,79.7,30.7,0.0,13.31,Sergio Busquets,Goal
+55.5,63.6,51.1,49.9,0.0,14.39,Yannick Bright,Goal
+63.1,38.5,91.4,26.7,0.0,17.09,Tadeo Allende,Goal
+99.5,0.5,22.1,4.1,0.0,77.0,Ian Fray,Goal
+54.4,42.7,85.4,30.4,0.0,27.28,Tadeo Allende,Goal
+56.6,27.1,79.8,9.8,0.0,29.94,Tadeo Allende,Goal
+70.0,33.7,0.0,0.0,0.0,50.8,Luis Suárez,Goal
+47.0,51.2,23.5,39.5,0.0,26.25,Gonzalo Luján,Goal
+56.0,60.9,45.0,55.4,0.0,12.3,Sergio Busquets,Goal
+50.9,22.1,24.8,37.1,0.0,17.22,David Martínez,Goal
+34.6,26.1,45.1,70.3,0.0,36.3,Jordi Alba,Goal
+27.3,40.1,35.1,71.5,0.0,29.27,Noah Allen,Goal
+64.3,59.0,62.0,69.0,0.0,8.21,Yannick Bright,Goal
+46.7,34.0,35.9,32.8,0.0,10.87,Sergio Busquets,Goal
+45.3,34.0,89.6,31.2,0.0,33.28,Tadeo Allende,Goal
+47.3,32.5,48.7,61.4,0.0,25.1,Yannick Bright,Goal
+46.9,80.8,58.5,78.7,0.0,17.65,Fafà Picault,Goal
+44.4,48.8,72.4,69.7,0.0,34.48,Luis Suárez,Goal
+64.2,33.6,71.1,7.3,0.0,26.8,Yannick Bright,Goal
+66.5,30.4,69.9,58.7,0.0,16.41,Sergio Busquets,Goal
+99.5,0.5,82.0,11.7,0.0,17.07,Marcelo Weigandt,Goal
+31.7,5.6,43.8,20.1,0.0,18.32,Yannick Bright,Goal
+68.0,6.8,75.3,2.9,0.0,8.28,Marcelo Weigandt,Goal
+53.3,32.5,94.2,25.3,0.0,26.29,Tadeo Allende,Goal
+62.0,35.1,72.8,52.2,0.0,20.22,Luis Suárez,Goal
+43.0,11.3,64.4,31.3,0.0,18.22,Tadeo Allende,Goal
+45.5,5.6,43.5,28.8,0.0,18.44,Sergio Busquets,Goal
+36.9,36.6,49.7,44.4,0.0,14.24,Luis Suárez,Goal
+78.5,59.1,85.9,45.2,0.0,19.04,Fafà Picault,Goal
+40.9,40.7,63.4,16.4,0.0,31.44,Luis Suárez,Goal
+36.5,36.3,46.0,37.7,0.0,8.14,Benjamín Cremaschi,Goal
+42.9,4.0,40.9,31.3,0.0,27.37,Sergio Busquets,Goal
+40.8,26.4,38.3,29.4,0.0,3.91,Sergio Busquets,Goal
+55.4,45.4,89.3,83.2,0.0,46.76,Jordi Alba,Goal
+97.1,69.6,91.5,83.2,0.0,14.6,Jordi Alba,Goal
+81.1,69.9,79.5,60.6,0.0,9.44,Telasco Segovia,Goal
+72.7,55.2,63.4,48.2,0.0,9.36,Sergio Busquets,Goal
+68.8,57.3,74.8,64.3,0.0,7.93,Telasco Segovia,Goal
+75.9,53.0,11.9,52.0,0.0,5.11,Óscar Ustari,Goal
+75.1,40.1,79.5,55.8,0.0,13.47,Telasco Segovia,Goal
+78.1,41.8,80.6,51.6,0.0,9.53,Telasco Segovia,Goal
+39.1,28.2,46.0,44.0,0.0,17.24,Telasco Segovia,Goal
+77.3,17.3,88.5,8.5,0.0,10.42,Benjamín Cremaschi,Goal
+80.6,5.8,79.8,22.2,0.0,16.42,Sergio Busquets,Goal
+63.6,29.2,86.4,47.0,0.013342098332942,29.68,Tadeo Allende,Goal
+74.3,31.0,80.5,28.0,0.0,6.89,Telasco Segovia,Goal
+78.7,41.9,49.3,34.2,0.0,19.2,Sergio Busquets,Goal
+72.3,60.2,73.6,83.0,0.0,23.35,Jordi Alba,Goal
+34.5,45.7,43.7,48.2,0.0,9.53,Sergio Busquets,Goal
+36.9,46.0,31.6,77.8,0.0,32.24,Noah Allen,Goal
+40.9,28.6,39.0,39.5,0.0,11.06,Federico Redondo,Goal
+83.2,0.0,82.0,18.5,0.0,18.54,Benjamín Cremaschi,Goal
+53.6,5.3,53.3,23.7,0.0,18.4,Federico Redondo,Goal
+71.3,38.2,29.2,25.0,0.0,3.45,Tomás Avilés,Goal
+53.7,45.7,58.1,62.6,0.0,16.65,Telasco Segovia,Goal
+98.2,71.4,30.0,24.5,0.0,21.59,Sergio Busquets,Goal
+55.8,40.3,49.9,50.0,0.0,28.72,Telasco Segovia,Goal
+66.7,61.4,59.9,58.8,0.0,7.3,Yannick Bright,Goal
+36.9,6.4,43.8,79.6,0.0,66.01,Jordi Alba,Goal
+63.5,27.9,90.0,87.8,0.0,64.87,Jordi Alba,Goal
+76.7,87.8,9.4,21.4,0.0,30.74,Marcelo Weigandt,Goal
+99.5,99.5,77.8,45.8,0.037584871053696,55.67,Telasco Segovia,Goal
+81.7,34.5,71.4,24.7,0.0,14.22,Sergio Busquets,Goal
+73.3,19.4,38.7,100.0,0.0,6.71,Jordi Alba,Goal
+77.3,34.0,90.4,30.6,0.0,13.53,Federico Redondo,Goal
+79.7,46.1,11.5,46.4,0.0,13.15,Noah Allen,Goal
+99.5,99.5,88.9,93.9,0.0,23.72,Telasco Segovia,Goal
+94.0,95.7,79.1,87.4,0.0,18.97,Jordi Alba,Goal
+91.0,93.2,90.8,93.8,0.0,12.99,Jordi Alba,Goal
+91.6,92.7,4.4,55.5,0.0,40.67,Óscar Ustari,Goal
+53.4,47.9,67.4,6.1,0.0,43.37,Marcelo Weigandt,Goal
+90.4,45.5,85.2,48.0,0.0,4.57,Yannick Bright,Goal
+93.9,94.2,86.9,93.0,0.0,9.73,Telasco Segovia,Goal
+99.4,0.2,39.0,71.3,0.0,31.81,Telasco Segovia,Goal
+99.5,0.5,87.0,3.1,0.0,12.77,Telasco Segovia,Goal
+80.4,7.0,50.1,33.4,0.0,59.33,Telasco Segovia,Goal
+79.4,30.3,67.2,25.6,0.0,13.54,Yannick Bright,Goal
+72.2,35.4,81.5,46.6,0.0,14.56,Telasco Segovia,Goal
+63.7,31.9,55.1,29.7,0.0,8.88,Yannick Bright,Goal
+46.6,6.1,38.0,7.0,0.0,12.89,Marcelo Weigandt,Goal
+43.6,5.6,36.5,33.1,0.0,22.36,Federico Redondo,Goal
+55.6,26.7,66.5,36.6,0.0,16.62,Sergio Busquets,Goal
+67.0,43.6,74.3,89.4,0.0,45.36,Jordi Alba,Goal
+70.1,64.8,69.9,36.7,0.0,27.05,Sergio Busquets,Goal
+66.5,61.7,70.6,48.1,0.0,13.85,Sergio Busquets,Goal
+47.1,28.5,40.9,72.0,0.0,28.33,Maximiliano Falcón,Goal
+50.3,50.0,52.8,41.2,0.0,12.5,Sergio Busquets,Goal
+50.1,27.7,67.2,30.1,0.0,17.27,Benjamín Cremaschi,Goal
+78.1,3.2,81.0,2.5,0.0,2.98,Marcelo Weigandt,Goal
+72.6,35.4,70.6,64.8,0.0,23.82,Noah Allen,Goal
+70.8,52.4,74.3,36.6,0.0,16.18,Federico Redondo,Goal
+74.4,29.2,29.0,28.6,0.0,12.87,Yannick Bright,Goal
+88.8,17.1,74.9,49.1,0.020019376650453,26.26,Yannick Bright,Goal
+73.8,47.8,74.8,65.2,0.0,19.54,Federico Redondo,Goal
+65.0,18.2,80.3,93.0,0.0,74.98,Jordi Alba,Goal
+71.2,32.5,74.0,63.3,0.0,31.57,Sergio Busquets,Goal
+49.3,50.1,31.1,57.2,0.0,21.69,Sergio Busquets,Goal
+77.5,35.5,69.4,50.6,0.0,21.07,Sergio Busquets,Goal
+83.5,53.7,89.2,76.5,0.0,25.14,Jordi Alba,Goal
+71.1,53.1,69.7,74.1,0.0,21.91,Sergio Busquets,Goal
+50.1,50.1,45.3,33.8,0.0,15.53,Sergio Busquets,Goal
+61.6,57.9,70.6,78.1,0.0,25.26,Noah Allen,Goal
+61.3,73.6,60.6,43.7,0.0,30.31,Sergio Busquets,Goal
+56.3,25.3,68.6,30.0,0.0,13.96,Benjamín Cremaschi,Goal
+67.4,27.0,75.1,14.9,0.0,13.98,Yannick Bright,Goal
+75.6,19.7,72.8,20.4,0.0,4.26,Benjamín Cremaschi,Goal
+76.9,20.3,67.2,22.7,0.0,9.99,Yannick Bright,Goal
+64.1,25.3,55.7,27.7,0.0,6.46,Sergio Busquets,Goal
+54.4,21.5,69.9,16.5,0.0,20.78,Benjamín Cremaschi,Goal
+65.4,39.4,71.0,66.0,0.0,25.76,Telasco Segovia,Goal
+75.0,36.0,87.9,29.1,0.0,18.5,Yannick Bright,Goal
+55.7,14.6,67.5,8.9,0.0,13.73,Marcelo Weigandt,Goal
+62.3,34.8,62.8,34.6,0.0,14.21,Sergio Busquets,Goal
+69.0,31.6,77.7,27.9,0.0,8.97,Benjamín Cremaschi,Goal
+63.2,58.8,66.0,76.1,0.0,18.57,Sergio Busquets,Goal
+71.9,77.6,63.9,86.2,0.0,12.19,Telasco Segovia,Goal
+76.3,94.7,66.6,89.0,0.0,10.78,Telasco Segovia,Goal
+88.3,71.1,85.6,82.4,0.0,11.62,Jordi Alba,Goal
+86.0,6.2,75.7,40.1,0.030421491712332,26.96,Jordi Alba,Goal
+63.4,10.9,69.7,16.1,0.0,52.02,Tadeo Allende,Goal
+66.7,31.2,68.5,69.6,0.0,32.73,Noah Allen,Goal
+70.1,39.7,59.2,7.8,0.0,22.08,Tadeo Allende,Goal
+65.4,13.9,43.8,67.9,0.0,6.93,Yannick Bright,Goal
+63.3,17.0,63.7,29.4,0.0,11.9,Yannick Bright,Goal
+67.5,16.1,73.5,15.6,0.0,5.58,Marcelo Weigandt,Goal
+69.8,50.7,0.0,0.0,0.0,11.47,,Goal
+99.5,0.5,35.6,11.1,0.0,49.94,Fafà Picault,Goal
+77.4,53.1,79.4,62.3,0.0,11.57,Benjamín Cremaschi,Goal
+71.1,29.8,67.1,39.4,0.0,10.4,Sergio Busquets,Goal
+70.8,60.3,84.1,46.4,0.0,19.9,Tadeo Allende,Goal
+93.8,13.5,90.3,11.9,0.0,7.07,Ian Fray,Goal
+99.5,0.5,86.1,5.3,0.0,14.23,Ian Fray,Goal
+81.5,9.9,72.8,32.1,0.0,22.88,Jordi Alba,Goal
+80.2,19.7,64.3,27.7,0.0,16.89,Jordi Alba,Goal
+55.1,21.3,30.9,88.0,0.0,37.85,Noah Allen,Goal
+99.5,0.5,29.5,0.0,0.0,48.71,Marcelo Weigandt,Goal
+47.1,66.7,54.3,70.0,0.0,9.4,Telasco Segovia,Goal
+66.7,69.3,71.1,48.1,0.0,15.73,Tadeo Allende,Goal
+48.5,45.5,80.4,20.1,0.0,44.28,Benjamín Cremaschi,Goal
+53.8,43.4,92.2,90.8,0.0,60.78,Jordi Alba,Goal
+76.7,66.4,74.0,64.3,0.0,6.82,Telasco Segovia,Goal
+81.2,71.4,65.0,8.7,0.0,11.33,Marcelo Weigandt,Goal
+39.1,83.6,31.8,93.8,0.0,12.74,Noah Allen,Goal
+38.8,93.2,30.2,89.3,0.0,7.41,Noah Allen,Goal
+54.1,86.9,53.6,72.4,0.0,6.08,Tadeo Allende,Goal
+77.5,67.9,61.8,54.8,0.0,4.85,Tomás Avilés,Goal
+80.9,63.3,89.2,68.5,0.0,9.79,Jordi Alba,Goal
+32.5,6.7,80.6,15.0,0.0,35.26,Telasco Segovia,Goal
+73.7,18.8,63.4,28.0,0.0,10.61,Yannick Bright,Goal
+39.1,34.2,47.7,48.4,0.0,6.94,Telasco Segovia,Goal
+63.5,27.0,67.2,55.7,0.0,3.99,Sergio Busquets,Goal
+66.5,24.9,89.5,14.6,0.0,23.98,Tadeo Allende,Goal
+54.2,30.4,41.9,33.9,0.0,12.79,Sergio Busquets,Goal
+58.5,33.7,50.3,35.2,0.0,4.1,Sergio Busquets,Goal
+72.1,40.3,64.7,37.4,0.0,6.65,Yannick Bright,Goal
+47.3,45.7,85.0,78.3,0.0,51.34,Jordi Alba,Goal
+43.2,48.2,40.4,83.3,0.0,19.56,Gonzalo Luján,Goal
+55.7,42.4,79.9,53.4,0.088631227612495,19.08,Luis Suárez,Goal
+39.1,33.9,52.7,85.1,0.0,34.47,Jordi Alba,Goal
+40.9,30.7,35.7,95.9,0.0,23.67,Noah Allen,Goal
+44.4,46.7,37.3,25.3,0.0,14.76,Tomás Avilés,Goal
+87.3,37.4,92.5,28.0,0.0,10.32,Baltasar Rodríguez,Goal
+53.3,49.7,60.0,0.0,0.0,22.01,Ian Fray,Goal
+69.0,67.6,75.2,79.9,0.0,6.55,Telasco Segovia,Goal
+81.2,57.3,6.2,43.9,0.0,18.75,Gonzalo Luján,Goal
+52.5,33.9,62.6,29.8,0.0,9.35,Yannick Bright,Goal
+58.8,27.4,61.5,27.2,0.0,4.81,Yannick Bright,Goal
+69.9,54.4,12.1,42.5,0.0,11.58,Sergio Busquets,Goal
+75.6,72.7,98.7,38.8,0.0,41.13,Tadeo Allende,Goal
+36.6,3.2,50.9,14.2,0.0,18.56,Telasco Segovia,Goal
+44.9,46.7,40.9,49.6,0.0,3.4,Sergio Busquets,Goal
+45.9,58.4,67.5,63.4,0.0,26.38,Telasco Segovia,Goal
+62.0,65.4,33.0,72.6,0.0,20.07,Óscar Ustari,Goal
+81.8,32.8,77.5,48.5,0.0,10.7,Yannick Bright,Goal
+74.9,65.4,83.7,18.9,0.0,43.04,Tadeo Allende,Goal
+41.3,35.0,44.8,8.2,0.0,2.15,Marcelo Weigandt,Goal
+68.0,32.5,77.0,57.0,0.0,26.1,Telasco Segovia,Goal
+57.9,75.6,55.7,73.2,0.0,3.26,Federico Redondo,Goal
+58.0,75.1,70.6,70.3,0.0,13.1,Jordi Alba,Goal
+68.3,66.4,70.3,71.2,0.0,3.26,Jordi Alba,Goal
+75.3,54.0,77.5,63.2,0.0,8.27,Sergio Busquets,Goal
+74.3,34.2,68.4,40.1,0.0,8.34,Sergio Busquets,Goal
+64.7,28.2,55.5,12.5,0.0,18.2,Gonzalo Luján,Goal
+93.2,97.1,81.0,91.1,0.0,11.28,Jordi Alba,Goal
+80.0,87.1,93.9,77.5,0.0,16.01,Jordi Alba,Goal
+68.2,43.0,60.1,41.8,0.0,14.91,Federico Redondo,Goal
+65.9,43.1,61.7,63.7,0.0,21.02,Sergio Busquets,Goal
+71.7,26.8,79.8,36.0,0.0,12.26,Allen Obando,Goal
+42.1,45.5,61.8,87.8,0.0,49.46,Jordi Alba,Goal
+54.7,67.0,67.3,59.0,0.0,11.36,Jordi Alba,Goal
+46.2,34.0,67.7,27.6,0.0,23.14,Tadeo Allende,Goal
+34.3,45.5,31.2,50.3,0.0,5.71,Jordi Alba,Goal
+34.0,48.5,41.5,75.9,0.0,21.44,Yannick Bright,Goal
+42.8,31.3,4.2,60.0,0.0,40.64,Gonzalo Luján,Goal
+82.3,13.1,80.8,28.9,0.0,15.87,Sergio Busquets,Goal
+55.7,47.3,59.8,59.6,0.0,12.97,Luis Suárez,Goal
+54.4,62.6,54.8,11.8,0.0,32.9,Ian Fray,Goal
+74.5,20.3,78.0,93.5,0.0,73.08,Jordi Alba,Goal
+99.5,0.5,98.2,31.8,0.0,18.06,Ian Fray,Goal
+78.5,53.1,82.4,55.8,0.0,6.42,Tadeo Allende,Goal
+82.6,49.1,96.5,33.3,0.043464101850986,20.6,Ian Fray,Goal
+44.6,41.3,64.7,64.6,0.0,34.68,Sergio Busquets,Goal
+69.4,68.5,82.4,93.2,0.0,25.14,Jordi Alba,Goal
+99.5,99.5,89.7,61.3,0.061236865818501,45.04,Tadeo Allende,Goal
+73.0,71.7,71.7,71.2,0.0,4.58,Tadeo Allende,Goal
+80.1,14.0,76.8,27.7,0.0,14.09,Sergio Busquets,Goal
+42.2,7.6,93.9,26.5,0.0,44.65,Tadeo Allende,Goal
+65.3,25.2,56.3,26.4,0.0,9.08,Gonzalo Luján,Goal
+69.4,40.9,73.5,58.4,0.0,19.82,Jordi Alba,Goal
+42.4,67.0,45.1,73.0,0.0,6.58,Yannick Bright,Goal
+43.9,73.6,15.9,51.8,0.0,22.93,Jordi Alba,Goal
+47.8,15.2,42.6,25.6,0.0,11.63,Sergio Busquets,Goal
+80.2,67.3,34.8,75.3,0.0,2.33,Gonzalo Luján,Goal
+63.5,19.5,60.6,15.3,0.0,5.1,Sergio Busquets,Goal
+72.4,16.4,36.7,88.7,0.0,37.03,Gonzalo Luján,Goal
+99.5,0.5,12.0,95.0,0.0,53.1,Noah Allen,Goal
+71.7,40.4,72.6,70.3,0.0,32.62,Jordi Alba,Goal
+96.0,29.5,94.6,41.7,0.14407074451447,14.53,Luis Suárez,Goal
+41.1,15.8,61.2,4.9,0.0,21.52,Ian Fray,Goal
+52.6,17.6,53.2,42.8,0.0,25.21,Yannick Bright,Goal
+71.3,68.1,72.3,60.0,0.0,6.8,Yannick Bright,Goal
+72.2,69.0,70.4,46.7,0.0,12.2,Yannick Bright,Goal
+63.0,14.0,2.6,51.0,0.0,14.3,Óscar Ustari,Goal
+99.5,0.5,4.7,50.3,0.0,49.47,Óscar Ustari,Goal
+69.7,11.9,77.2,41.9,0.0,21.14,Yannick Bright,Goal
+59.4,22.4,88.6,13.5,0.0,20.49,Ian Fray,Goal
+59.9,34.3,88.6,30.0,0.0,18.83,Ian Fray,Goal
+99.5,0.5,55.3,90.9,0.0,45.57,Noah Allen,Goal
+85.7,12.3,73.4,32.7,0.0,19.72,Jordi Alba,Goal
+67.9,23.0,73.9,36.3,0.0,10.26,Luis Suárez,Goal
+85.1,64.9,88.8,73.9,0.0,8.63,Luis Suárez,Goal
+75.3,28.0,44.9,68.2,0.0,8.2,Gonzalo Luján,Goal
+79.6,27.9,81.6,37.3,0.0,7.45,Tadeo Allende,Goal
+64.1,38.6,58.5,30.7,0.0,5.98,Sergio Busquets,Goal
+75.3,59.0,94.0,69.0,0.0,21.21,Jordi Alba,Goal
+62.5,10.4,42.4,70.9,0.0,64.25,Noah Allen,Goal
+60.7,25.3,64.6,44.0,0.0,7.41,Telasco Segovia,Goal
+68.1,15.0,67.9,26.1,0.0,12.71,Gonzalo Luján,Goal
+72.3,19.1,43.6,43.1,0.0,25.18,Tomás Avilés,Goal
+77.6,30.7,37.3,25.3,0.0,11.81,Tomás Avilés,Goal
+88.3,2.8,39.2,35.0,0.0,28.56,Tomás Avilés,Goal
+74.0,23.9,41.0,19.8,0.0,44.98,Benjamín Cremaschi,Goal
+57.8,23.7,58.7,11.0,0.0,12.73,Gonzalo Luján,Goal
+65.2,57.2,74.7,71.8,0.0,8.78,Telasco Segovia,Goal
+61.9,44.8,64.0,54.2,0.0,14.62,Telasco Segovia,Goal
+75.4,34.3,73.1,42.5,0.0,19.12,Telasco Segovia,Goal
+64.0,44.6,75.6,41.5,0.0,8.85,Luis Suárez,Goal
+41.5,38.3,39.8,36.7,0.0,29.4,Maximiliano Falcón,Goal
+37.8,39.5,54.6,31.9,0.0,10.56,Telasco Segovia,Goal
+59.0,40.7,69.2,83.5,0.0,42.72,Noah Allen,Goal
+63.1,15.8,75.4,3.5,0.0,12.43,Tomás Avilés,Goal
+73.7,79.3,92.6,33.4,0.0,49.69,Fafà Picault,Goal
+70.4,17.3,79.6,12.9,0.0,2.51,Fafà Picault,Goal
+54.1,46.2,71.4,74.6,0.0,29.06,Telasco Segovia,Goal
+49.2,14.4,62.0,22.8,0.0,10.82,Luis Suárez,Goal
+41.4,38.8,75.8,61.8,0.0,22.68,Tadeo Allende,Goal
+41.5,36.4,55.5,34.5,0.0,14.13,Yannick Bright,Goal
+53.9,22.1,58.1,38.5,0.0,16.93,Yannick Bright,Goal
+68.6,59.7,89.8,75.1,0.0,24.61,Jordi Alba,Goal
+52.7,46.7,48.3,42.1,0.0,6.37,Sergio Busquets,Goal
+99.5,99.5,93.3,93.6,0.0,8.56,Jordi Alba,Goal
+64.6,48.7,67.8,62.3,0.0,11.93,Yannick Bright,Goal
+64.8,58.8,75.0,58.5,0.0,10.2,Luis Suárez,Goal
+73.4,65.1,92.2,76.1,0.0,20.38,Noah Allen,Goal
+36.5,24.1,31.1,55.2,0.0,31.57,Gonzalo Luján,Goal
+59.3,57.6,33.5,56.0,0.0,32.14,Tomás Avilés,Goal
+71.2,52.4,75.2,46.9,0.0,6.8,Luis Suárez,Goal
+99.5,0.5,36.0,15.9,0.0,56.2,David Martínez,Goal
+74.4,20.6,68.3,52.4,0.0,30.89,Sergio Busquets,Goal
+62.0,32.7,62.6,43.7,0.0,11.02,Sergio Busquets,Goal
+62.6,37.0,54.3,57.0,0.0,19.33,Sergio Busquets,Goal
+62.3,32.4,47.3,48.4,0.0,21.93,Sergio Busquets,Goal
+21.9,88.4,21.8,76.3,0.0,5.4,Jordi Alba,Goal
+38.1,88.7,31.9,64.5,0.0,24.98,Sergio Busquets,Goal
+72.6,66.3,75.0,39.4,0.0,21.99,Luis Suárez,Goal
+72.3,53.9,96.5,23.4,0.0,14.39,Ian Fray,Goal
+99.5,0.5,45.8,47.0,0.0,48.01,,Goal
+56.6,38.3,72.6,88.2,0.0,34.91,Noah Allen,Goal
+42.1,19.4,34.8,26.8,0.0,15.5,Sergio Busquets,Goal
+63.9,42.1,28.8,57.3,0.0,14.96,Maximiliano Falcón,Goal
+60.6,51.2,76.4,24.0,0.0,31.61,Tadeo Allende,Goal
+34.5,31.5,65.4,22.3,0.0,19.95,Tadeo Allende,Goal
+37.8,28.5,55.6,30.3,0.0,19.44,Tadeo Allende,Goal
+62.8,33.4,58.2,30.6,0.0,3.97,Federico Redondo,Goal
+56.3,40.6,51.5,63.7,0.0,23.59,Sergio Busquets,Goal
+67.5,75.6,72.8,80.5,0.0,7.22,Jordi Alba,Goal
+72.2,66.0,71.2,40.3,0.0,25.72,Luis Suárez,Goal
+57.3,41.5,54.0,76.0,0.0,20.59,Noah Allen,Goal
+70.4,53.0,53.6,62.8,0.0,24.3,Fafà Picault,Goal
+58.6,71.2,56.3,83.2,0.0,12.22,Sergio Busquets,Goal
+67.0,70.2,67.8,48.2,0.0,22.01,Federico Redondo,Goal
+73.2,44.5,86.4,89.9,0.0,47.28,Jordi Alba,Goal
+45.3,38.6,85.8,81.0,0.0,47.43,Jordi Alba,Goal
+35.6,44.6,60.7,68.7,0.0,33.17,Telasco Segovia,Goal
+39.7,38.0,62.4,85.3,0.0,52.8,Jordi Alba,Goal
+65.0,12.2,87.2,7.0,0.0,19.84,Tadeo Allende,Goal
+52.9,29.8,53.1,47.0,0.0,20.94,Federico Redondo,Goal
+67.6,53.9,73.3,67.3,0.0,14.56,Luis Suárez,Goal
+76.5,72.6,67.3,93.0,0.0,22.64,Noah Allen,Goal
+69.9,60.8,82.9,76.0,0.0,26.52,Luis Suárez,Goal
+71.0,41.8,80.1,45.8,0.0,9.94,Luis Suárez,Goal
+37.4,13.5,36.3,36.4,0.0,21.16,Sergio Busquets,Goal
+53.3,11.6,92.4,18.6,0.0,38.74,Tadeo Allende,Goal
+78.1,53.3,79.8,59.6,0.0,6.53,Luis Suárez,Goal
+59.3,36.4,62.9,80.6,0.0,44.15,Noah Allen,Goal
+65.8,54.2,71.5,33.9,0.0,21.09,Federico Redondo,Goal
+72.1,83.5,75.6,82.7,0.0,3.49,Fafà Picault,Goal
+56.6,24.1,36.4,25.2,0.0,21.4,Gonzalo Luján,Goal
+85.3,30.0,90.3,15.8,0.0,8.49,Tadeo Allende,Goal
+32.4,39.5,31.4,55.7,0.0,16.23,Telasco Segovia,Goal
+58.4,73.5,65.7,90.3,0.0,18.32,Jordi Alba,Goal
+57.8,82.0,58.6,58.5,0.0,23.51,Sergio Busquets,Goal
+47.3,11.4,4.2,41.0,0.0,12.79,Óscar Ustari,Goal
+26.7,38.5,47.0,26.0,0.0,9.34,Tadeo Allende,Goal
+33.9,9.5,45.2,26.2,0.0,16.32,Tadeo Allende,Goal
+44.8,35.8,46.0,63.4,0.0,21.7,Telasco Segovia,Goal
+42.6,59.1,44.1,26.8,0.0,53.54,Sergio Busquets,Goal
+57.1,9.2,59.2,38.5,0.0,25.67,Federico Redondo,Goal
+63.7,40.1,72.1,59.6,0.0,21.23,Telasco Segovia,Goal
+78.7,50.6,87.9,37.0,0.0,14.41,Luis Suárez,Goal
+44.2,36.4,51.0,57.2,0.0,22.6,Federico Redondo,Goal
+58.1,48.7,62.4,57.6,0.0,9.88,Jordi Alba,Goal
+59.2,39.4,68.2,36.9,0.0,9.34,Tadeo Allende,Goal
+70.6,24.3,23.6,77.0,0.0,17.66,Óscar Ustari,Goal
+58.0,64.6,41.9,19.5,0.0,24.45,Benjamín Cremaschi,Goal
+63.1,16.2,66.5,6.2,0.0,7.61,Tadeo Allende,Goal
+75.9,39.7,75.1,60.0,0.0,20.32,Luis Suárez,Goal
+32.9,57.3,58.0,88.4,0.0,19.96,David Martínez,Goal
+54.1,82.7,51.7,84.5,0.0,11.77,David Martínez,Goal
+59.6,27.9,85.1,17.6,0.0,20.57,Ian Fray,Goal
+68.6,36.6,85.2,48.2,0.0,20.25,Telasco Segovia,Goal
+73.3,59.3,69.4,38.5,0.0,21.05,Sergio Busquets,Goal
+81.2,28.3,89.9,18.3,0.0,13.25,Ian Fray,Goal
+70.6,9.2,13.8,75.2,0.0,27.37,David Martínez,Goal
+87.4,76.4,87.5,92.3,0.0,15.9,Telasco Segovia,Goal
+42.2,21.8,37.3,27.1,0.0,7.22,Federico Redondo,Goal
+67.9,11.9,87.1,0.0,0.0,22.77,Marcelo Weigandt,Goal
+74.5,65.7,75.5,70.6,0.0,9.4,Luis Suárez,Goal
+74.3,64.6,64.7,58.2,0.0,11.84,Telasco Segovia,Goal
+73.3,10.3,75.6,24.0,0.0,10.62,Marcelo Weigandt,Goal
+63.3,81.8,62.9,76.1,0.0,10.34,Telasco Segovia,Goal
+72.1,67.6,64.9,68.5,0.0,8.91,Telasco Segovia,Goal
+70.3,74.5,0.0,0.0,0.0,7.81,,Goal
+67.0,65.2,82.1,50.7,0.046680644154549,29.97,Telasco Segovia,Goal
+85.8,71.5,73.2,64.2,0.0,16.37,Telasco Segovia,Goal
+61.6,57.5,62.8,45.8,0.0,5.48,Sergio Busquets,Goal
+75.8,16.4,79.6,5.9,0.0,10.25,Ian Fray,Goal
+66.3,7.3,93.3,39.5,0.16689451038837,35.09,Tadeo Allende,Goal
+74.3,52.4,88.5,67.5,0.0,19.33,Telasco Segovia,Goal
+80.7,23.4,78.1,36.6,0.0,13.45,Luis Suárez,Goal
+95.7,24.7,89.8,53.6,0.23793014883995,31.16,Luis Suárez,Goal
+87.7,69.4,76.9,57.2,0.0,15.09,Luis Suárez,Goal
+73.5,35.7,10.8,25.5,0.0,5.24,Maximiliano Falcón,Goal
+72.5,68.4,70.9,82.9,0.0,22.5,Noah Allen,Goal
+66.4,71.5,62.4,84.5,0.0,17.68,Noah Allen,Goal
+66.0,75.3,86.0,83.2,0.0,21.93,Noah Allen,Goal
+65.2,25.9,68.6,5.2,0.0,19.83,Ian Fray,Goal
+56.0,19.2,43.9,45.1,0.0,23.26,Sergio Busquets,Goal
+73.2,62.6,88.1,72.1,0.0,18.65,Luis Suárez,Goal
+67.8,23.3,60.7,11.7,0.0,15.79,Sergio Busquets,Goal
+77.1,4.4,65.3,11.7,0.0,13.88,Sergio Busquets,Goal
+64.6,4.9,52.7,18.5,0.0,18.07,Federico Redondo,Goal
+80.2,29.1,82.4,44.6,0.0,15.66,Luis Suárez,Goal
+72.0,34.9,76.4,41.2,0.0,7.68,Tadeo Allende,Goal
+99.5,99.5,83.7,88.3,0.0,19.31,Telasco Segovia,Goal
+84.9,86.9,72.5,69.0,0.0,21.45,Benjamín Cremaschi,Goal
+42.4,31.0,91.0,37.0,0.20729896426201,46.39,Tadeo Allende,Goal
+64.8,23.3,53.1,32.5,0.0,2.79,Benjamín Cremaschi,Goal
+65.5,28.9,92.4,22.2,0.0,15.24,Marcelo Weigandt,Goal
+40.2,5.2,42.1,9.2,0.0,4.43,Marcelo Weigandt,Goal
+53.7,5.8,62.3,2.9,0.0,6.55,Benjamín Cremaschi,Goal
+62.4,39.4,72.1,66.7,0.0,26.26,Telasco Segovia,Goal
+45.5,53.0,60.0,50.4,0.0,14.73,Luis Suárez,Goal
+70.3,30.9,95.1,32.7,0.18039289116859,25.21,Luis Suárez,Goal
+40.0,4.7,12.8,72.8,0.0,6.36,Jordi Alba,Goal
+53.1,52.7,62.5,68.1,0.0,18.04,Telasco Segovia,Goal
+34.1,18.3,37.5,10.6,0.0,8.33,Marcelo Weigandt,Goal
+38.5,14.4,52.0,15.3,0.0,8.77,Benjamín Cremaschi,Goal
+36.0,6.5,29.3,35.1,0.0,26.3,Maximiliano Falcón,Goal
+63.6,30.0,58.3,67.2,0.0,37.58,David Martínez,Goal
+45.5,36.9,36.9,33.9,0.0,9.71,Benjamín Cremaschi,Goal
+53.7,22.2,93.6,16.1,0.0,31.88,Tadeo Allende,Goal
+74.3,17.1,73.2,28.3,0.0,11.5,Marcelo Weigandt,Goal
+70.1,31.2,72.5,36.7,0.0,5.26,Sergio Busquets,Goal
+73.5,51.9,85.8,69.7,0.0,20.71,Telasco Segovia,Goal
+71.2,34.6,67.2,61.7,0.0,22.57,David Martínez,Goal
+69.2,66.9,75.4,64.6,0.0,6.61,Luis Suárez,Goal
+41.4,7.9,30.2,6.1,0.0,11.36,Marcelo Weigandt,Goal
+42.5,23.9,65.2,65.8,0.0,50.39,David Martínez,Goal
+47.3,72.3,55.3,82.3,0.0,12.81,Noah Allen,Goal
+49.6,78.8,44.9,86.0,0.0,10.06,Telasco Segovia,Goal
+45.4,55.2,29.4,49.8,0.0,44.07,Telasco Segovia,Goal
+90.5,94.4,77.4,86.0,0.0,9.3,Telasco Segovia,Goal
+90.5,8.0,25.0,55.1,0.0,15.36,Maximiliano Falcón,Goal
+61.3,54.5,52.6,5.6,0.0,20.44,Federico Redondo,Goal
+65.8,54.3,61.5,54.5,0.0,3.49,Luis Suárez,Goal
+71.8,43.6,51.3,33.9,0.0,6.45,Marcelo Weigandt,Goal
+67.8,39.4,26.8,64.4,0.0,28.4,Maximiliano Falcón,Goal
+63.2,38.9,29.4,63.0,0.0,31.95,Maximiliano Falcón,Goal
+78.8,24.0,78.0,32.2,0.0,8.24,Luis Suárez,Goal
+76.3,54.5,83.3,80.5,0.0,25.9,Tadeo Allende,Goal
+29.9,70.3,33.4,63.6,0.0,7.56,Sergio Busquets,Goal
+34.3,71.5,34.6,68.1,0.0,3.31,Sergio Busquets,Goal
+72.4,37.1,90.8,12.9,0.0,26.22,Tadeo Allende,Goal
+70.6,18.3,63.5,29.1,0.0,12.92,Benjamín Cremaschi,Goal
+77.5,35.4,88.3,33.4,0.0,9.88,Marcelo Weigandt,Goal
+85.4,40.3,87.5,51.0,0.0,10.9,Telasco Segovia,Goal
+44.6,71.1,67.5,63.6,0.0,17.37,Federico Redondo,Goal
+43.1,7.4,82.0,23.4,0.0,6.21,Ian Fray,Goal
+82.5,28.8,81.2,33.4,0.0,4.41,Luis Suárez,Goal
+75.6,44.6,87.6,75.3,0.0,33.52,Noah Allen,Goal
+46.2,36.1,48.0,64.0,0.0,27.96,Benjamín Cremaschi,Goal
+54.5,29.1,61.1,11.3,0.0,18.98,Marcelo Weigandt,Goal
+55.4,18.3,57.9,25.5,0.0,7.59,Sergio Busquets,Goal
+80.6,26.2,82.4,25.6,0.0,3.64,Ian Fray,Goal
+76.5,38.0,80.2,33.9,0.0,5.52,Luis Suárez,Goal
+40.7,40.0,74.6,48.7,0.0,6.17,Luis Suárez,Goal
+35.0,9.7,27.4,23.9,0.0,15.03,Benjamín Cremaschi,Goal
+31.4,26.7,81.9,35.4,0.36086097359657,41.95,Fafà Picault,Goal
+35.0,36.4,31.4,36.8,0.0,4.22,Sergio Busquets,Goal
+24.0,25.1,38.1,74.9,0.0,19.71,Sergio Busquets,Goal
+25.8,3.5,29.7,10.3,0.0,6.37,Tadeo Allende,Goal
+99.5,0.5,92.6,48.7,0.11334229260683,47.1,Benjamín Cremaschi,Goal
+68.9,8.6,69.2,21.5,0.0,12.8,Sergio Busquets,Goal
+70.5,27.8,68.4,37.1,0.0,14.45,Marcelo Weigandt,Goal
+59.4,36.2,69.1,61.8,0.0,26.44,Benjamín Cremaschi,Goal
+44.0,51.9,13.4,54.0,0.0,15.56,Maximiliano Falcón,Goal
+53.6,28.0,61.2,28.5,0.0,9.18,Tadeo Allende,Goal
+74.8,49.7,89.0,41.1,0.55488175153732,10.68,Tadeo Allende,Goal
+99.5,0.5,27.1,9.1,0.0,60.7,Maximiliano Falcón,Goal
+85.8,28.7,11.0,61.0,0.0,19.65,David Martínez,Goal
+48.6,49.6,44.3,42.8,0.0,7.77,Sergio Busquets,Goal
+51.1,21.7,69.4,8.5,0.0,17.88,Benjamín Cremaschi,Goal
+57.8,32.5,57.3,45.5,0.0,12.11,Marcelo Weigandt,Goal
+54.3,26.6,78.3,12.5,0.0,22.9,Tadeo Allende,Goal
+73.8,51.3,85.0,51.2,0.0,11.1,Luis Suárez,Goal
+53.1,68.6,66.4,57.2,0.0,10.7,Jordi Alba,Goal
+71.0,38.3,80.3,33.8,0.020344262942672,16.58,Tadeo Allende,Goal
+59.7,6.5,46.9,24.2,0.0,21.84,Marcelo Weigandt,Goal
+56.4,22.6,62.0,23.0,0.0,7.16,Sergio Busquets,Goal
+55.4,44.5,71.4,54.6,0.0,10.93,Sergio Busquets,Goal
+66.0,52.5,41.1,79.4,0.0,13.46,Luis Suárez,Goal
+75.6,47.8,9.0,52.8,0.0,17.3,Óscar Ustari,Goal
+77.1,52.1,45.6,24.2,0.0,6.61,Tadeo Allende,Goal
+37.8,8.6,42.4,26.2,0.0,13.9,Benjamín Cremaschi,Goal
+53.8,29.6,51.2,56.1,0.0,26.63,Sergio Busquets,Goal
+51.5,44.2,52.1,30.4,0.0,14.99,Tomás Avilés,Goal
+69.1,66.3,21.9,2.2,0.0,32.27,Marcelo Weigandt,Goal
+33.9,12.2,32.9,17.9,0.0,5.79,Maximiliano Falcón,Goal
+30.8,13.6,86.8,45.5,0.16188614070415,46.84,Tadeo Allende,Goal
+81.0,51.2,91.0,43.7,0.16427262127399,12.5,Luis Suárez,Goal
+45.9,34.0,44.3,14.6,0.0,9.1,Baltasar Rodríguez,Goal
+33.5,17.0,52.0,30.7,0.0,7.29,Baltasar Rodríguez,Goal
+68.6,41.9,26.2,31.5,0.0,23.44,Federico Redondo,Goal
+69.5,52.4,56.0,49.9,0.0,13.73,Federico Redondo,Goal
+74.1,65.7,78.7,61.8,0.0,6.03,Baltasar Rodríguez,Goal
+86.6,78.0,78.2,71.4,0.01973757147789,10.56,Baltasar Rodríguez,Goal
+56.7,28.1,8.4,68.2,0.0,21.77,Jordi Alba,Goal
+37.0,65.3,40.2,76.4,0.0,11.47,Federico Redondo,Goal
+33.3,66.6,27.3,62.4,0.0,7.0,Sergio Busquets,Goal
+74.7,33.2,86.6,26.3,0.0,14.07,Luis Suárez,Goal
+68.7,37.1,12.0,74.2,0.0,31.79,Jordi Alba,Goal
+67.8,17.3,69.5,32.8,0.0,15.59,Luis Suárez,Goal
+78.7,39.5,34.2,48.8,0.0,2.35,Yannick Bright,Goal
+75.7,34.0,80.2,68.4,0.0,34.73,Baltasar Rodríguez,Goal
+40.6,34.6,41.4,38.2,0.0,3.69,Jordi Alba,Goal
+39.4,35.3,46.1,33.8,0.0,3.95,Sergio Busquets,Goal
+68.2,26.2,64.7,67.6,0.0,2.92,Yannick Bright,Goal
+59.4,37.9,63.7,56.9,0.0,24.69,Jordi Alba,Goal
+63.1,57.3,70.6,76.5,0.0,26.83,Luis Suárez,Goal
+74.2,47.8,69.8,41.0,0.0,7.6,Sergio Busquets,Goal
+64.9,66.0,86.3,45.6,0.0,27.3,Tadeo Allende,Goal
+54.5,64.0,92.0,75.9,0.0,32.43,Baltasar Rodríguez,Goal
+70.5,60.5,68.0,36.9,0.0,15.86,Sergio Busquets,Goal
+99.5,0.5,85.3,4.3,0.0,12.04,Baltasar Rodríguez,Goal
+65.8,10.9,66.3,49.7,0.0,37.91,Jordi Alba,Goal
+61.7,33.3,65.6,36.0,0.0,5.44,Sergio Busquets,Goal
+52.1,20.9,38.3,10.1,0.0,14.42,Marcelo Weigandt,Goal
+56.4,33.7,67.2,27.0,0.0,10.76,Federico Redondo,Goal
+75.3,37.9,96.2,25.3,0.0,19.11,Tadeo Allende,Goal
+73.7,25.0,67.3,23.0,0.0,10.34,Sergio Busquets,Goal
+69.1,36.1,73.6,42.5,0.0,7.82,Tadeo Allende,Goal
+42.4,20.8,54.8,20.8,0.0,12.4,Tadeo Allende,Goal
+61.0,43.0,64.6,88.0,0.0,21.04,Jordi Alba,Goal
+97.4,77.0,88.3,40.4,0.0,37.71,Tadeo Allende,Goal
+99.5,0.5,78.1,67.7,0.017830107361078,70.54,Jordi Alba,Goal
+40.4,38.2,4.5,57.2,0.0,45.95,Óscar Ustari,Goal
+49.6,35.1,48.8,60.3,0.0,20.85,Sergio Busquets,Goal
+55.1,4.4,61.7,5.6,0.0,6.71,Marcelo Weigandt,Goal
+42.9,36.0,39.4,69.9,0.0,29.01,Maximiliano Falcón,Goal
+47.3,14.0,41.9,13.5,0.0,4.97,Marcelo Weigandt,Goal
+51.8,6.2,54.3,36.3,0.0,11.82,Sergio Busquets,Goal
+45.4,21.5,61.3,30.2,0.0,34.82,Rodrigo De Paul,Goal
+34.3,13.7,31.0,29.5,0.0,12.32,Federico Redondo,Goal
+33.2,27.1,33.0,52.5,0.0,8.24,Federico Redondo,Goal
+54.4,33.4,54.7,47.6,0.0,14.2,Federico Redondo,Goal
+61.4,23.9,61.0,28.9,0.0,3.18,Luis Suárez,Goal
+62.4,28.5,68.6,55.8,0.0,11.08,Federico Redondo,Goal
+68.0,49.1,34.3,4.6,0.0,23.07,Tadeo Allende,Goal
+43.6,33.4,62.3,59.9,0.0,21.74,Baltasar Rodríguez,Goal
+63.8,38.9,20.8,24.0,0.0,9.86,Tomás Avilés,Goal
+64.4,50.0,43.5,62.3,0.0,4.68,Benjamín Cremaschi,Goal
+68.8,23.7,72.3,30.7,0.0,7.83,Sergio Busquets,Goal
+68.1,32.2,77.3,64.6,0.0,18.54,Baltasar Rodríguez,Goal
+46.4,40.0,50.3,33.3,0.0,2.26,Tadeo Allende,Goal
+44.0,44.2,54.3,54.2,0.0,8.91,Federico Redondo,Goal
+64.0,55.5,10.3,29.6,0.0,9.39,Ian Fray,Goal
+47.5,42.2,55.5,68.2,0.0,19.68,Baltasar Rodríguez,Goal
+65.9,7.7,58.4,8.8,0.0,7.58,Marcelo Weigandt,Goal
+65.5,12.8,56.2,27.4,0.0,13.04,Federico Redondo,Goal
+62.8,27.3,67.2,60.2,0.0,24.79,Baltasar Rodríguez,Goal
+43.0,51.2,34.1,72.7,0.0,19.55,Maximiliano Falcón,Goal
+58.6,83.3,59.0,75.9,0.0,7.11,Baltasar Rodríguez,Goal
+23.8,43.4,28.5,58.8,0.0,17.07,Sergio Busquets,Goal
+40.0,38.8,59.0,35.5,0.0,18.96,Baltasar Rodríguez,Goal
+67.7,30.1,73.8,36.1,0.0,6.59,Luis Suárez,Goal
+68.7,63.0,63.1,84.2,0.0,4.02,Jordi Alba,Goal
+63.6,45.8,64.7,58.2,0.0,9.26,Federico Redondo,Goal
+50.2,50.3,12.3,72.9,0.0,28.44,Maximiliano Falcón,Goal
+78.1,58.2,77.1,86.6,0.0,22.74,Jordi Alba,Goal
+65.0,53.6,65.8,63.4,0.0,6.07,Jordi Alba,Goal
+99.7,0.8,86.1,12.8,0.0,9.22,Telasco Segovia,Goal
+82.5,7.7,93.7,16.7,0.0,14.37,Telasco Segovia,Goal
+73.7,9.5,76.8,17.4,0.0,13.0,Sergio Busquets,Goal
+64.0,42.8,68.4,61.7,0.0,19.41,Telasco Segovia,Goal
+79.0,48.4,7.9,78.6,0.0,23.59,Tadeo Allende,Goal
+62.7,16.6,73.8,4.0,0.0,15.84,Tadeo Allende,Goal
+53.3,60.6,70.5,77.3,0.0,30.78,Telasco Segovia,Goal
+73.5,67.2,86.0,84.0,0.0,19.64,Luis Suárez,Goal
+70.4,59.3,78.3,68.4,0.0,12.05,Luis Suárez,Goal
+73.5,29.2,4.8,46.4,0.0,2.8,Óscar Ustari,Goal
+34.7,44.8,55.5,26.2,0.0,23.67,Marcelo Weigandt,Goal
+68.0,49.9,78.8,82.1,0.0,36.44,Jordi Alba,Goal
+37.3,44.9,71.8,75.2,0.0,46.75,Telasco Segovia,Goal
+35.7,18.2,54.3,17.3,0.0,72.15,Marcelo Weigandt,Goal
+67.6,65.3,73.0,70.2,0.0,7.29,Benjamín Cremaschi,Goal
+44.8,72.6,38.2,60.3,0.0,12.8,Sergio Busquets,Goal
+45.1,76.8,48.2,68.9,0.0,8.49,Benjamín Cremaschi,Goal
+46.0,79.2,35.5,48.7,0.0,25.02,Sergio Busquets,Goal
+60.8,60.2,63.1,71.9,0.0,11.92,Sergio Busquets,Goal
+60.9,64.4,66.1,67.4,0.0,6.0,Sergio Busquets,Goal
+18.8,8.9,9.0,29.8,0.0,23.08,Maximiliano Falcón,Goal
+46.4,9.2,44.4,23.0,0.0,11.33,Benjamín Cremaschi,Goal
+47.8,25.3,44.5,41.5,0.0,16.53,Sergio Busquets,Goal
+72.2,59.4,90.3,77.5,0.0,27.24,Jordi Alba,Goal
+43.9,6.1,30.4,38.5,0.0,32.83,Maximiliano Falcón,Goal
+57.8,14.2,99.5,99.5,0.0,15.56,Jordi Alba,Goal
+53.7,41.0,23.9,5.4,0.0,10.03,Marcelo Weigandt,Goal
+60.4,38.8,76.5,92.0,0.0,54.79,Jordi Alba,Goal
+65.0,69.0,74.6,79.7,0.0,14.57,Luis Suárez,Goal
+73.4,57.6,86.0,85.1,0.0,30.25,Jordi Alba,Goal
+64.6,34.6,79.8,36.8,0.037321165204048,8.16,Luis Suárez,Goal
+64.3,32.3,67.2,60.9,0.0,27.9,Telasco Segovia,Goal
+56.3,5.5,14.7,48.4,0.0,2.15,Óscar Ustari,Goal
+40.5,2.6,37.2,18.2,0.0,14.19,Federico Redondo,Goal
+38.6,13.6,46.2,9.4,0.0,12.27,Baltasar Rodríguez,Goal
+66.8,27.2,64.7,54.5,0.0,27.38,Sergio Busquets,Goal
+73.7,44.6,70.5,57.2,0.0,13.0,Baltasar Rodríguez,Goal
+82.5,77.3,96.3,70.1,0.0,15.57,Jordi Alba,Goal
+27.6,8.2,26.6,25.1,0.0,16.93,Baltasar Rodríguez,Goal
+74.2,25.4,74.7,47.9,0.0,22.51,Sergio Busquets,Goal
+71.8,52.1,67.5,58.5,0.0,5.37,Sergio Busquets,Goal
+72.9,59.1,76.2,75.8,0.0,17.23,Jordi Alba,Goal
+69.9,58.4,84.3,81.6,0.0,27.37,Jordi Alba,Goal
+35.4,37.1,34.6,53.4,0.0,12.96,Sergio Busquets,Goal
+65.1,4.6,60.2,37.0,0.0,27.18,Federico Redondo,Goal
+35.4,36.2,13.1,38.4,0.0,18.73,Yannick Bright,Goal
+55.7,1.9,40.6,95.7,0.0,51.2,Yannick Bright,Goal
+37.3,33.1,40.2,11.7,0.0,16.77,Tadeo Allende,Goal
+44.5,71.5,34.3,95.4,0.0,5.96,Jordi Alba,Goal
+56.4,63.6,55.7,46.9,0.0,16.24,Sergio Busquets,Goal
+63.5,13.1,68.4,84.2,0.0,2.5,Sergio Busquets,Goal
+74.4,14.1,87.8,13.7,0.0,12.77,Marcelo Weigandt,Goal
+76.8,49.3,75.6,66.7,0.0,6.51,Luis Suárez,Goal
+64.2,68.8,71.3,77.0,0.0,19.87,Jordi Alba,Goal
+41.2,30.1,35.2,33.9,0.0,7.1,Luis Suárez,Goal
+41.7,38.3,37.1,41.5,0.0,9.55,Sergio Busquets,Goal
+47.4,33.6,44.2,15.6,0.0,11.4,Benjamín Cremaschi,Goal
+37.1,32.5,34.8,49.3,0.0,6.42,Telasco Segovia,Goal
+58.7,29.8,85.3,36.9,0.033301260322332,26.83,Tadeo Allende,Goal
+44.5,52.2,42.4,47.8,0.0,4.88,Sergio Busquets,Goal
+44.7,64.5,42.5,72.0,0.0,10.26,Telasco Segovia,Goal
+49.0,76.4,60.8,94.1,0.0,20.33,Luis Suárez,Goal
+54.3,91.8,54.9,85.9,0.0,4.4,Jordi Alba,Goal
+62.7,92.0,8.8,76.6,0.0,31.3,Federico Redondo,Goal
+39.0,41.0,92.9,91.1,0.0,43.26,Benjamín Cremaschi,Goal
+71.9,62.4,64.0,25.2,0.0,20.22,Tadeo Allende,Goal
+74.8,68.4,79.3,74.5,0.0,7.58,Luis Suárez,Goal
+86.1,46.0,87.3,44.6,0.0,7.39,Federico Redondo,Goal
+64.1,46.9,63.7,60.5,0.0,13.92,Telasco Segovia,Goal
+99.5,99.5,10.4,64.4,0.0,54.24,Rocco Ríos Novo,Goal
+69.4,58.7,27.5,73.7,0.0,9.82,Noah Allen,Goal
+52.9,50.7,70.0,69.0,0.0,21.77,Jordi Alba,Goal
+79.5,69.3,76.9,46.9,0.0,10.3,Telasco Segovia,Goal
+76.5,61.1,96.9,57.8,0.0,15.45,Luis Suárez,Goal
+89.8,81.8,32.4,66.5,0.0,35.86,Yannick Bright,Goal
+70.4,39.4,62.8,32.5,0.0,34.58,Noah Allen,Goal
+69.7,64.5,80.1,74.3,0.0,11.18,Jordi Alba,Goal
+75.2,71.1,86.1,74.5,0.0,14.38,Jordi Alba,Goal
+79.5,67.8,97.9,66.0,0.0,15.2,Jordi Alba,Goal
+99.5,99.5,89.6,100.0,0.0,46.81,Jordi Alba,Goal
+43.6,24.2,30.1,28.6,0.0,22.11,Tomás Avilés,Goal
+61.4,59.3,73.0,92.4,0.0,34.56,Jordi Alba,Goal
+63.4,18.0,56.1,21.8,0.0,9.76,Sergio Busquets,Goal
+55.7,12.2,69.2,5.8,0.0,13.81,Marcelo Weigandt,Goal
+59.2,45.1,68.6,48.8,0.0,5.58,Sergio Busquets,Goal
+79.3,61.8,95.3,76.1,0.0,19.68,Jordi Alba,Goal
+38.1,10.7,0.0,0.0,0.0,22.94,,Goal
+38.2,26.1,58.8,37.1,0.0,29.93,Gonzalo Luján,Goal
+75.9,31.6,0.0,0.0,0.0,3.78,,Goal
+69.9,69.3,60.7,30.7,0.0,30.28,Maximiliano Falcón,Goal
+55.0,14.6,54.3,32.4,0.0,18.52,Yannick Bright,Goal
+61.7,43.9,60.0,74.7,0.0,24.35,Telasco Segovia,Goal
+33.2,35.4,96.8,55.0,0.0,24.02,Fafà Picault,Goal
+72.2,59.4,54.3,81.8,0.0,21.45,Benjamín Cremaschi,Goal
+61.0,30.1,89.8,10.9,0.0,30.2,Marcelo Weigandt,Goal
+38.3,8.3,41.5,30.0,0.0,23.62,Federico Redondo,Goal
+52.3,35.7,56.7,40.9,0.0,7.91,Federico Redondo,Goal
+63.7,71.1,67.8,81.7,0.0,13.04,Telasco Segovia,Goal
+65.4,75.8,13.9,11.9,0.0,13.02,Tadeo Allende,Goal
+78.2,54.6,66.0,37.9,0.0,7.65,Maximiliano Falcón,Goal
+70.8,31.3,75.7,41.6,0.0,11.41,Luis Suárez,Goal
+68.3,44.3,96.1,63.2,0.35750350356102,31.54,Jordi Alba,Goal
+57.4,24.2,97.2,40.3,0.0,16.87,Marcelo Weigandt,Goal
+75.6,44.2,94.6,68.9,0.0,29.46,Jordi Alba,Goal
+59.0,20.1,63.4,31.8,0.0,12.19,Tadeo Allende,Goal
+65.0,32.7,89.3,9.4,0.0,34.23,Tadeo Allende,Goal
+36.6,28.6,32.6,37.3,0.0,10.92,Sergio Busquets,Goal
+29.0,36.4,33.3,58.5,0.0,22.51,Sergio Busquets,Goal
+62.3,33.1,85.6,64.2,0.095059394836426,41.65,Telasco Segovia,Goal
+38.5,4.9,36.1,15.2,0.0,10.58,Federico Redondo,Goal
+32.8,24.6,43.2,25.5,0.0,8.49,Tadeo Allende,Goal
+45.4,27.9,42.4,24.6,0.0,4.48,Tadeo Allende,Goal
+55.8,57.9,30.1,39.4,0.0,34.76,Benjamín Cremaschi,Goal
+56.6,41.1,68.1,22.4,0.0,13.37,Rodrigo De Paul,Goal
+58.0,17.0,29.8,71.2,0.0,12.65,Noah Allen,Goal
+54.4,9.5,27.5,66.0,0.0,18.88,Jordi Alba,Goal
+45.4,0.0,56.7,10.9,0.0,9.0,Jordi Alba,Goal
+72.4,16.1,90.7,55.2,0.0,44.55,Baltasar Rodríguez,Goal
+65.7,32.1,66.0,57.5,0.0,18.95,Sergio Busquets,Goal
+67.4,55.4,86.4,39.7,0.21319805085659,29.98,Luis Suárez,Goal
+83.4,89.3,72.5,59.1,0.0,22.77,Sergio Busquets,Goal
+70.8,50.1,82.7,49.7,0.0,11.31,Luis Suárez,Goal
+75.4,41.0,81.9,49.3,0.0,10.08,Luis Suárez,Goal
+70.5,26.1,59.2,56.4,0.0,28.65,Gonzalo Luján,Goal
+34.4,13.1,19.6,8.0,0.0,18.53,Marcelo Weigandt,Goal
+99.5,0.5,85.1,11.3,0.0,18.17,Yannick Bright,Goal
+73.1,12.3,77.8,33.0,0.0,21.23,Sergio Busquets,Goal
+86.6,24.8,80.3,7.8,0.0,29.88,Luis Suárez,Goal
+97.5,32.4,95.8,19.7,0.0,15.55,Marcelo Weigandt,Goal
+74.9,35.7,86.7,66.3,0.0,32.68,Benjamín Cremaschi,Goal
+85.7,58.1,86.5,41.5,0.12999652326107,18.73,Marcelo Weigandt,Goal
+79.1,25.3,93.5,15.6,0.0,15.31,Marcelo Weigandt,Goal
+62.3,38.3,89.5,84.8,0.0,51.67,Fafà Picault,Goal
+78.8,32.1,45.4,33.8,0.0,18.34,Tomás Avilés,Goal
+68.0,42.1,92.7,81.0,0.0,48.85,Benjamín Cremaschi,Goal
+62.5,15.9,68.9,47.2,0.0,23.52,Yannick Bright,Goal
+71.5,29.2,75.9,56.4,0.0,26.56,Luis Suárez,Goal
+68.3,37.3,79.9,23.5,0.0,18.48,Benjamín Cremaschi,Goal
+35.5,23.9,41.0,97.2,0.0,8.02,Noah Allen,Goal
+41.0,19.0,24.8,97.0,0.0,18.96,Ryan Sailor,Goal
+42.2,23.9,72.6,51.2,0.0,36.86,Fafà Picault,Goal
+34.4,24.7,32.4,40.0,0.0,13.25,Rodrigo De Paul,Goal
+36.3,43.3,43.3,71.1,0.0,28.67,Jordi Alba,Goal
+63.8,25.3,68.1,13.4,0.0,13.97,Marcelo Weigandt,Goal
+80.2,31.9,96.2,33.5,0.13735483586788,17.04,Luis Suárez,Goal
+98.7,6.7,85.0,17.0,0.0,17.14,Rodrigo De Paul,Goal
+40.7,16.0,75.4,14.3,0.0,29.48,Benjamín Cremaschi,Goal
+67.2,40.9,75.3,28.7,0.021672690287232,17.98,Rodrigo De Paul,Goal
+91.3,84.9,76.6,65.4,0.028153002262115,24.42,Baltasar Rodríguez,Goal
+78.4,42.8,77.5,24.2,0.0,54.1,Marcelo Weigandt,Goal
+78.2,37.0,98.4,23.7,0.0,23.3,Marcelo Weigandt,Goal
+72.0,40.0,73.5,64.2,0.026008609682322,23.9,Yannick Bright,Goal
+38.2,53.0,51.1,82.8,0.0,32.86,Jordi Alba,Goal
+71.9,56.0,73.2,56.4,0.0,11.41,Yannick Bright,Goal
+76.0,49.6,91.7,39.3,0.49310195446014,16.92,Luis Suárez,Goal
+54.4,52.5,43.0,51.6,0.0,10.47,Sergio Busquets,Goal
+54.1,48.3,48.4,52.5,0.0,10.72,Yannick Bright,Goal
+45.9,50.0,38.2,26.1,0.0,26.57,Tomás Avilés,Goal
+54.4,24.3,92.3,18.3,0.0,34.16,Tadeo Allende,Goal
+99.5,0.5,86.2,5.8,0.0,14.32,Rodrigo De Paul,Goal
+85.5,81.6,96.4,78.3,0.0,11.3,Jordi Alba,Goal
+43.7,23.7,52.2,31.1,0.0,13.94,Yannick Bright,Goal
+94.0,69.7,35.5,77.1,0.0,5.53,Tadeo Allende,Goal
+26.4,35.8,8.2,70.2,0.0,18.25,Maximiliano Falcón,Goal
+32.6,49.4,26.1,38.2,0.0,12.86,Tomás Avilés,Goal
+56.8,37.4,58.8,38.0,0.0,9.27,Rodrigo De Paul,Goal
+55.8,38.0,60.5,41.5,0.0,3.62,Rodrigo De Paul,Goal
+83.2,67.0,74.4,81.0,0.0,11.88,Yannick Bright,Goal
+62.8,28.2,65.9,59.0,0.0,24.9,Yannick Bright,Goal
+49.0,49.7,59.3,55.8,0.0,20.48,Tadeo Allende,Goal
+63.1,15.0,59.6,20.0,0.0,6.1,Rodrigo De Paul,Goal
+79.9,34.8,0.0,0.0,0.0,18.31,,Goal
+65.0,45.7,75.0,48.7,0.0,9.3,Telasco Segovia,Goal
+99.5,0.5,69.6,29.3,0.0,37.57,Luis Suárez,Goal
+49.9,50.0,31.7,35.8,0.0,22.88,Tomás Avilés,Goal
+75.9,23.4,26.3,42.7,0.0,40.32,Maximiliano Falcón,Goal
+58.3,30.0,61.9,50.2,0.0,9.93,Rodrigo De Paul,Goal
+78.7,86.9,8.5,66.0,0.0,27.28,Noah Allen,Goal
+65.9,70.6,0.0,0.0,0.0,4.9,Ian Fray,Goal
+65.2,28.8,87.5,46.4,0.0,39.85,Tadeo Allende,Goal
+57.2,23.1,73.2,14.9,0.0,12.1,Tadeo Allende,Goal
+70.7,16.5,70.7,27.9,0.0,11.4,Telasco Segovia,Goal
+72.8,43.6,73.7,83.6,0.0,32.2,Noah Allen,Goal
+37.6,5.2,64.0,28.0,0.0,13.97,Ian Fray,Goal
+58.3,53.0,85.0,45.4,0.52984148263931,27.76,Tadeo Allende,Goal
+56.8,57.2,56.5,67.2,0.0,10.0,Sergio Busquets,Goal
+49.7,49.9,33.7,34.9,0.0,14.57,Sergio Busquets,Goal
+75.8,26.8,69.7,38.6,0.0,10.62,Rodrigo De Paul,Goal
+58.8,8.8,47.5,38.8,0.0,31.56,Noah Allen,Goal
+72.1,22.8,98.6,23.5,0.0,20.47,Marcelo Weigandt,Goal
+73.2,16.4,87.0,10.9,0.0,14.96,Marcelo Weigandt,Goal
+79.8,12.2,4.3,49.6,0.0,4.6,Rocco Ríos Novo,Goal
+72.0,50.3,85.1,73.0,0.0,26.28,Jordi Alba,Goal
+72.7,43.5,41.2,82.9,0.0,10.44,Jordi Alba,Goal
+79.1,33.4,99.0,25.3,0.0,20.88,Rodrigo De Paul,Goal
+99.5,0.5,93.0,24.4,0.0,42.2,Jordi Alba,Goal
+87.4,13.3,35.2,69.4,0.0,2.09,Baltasar Rodríguez,Goal
+53.8,80.2,65.4,94.9,0.0,18.12,Yannick Bright,Goal
+35.3,34.8,32.5,37.6,0.0,9.22,Sergio Busquets,Goal
+69.2,43.6,88.1,61.7,0.37160965800285,23.53,Jordi Alba,Goal
+50.8,69.4,69.8,94.3,0.0,31.32,Jordi Alba,Goal
+64.8,86.7,69.6,95.1,0.0,10.48,Jordi Alba,Goal
+78.1,42.1,90.1,29.5,0.035440385341644,17.4,Ian Fray,Goal
+67.1,66.1,76.4,73.9,0.0,12.14,Yannick Bright,Goal
+36.9,65.1,25.9,59.1,0.0,12.52,Sergio Busquets,Goal
+70.6,96.3,68.1,86.1,0.0,10.38,Jordi Alba,Goal
+68.1,93.0,91.1,80.2,0.0,27.01,Jordi Alba,Goal
+67.5,75.1,62.3,77.2,0.0,10.42,Noah Allen,Goal
+67.1,88.9,58.3,82.6,0.0,8.88,Noah Allen,Goal
+99.5,0.5,42.2,30.7,0.0,49.9,Yannick Bright,Goal
+54.0,42.6,54.8,32.5,0.0,17.38,Rodrigo De Paul,Goal
+69.0,86.2,77.1,77.8,0.0,11.67,Yannick Bright,Goal
+73.8,63.0,84.7,59.7,0.0,11.39,Tadeo Allende,Goal
+64.6,28.9,76.6,46.6,0.0,20.4,Tadeo Allende,Goal
+28.6,7.3,33.8,21.7,0.0,15.31,Sergio Busquets,Goal
+74.9,46.0,66.4,3.9,0.0,20.22,Rodrigo De Paul,Goal
+80.9,38.9,35.5,70.5,0.0,13.57,Noah Allen,Goal
+69.3,42.1,77.1,50.1,0.025609064847231,7.62,Yannick Bright,Goal
+61.4,22.2,73.4,13.8,0.0,11.24,Rodrigo De Paul,Goal
+99.5,0.5,45.8,15.4,0.0,64.4,Gonzalo Luján,Goal
+50.1,50.1,41.0,43.8,0.0,11.85,Tadeo Allende,Goal
+53.4,19.2,68.5,6.6,0.0,19.67,Marcelo Weigandt,Goal
+60.3,25.2,56.9,37.3,0.0,15.38,Sergio Busquets,Goal
+41.2,59.2,40.8,46.8,0.0,12.41,Jordi Alba,Goal
+45.8,67.0,55.2,82.8,0.0,18.38,Noah Allen,Goal
+50.7,70.9,45.0,65.2,0.0,8.06,Yannick Bright,Goal
+64.1,75.0,77.6,94.6,0.0,23.8,Jordi Alba,Goal
+72.7,89.1,62.5,62.5,0.0,17.37,Yannick Bright,Goal
+36.9,21.7,36.3,43.0,0.0,21.31,Yannick Bright,Goal
+71.5,83.7,70.3,75.6,0.0,12.91,Rodrigo De Paul,Goal
+68.1,76.3,75.0,87.6,0.0,13.24,Jordi Alba,Goal
+55.0,28.2,64.0,81.0,0.0,54.46,Jordi Alba,Goal
+64.6,57.9,97.1,71.7,0.0,33.45,Mateo Silvetti,Goal
+66.4,51.6,61.8,86.5,0.0,6.15,Jordi Alba,Goal
+60.1,57.7,67.4,63.0,0.0,9.02,Mateo Silvetti,Goal
+70.7,50.8,86.0,32.5,0.0,23.57,Rodrigo De Paul,Goal
+57.9,43.9,60.0,59.5,0.0,15.74,Sergio Busquets,Goal
+65.2,51.7,75.8,71.4,0.0,14.48,Mateo Silvetti,Goal
+65.1,4.7,97.8,4.5,0.0,31.51,Marcelo Weigandt,Goal
+99.5,0.6,85.6,13.9,0.0,17.97,Rodrigo De Paul,Goal
+81.5,11.3,73.8,36.6,0.0,27.09,Jordi Alba,Goal
+99.5,0.5,35.2,69.4,0.0,47.5,Baltasar Rodríguez,Goal
+56.0,14.4,27.0,100.0,0.0,10.25,Jordi Alba,Goal
+24.8,4.5,28.5,15.1,0.0,11.72,Jordi Alba,Goal
+75.1,39.3,98.6,19.5,0.0,28.5,Marcelo Weigandt,Goal
+93.6,13.5,41.0,88.5,0.0,17.94,Baltasar Rodríguez,Goal
+43.4,45.6,63.4,42.7,0.0,17.16,Jordi Alba,Goal
+69.4,46.3,70.4,75.7,0.0,3.06,Jordi Alba,Goal
+71.9,65.6,79.3,48.4,0.0,22.9,Rodrigo De Paul,Goal
+61.1,72.4,94.7,81.8,0.0,30.59,Jordi Alba,Goal
+35.8,54.8,23.5,69.5,0.0,30.19,Maximiliano Falcón,Goal
+66.4,57.7,71.9,63.1,0.0,7.71,Jordi Alba,Goal
+77.6,38.0,95.8,25.0,0.0,21.53,Marcelo Weigandt,Goal
+70.7,56.0,0.0,0.0,0.0,10.6,Jordi Alba,Goal
+36.6,56.2,83.2,53.0,0.52628928422928,46.9,Tadeo Allende,Goal
+56.5,64.0,67.7,73.8,0.0,13.32,Jordi Alba,Goal
+66.2,28.0,61.3,27.4,0.0,7.44,Yannick Bright,Goal
+63.4,39.9,60.0,56.0,0.0,16.72,Sergio Busquets,Goal
+63.7,57.0,20.1,9.6,0.0,17.63,Maximiliano Falcón,Goal
+36.6,37.6,82.9,73.9,0.0,16.93,Jordi Alba,Goal
+61.5,62.2,27.1,80.3,0.0,10.72,Jordi Alba,Goal
+71.2,28.6,73.6,47.7,0.0,19.19,Rodrigo De Paul,Goal
+41.9,36.8,64.7,17.2,0.0,16.7,Rodrigo De Paul,Goal
+65.0,39.7,54.1,46.0,0.0,10.13,Yannick Bright,Goal
+54.3,6.2,29.7,92.6,0.0,16.72,Noah Allen,Goal
+63.7,0.0,60.0,10.2,0.0,7.23,Rodrigo De Paul,Goal
+57.6,3.4,63.7,2.8,0.0,6.13,Rodrigo De Paul,Goal
+59.7,7.0,40.8,73.1,0.0,8.91,Sergio Busquets,Goal
+31.4,32.1,40.0,39.9,0.0,16.12,Sergio Busquets,Goal
+72.5,39.9,83.3,44.4,0.0,15.92,Tadeo Allende,Goal
+82.3,57.5,66.2,44.4,0.0,20.22,Sergio Busquets,Goal
+78.6,60.7,8.6,55.7,0.0,13.91,Óscar Ustari,Goal
+76.5,50.7,93.6,85.4,0.0,32.89,Jordi Alba,Goal
+79.6,32.1,93.2,22.7,0.0,15.45,Ian Fray,Goal
+74.1,41.5,74.8,65.2,0.0,16.67,Baltasar Rodríguez,Goal
+74.5,54.7,62.3,4.2,0.0,2.28,Sergio Busquets,Goal
+77.2,27.0,77.3,39.9,0.0,12.9,Sergio Busquets,Goal
+39.3,24.6,46.2,57.3,0.0,25.51,Yannick Bright,Goal
+64.5,50.1,79.9,61.8,0.045304674655199,22.81,Baltasar Rodríguez,Goal
+57.6,32.1,86.5,28.8,0.0,31.52,Mateo Silvetti,Goal
+54.6,49.5,16.3,67.5,0.0,31.49,Yannick Bright,Goal
+75.8,53.2,88.6,66.7,0.0,17.69,Mateo Silvetti,Goal
+66.2,27.2,62.5,25.6,0.0,6.55,Rodrigo De Paul,Goal
+72.2,39.3,65.0,28.2,0.0,10.58,Rodrigo De Paul,Goal
+75.3,31.3,85.5,37.4,0.0,10.15,Rodrigo De Paul,Goal
+79.1,30.3,39.5,93.2,0.0,23.0,Noah Allen,Goal
+73.1,53.4,67.3,33.5,0.0,3.11,Yannick Bright,Goal
+57.1,19.5,66.8,26.5,0.0,11.96,Mateo Silvetti,Goal
+70.5,18.0,61.7,17.6,0.0,9.54,Mateo Silvetti,Goal
+80.2,51.3,81.5,72.6,0.0,20.36,Jordi Alba,Goal
+69.8,29.4,65.2,12.6,0.0,18.7,Baltasar Rodríguez,Goal
+43.2,18.2,62.2,7.6,0.0,20.14,Ian Fray,Goal
+99.5,99.5,82.7,89.9,0.0,19.35,Jordi Alba,Goal
+91.0,94.8,90.1,92.2,0.0,10.26,Jordi Alba,Goal
+87.0,91.4,67.5,60.4,0.0,27.45,Rodrigo De Paul,Goal
+54.7,56.2,52.8,56.6,0.0,6.69,Baltasar Rodríguez,Goal
+58.1,73.2,66.9,82.0,0.0,12.09,Jordi Alba,Goal
+65.4,81.4,60.0,88.0,0.0,46.51,Jordi Alba,Goal
+75.6,68.0,96.4,68.3,0.0,20.8,Jordi Alba,Goal
+99.5,99.5,92.3,48.7,0.0,51.31,Maximiliano Falcón,Goal
+53.5,45.1,68.0,30.4,0.0,2.4,Tadeo Allende,Goal
+58.2,34.2,70.1,6.2,0.0,29.28,Ian Fray,Goal
+99.7,0.9,97.4,57.5,0.15220111608505,56.65,Luis Suárez,Goal
+62.0,28.1,63.7,42.1,0.0,16.55,Rodrigo De Paul,Goal
+65.4,40.6,64.7,63.5,0.0,22.91,Sergio Busquets,Goal
+29.2,52.5,45.1,92.2,0.0,36.37,Noah Allen,Goal
+38.0,67.1,62.6,35.2,0.0,4.17,Rodrigo De Paul,Goal
+69.5,36.0,83.7,18.7,0.0,21.46,Mateo Silvetti,Goal
+67.1,46.6,58.5,37.7,0.0,24.54,Maximiliano Falcón,Goal
+60.9,22.4,56.2,30.6,0.0,9.45,Rodrigo De Paul,Goal
+65.6,31.5,66.3,39.9,0.0,7.63,Sergio Busquets,Goal
+66.6,56.7,69.4,11.9,0.0,26.69,Ian Fray,Goal
+99.5,99.5,46.0,57.9,0.0,44.68,Rodrigo De Paul,Goal
+85.4,92.9,70.1,41.9,0.0,53.25,Rodrigo De Paul,Goal
+67.4,35.5,65.5,54.4,0.0,13.0,Sergio Busquets,Goal
+64.9,33.0,68.8,33.0,0.0,8.63,Rodrigo De Paul,Goal
+73.6,51.2,80.6,56.1,0.0,8.54,Luis Suárez,Goal
+68.4,58.1,73.0,70.0,0.0,12.76,Luis Suárez,Goal
+75.7,57.2,94.8,67.7,0.0,21.71,Jordi Alba,Goal
+74.9,38.7,70.7,49.3,0.0,16.6,Baltasar Rodríguez,Goal
+99.5,0.5,72.1,39.4,0.0,61.1,Maximiliano Falcón,Goal
+55.4,56.4,85.3,53.0,0.53498065471649,18.75,Baltasar Rodríguez,Goal
+55.2,47.1,74.2,28.9,0.0,18.56,Ian Fray,Goal
+55.2,45.3,63.4,7.1,0.0,37.31,Ian Fray,Goal
+55.8,24.2,47.7,69.3,0.0,42.95,Noah Allen,Goal
+66.3,7.3,62.4,52.7,0.0,22.25,Baltasar Rodríguez,Goal
+78.8,61.9,74.5,40.4,0.0,21.93,Ian Fray,Goal
+36.9,33.8,31.0,27.8,0.0,8.41,Rodrigo De Paul,Goal
+33.8,40.9,89.5,25.2,0.0,56.03,Mateo Silvetti,Goal
+62.6,6.2,61.9,28.5,0.0,16.51,Rodrigo De Paul,Goal
+73.1,39.2,56.7,74.8,0.0,16.64,Baltasar Rodríguez,Goal
+62.1,70.7,70.4,60.9,0.0,11.12,Luis Suárez,Goal
+68.1,6.6,68.7,11.1,0.0,13.55,Rodrigo De Paul,Goal
+40.7,32.0,53.8,24.2,0.0,28.0,Gonzalo Luján,Goal
+56.1,0.0,52.8,16.8,0.0,19.81,Rodrigo De Paul,Goal
+58.8,3.1,54.0,31.9,0.0,29.27,Sergio Busquets,Goal
+56.6,28.3,28.3,60.9,0.0,34.4,Gonzalo Luján,Goal
+46.6,44.1,63.6,85.2,0.0,42.74,Jordi Alba,Goal
+51.3,66.0,58.7,77.8,0.0,13.93,Yannick Bright,Goal
+58.0,76.3,71.4,93.8,0.0,22.04,Tadeo Allende,Goal
+75.6,58.5,88.7,73.4,0.0,19.11,Luis Suárez,Goal
+74.7,61.8,15.0,51.5,0.0,5.81,Óscar Ustari,Goal
+40.4,31.5,35.3,64.9,0.0,19.48,Noah Allen,Goal
+76.9,77.8,69.8,68.8,0.0,11.46,Sergio Busquets,Goal
+56.2,24.8,41.8,30.5,0.0,15.49,Sergio Busquets,Goal
+64.8,38.7,89.6,51.5,0.62053233385086,27.91,Tadeo Allende,Goal
+73.1,58.6,12.4,53.8,0.0,19.51,Noah Allen,Goal
+40.1,36.4,57.2,74.2,0.0,41.49,Tadeo Allende,Goal
+66.9,42.8,12.0,20.1,0.0,13.39,Ian Fray,Goal
+58.1,30.7,67.1,33.9,0.0,10.16,Rodrigo De Paul,Goal
+64.5,54.8,91.0,76.5,0.0,27.49,Jordi Alba,Goal
+40.2,32.1,52.5,41.4,0.0,15.42,Luis Suárez,Goal
+60.0,33.3,54.0,46.9,0.0,13.51,Sergio Busquets,Goal
+55.7,30.3,61.1,80.5,0.0,35.65,Jordi Alba,Goal
+81.2,26.8,77.7,4.2,0.0,20.21,Tadeo Allende,Goal
+77.0,22.9,62.1,81.0,0.0,3.11,Sergio Busquets,Goal
+73.6,29.1,77.9,46.0,0.0,17.44,Luis Suárez,Goal
+72.9,51.4,88.9,68.6,0.0,24.83,Jordi Alba,Goal
+63.8,3.0,74.7,4.0,0.0,12.2,Tadeo Allende,Goal
+86.3,34.8,82.7,50.1,0.14064851403236,15.56,Baltasar Rodríguez,Goal
+88.3,14.3,6.9,34.8,0.0,27.86,Telasco Segovia,Goal
+70.4,24.0,91.6,22.9,0.0,18.01,Tadeo Allende,Goal
+73.7,20.5,91.0,12.9,0.0,18.16,Rodrigo De Paul,Goal
+99.5,0.5,70.7,22.4,0.0,53.0,Marcelo Weigandt,Goal
+55.5,14.4,91.3,10.9,0.0,36.73,Tadeo Allende,Goal
+72.8,41.5,99.5,99.5,0.0,38.75,Jordi Alba,Goal
+42.6,15.4,55.6,20.5,0.0,10.55,Rodrigo De Paul,Goal
+64.4,16.6,66.9,39.7,0.0,22.63,Rodrigo De Paul,Goal
+70.3,23.1,75.8,18.4,0.0,18.98,Ian Fray,Goal
+85.2,69.0,97.7,69.7,0.0,12.02,Jordi Alba,Goal
+99.7,99.3,33.0,0.0,0.0,47.75,Marcelo Weigandt,Goal
+90.1,94.5,81.9,89.5,0.0,7.66,Jordi Alba,Goal
+57.4,49.0,67.3,45.1,0.0,8.81,Rodrigo De Paul,Goal
+43.7,29.4,43.8,24.7,0.0,2.4,Sergio Busquets,Goal
+69.1,31.6,57.9,17.9,0.0,6.69,Rodrigo De Paul,Goal
+76.8,39.3,19.2,7.4,0.0,8.54,Marcelo Weigandt,Goal
+67.4,37.4,60.3,56.0,0.0,43.32,Yannick Bright,Goal
+69.3,56.2,76.8,77.1,0.0,26.31,Jordi Alba,Goal
+56.9,15.0,75.9,7.8,0.0,20.03,Tadeo Allende,Goal
+54.0,26.8,46.4,19.2,0.0,12.09,Tadeo Allende,Goal
+99.5,0.5,21.5,65.5,0.0,49.6,Gonzalo Luján,Goal
+60.1,68.4,57.0,76.3,0.0,9.05,Sergio Busquets,Goal
+68.9,41.7,77.8,46.3,0.0,10.02,Luis Suárez,Goal
+62.8,26.0,90.5,17.8,0.0,22.88,Tadeo Allende,Goal
+68.8,45.6,60.4,80.5,0.0,3.55,Maximiliano Falcón,Goal
+59.9,67.2,54.7,73.5,0.0,11.24,Noah Allen,Goal
+66.2,72.7,90.6,92.0,0.0,6.65,Jordi Alba,Goal
+65.9,67.6,42.6,54.9,0.0,7.91,Noah Allen,Goal
+62.1,69.6,63.6,57.2,0.0,5.22,Sergio Busquets,Goal
+68.5,63.0,57.5,69.3,0.0,27.34,Maximiliano Falcón,Goal
+84.7,59.4,86.7,49.7,0.063076235353947,9.9,Luis Suárez,Goal
+40.0,27.6,92.8,26.5,0.0,51.75,Tadeo Allende,Goal
+77.9,27.7,15.9,34.5,0.0,2.53,Ian Fray,Goal
+78.4,29.9,87.5,46.4,0.0,18.84,Tadeo Allende,Goal
+56.2,12.1,65.2,18.7,0.0,9.32,Rodrigo De Paul,Goal
+65.2,45.6,63.4,76.9,0.0,23.48,Noah Allen,Goal
+70.7,49.6,75.4,52.2,0.0,5.37,Luis Suárez,Goal
+54.4,30.1,54.8,51.0,0.0,3.77,Rodrigo De Paul,Goal
+99.5,0.5,55.3,32.9,0.0,45.49,Rodrigo De Paul,Goal
+57.2,18.9,96.0,25.0,0.0,30.95,Tadeo Allende,Goal
+37.6,6.1,45.3,25.5,0.0,57.48,Tadeo Allende,Goal
+45.3,55.4,62.2,85.3,0.0,40.3,Jordi Alba,Goal
+63.8,69.7,64.1,71.4,0.0,18.95,Baltasar Rodríguez,Goal
+63.8,28.8,4.4,45.3,0.0,55.52,Marcelo Weigandt,Goal
+72.5,69.4,91.4,81.8,0.0,22.44,Jordi Alba,Goal
+72.8,78.7,70.5,91.6,0.0,16.0,Jordi Alba,Goal
+90.0,38.7,80.0,45.6,0.095320716500282,12.15,Luis Suárez,Goal
+69.2,49.7,31.9,56.8,0.0,4.71,Rocco Ríos Novo,Goal
+60.9,35.0,24.9,9.2,0.0,8.24,Tomás Avilés,Goal
+58.5,10.1,53.1,35.5,0.0,21.83,Rodrigo De Paul,Goal
+60.0,37.5,71.5,82.4,0.0,45.59,Gonzalo Luján,Goal
+77.4,63.1,72.7,14.0,0.0,6.02,Marcelo Weigandt,Goal
+74.5,74.2,78.5,87.7,0.0,13.57,Telasco Segovia,Goal
+70.3,53.9,73.2,38.7,0.0,14.19,Rodrigo De Paul,Goal
+45.9,28.2,54.3,56.6,0.0,27.87,Yannick Bright,Goal
+66.9,44.8,44.6,24.9,0.0,33.3,Baltasar Rodríguez,Goal
+66.5,3.9,51.8,22.1,0.0,21.15,Tomás Avilés,Goal
+60.5,36.7,47.5,49.6,0.0,12.79,Baltasar Rodríguez,Goal
+51.8,19.5,46.7,32.8,0.0,14.9,Sergio Busquets,Goal
+42.6,35.8,78.9,6.4,0.0,51.67,Yannick Bright,Goal
+59.7,62.1,56.6,66.3,0.0,6.55,Yannick Bright,Goal
+67.5,39.9,72.1,35.9,0.0,12.11,Yannick Bright,Goal
+77.4,94.4,71.6,34.4,0.0,33.93,Baltasar Rodríguez,Goal
+99.5,0.5,98.1,40.9,0.080283977091312,40.42,Sergio Busquets,Goal
+73.4,44.8,71.7,58.6,0.0,10.22,Baltasar Rodríguez,Goal
+53.7,79.6,62.8,92.7,0.0,17.16,Gonzalo Luján,Goal
+63.1,69.7,54.8,52.5,0.0,17.85,Sergio Busquets,Goal
+64.7,44.1,43.5,69.7,0.0,9.16,Noah Allen,Goal
+61.1,53.0,65.2,63.0,0.0,38.93,Luis Suárez,Goal
+62.3,49.3,68.8,34.0,0.0,26.47,Rodrigo De Paul,Goal
+75.9,27.3,84.6,72.4,0.0,45.03,Jordi Alba,Goal
+78.3,60.4,90.0,76.9,0.0,16.84,Jordi Alba,Goal
+69.9,43.2,91.6,76.3,0.0,39.58,Jordi Alba,Goal
+53.8,25.8,0.0,0.0,0.0,12.85,,Goal
+79.3,22.1,69.8,2.7,0.0,21.2,Tadeo Allende,Goal
+71.1,24.1,66.5,40.4,0.0,13.1,Yannick Bright,Goal
+67.5,30.0,33.7,79.6,0.0,25.5,Noah Allen,Goal
+73.9,34.7,22.5,61.4,0.0,5.63,Maximiliano Falcón,Goal
+67.1,26.6,76.2,35.4,0.0,14.79,Tadeo Allende,Goal
+56.6,33.3,75.2,28.9,0.0,4.17,Rodrigo De Paul,Goal
+54.0,48.7,68.7,41.9,0.0,17.98,Tadeo Allende,Goal
+70.6,57.7,45.7,84.6,0.0,19.64,Noah Allen,Goal
+58.9,25.3,66.5,13.8,0.0,7.32,Rodrigo De Paul,Goal
+59.1,26.3,61.3,55.9,0.0,34.5,Sergio Busquets,Goal
+79.9,65.8,75.2,49.5,0.0,17.33,Rodrigo De Paul,Goal
+68.7,33.3,70.0,37.4,0.0,7.1,Ian Fray,Goal
+46.2,32.7,53.1,52.9,0.0,15.61,Rodrigo De Paul,Goal
+46.1,40.7,74.7,38.7,0.0,28.64,Tadeo Allende,Goal
+85.8,85.2,12.0,20.1,0.0,30.56,Ian Fray,Goal
+65.9,50.2,76.0,51.2,0.0,10.73,Baltasar Rodríguez,Goal
+68.3,67.0,82.6,69.6,0.0,6.77,Luis Suárez,Goal
+76.4,47.5,80.2,56.6,0.0,8.07,Luis Suárez,Goal
+63.2,45.0,73.4,59.9,0.0,18.06,Luis Suárez,Goal
+53.4,25.6,46.7,21.2,0.0,8.02,Rodrigo De Paul,Goal
+61.1,7.6,57.4,87.2,0.0,14.18,Jordi Alba,Goal
+64.1,18.0,45.0,29.1,0.0,4.97,Marcelo Weigandt,Goal
+73.6,53.3,64.8,96.9,0.0,25.02,Baltasar Rodríguez,Goal
+99.5,99.5,79.7,90.2,0.0,22.23,Baltasar Rodríguez,Goal
+76.5,60.9,75.8,71.2,0.0,10.32,Luis Suárez,Goal
+70.5,43.1,79.4,79.3,0.0,41.35,Baltasar Rodríguez,Goal
+51.7,24.4,63.8,29.2,0.0,13.73,Rodrigo De Paul,Goal
+54.5,30.7,67.1,5.5,0.0,24.77,Ian Fray,Goal
+64.3,17.4,68.1,33.1,0.0,16.1,Sergio Busquets,Goal
+82.1,34.6,4.2,49.1,0.0,8.14,Rocco Ríos Novo,Goal
+75.2,44.6,86.7,54.0,0.18627648055553,12.74,Luis Suárez,Goal
+48.7,57.3,53.3,69.9,0.0,13.41,Sergio Busquets,Goal
+76.2,30.3,90.8,37.1,0.0,44.33,Sergio Busquets,Goal
+63.8,64.6,77.3,78.2,0.0,19.16,Baltasar Rodríguez,Goal
+43.1,33.6,36.7,47.2,0.0,15.03,Sergio Busquets,Goal
+51.8,55.4,61.4,58.4,0.0,10.06,Baltasar Rodríguez,Goal
+71.6,62.3,92.6,40.7,0.31246769428253,31.8,Tadeo Allende,Goal
+36.7,20.7,54.7,9.2,0.0,21.19,Ian Fray,Goal
+30.3,33.7,32.0,52.1,0.0,8.37,Sergio Busquets,Goal
+43.3,48.1,66.5,58.1,0.0,28.31,Baltasar Rodríguez,Goal
+68.0,48.8,81.5,68.7,0.0,24.13,Luis Suárez,Goal
+73.9,30.3,79.8,42.4,0.0,13.46,Rodrigo De Paul,Goal
+80.2,32.7,80.3,46.4,0.0,13.7,Luis Suárez,Goal
+54.9,13.8,55.7,30.7,0.0,16.92,Luis Suárez,Goal
+54.3,48.5,71.7,69.2,0.0,0.1,Sergio Busquets,Goal
+54.0,48.2,55.4,28.8,0.0,18.72,Rodrigo De Paul,Goal
+79.7,63.6,87.5,56.1,0.0,10.82,Rodrigo De Paul,Goal
+37.1,21.0,42.2,35.5,0.0,15.37,Sergio Busquets,Goal
+60.6,32.5,64.6,53.7,0.0,24.44,Baltasar Rodríguez,Goal
+75.7,39.5,80.8,53.6,0.0,14.96,Luis Suárez,Goal
+74.4,22.7,71.9,29.5,0.0,7.24,Rodrigo De Paul,Goal
+73.3,43.7,79.3,52.4,0.0,10.57,Luis Suárez,Goal
+77.1,53.4,87.9,24.7,0.0,33.9,Tadeo Allende,Goal
+71.9,36.3,64.0,17.1,0.0,29.04,Yannick Bright,Goal
+63.0,22.1,78.4,49.3,0.0,7.94,Luis Suárez,Goal
+94.3,33.7,39.8,58.0,0.0,15.31,Yannick Bright,Goal
+80.7,53.7,96.1,85.9,0.0,23.66,Baltasar Rodríguez,Goal
+82.5,53.3,86.1,49.0,0.0,5.61,Rodrigo De Paul,Goal
+37.7,5.6,62.7,91.7,0.0,31.32,Jordi Alba,Goal
+72.5,38.3,72.8,45.1,0.0,6.81,Luis Suárez,Goal
+69.7,38.5,72.7,77.8,0.0,39.19,Jordi Alba,Goal
+49.2,33.4,47.5,22.5,0.0,16.0,Rodrigo De Paul,Goal
+65.0,33.1,66.7,39.2,0.0,6.33,Luis Suárez,Goal
+48.4,12.8,56.2,35.5,0.0,24.04,Rodrigo De Paul,Goal
+46.3,44.4,91.9,81.7,0.0,56.26,Baltasar Rodríguez,Goal
+40.0,27.2,93.0,49.7,0.30264827609062,36.59,Tadeo Allende,Goal
+45.7,46.6,36.9,38.6,0.0,12.45,Rodrigo De Paul,Goal
+45.3,45.8,53.0,56.7,0.0,12.32,Luis Suárez,Goal
+53.7,44.8,47.3,39.1,0.0,8.57,Rodrigo De Paul,Goal
+46.5,32.1,62.9,22.1,0.0,18.86,Rodrigo De Paul,Goal
+65.5,35.2,70.6,28.3,0.0,8.74,Rodrigo De Paul,Goal
+74.3,39.2,86.6,43.6,0.0,12.4,Tadeo Allende,Goal
+72.1,55.7,79.5,61.7,0.0,9.53,Luis Suárez,Goal
+73.6,21.0,80.7,33.3,0.0,14.2,Telasco Segovia,Goal
+73.8,90.8,78.6,96.9,0.0,8.45,Baltasar Rodríguez,Goal
+72.4,87.4,68.3,52.6,0.0,32.26,Yannick Bright,Goal
+77.2,65.2,98.0,92.2,0.0,34.08,Jordi Alba,Goal
+80.4,39.4,94.2,18.4,0.0,26.95,Tadeo Allende,Goal
+43.5,26.8,41.2,36.2,0.0,11.06,Tomás Avilés,Goal
+40.7,34.6,80.7,94.1,0.0,56.46,Jordi Alba,Goal
+75.2,29.2,2.7,50.2,0.0,2.2,Rocco Ríos Novo,Goal
+52.6,0.0,41.7,21.2,0.0,22.3,Marcelo Weigandt,Goal
+51.7,14.6,90.5,29.3,0.016076952219009,41.49,Tadeo Allende,Goal
+70.4,45.1,2.7,51.9,0.0,7.25,Rocco Ríos Novo,Goal
+50.9,35.9,55.2,26.6,0.0,9.48,Yannick Bright,Goal
+47.2,48.5,44.8,77.4,0.0,25.47,Jordi Alba,Goal
+46.4,65.3,42.9,54.4,0.0,10.69,Sergio Busquets,Goal
+65.0,77.0,5.2,61.5,0.0,35.45,Maximiliano Falcón,Goal
+75.5,64.1,87.6,75.1,0.0,15.32,Jordi Alba,Goal
+99.5,0.5,85.7,7.3,0.0,14.38,Baltasar Rodríguez,Goal
+72.5,6.1,76.3,39.2,0.0,31.42,Gonzalo Luján,Goal
+65.4,23.2,73.8,18.2,0.0,9.6,Tadeo Allende,Goal
+66.5,22.6,73.0,25.0,0.0,14.34,Yannick Bright,Goal
+72.5,77.4,21.0,92.8,0.0,10.25,Jordi Alba,Goal
+64.1,14.5,73.4,15.9,0.0,9.5,Tadeo Allende,Goal
+73.7,32.7,69.5,26.4,0.0,5.76,Yannick Bright,Goal
+73.3,61.0,94.2,77.3,0.0,29.55,Jordi Alba,Goal
+99.5,0.5,94.4,54.6,0.0,49.31,Tadeo Allende,Goal
+66.2,5.5,67.8,12.3,0.0,6.79,Marcelo Weigandt,Goal
+78.1,21.8,91.8,60.6,0.28965285420418,15.52,Baltasar Rodríguez,Goal
+60.2,13.4,45.4,26.4,0.0,19.5,Tomás Avilés,Goal
+87.3,58.6,86.9,64.6,0.0,5.1,Mateo Silvetti,Goal
+43.6,52.6,38.1,45.4,0.0,10.58,Sergio Busquets,Goal
+61.0,38.0,96.4,30.0,0.0,38.2,Tadeo Allende,Goal
+77.5,40.9,57.1,53.7,0.0,12.18,Gonzalo Luján,Goal
+72.3,50.7,7.4,78.6,0.0,6.94,Sergio Busquets,Goal
+42.0,32.5,43.3,50.9,0.0,19.04,Sergio Busquets,Goal
+83.7,18.1,94.8,43.6,0.35724887251854,27.81,Luis Suárez,Goal
+35.0,31.1,88.1,66.2,0.26665619015694,63.65,Jordi Alba,Goal
+69.5,42.9,79.5,37.3,0.0,12.18,Sergio Busquets,Goal
+50.7,7.6,36.9,15.7,0.0,13.91,Marcelo Weigandt,Goal
+58.8,19.8,71.0,13.4,0.0,17.25,Marcelo Weigandt,Goal
+66.1,24.9,60.4,16.8,0.0,9.56,Sergio Busquets,Goal
+65.5,49.0,80.1,68.4,0.0,18.35,Luis Suárez,Goal
+58.8,17.4,71.3,5.0,0.0,18.46,Tadeo Allende,Goal
+62.9,27.4,68.9,49.5,0.0,22.54,Baltasar Rodríguez,Goal
+67.8,40.4,72.7,47.0,0.0,7.48,Luis Suárez,Goal
+78.6,37.8,94.1,32.2,0.0,16.29,Tadeo Allende,Goal
+38.8,33.1,74.2,55.7,0.0,26.52,Baltasar Rodríguez,Goal
+70.8,54.3,18.3,64.3,0.0,5.6,Sergio Busquets,Goal
+51.7,31.9,84.6,6.2,0.0,43.58,Tadeo Allende,Goal
+68.8,37.3,77.5,78.8,0.0,49.08,Jordi Alba,Goal
+78.1,59.7,75.1,35.9,0.0,23.82,Baltasar Rodríguez,Goal
+76.9,49.1,88.0,71.1,0.0,24.25,Jordi Alba,Goal
+82.0,63.4,11.3,28.8,0.0,13.32,Ian Fray,Goal
+76.5,37.2,77.7,45.6,0.0,7.79,Sergio Busquets,Goal
+86.6,46.2,88.5,40.4,0.0,6.1,Tadeo Allende,Goal
+73.4,41.4,77.6,38.7,0.0,4.99,Tadeo Allende,Goal
+66.5,37.2,91.9,19.8,0.0,33.0,Luis Suárez,Goal
+71.0,25.0,73.8,40.1,0.0,14.34,Luis Suárez,Goal
+65.2,59.4,88.1,80.8,0.0,31.34,Jordi Alba,Goal
+59.8,18.4,46.4,56.8,0.0,33.66,Sergio Busquets,Goal
+33.4,13.3,31.3,27.9,0.0,18.66,Rodrigo De Paul,Goal
+77.7,35.4,10.7,8.4,0.0,15.16,Jordi Alba,Goal
+43.7,55.0,43.9,66.5,0.0,13.44,Baltasar Rodríguez,Goal
+61.6,51.9,85.6,61.0,0.0,25.67,Jordi Alba,Goal
+45.4,10.2,59.2,11.8,0.0,10.42,Marcelo Weigandt,Goal
+61.7,37.6,69.8,49.5,0.0,14.12,Baltasar Rodríguez,Goal
+60.4,50.4,61.8,54.7,0.0,15.7,Sergio Busquets,Goal
+43.5,17.5,34.1,28.2,0.0,14.29,Rodrigo De Paul,Goal
+36.9,41.5,29.4,26.2,0.0,16.66,Rodrigo De Paul,Goal
+53.2,46.0,76.1,60.7,0.0,19.6,Baltasar Rodríguez,Goal
+36.6,13.2,37.5,40.6,0.0,22.82,Rodrigo De Paul,Goal
+77.1,60.0,37.8,18.0,0.0,30.8,Noah Allen,Goal
+74.8,20.8,92.2,8.1,0.0,21.54,Tadeo Allende,Goal
+99.5,0.5,89.5,13.9,0.0,15.91,Baltasar Rodríguez,Goal
+75.8,7.8,33.9,18.0,0.0,16.86,Tadeo Allende,Goal
+70.8,23.5,47.4,46.2,0.0,2.28,Sergio Busquets,Goal
+51.6,12.7,82.1,97.3,0.0,18.74,Baltasar Rodríguez,Goal
+56.8,5.5,28.9,92.7,0.0,21.46,Noah Allen,Goal
+70.2,72.4,96.3,72.0,0.0,27.1,Jordi Alba,Goal
+77.1,76.8,71.2,70.5,0.0,9.14,Rodrigo De Paul,Goal
+60.1,36.4,39.0,84.0,0.0,2.62,Baltasar Rodríguez,Goal
+47.7,47.2,36.2,12.1,0.0,36.94,Marcelo Weigandt,Goal
+79.5,39.1,81.1,51.9,0.084788009524345,12.9,Luis Suárez,Goal
+79.3,76.2,41.7,95.7,0.0,26.97,Jordi Alba,Goal
+72.8,33.3,80.7,34.6,0.0,8.01,Tadeo Allende,Goal
+73.5,28.9,94.5,49.2,0.0,29.21,Baltasar Rodríguez,Goal
+99.5,0.5,89.2,9.7,0.0,13.81,Baltasar Rodríguez,Goal
+85.7,13.0,79.6,51.7,0.0,39.18,Rodrigo De Paul,Goal
+73.0,21.7,79.4,33.1,0.0,13.07,Luis Suárez,Goal
+72.2,38.4,41.6,74.4,0.0,18.44,Noah Allen,Goal
+75.2,51.6,86.7,64.6,0.0,17.36,Luis Suárez,Goal
+76.8,40.1,92.4,44.2,0.34824314713478,16.13,Luis Suárez,Goal
+75.4,49.8,91.4,66.1,0.0,23.06,Luis Suárez,Goal
+74.0,26.2,78.0,64.8,0.0,39.76,Jordi Alba,Goal
+82.6,68.1,69.2,62.8,0.0,6.89,Jordi Alba,Goal
+39.9,5.4,33.9,14.5,0.0,10.9,Telasco Segovia,Goal
+46.6,49.0,85.8,25.0,0.028447695076466,45.96,Tadeo Allende,Goal
+47.5,5.4,59.7,15.7,0.0,9.43,Tadeo Allende,Goal
+44.3,6.0,58.3,13.2,0.0,15.74,Tadeo Allende,Goal
+77.3,23.4,86.5,36.7,0.0,15.98,Ian Fray,Goal
+56.0,34.0,88.5,58.7,0.0,38.28,Luis Suárez,Goal
+69.3,52.5,19.5,35.4,0.0,17.98,Marcelo Weigandt,Goal
+79.2,65.8,93.7,76.5,0.0,18.02,Jordi Alba,Goal
+44.4,4.3,37.2,22.9,0.0,11.74,Jordi Alba,Goal
+38.2,7.8,36.8,25.6,0.0,9.48,Jordi Alba,Goal
+91.6,50.1,93.3,58.9,0.77364093065262,8.96,Telasco Segovia,Goal
+67.5,34.0,72.7,42.7,0.0,10.06,Ian Fray,Goal
+79.7,48.7,76.0,57.1,0.0,9.18,Luis Suárez,Goal
+50.0,50.0,0.0,0.0,0.0,10.8,,Goal
+64.8,59.8,70.6,72.4,0.0,13.87,Baltasar Rodríguez,Goal
+63.1,29.1,61.4,38.5,0.0,9.55,Rodrigo De Paul,Goal
+64.0,34.4,71.9,100.0,0.0,35.3,Jordi Alba,Goal
+64.9,50.1,19.8,90.7,0.0,20.91,Jordi Alba,Goal
+65.2,32.3,95.8,19.9,0.0,34.1,Tadeo Allende,Goal
+69.1,58.6,75.4,77.4,0.0,19.83,Jordi Alba,Goal
+68.7,45.0,77.5,39.9,0.0,12.14,Tadeo Allende,Goal
+68.3,44.2,90.7,83.2,0.0,29.07,Mateo Silvetti,Goal
+81.2,13.0,74.3,55.6,0.03224703669548,38.6,Baltasar Rodríguez,Goal
+40.7,59.5,36.2,65.1,0.0,7.18,Sergio Busquets,Goal
+54.5,80.7,73.5,91.9,0.0,21.19,Jordi Alba,Goal
+70.8,45.0,31.2,23.6,0.0,16.34,Rodrigo De Paul,Goal
+49.7,22.5,63.7,5.4,0.0,21.9,Ian Fray,Goal
+55.7,15.6,42.7,24.9,0.0,15.98,Rodrigo De Paul,Goal
+22.3,74.2,52.1,2.9,0.0,19.13,Tadeo Allende,Goal
+44.7,68.5,68.8,15.0,0.0,55.62,Rodrigo De Paul,Goal
+63.1,15.1,69.7,35.5,0.0,22.55,Rodrigo De Paul,Goal
+73.7,50.5,75.0,65.2,0.0,23.73,Jordi Alba,Goal
+44.6,32.8,51.6,10.2,0.0,23.66,Ian Fray,Goal
+58.6,9.7,72.2,5.7,0.0,11.77,Ian Fray,Goal
+66.9,23.2,83.3,9.4,0.0,16.73,Ian Fray,Goal
+34.7,27.9,48.7,20.1,0.0,19.1,Tadeo Allende,Goal
+65.0,21.3,92.7,27.0,0.058639675378799,24.7,Mateo Silvetti,Goal
+44.0,20.2,85.8,23.5,0.0,20.47,Telasco Segovia,Goal
+88.9,67.8,99.0,59.3,0.0,9.5,Jordi Alba,Goal
+51.9,53.6,82.2,35.0,0.38621106743813,35.55,Tadeo Allende,Goal
+40.2,49.8,34.4,49.6,0.0,5.8,Rodrigo De Paul,Goal
+42.9,41.4,28.9,48.0,0.0,15.48,Sergio Busquets,Goal
+48.5,47.4,37.7,40.2,0.0,10.82,Rodrigo De Paul,Goal
+44.6,40.0,38.7,30.7,0.0,11.52,Rodrigo De Paul,Goal
+52.4,41.5,93.6,75.4,0.0,42.86,Jordi Alba,Goal
+56.5,39.0,71.4,50.4,0.0,14.6,Tadeo Allende,Goal
+83.0,23.1,88.6,36.3,0.0,14.34,Telasco Segovia,Goal
+50.2,50.0,0.0,0.0,0.0,12.06,,Goal
+58.0,75.0,62.3,80.3,0.0,7.07,Baltasar Rodríguez,Goal
+63.4,40.6,53.5,33.9,0.0,12.57,Maximiliano Falcón,Goal
+62.4,33.6,76.2,50.3,0.026478143408895,25.69,Baltasar Rodríguez,Goal
+99.5,99.5,88.3,48.3,0.026478143408895,52.41,Mateo Silvetti,Goal
+77.6,1.6,90.8,37.1,0.0,37.96,Sergio Busquets,Goal
+72.5,54.9,94.3,76.5,0.0,32.45,Mateo Silvetti,Goal
+39.6,66.4,38.7,74.7,0.0,8.34,Sergio Busquets,Goal
+73.9,48.1,92.5,33.1,0.0,23.89,Tadeo Allende,Goal
+80.6,55.7,88.5,65.2,0.41735255718231,12.36,Baltasar Rodríguez,Goal
+62.5,19.8,63.6,4.1,0.0,15.74,Rodrigo De Paul,Goal
+64.9,18.3,71.7,4.3,0.0,17.54,Rodrigo De Paul,Goal
+60.3,73.9,60.1,67.8,0.0,6.1,Sergio Busquets,Goal
+63.2,73.5,62.2,66.6,0.0,7.17,Sergio Busquets,Goal
+63.7,75.6,65.0,89.9,0.0,14.36,Jordi Alba,Goal
+68.2,22.7,87.5,7.9,0.0,27.72,Marcelo Weigandt,Goal
+47.1,2.3,45.0,13.5,0.0,11.59,Tadeo Allende,Goal
+62.5,13.7,57.2,26.5,0.0,12.46,Rodrigo De Paul,Goal
+68.0,13.8,60.8,16.8,0.0,7.89,Rodrigo De Paul,Goal
+92.7,95.1,77.4,82.6,0.0,19.76,Jordi Alba,Goal
+68.3,7.1,24.4,42.2,0.0,27.38,Maximiliano Falcón,Goal
+79.5,39.1,87.1,62.4,0.15824370086193,24.51,Mateo Silvetti,Goal
+73.6,30.4,72.0,19.4,0.0,11.12,Marcelo Weigandt,Goal
+76.3,11.9,80.4,3.2,0.0,9.58,Tadeo Allende,Goal
+74.0,3.4,74.5,3.5,0.0,4.09,Rodrigo De Paul,Goal
+76.1,74.5,90.4,74.8,0.0,15.62,Mateo Silvetti,Goal
+44.8,56.1,87.9,39.8,0.53440201282501,30.97,Tadeo Allende,Goal
+59.4,19.8,55.9,2.2,0.0,17.94,Marcelo Weigandt,Goal
+62.0,27.4,62.6,42.4,0.0,12.35,Sergio Busquets,Goal
+71.2,53.3,94.7,80.2,0.0,35.4,Mateo Silvetti,Goal
+43.0,26.7,88.7,39.7,0.59763669967651,27.77,Tadeo Allende,Goal
+48.0,24.6,52.5,75.3,0.0,38.25,Maximiliano Falcón,Goal
+54.0,6.7,62.9,20.4,0.0,16.4,Rodrigo De Paul,Goal
+24.6,3.4,21.7,20.0,0.0,17.2,Maximiliano Falcón,Goal
+74.3,43.0,75.9,51.5,0.0,8.65,Luis Suárez,Goal
+76.9,41.3,77.2,52.2,0.0,10.6,Luis Suárez,Goal
+44.5,4.3,42.9,16.8,0.0,13.4,Sergio Busquets,Goal
+38.2,25.0,24.8,28.6,0.0,13.88,Tomás Avilés,Goal
+74.9,34.5,90.4,39.0,0.55139327049255,16.14,Rodrigo De Paul,Goal
+45.4,41.2,87.3,31.3,0.073713392019272,26.48,Luis Suárez,Goal
+43.9,62.1,57.6,20.4,0.0,42.42,Rodrigo De Paul,Goal
+60.4,40.6,57.4,24.4,0.0,16.48,Sergio Busquets,Goal
+62.6,38.3,95.5,69.6,0.0,44.1,Telasco Segovia,Goal
+50.0,50.0,0.0,0.0,0.0,11.5,,Goal
+79.7,42.7,88.6,73.8,0.0,34.3,Jordi Alba,Goal
+73.3,66.1,90.8,47.0,0.12602384388447,25.9,Mateo Silvetti,Goal
+33.8,26.2,42.2,36.7,0.0,12.75,Tadeo Allende,Goal
+75.4,35.0,79.5,43.9,0.0,16.62,Tadeo Allende,Goal
+36.2,80.2,52.8,96.3,0.0,16.86,Jordi Alba,Goal
+71.8,12.9,70.8,34.9,0.0,22.02,Tadeo Allende,Goal
+55.3,32.7,69.5,15.0,0.0,18.84,Marcelo Weigandt,Goal
+72.4,46.6,70.4,27.9,0.0,21.81,Rodrigo De Paul,Goal
+69.4,45.4,71.0,67.6,0.0,17.17,Baltasar Rodríguez,Goal
+60.4,29.1,77.2,25.9,0.0,12.86,Rodrigo De Paul,Goal
+63.1,20.7,56.7,80.8,0.0,36.9,Maximiliano Falcón,Goal
+78.2,6.0,73.0,4.0,0.0,4.88,Marcelo Weigandt,Goal
+69.8,27.4,68.2,56.2,0.0,24.96,Baltasar Rodríguez,Goal
+76.7,36.6,58.4,10.2,0.0,32.05,Ian Fray,Goal
+99.5,99.5,86.6,34.8,0.0,65.97,Marcelo Weigandt,Goal
+54.5,6.9,62.0,34.6,0.0,24.04,Rodrigo De Paul,Goal
+70.6,35.1,76.3,52.3,0.0,18.12,Mateo Silvetti,Goal
+44.1,58.8,75.1,24.0,0.0,18.3,Baltasar Rodríguez,Goal
+75.4,80.2,66.4,67.8,0.0,15.32,Sergio Busquets,Goal
+64.6,73.0,62.2,90.4,0.0,17.56,Baltasar Rodríguez,Goal
+72.2,71.2,72.2,64.3,0.0,6.9,Jordi Alba,Goal
+99.5,99.4,78.1,84.7,0.0,25.96,Jordi Alba,Goal
+82.3,94.8,70.5,90.4,0.0,14.14,Jordi Alba,Goal
+99.5,99.5,32.6,21.9,0.0,37.39,Maximiliano Falcón,Goal
+36.3,43.0,7.3,39.5,0.0,62.82,Sergio Busquets,Goal
+77.0,20.1,88.9,9.3,0.0,14.28,Rodrigo De Paul,Goal
+85.7,60.4,88.4,43.8,0.093070358037949,15.29,Mateo Silvetti,Goal
+65.7,47.2,70.5,72.3,0.0,26.75,Baltasar Rodríguez,Goal
+73.0,59.7,76.2,73.9,0.0,15.4,Baltasar Rodríguez,Goal
+46.4,50.5,55.6,39.4,0.0,12.54,Yannick Bright,Goal
+85.7,91.3,0.0,0.0,0.0,42.42,Mateo Silvetti,Goal
+99.6,0.7,86.0,68.7,0.028076222166419,69.35,Jordi Alba,Goal
+35.2,53.4,81.3,60.7,0.0,14.35,Telasco Segovia,Goal
+44.0,29.2,46.2,46.0,0.0,13.8,Luis Suárez,Goal
+72.5,86.1,72.8,94.5,0.0,8.41,Telasco Segovia,Goal
+75.4,75.1,78.6,66.9,0.0,8.8,Luis Suárez,Goal
+73.1,64.5,74.4,70.6,0.0,6.24,Luis Suárez,Goal
+46.6,54.7,52.5,44.8,0.0,6.41,Yannick Bright,Goal
+28.0,28.8,33.6,6.2,0.0,23.28,Ian Fray,Goal
+43.6,10.2,58.6,16.8,0.0,16.39,Rodrigo De Paul,Goal
+73.6,18.3,97.1,26.0,0.0,24.63,Tadeo Allende,Goal
+72.6,36.0,89.4,92.6,0.0,59.66,Jordi Alba,Goal
+43.3,5.0,36.1,11.8,0.0,10.32,Ian Fray,Goal
+60.8,38.0,77.7,8.9,0.0,33.62,Rodrigo De Paul,Goal
+26.0,34.8,25.9,27.3,0.0,7.5,Rodrigo De Paul,Goal
+75.2,6.0,90.9,43.6,0.033939868211746,37.83,Sergio Busquets,Goal
+64.5,30.8,65.4,53.9,0.0,23.25,Sergio Busquets,Goal
+39.0,33.8,48.8,28.6,0.0,11.09,Tadeo Allende,Goal
+50.1,49.9,28.1,73.8,0.0,34.01,Noah Allen,Goal
+28.3,33.0,30.3,10.4,0.0,22.69,Rodrigo De Paul,Goal
+71.6,32.8,89.8,37.9,0.42203733325005,12.65,Rodrigo De Paul,Goal
+72.8,5.5,63.9,25.5,0.0,20.4,Rodrigo De Paul,Goal
+73.8,12.1,69.2,18.8,0.0,8.13,Rodrigo De Paul,Goal
+59.5,32.7,51.5,24.0,0.0,11.82,Sergio Busquets,Goal
+65.2,46.8,85.5,47.6,0.46825894713402,10.61,Tadeo Allende,Goal

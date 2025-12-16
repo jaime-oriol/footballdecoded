@@ -50,12 +50,12 @@ import os
 BACKGROUND_COLOR = '#313332'
 PITCH_COLOR = '#313332'
 
-# Origin colors
-ORIGIN_COLORS = {
-    'Asistido': '#00FF7F',
-    'Regate previo': '#00D9FF',
-    'Carry individual': '#FFD700',
-    'Rebote': '#CCCCCC'
+# Origin markers
+ORIGIN_MARKERS = {
+    'Asistido': 'h',           # Hexágono
+    'Regate previo': 'o',       # Círculo
+    'Carry individual': 'D',    # Diamante
+    'Rebote': 's'               # Cuadrado
 }
 
 def plot_goals_origin(csv_path, player_name, face_path=None, team_name=None,
@@ -117,26 +117,23 @@ def plot_goals_origin(csv_path, player_name, face_path=None, team_name=None,
     fig.set_facecolor(BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
 
-    # Plot goals with origin-based borders
+    # Plot goals with origin-based markers
     for _, goal in goals_df.iterrows():
         if pd.notna(goal['x']) and pd.notna(goal['y']):
             xg_val = goal.get('xg', 0.1)
             origin = goal.get('origin_type', 'Rebote')
-            edge_color = ORIGIN_COLORS.get(origin, '#CCCCCC')
+            marker = ORIGIN_MARKERS.get(origin, 's')
 
-            # Size by xG
-            size = 200 + (xg_val * 600)
-
-            # Plot with xG-based fill and origin-based border
+            # Plot with xG-based fill and origin-based marker shape
             pitch.scatter(
-                goal['y'], goal['x'],
-                s=size,
+                goal['x'], goal['y'],
+                s=200,
                 c=xg_val,
                 cmap=node_cmap,
                 vmin=0, vmax=0.8,
-                marker='o',
-                edgecolors=edge_color,
-                linewidths=3,
+                marker=marker,
+                edgecolors='white',
+                linewidths=2,
                 alpha=0.9,
                 zorder=3,
                 ax=ax
@@ -150,29 +147,27 @@ def plot_goals_origin(csv_path, player_name, face_path=None, team_name=None,
     cbar.outline.set_edgecolor('w')
     cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
 
-    # LEGEND: Origin types
-    legend_ax = fig.add_axes([0.075, 0.07, 0.5, 0.12])
+    # LEGEND: Origin types (same style as shot_xg.py)
+    legend_ax = fig.add_axes([0.075, 0.07, 0.5, 0.08])
     legend_ax.axis("off")
     plt.xlim([0, 5])
-    plt.ylim([0, 1.2])
+    plt.ylim([0, 1])
 
-    # Row 1: Assisted & After Dribble
-    legend_ax.scatter(0.2, 0.85, marker='o', s=200, c=PITCH_COLOR,
-                     edgecolors=ORIGIN_COLORS['Asistido'], lw=3)
-    legend_ax.text(0.35, 0.76, "Assisted", color="w", fontfamily=font, fontsize=9)
+    # Column 1: Assisted
+    legend_ax.scatter(0.2, 0.7, marker=ORIGIN_MARKERS['Asistido'], s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(0.35, 0.61, "Assisted", color="w", fontfamily=font)
 
-    legend_ax.scatter(1.8, 0.85, marker='o', s=200, c=PITCH_COLOR,
-                     edgecolors=ORIGIN_COLORS['Regate previo'], lw=3)
-    legend_ax.text(1.95, 0.76, "After Dribble", color="w", fontfamily=font, fontsize=9)
+    # Column 1: After Dribble
+    legend_ax.scatter(0.2, 0.2, marker=ORIGIN_MARKERS['Regate previo'], s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(0.35, 0.11, "After Dribble", color="w", fontfamily=font)
 
-    # Row 2: Individual Carry & Rebound
-    legend_ax.scatter(0.2, 0.35, marker='o', s=200, c=PITCH_COLOR,
-                     edgecolors=ORIGIN_COLORS['Carry individual'], lw=3)
-    legend_ax.text(0.35, 0.26, "Individual Carry", color="w", fontfamily=font, fontsize=9)
+    # Column 2: Individual Carry
+    legend_ax.scatter(1.55, 0.7, marker=ORIGIN_MARKERS['Carry individual'], s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(1.7, 0.61, "Indiv. Carry", color="w", fontfamily=font)
 
-    legend_ax.scatter(1.8, 0.35, marker='o', s=200, c=PITCH_COLOR,
-                     edgecolors=ORIGIN_COLORS['Rebote'], lw=3)
-    legend_ax.text(1.95, 0.26, "Rebound", color="w", fontfamily=font, fontsize=9)
+    # Column 2: Rebound
+    legend_ax.scatter(1.55, 0.2, marker=ORIGIN_MARKERS['Rebote'], s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(1.7, 0.11, "Rebound", color="w", fontfamily=font)
 
     # TITLES
     title_text = f"{player_name} - Goals by Origin"

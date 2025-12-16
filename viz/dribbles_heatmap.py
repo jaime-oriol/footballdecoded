@@ -127,11 +127,12 @@ def plot_dribbles_heatmap(csv_path, player_name, face_path=None, team_name=None,
             ax=ax
         )
 
-    # SCATTER OVERLAY: Successful dribbles
+    # SCATTER OVERLAY: Successful dribbles (hexagons)
     if len(successful) > 0:
         pitch.scatter(
             successful['x'], successful['y'],
             s=100,
+            marker='h',
             c=SUCCESS_COLOR,
             edgecolors='white',
             linewidths=1,
@@ -140,11 +141,12 @@ def plot_dribbles_heatmap(csv_path, player_name, face_path=None, team_name=None,
             ax=ax
         )
 
-    # SCATTER OVERLAY: Failed dribbles
+    # SCATTER OVERLAY: Failed dribbles (squares)
     if len(failed) > 0:
         pitch.scatter(
             failed['x'], failed['y'],
             s=100,
+            marker='s',
             c=FAIL_COLOR,
             edgecolors='white',
             linewidths=1,
@@ -159,9 +161,9 @@ def plot_dribbles_heatmap(csv_path, player_name, face_path=None, team_name=None,
     plt.xlim([0, 5])
     plt.ylim([0, 1])
 
-    # Dribble outcome
-    legend_ax.scatter(0.2, 0.7, marker='o', s=200, c=SUCCESS_COLOR, edgecolors='w', lw=1.5)
-    legend_ax.scatter(0.2, 0.2, marker='o', s=200, c=FAIL_COLOR, edgecolors='w', lw=1.5)
+    # Dribble outcome with shapes
+    legend_ax.scatter(0.2, 0.7, marker='h', s=200, c=SUCCESS_COLOR, edgecolors='w', lw=1.5)
+    legend_ax.scatter(0.2, 0.2, marker='s', s=200, c=FAIL_COLOR, edgecolors='w', lw=1.5)
     legend_ax.text(0.35, 0.61, "Successful", color="w", fontfamily=font, fontsize=10)
     legend_ax.text(0.35, 0.11, "Failed", color="w", fontfamily=font, fontsize=10)
 
