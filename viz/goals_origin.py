@@ -145,6 +145,7 @@ def plot_goals_origin(csv_path, player_name, face_path=None, team_name=None,
     cb_ax = fig.add_axes([0.53, 0.107, 0.35, 0.03])
     cbar = fig.colorbar(sm, cax=cb_ax, orientation='horizontal')
     cbar.outline.set_edgecolor('w')
+    cbar.ax.tick_params(colors='white')  # Color de los números
     cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
 
     # LEGEND: Origin types (same style as shot_xg.py)
@@ -155,19 +156,19 @@ def plot_goals_origin(csv_path, player_name, face_path=None, team_name=None,
 
     # Column 1: Assisted
     legend_ax.scatter(0.2, 0.7, marker=ORIGIN_MARKERS['Asistido'], s=200, c=PITCH_COLOR, edgecolors='w')
-    legend_ax.text(0.35, 0.61, "Assisted", color="w", fontfamily=font)
+    legend_ax.text(0.4, 0.61, "Assisted", color="w", fontfamily=font)
 
     # Column 1: After Dribble
     legend_ax.scatter(0.2, 0.2, marker=ORIGIN_MARKERS['Regate previo'], s=200, c=PITCH_COLOR, edgecolors='w')
-    legend_ax.text(0.35, 0.11, "After Dribble", color="w", fontfamily=font)
+    legend_ax.text(0.4, 0.11, "After Dribble", color="w", fontfamily=font)
 
     # Column 2: Individual Carry
-    legend_ax.scatter(1.55, 0.7, marker=ORIGIN_MARKERS['Carry individual'], s=200, c=PITCH_COLOR, edgecolors='w')
-    legend_ax.text(1.7, 0.61, "Indiv. Carry", color="w", fontfamily=font)
+    legend_ax.scatter(1.7, 0.7, marker=ORIGIN_MARKERS['Carry individual'], s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(1.925, 0.61, "Indiv. Carry", color="w", fontfamily=font)
 
     # Column 2: Rebound
-    legend_ax.scatter(1.55, 0.2, marker=ORIGIN_MARKERS['Rebote'], s=200, c=PITCH_COLOR, edgecolors='w')
-    legend_ax.text(1.7, 0.11, "Rebound", color="w", fontfamily=font)
+    legend_ax.scatter(1.7, 0.2, marker=ORIGIN_MARKERS['Rebote'], s=200, c=PITCH_COLOR, edgecolors='w')
+    legend_ax.text(1.925, 0.11, "Rebound", color="w", fontfamily=font)
 
     # TITLES
     title_text = f"{player_name} - Goals by Origin"

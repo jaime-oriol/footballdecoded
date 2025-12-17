@@ -161,6 +161,7 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
     cb_ax = fig.add_axes([0.53, 0.107, 0.35, 0.03])
     cbar = fig.colorbar(sm, cax=cb_ax, orientation='horizontal')
     cbar.outline.set_edgecolor('w')
+    cbar.ax.tick_params(colors='white')  # Color de los números
     cbar.set_label(" xG", loc="left", color='w', fontweight='bold', labelpad=-28.5)
 
     # LEGEND
@@ -207,15 +208,11 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
 
     # Left column
     fig.text(0.65, 0.925, "Assists:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.65, 0.9, "Goals:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
     fig.text(0.65, 0.875, "Avg xG:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.65, 0.85, "Conv %:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
 
     fig.text(0.75, 0.925, f"{total_assists}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.75, 0.9, f"{int(goals_scored)}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
     fig.text(0.75, 0.875, f"{avg_xg:.2f}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.75, 0.85, f"{conversion:.0f}%", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-
+    
     # Right column - Top receivers
     fig.text(0.82, 0.925, "Top Receivers:", fontweight="bold", fontsize=9, color='w', fontfamily=font)
     y_pos = 0.9

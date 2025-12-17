@@ -167,10 +167,6 @@ def plot_dribbles_heatmap(csv_path, player_name, face_path=None, team_name=None,
     legend_ax.text(0.35, 0.61, "Successful", color="w", fontfamily=font, fontsize=10)
     legend_ax.text(0.35, 0.11, "Failed", color="w", fontfamily=font, fontsize=10)
 
-    # Heatmap explanation
-    legend_ax.text(1.5, 0.45, "Heatmap shows dribble density", color="w",
-                  fontfamily=font, fontsize=9, style='italic')
-
     # TITLES
     title_text = f"{player_name} - Dribbles Heatmap"
     subtitle_text = team_name if team_name else ""

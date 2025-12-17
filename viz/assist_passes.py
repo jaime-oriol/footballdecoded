@@ -137,7 +137,7 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
     # xG COLOR SCALE: Horizontal colorbar
     sm = plt.cm.ScalarMappable(cmap=node_cmap, norm=plt.Normalize(vmin=0, vmax=0.8))
     sm.set_array([])
-    cb_ax = fig.add_axes([0.25, 0.07, 0.5, 0.025])
+    cb_ax = fig.add_axes([0.25, 0.0, 0.5, 0.025])
     cbar = fig.colorbar(sm, cax=cb_ax, orientation='horizontal')
     cbar.outline.set_edgecolor('w')
     cbar.ax.tick_params(labelsize=8, colors='w')
@@ -195,29 +195,13 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
 
     # Left column
     fig.text(0.78, 1.03, "Assists:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.78, 1.01, "Goals:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.78, 1.01, "Avg Length:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
     fig.text(0.78, 0.99, "Avg xG:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.78, 0.97, "Conv %:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
 
     fig.text(0.88, 1.03, f"{total_assists}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.88, 1.01, f"{goals_scored}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.88, 1.01, f"{avg_length:.1f}m", fontweight="regular", fontsize=12, color='w', fontfamily=font)
     fig.text(0.88, 0.99, f"{avg_xg:.2f}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.88, 0.97, f"{conversion:.0f}%", fontweight="regular", fontsize=12, color='w', fontfamily=font)
-
-    # Right column - More stats
-    fig.text(0.78, 0.95, "Avg Length:", fontweight="bold", fontsize=11, color='w', fontfamily=font)
-    fig.text(0.88, 0.95, f"{avg_length:.1f}m", fontweight="regular", fontsize=11, color='w', fontfamily=font)
-
-    # Top receivers below
-    fig.text(0.78, 0.925, "Top Receivers:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    y_pos = 0.9
-    for i, (receiver, count) in enumerate(top_receivers.items()):
-        if i < 3:
-            name_short = receiver.split()[-1] if ' ' in receiver else receiver[:10]
-            fig.text(0.78, y_pos, f"{name_short}:", fontweight="regular", fontsize=9, color='w', fontfamily=font)
-            fig.text(0.88, y_pos, f"{count}", fontweight="regular", fontsize=9, color='w', fontfamily=font)
-            y_pos -= 0.02
-
+   
     # FACE/LOGO
     if face_path and os.path.exists(face_path):
         try:
@@ -229,8 +213,8 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
             pass
 
     # FOOTER
-    fig.text(0.085, -0.01, "Created by Jaime Oriol", fontweight='bold',
-            fontsize=16, color="white", fontfamily=font)
+    fig.text(0.075, -0.01, "Created by Jaime Oriol", fontweight='bold',
+            fontsize=14, color="white", fontfamily=font)
 
     # Logo Football Decoded
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -238,7 +222,7 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
     if os.path.exists(logo_path):
         try:
             logo = Image.open(logo_path)
-            logo_ax = fig.add_axes([0.675, -0.09, 0.32, 0.16])
+            logo_ax = fig.add_axes([0.7, -0.09, 0.3, 0.14])
             logo_ax.imshow(logo)
             logo_ax.axis('off')
         except:
