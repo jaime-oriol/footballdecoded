@@ -43,8 +43,7 @@ CONTEXT_COLORS = {
 # Event markers
 EVENT_MARKERS = {
     'goal': '*',               # Star
-    'assist': 'D',             # Diamond
-    'key_pass': 'o',           # Circle
+    'assist': 'o',             # Circle
     'dribble_to_shot': '^'     # Triangle
 }
 
@@ -192,31 +191,31 @@ def plot_impact_timeline(csv_path, player_name, face_path=None, team_name=None,
     subtitle_text = team_name if team_name else ""
     subsubtitle_text = f"{competition} {season}" if competition and season else (season if season else "")
 
-    fig.text(0.18, 0.945, title_text, fontweight="bold", fontsize=18, color='w', fontfamily=font)
+    fig.text(0.18, 0.925, title_text, fontweight="bold", fontsize=18, color='w', fontfamily=font)
     if subtitle_text:
-        fig.text(0.18, 0.920, subtitle_text, fontweight="regular", fontsize=14, color='w', fontfamily=font)
+        fig.text(0.18, 0.895, subtitle_text, fontweight="regular", fontsize=14, color='w', fontfamily=font)
     if subsubtitle_text:
-        fig.text(0.18, 0.895, subsubtitle_text, fontweight="regular", fontsize=11, color='w', fontfamily=font)
+        fig.text(0.18, 0.865, subsubtitle_text, fontweight="regular", fontsize=11, color='w', fontfamily=font)
 
     # STATISTICS PANEL (top right)
     total_events = len(events_df)
     goals = len(events_df[events_df['event_type'] == 'goal'])
     assists = len(events_df[events_df['event_type'] == 'assist'])
-    key_passes = len(events_df[events_df['event_type'] == 'key_pass'])
+    dribbles_to_shot = len(events_df[events_df['event_type'] == 'dribble_to_shot'])
 
     # Clutch events (last 15 min)
     clutch_events = len(events_df[events_df['minute'] >= 75])
     clutch_pct = (clutch_events / total_events * 100) if total_events > 0 else 0
 
-    fig.text(0.75, 0.97, "Total Events:", fontweight="bold", fontsize=11, color='w', fontfamily=font)
-    fig.text(0.75, 0.945, "Goals:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.75, 0.92, "Assists:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.75, 0.895, "Clutch %:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.7, 0.96, "Total Events:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.7, 0.935, "Goals:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.7, 0.91, "Assists:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.7, 0.885, "Clutch %:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
 
-    fig.text(0.87, 0.97, f"{total_events}", fontweight="regular", fontsize=11, color='w', fontfamily=font)
-    fig.text(0.87, 0.945, f"{goals}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.87, 0.92, f"{assists}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.87, 0.895, f"{clutch_pct:.0f}%", fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.82, 0.96, f"{total_events}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.82, 0.935, f"{goals}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.82, 0.91, f"{assists}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.82, 0.885, f"{clutch_pct:.0f}%", fontweight="regular", fontsize=12, color='w', fontfamily=font)
 
     # FACE/LOGO
     if face_path and os.path.exists(face_path):

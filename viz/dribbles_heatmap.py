@@ -192,16 +192,16 @@ def plot_dribbles_heatmap(csv_path, player_name, face_path=None, team_name=None,
 
     # Stats positioning
     fig.text(0.8, 1.04, "Success:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
-    fig.text(0.8, 1.01, "Failed:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
-    fig.text(0.8, 0.98, "Rate:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.8, 1.015, "Failed:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.8, 0.985, "Rate:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
 
     fig.text(0.88, 1.04, f"{successful_count}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
-    fig.text(0.88, 1.01, f"{failed_count}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
-    fig.text(0.88, 0.98, f"{success_rate:.1f}%", fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.88, 1.015, f"{failed_count}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.88, 0.985, f"{success_rate:.1f}%", fontweight="regular", fontsize=14, color='w', fontfamily=font)
 
     if per_match is not None:
-        fig.text(0.8, 0.96, "Per Match:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
-        fig.text(0.88, 0.96, f"{per_match:.1f}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
+        fig.text(0.8, 0.955, "Per Match:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
+        fig.text(0.88, 0.955, f"{per_match:.1f}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
 
     # FACE/LOGO
     if face_path and os.path.exists(face_path):

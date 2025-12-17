@@ -1,0 +1,151 @@
+minute,event_type,score_context,description
+1.0,dribble_to_shot,drawing,Dribble → Shot
+1.0,dribble_to_shot,drawing,Dribble → Shot
+4.0,dribble_to_shot,drawing,Dribble → Shot
+4.0,assist,drawing,Assist to Tomás Avilés
+4.0,assist,losing,Assist to Yannick Bright
+6.0,dribble_to_shot,drawing,Dribble → Shot
+7.0,dribble_to_shot,drawing,Dribble → Shot
+8.0,dribble_to_shot,drawing,Dribble → Shot
+9.0,goal,drawing,Goal (xG: 0.04)
+11.0,dribble_to_shot,drawing,Dribble → Shot
+11.0,assist,drawing,Assist to Jordi Alba
+11.0,dribble_to_shot,drawing,Dribble → Shot
+12.0,assist,drawing,Assist to Tadeo Allende
+12.0,dribble_to_shot,drawing,Dribble → Shot
+14.0,dribble_to_shot,drawing,Dribble → Shot
+14.0,goal,winning,Goal (xG: 0.04)
+15.0,dribble_to_shot,winning,Dribble → Shot
+16.0,goal,drawing,Goal (xG: 0.08)
+17.0,dribble_to_shot,drawing,Dribble → Shot
+17.0,dribble_to_shot,winning,Dribble → Shot
+18.0,goal,drawing,Goal (xG: 0.21)
+19.0,dribble_to_shot,losing,Dribble → Shot
+19.0,dribble_to_shot,losing,Dribble → Shot
+19.0,goal,losing,Goal (xG: 0.73)
+21.0,dribble_to_shot,drawing,Dribble → Shot
+23.0,goal,winning,Goal (xG: 0.54)
+23.0,assist,losing,Assist to Jordi Alba
+23.0,dribble_to_shot,drawing,Dribble → Shot
+24.0,dribble_to_shot,losing,Dribble → Shot
+24.0,dribble_to_shot,losing,Dribble → Shot
+24.0,dribble_to_shot,drawing,Dribble → Shot
+24.0,dribble_to_shot,drawing,Dribble → Shot
+26.0,goal,drawing,Goal (xG: 0.19)
+26.0,goal,drawing,Goal (xG: 0.08)
+27.0,dribble_to_shot,winning,Dribble → Shot
+29.0,dribble_to_shot,winning,Dribble → Shot
+29.0,assist,drawing,Assist to Benjamín Cremaschi
+30.0,dribble_to_shot,drawing,Dribble → Shot
+30.0,dribble_to_shot,drawing,Dribble → Shot
+30.0,dribble_to_shot,drawing,Dribble → Shot
+31.0,assist,drawing,Assist to Tadeo Allende
+32.0,assist,losing,Assist to Tadeo Allende
+33.0,dribble_to_shot,drawing,Dribble → Shot
+33.0,dribble_to_shot,winning,Dribble → Shot
+33.0,goal,drawing,Goal (xG: 0.09)
+33.0,dribble_to_shot,drawing,Dribble → Shot
+34.0,assist,drawing,Assist to Tadeo Allende
+35.0,dribble_to_shot,drawing,Dribble → Shot
+36.0,dribble_to_shot,drawing,Dribble → Shot
+37.0,dribble_to_shot,winning,Dribble → Shot
+37.0,goal,winning,Goal (xG: 0.15)
+38.0,dribble_to_shot,losing,Dribble → Shot
+38.0,goal,winning,Goal (xG: 0.64)
+38.0,goal,drawing,Goal (xG: 0.07)
+39.0,dribble_to_shot,drawing,Dribble → Shot
+39.0,goal,drawing,Goal (xG: 0.26)
+40.0,goal,winning,Goal (xG: 0.63)
+41.0,dribble_to_shot,winning,Dribble → Shot
+42.0,assist,drawing,Assist to Baltasar Rodríguez
+43.0,dribble_to_shot,winning,Dribble → Shot
+43.0,dribble_to_shot,drawing,Dribble → Shot
+45.0,dribble_to_shot,winning,Dribble → Shot
+46.0,dribble_to_shot,losing,Dribble → Shot
+46.0,dribble_to_shot,winning,Dribble → Shot
+47.0,goal,losing,Goal (xG: 0.27)
+47.0,dribble_to_shot,winning,Dribble → Shot
+47.0,dribble_to_shot,winning,Dribble → Shot
+48.0,dribble_to_shot,losing,Dribble → Shot
+48.0,dribble_to_shot,winning,Dribble → Shot
+48.0,dribble_to_shot,drawing,Dribble → Shot
+48.0,dribble_to_shot,losing,Dribble → Shot
+49.0,goal,losing,Goal (xG: 0.07)
+50.0,dribble_to_shot,winning,Dribble → Shot
+51.0,assist,winning,Assist to Jordi Alba
+52.0,dribble_to_shot,winning,Dribble → Shot
+54.0,dribble_to_shot,drawing,Dribble → Shot
+55.0,dribble_to_shot,losing,Dribble → Shot
+56.0,goal,winning,Goal (xG: 0.21)
+56.0,dribble_to_shot,winning,Dribble → Shot
+56.0,assist,winning,Assist to Mateo Silvetti
+58.0,dribble_to_shot,losing,Dribble → Shot
+59.0,goal,winning,Goal (xG: 0.97)
+59.0,assist,winning,Assist to Tadeo Allende
+59.0,dribble_to_shot,winning,Dribble → Shot
+61.0,dribble_to_shot,winning,Dribble → Shot
+61.0,dribble_to_shot,winning,Dribble → Shot
+61.0,dribble_to_shot,drawing,Dribble → Shot
+61.0,assist,winning,Assist to Lionel Messi
+61.0,assist,winning,Assist to Tadeo Allende
+61.0,goal,drawing,Goal (xG: 0.39)
+61.0,goal,winning,Goal (xG: 0.79)
+62.0,goal,losing,Goal (xG: 0.79)
+62.0,dribble_to_shot,drawing,Dribble → Shot
+64.0,dribble_to_shot,winning,Dribble → Shot
+64.0,dribble_to_shot,losing,Dribble → Shot
+65.0,dribble_to_shot,losing,Dribble → Shot
+65.0,goal,drawing,Goal (xG: 0.45)
+65.0,dribble_to_shot,winning,Dribble → Shot
+66.0,goal,winning,Goal (xG: 0.27)
+66.0,assist,winning,Assist to Mateo Silvetti
+67.0,assist,winning,Assist to Luis Suárez
+67.0,dribble_to_shot,winning,Dribble → Shot
+67.0,dribble_to_shot,winning,Dribble → Shot
+67.0,dribble_to_shot,winning,Dribble → Shot
+70.0,assist,losing,Assist to Rodrigo De Paul
+71.0,dribble_to_shot,losing,Dribble → Shot
+72.0,dribble_to_shot,winning,Dribble → Shot
+72.0,dribble_to_shot,drawing,Dribble → Shot
+73.0,goal,winning,Goal (xG: 0.62)
+73.0,dribble_to_shot,winning,Dribble → Shot
+73.0,assist,winning,Assist to Tadeo Allende
+74.0,goal,winning,Goal (xG: 0.63)
+74.0,dribble_to_shot,drawing,Dribble → Shot
+74.0,dribble_to_shot,winning,Dribble → Shot
+75.0,assist,winning,Assist to Tadeo Allende
+75.0,dribble_to_shot,losing,Dribble → Shot
+79.0,dribble_to_shot,winning,Dribble → Shot
+80.0,goal,winning,Goal (xG: 0.07)
+80.0,dribble_to_shot,drawing,Dribble → Shot
+81.0,dribble_to_shot,winning,Dribble → Shot
+81.0,dribble_to_shot,winning,Dribble → Shot
+83.0,dribble_to_shot,drawing,Dribble → Shot
+83.0,goal,drawing,Goal (xG: 0.04)
+84.0,dribble_to_shot,winning,Dribble → Shot
+84.0,dribble_to_shot,winning,Dribble → Shot
+84.0,goal,winning,Goal (xG: 0.04)
+84.0,dribble_to_shot,winning,Dribble → Shot
+84.0,dribble_to_shot,winning,Dribble → Shot
+85.0,dribble_to_shot,winning,Dribble → Shot
+85.0,goal,winning,Goal (xG: 0.11)
+86.0,goal,winning,Goal (xG: 0.62)
+86.0,dribble_to_shot,drawing,Dribble → Shot
+86.0,goal,losing,Goal (xG: 0.12)
+86.0,dribble_to_shot,winning,Dribble → Shot
+86.0,goal,winning,Goal (xG: 0.28)
+88.0,assist,winning,Assist to Fafà Picault
+88.0,assist,winning,Assist to Luis Suárez
+90.0,assist,winning,Assist to Telasco Segovia
+90.0,dribble_to_shot,winning,Dribble → Shot
+91.0,dribble_to_shot,drawing,Dribble → Shot
+91.0,dribble_to_shot,winning,Dribble → Shot
+91.0,dribble_to_shot,losing,Dribble → Shot
+91.0,dribble_to_shot,drawing,Dribble → Shot
+91.0,dribble_to_shot,winning,Dribble → Shot
+92.0,dribble_to_shot,winning,Dribble → Shot
+93.0,dribble_to_shot,losing,Dribble → Shot
+95.0,dribble_to_shot,winning,Dribble → Shot
+95.0,assist,losing,Assist to Tadeo Allende
+97.0,dribble_to_shot,winning,Dribble → Shot
+99.0,assist,losing,Assist to Telasco Segovia

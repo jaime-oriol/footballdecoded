@@ -57,14 +57,15 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
     # Plot assist-to-shot connections (dotted lines)
     for _, shot in shots_df.iterrows():
         if all(pd.notna(shot[['x_assist', 'y_assist', 'x_shot', 'y_shot']])):
-            ax['pitch'].lines(
-                shot['y_assist'], shot['x_assist'],  # (y, x) como shot_xg
-                shot['y_shot'], shot['x_shot'],      # (y, x) como shot_xg
+            pitch.lines(
+                shot['x_assist'], shot['y_assist'],  # pitch.lines() usa (x, y) Opta directamente
+                shot['x_shot'], shot['y_shot'],      # pitch.lines() usa (x, y) Opta directamente
                 linestyle='--',
                 color='white',
                 alpha=0.3,
                 linewidth=1,
-                zorder=1
+                zorder=1,
+                ax=ax['pitch']
             )
 
     # Plot shots with markers based on body part
@@ -137,8 +138,12 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
     total_assists = len(shots_df)
     goals_scored = shots_df['is_goal'].sum() if 'is_goal' in shots_df.columns else 0
     total_xg = shots_df['xg'].sum() if 'xg' in shots_df.columns else 0
-    avg_xg = shots_df['xg'].mean() if 'xg' in shots_df.columns else 0
-    conversion = (goals_scored / total_assists * 100) if total_assists > 0 else 0
+    avg_xg_per_goal = (total_xg / goals_scored) if goals_scored > 0 else 0
+
+    # xG Performance calculation (like shot_xg.py)
+    xg_perf = goals_scored - total_xg
+    sign = '+' if xg_perf > 0 else ''
+    perf_pct = int(round(100 * xg_perf / total_xg, 0)) if total_xg > 0 else 0
 
     # Top receivers
     if 'shooter' in shots_df.columns:
@@ -149,14 +154,14 @@ def plot_assisted_goals(csv_path, player_name, face_path=None, team_name=None,
     # Labels izquierda (IDÉNTICO a shot_xg)
     fig.text(0.65, 0.925, "Assists:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
     fig.text(0.65, 0.9, "xG:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.65, 0.875, "Goals:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.65, 0.85, "Conv %:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.65, 0.875, "xG/Goal:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.65, 0.85, "xG Perf:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
 
     # Valores izquierda
     fig.text(0.73, 0.925, f"{total_assists}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
     fig.text(0.73, 0.9, f"{total_xg:.2f}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.73, 0.875, f"{int(goals_scored)}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
-    fig.text(0.73, 0.85, f"{conversion:.0f}%", fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.73, 0.875, f"{avg_xg_per_goal:.2f}", fontweight="regular", fontsize=10, color='w', fontfamily=font)
+    fig.text(0.73, 0.85, f"{sign}{perf_pct}%", fontweight="regular", fontsize=10, color='w', fontfamily=font)
 
     # Labels derecha - Top receivers
     fig.text(0.79, 0.927, "Top Receivers:", fontweight="bold", fontsize=10, color='w', fontfamily=font)
