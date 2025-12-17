@@ -35,9 +35,9 @@ PITCH_COLOR = '#313332'
 
 # Context colors
 CONTEXT_COLORS = {
-    'drawing': '#FF6B6B',      # Red - empate (alta presión)
+    'drawing': '#FFA94D',      # Orange - empate
     'winning': '#51CF66',      # Green - ganando
-    'losing': '#FFA94D'        # Orange - perdiendo (remontada)
+    'losing': '#FF6B6B'        # Red - perdiendo
 }
 
 # Event markers
@@ -192,11 +192,11 @@ def plot_impact_timeline(csv_path, player_name, face_path=None, team_name=None,
     subtitle_text = team_name if team_name else ""
     subsubtitle_text = f"{competition} {season}" if competition and season else (season if season else "")
 
-    fig.text(0.18, 0.97, title_text, fontweight="bold", fontsize=18, color='w', fontfamily=font)
+    fig.text(0.18, 0.945, title_text, fontweight="bold", fontsize=18, color='w', fontfamily=font)
     if subtitle_text:
-        fig.text(0.18, 0.945, subtitle_text, fontweight="regular", fontsize=14, color='w', fontfamily=font)
+        fig.text(0.18, 0.920, subtitle_text, fontweight="regular", fontsize=14, color='w', fontfamily=font)
     if subsubtitle_text:
-        fig.text(0.18, 0.925, subsubtitle_text, fontweight="regular", fontsize=11, color='w', fontfamily=font)
+        fig.text(0.18, 0.895, subsubtitle_text, fontweight="regular", fontsize=11, color='w', fontfamily=font)
 
     # STATISTICS PANEL (top right)
     total_events = len(events_df)
