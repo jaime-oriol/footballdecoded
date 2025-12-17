@@ -141,7 +141,7 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
     cbar = fig.colorbar(sm, cax=cb_ax, orientation='horizontal')
     cbar.outline.set_edgecolor('w')
     cbar.ax.tick_params(labelsize=8, colors='w')
-    cbar.set_label("xG Generated", loc="center", color='w', fontweight='bold', fontsize=9)
+    cbar.set_label("xG Generated", loc="center", color='w', fontweight='bold', fontsize=12)
 
     # LEGEND: Arrow width explanation
     legend_ax = fig.add_axes([0.075, 0.065, 0.15, 0.045])
@@ -151,7 +151,7 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
 
     # Note about arrow width
     legend_ax.text(0.5, 0.5, "Arrow width = xG", color="w", fontfamily=font,
-                  fontsize=9, ha='center', va='center', style='italic')
+                  fontsize=14, ha='center', va='center', style='italic')
 
     # TITLES
     title_text = f"{player_name} - Assist Passes"
@@ -194,13 +194,13 @@ def plot_assist_passes(csv_path, player_name, face_path=None, team_name=None,
         top_receivers = pd.Series()
 
     # Left column
-    fig.text(0.78, 1.03, "Assists:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.78, 1.01, "Avg Length:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.78, 0.99, "Avg xG:", fontweight="bold", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.77, 1.03, "Assists:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.77, 1.00, "Avg Length:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.77, 0.97, "Avg xG:", fontweight="bold", fontsize=14, color='w', fontfamily=font)
 
-    fig.text(0.88, 1.03, f"{total_assists}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.88, 1.01, f"{avg_length:.1f}m", fontweight="regular", fontsize=12, color='w', fontfamily=font)
-    fig.text(0.88, 0.99, f"{avg_xg:.2f}", fontweight="regular", fontsize=12, color='w', fontfamily=font)
+    fig.text(0.87, 1.03, f"{total_assists}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.87, 1.00, f"{avg_length:.1f}m", fontweight="regular", fontsize=14, color='w', fontfamily=font)
+    fig.text(0.87, 0.97, f"{avg_xg:.2f}", fontweight="regular", fontsize=14, color='w', fontfamily=font)
    
     # FACE/LOGO
     if face_path and os.path.exists(face_path):
