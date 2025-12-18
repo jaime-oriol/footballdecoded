@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.patches import Rectangle
-from mplsoccer.pitch import VerticalPitch
+from mplsoccer import VerticalPitch
 from PIL import Image
 import os
 from typing import List, Tuple

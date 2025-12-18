@@ -35,7 +35,7 @@ Coordinate System: Opta (0-100) with vertical pitch orientation
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from mplsoccer.pitch import VerticalPitch
+from mplsoccer import VerticalPitch
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.collections import LineCollection
 from matplotlib.patches import FancyArrowPatch, Circle, ArrowStyle

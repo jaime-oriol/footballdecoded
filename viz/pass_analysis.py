@@ -31,7 +31,7 @@ Created: 2025 - FootballDecoded Project
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from mplsoccer.pitch import VerticalPitch
+from mplsoccer import VerticalPitch
 import matplotlib.colors as mcolors
 import matplotlib.patheffects as path_effects
 from PIL import Image

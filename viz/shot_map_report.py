@@ -44,7 +44,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as mcolors
-from mplsoccer.pitch import VerticalPitch
+from mplsoccer import VerticalPitch
 from PIL import Image
 import os
 
