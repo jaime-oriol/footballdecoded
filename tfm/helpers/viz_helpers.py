@@ -72,29 +72,18 @@ def plot_top10_ranking(
 
         if not replacement_row.empty:
             replacement_row = replacement_row.copy()
-            # Enriquecer con datos adicionales
-            replacement_data = df_data[df_data['unique_player_id'] == replacement_id]
-            if not replacement_data.empty:
-                replacement_row.loc[replacement_row.index[0], 'age'] = replacement_data['age'].iloc[0]
-                tm_metrics = replacement_data['transfermarkt_metrics'].iloc[0]
-                replacement_row.loc[replacement_row.index[0], 'transfermarkt_metrics'] = tm_metrics
+            # Enriquecer EXACTAMENTE igual que similar_df (líneas 47-51)
+            replacement_row = replacement_row.merge(
+                df_data[['unique_player_id', 'age', 'transfermarkt_metrics']],
+                on='unique_player_id',
+                how='left'
+            )
+            # Calcular market_value_m igual que similar_df (línea 63)
+            replacement_row['market_value_m'] = replacement_row.apply(extract_market_value, axis=1)
 
-                # Calcular market_value_m correctamente
-                if pd.notna(tm_metrics) and isinstance(tm_metrics, dict):
-                    val = tm_metrics.get('transfermarkt_market_value_eur')
-                    if val:
-                        try:
-                            replacement_row.loc[replacement_row.index[0], 'market_value_m'] = float(val) / 1_000_000
-                        except:
-                            replacement_row.loc[replacement_row.index[0], 'market_value_m'] = None
-                    else:
-                        replacement_row.loc[replacement_row.index[0], 'market_value_m'] = None
-                else:
-                    replacement_row.loc[replacement_row.index[0], 'market_value_m'] = None
-
-                # Añadir al dataframe
-                similar_df = pd.concat([similar_df, replacement_row], ignore_index=True)
-                add_replacement_row = True
+            # Añadir al dataframe
+            similar_df = pd.concat([similar_df, replacement_row], ignore_index=True)
+            add_replacement_row = True
 
     # Setup figura
     num_rows = len(similar_df)
