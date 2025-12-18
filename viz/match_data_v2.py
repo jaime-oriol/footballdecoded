@@ -114,7 +114,20 @@ def extract_match_complete_v2(ws_id: int, ss_id: Optional[int], league: str, sea
     events = ws_data.get('events', pd.DataFrame())
     if events.empty:
         return {}
-    
+
+    # Normalize team names to match user-provided canonical names
+    # WhoScored may return variations like "Inter Miami CF" vs "Inter Miami"
+    if 'team' in events.columns:
+        team_mapping = {}
+        for ws_team in events['team'].unique():
+            if pd.notna(ws_team):
+                ws_lower = str(ws_team).lower()
+                if home_team.lower() in ws_lower or ws_lower in home_team.lower():
+                    team_mapping[ws_team] = home_team
+                elif away_team.lower() in ws_lower or ws_lower in away_team.lower():
+                    team_mapping[ws_team] = away_team
+        events['team'] = events['team'].map(lambda x: team_mapping.get(x, x))
+
     # COMPLETE ENRICHMENT PIPELINE
     # Each function adds new calculated fields while preserving existing data
     events = _add_carries(events)                    # Ball carrying detection
@@ -196,15 +209,13 @@ def _get_sofascore_data(event_id: Optional[int], home_team: str, away_team: str)
         if shots_df.empty:
             return {}
 
-        # Get actual team names from SofaScore data
-        ss_home_team = shots_df[shots_df['is_home'] == True]['team'].iloc[0] if any(shots_df['is_home']) else home_team
-        ss_away_team = shots_df[shots_df['is_home'] == False]['team'].iloc[0] if any(~shots_df['is_home']) else away_team
-
         # Convert to standardized format compatible with _merge_shot_xg
-        # SofaScore coordinates: 0-100 x 0-100 (half field)
-        # Need to convert to Opta: 0-100 x 0-100 (full field)
+        # Use canonical team names passed by user, not SofaScore names
         shots = []
         for _, shot in shots_df.iterrows():
+            # Map SofaScore team to canonical name using is_home flag
+            canonical_team = home_team if shot['is_home'] else away_team
+
             # SofaScore x goes from 0 (goal) to ~50 (halfway line)
             # Opta x goes from 0 (own goal) to 100 (opponent goal)
             x_ss = float(shot['location_x']) if pd.notna(shot['location_x']) else 0.0
@@ -217,7 +228,7 @@ def _get_sofascore_data(event_id: Optional[int], home_team: str, away_team: str)
 
             shots.append({
                 'minute': float(shot['minute']) if pd.notna(shot['minute']) else 0.0,
-                'team': shot['team'],  # Use SofaScore team name directly
+                'team': canonical_team,  # Use canonical team name from user
                 'player': shot['player'],
                 'xg': float(shot['xg']) if pd.notna(shot['xg']) else 0.0,
                 'x': x_opta,
@@ -232,8 +243,8 @@ def _get_sofascore_data(event_id: Optional[int], home_team: str, away_team: str)
         return {
             'shots': pd.DataFrame(shots),
             'match_info': {
-                'home_team': ss_home_team,
-                'away_team': ss_away_team,
+                'home_team': home_team,
+                'away_team': away_team,
                 'total_shots': len(shots)
             }
         }
@@ -657,97 +668,68 @@ def _add_action_classifications(events: pd.DataFrame) -> pd.DataFrame:
     
     return events
 
-def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced xG merging with flexible team name matching"""
-    if us_shots.empty:
+def _merge_shot_xg(events: pd.DataFrame, ss_shots: pd.DataFrame) -> pd.DataFrame:
+    """Merge xG from SofaScore shots into WhoScored events. Team names are already normalized."""
+    if ss_shots.empty:
         events['xg'] = 0.0
         return events
-    
+
     events['xg'] = 0.0
     shot_events = events[events['event_type'].str.contains('Shot|Goal', case=False, na=False)]
-    
-    # Team name mapping for better matching
-    def _match_team_flexible(whoscored_team: str, understat_team: str) -> bool:
-        """Flexible team matching to handle name variations"""
-        ws_team = whoscored_team.lower().strip()
-        us_team = understat_team.lower().strip()
-        
-        # Exact match
-        if ws_team == us_team:
-            return True
-            
-        # Handle Atletico/Atletico Madrid variants
-        if ('atletico' in ws_team and 'atletico' in us_team) or \
-           ('atlético' in ws_team and 'atlético' in us_team):
-            return True
-            
-        # Handle other common variants
-        team_mappings = {
-            'real madrid': ['madrid', 'real'],
-            'barcelona': ['barça', 'fc barcelona', 'barca'],
-            'athletic bilbao': ['athletic', 'bilbao'],
-            'real sociedad': ['sociedad'],
-            'valencia': ['valencia cf'],
-            'sevilla': ['sevilla fc']
-        }
-        
-        # Check both directions
-        for full_name, variants in team_mappings.items():
-            if (ws_team in [full_name] + variants and us_team in [full_name] + variants):
-                return True
-        
-        # Check if one team name contains the other (last resort)
-        if ws_team in us_team or us_team in ws_team:
-            return True
-            
-        return False
-    
+
+    # Track which SofaScore shots have been used (1-to-1 matching)
+    used_ss_indices = set()
+
     for idx, shot in shot_events.iterrows():
         minute = shot['minute']
         team = shot['team']
         player = shot['player']
-        
-        # Multi-level matching strategy with flexible team matching
-        matches = []
-        
-        # 1. Exact match (minute + flexible team + player)
-        if pd.notna(player):
-            player_last_name = str(player).split()[-1] if player else ""
-            for _, us_shot in us_shots.iterrows():
-                if (abs(us_shot['minute'] - minute) <= 1 and
-                    _match_team_flexible(team, us_shot['team']) and
-                    player_last_name.lower() in us_shot['player'].lower()):
-                    matches.append(('exact', pd.DataFrame([us_shot])))
-                    break
-        
-        # 2. Time + flexible team match
-        time_team_matches = []
-        for _, us_shot in us_shots.iterrows():
-            if (abs(us_shot['minute'] - minute) <= 2 and
-                _match_team_flexible(team, us_shot['team'])):
-                time_team_matches.append(us_shot)
-        
-        if time_team_matches:
-            matches.append(('time_team', pd.DataFrame(time_team_matches)))
-        
-        # 3. Flexible team + result match (for goals)
-        if shot.get('is_goal', False) or 'Goal' in shot.get('event_type', ''):
-            goal_matches = []
-            for _, us_shot in us_shots.iterrows():
-                if (_match_team_flexible(team, us_shot['team']) and
-                    us_shot['result'] == 'Goal'):
-                    goal_matches.append(us_shot)
-            
-            if goal_matches:
-                matches.append(('goal', pd.DataFrame(goal_matches)))
-        
-        # Use best match
-        for match_type, match_df in matches:
-            if not match_df.empty:
-                xg_value = match_df.iloc[0]['xg']
-                events.at[idx, 'xg'] = xg_value
-                break
-    
+
+        best_match = None
+        best_score = 0
+        best_ss_idx = None
+
+        for ss_idx, ss_shot in ss_shots.iterrows():
+            # Skip if already used
+            if ss_idx in used_ss_indices:
+                continue
+
+            score = 0
+
+            # Team must match exactly (already normalized)
+            if ss_shot['team'] != team:
+                continue
+
+            # Minute match (within 6 minutes to handle injury time)
+            if abs(ss_shot['minute'] - minute) <= 6:
+                score += 10
+                if abs(ss_shot['minute'] - minute) <= 1:
+                    score += 10  # Bonus for very close match
+            else:
+                continue  # Skip if minute is too far
+
+            # Player match (last name)
+            if pd.notna(player) and pd.notna(ss_shot['player']):
+                player_last = str(player).split()[-1].lower()
+                ss_player_last = str(ss_shot['player']).split()[-1].lower()
+                if player_last in ss_player_last or ss_player_last in player_last:
+                    score += 20
+
+            # Result match (for goals)
+            if (shot.get('is_goal', False) or 'Goal' in shot.get('event_type', '')) and ss_shot['result'] == 'Goal':
+                score += 15
+
+            # Keep best match
+            if score > best_score:
+                best_score = score
+                best_match = ss_shot
+                best_ss_idx = ss_idx
+
+        # Assign xG if good enough match found and mark as used
+        if best_match is not None and best_score >= 10:
+            events.at[idx, 'xg'] = best_match['xg']
+            used_ss_indices.add(best_ss_idx)
+
     return events
 
 def _generate_team_hulls(events: pd.DataFrame, home_team: str, away_team: str) -> pd.DataFrame:
