@@ -124,16 +124,17 @@ def find_similar_players_cosine(
     # ========== SELECCIONAR FEATURES ==========
     basic_cols = ['unique_player_id', 'player_name', 'team', 'league', 'season', 'position']
 
-    per90_cols = [col for col in df.columns if col.endswith('_per90')]
-    per90_cols = [col for col in per90_cols
-                  if not any(kw in col for kw in GK_KEYWORDS)]
+    # Usar SOLO normalización per 100 touches
+    normalized_cols = [col for col in df.columns if col.endswith('_per100touches')]
+    normalized_cols = [col for col in normalized_cols
+                       if not any(kw in col for kw in GK_KEYWORDS)]
 
-    feature_cols = [c for c in per90_cols if c not in basic_cols]
+    feature_cols = [c for c in normalized_cols if c not in basic_cols]
 
-    print(f"Features: {len(feature_cols)} (solo _per90, excl. GK)")
+    print(f"Features: {len(feature_cols)} (per 100 touches, excl. GK)")
 
     if len(feature_cols) == 0:
-        raise ValueError("No features válidos (columnas _per90)")
+        raise ValueError("No features válidos con sufijo _per100touches")
 
     # ========== MANEJAR NANs ==========
     df_work = df.copy()
@@ -145,15 +146,23 @@ def find_similar_players_cosine(
 
     fbref_cols = [c for c in feature_cols if c not in understat_cols]
 
-    core_keywords = ['goals_per90', 'assists_per90', 'shots_per90',
-                     'passes_attempted_per90', 'passes_completed_per90',
-                     'Touches_Touches_per90', 'Tackles_Tkl_per90', 'interceptions_per90',
-                     'Carries_Carries_per90', 'non_penalty_expected_goals_per90',
-                     'expected_assists_per90', 'SCA_SCA_per90', 'GCA_GCA_per90']
-    core_metrics = [c for c in fbref_cols if c in core_keywords]
+    # Core keywords base (sin sufijo) - per 100 touches
+    core_base_keywords = ['goals', 'assists', 'shots',
+                          'passes_attempted', 'passes_completed',
+                          'Touches_Touches', 'Tackles_Tkl', 'interceptions',
+                          'Carries_Carries', 'non_penalty_expected_goals',
+                          'expected_assists', 'SCA_SCA', 'GCA_GCA']
+
+    # Excluir métricas defensivas que no son relevantes para atacantes
+    defensive_exclude = ['goals_against', 'Goals_GA', 'Goals_GK']
+
+    core_metrics = [c for c in fbref_cols
+                    if any(c.startswith(kw + '_') or c == kw + '_per100touches' for kw in core_base_keywords)
+                    and not any(excl in c for excl in defensive_exclude)]
 
     secondary_keywords = ['wins', 'draws', 'losses', 'Goals_CK', 'Goals_GA', 'Goals_PKA',
-                         'Crosses_Stp', 'Crosses_Opp', 'Launch', 'errors', 'OG', 'PKcon', 'PKwon']
+                         'Crosses_Stp', 'Crosses_Opp', 'Launch', 'errors', 'OG', 'PKcon', 'PKwon',
+                         'goals_against']
     secondary_metrics = [c for c in fbref_cols if any(kw in c for kw in secondary_keywords)]
 
     for col in secondary_metrics:

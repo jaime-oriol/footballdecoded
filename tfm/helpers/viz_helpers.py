@@ -64,7 +64,8 @@ def plot_top10_ranking(
 
     # Si replacement no está en top-10, añadirlo al final
     add_replacement_row = False
-    if replacement_info and replacement_info.get('rank', 0) > 10:
+    rank = replacement_info.get('rank') if replacement_info else None
+    if replacement_info and rank is not None and rank > 10:
         replacement_id = replacement_info['unique_player_id']
         # Buscar el replacement en el resultado completo
         full_results = result['similar_players']
@@ -171,8 +172,6 @@ def plot_top10_ranking(
         # Si es el replacement añadido (último y fuera del top-10), añadir separador
         if add_replacement_row and idx == len(similar_df) - 1:
             y_separator_replacement = y_start - ((idx - 0.3) * row_height)
-            ax.plot([0.5, 11.5], [y_separator_replacement, y_separator_replacement],
-                    color='grey', linewidth=1.5, linestyle='--', alpha=0.8)
 
         y_pos = y_start - (idx * row_height)
         player_id = row['unique_player_id']
