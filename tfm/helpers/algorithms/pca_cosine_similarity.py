@@ -124,17 +124,26 @@ def find_similar_players_cosine(
     # ========== SELECCIONAR FEATURES ==========
     basic_cols = ['unique_player_id', 'player_name', 'team', 'league', 'season', 'position']
 
-    # Usar SOLO normalización per 100 touches
-    normalized_cols = [col for col in df.columns if col.endswith('_per100touches')]
+    # Auto-detectar normalización: per100touches o per90
+    per100_cols = [col for col in df.columns if col.endswith('_per100touches')]
+    per90_cols = [col for col in df.columns if col.endswith('_per90')]
+
+    if len(per100_cols) > len(per90_cols):
+        normalized_cols = per100_cols
+        norm_type = 'per 100 touches'
+    else:
+        normalized_cols = per90_cols
+        norm_type = 'per 90'
+
     normalized_cols = [col for col in normalized_cols
                        if not any(kw in col for kw in GK_KEYWORDS)]
 
     feature_cols = [c for c in normalized_cols if c not in basic_cols]
 
-    print(f"Features: {len(feature_cols)} (per 100 touches, excl. GK)")
+    print(f"Features: {len(feature_cols)} ({norm_type}, excl. GK)")
 
     if len(feature_cols) == 0:
-        raise ValueError("No features válidos con sufijo _per100touches")
+        raise ValueError(f"No features válidos con sufijo _per100touches o _per90")
 
     # ========== MANEJAR NANs ==========
     df_work = df.copy()
@@ -146,7 +155,7 @@ def find_similar_players_cosine(
 
     fbref_cols = [c for c in feature_cols if c not in understat_cols]
 
-    # Core keywords base (sin sufijo) - per 100 touches
+    # Core keywords base (sin sufijo)
     core_base_keywords = ['goals', 'assists', 'shots',
                           'passes_attempted', 'passes_completed',
                           'Touches_Touches', 'Tackles_Tkl', 'interceptions',
@@ -156,8 +165,11 @@ def find_similar_players_cosine(
     # Excluir métricas defensivas que no son relevantes para atacantes
     defensive_exclude = ['goals_against', 'Goals_GA', 'Goals_GK']
 
+    # Detectar sufijo normalización
+    norm_suffix = '_per100touches' if norm_type == 'per 100 touches' else '_per90'
+
     core_metrics = [c for c in fbref_cols
-                    if any(c.startswith(kw + '_') or c == kw + '_per100touches' for kw in core_base_keywords)
+                    if any(c.startswith(kw + '_') or c == kw + norm_suffix for kw in core_base_keywords)
                     and not any(excl in c for excl in defensive_exclude)]
 
     secondary_keywords = ['wins', 'draws', 'losses', 'Goals_CK', 'Goals_GA', 'Goals_PKA',
