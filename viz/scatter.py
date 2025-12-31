@@ -318,12 +318,12 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
         pass  # No logo si no existe
 
     # Footer
-    fig.text(0.08, 0.025, "Created by Jaime Oriol", fontweight='bold', fontsize=10,
+    fig.text(0.05, 0.0, "Created by Jaime Oriol", fontweight='bold', fontsize=10,
              color="white", fontfamily=FONT_FAMILY)
 
     # Try to add logo
     try:
-        logo_path = "../logo/Logo-blanco.png"
+        logo_path = "../blog/logo/Logo-blanco.png"
         if os.path.exists(logo_path):
             logo = Image.open(logo_path)
             logo_ax = plt.gcf().add_axes([0.685, -0.025, 0.32, 0.15])
