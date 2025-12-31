@@ -67,24 +67,31 @@ def plot_top10_ranking(
     rank = replacement_info.get('rank') if replacement_info else None
     if replacement_info and rank is not None and rank > 10:
         replacement_id = replacement_info['unique_player_id']
-        # Buscar el replacement en el resultado completo
-        full_results = result['similar_players']
-        replacement_row = full_results[full_results['unique_player_id'] == replacement_id]
 
-        if not replacement_row.empty:
-            replacement_row = replacement_row.copy()
-            # Enriquecer EXACTAMENTE igual que similar_df (líneas 47-51)
-            replacement_row = replacement_row.merge(
-                df_data[['unique_player_id', 'age', 'transfermarkt_metrics']],
-                on='unique_player_id',
-                how='left'
-            )
-            # Calcular market_value_m igual que similar_df (línea 63)
-            replacement_row['market_value_m'] = replacement_row.apply(extract_market_value, axis=1)
+        # Construir replacement_row directamente desde replacement_info
+        # (no buscar en similar_players, que solo tiene top-30)
+        replacement_row = pd.DataFrame([{
+            'unique_player_id': replacement_info['unique_player_id'],
+            'player_name': replacement_info['player_name'],
+            'team': replacement_info['team'],
+            'league': replacement_info['league'],
+            'season': replacement_info['season'],
+            'rank': replacement_info['rank'],
+            'cosine_similarity': replacement_info['cosine_similarity']
+        }])
 
-            # Añadir al dataframe
-            similar_df = pd.concat([similar_df, replacement_row], ignore_index=True)
-            add_replacement_row = True
+        # Enriquecer EXACTAMENTE igual que similar_df (líneas 47-51)
+        replacement_row = replacement_row.merge(
+            df_data[['unique_player_id', 'age', 'transfermarkt_metrics']],
+            on='unique_player_id',
+            how='left'
+        )
+        # Calcular market_value_m igual que similar_df (línea 63)
+        replacement_row['market_value_m'] = replacement_row.apply(extract_market_value, axis=1)
+
+        # Añadir al dataframe
+        similar_df = pd.concat([similar_df, replacement_row], ignore_index=True)
+        add_replacement_row = True
 
     # Setup figura
     num_rows = len(similar_df)
