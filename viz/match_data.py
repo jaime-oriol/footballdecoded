@@ -106,7 +106,7 @@ def extract_match_complete(ws_id: int, us_id: Optional[int], league: str, season
     
     # Extract raw data from both sources
     ws_data = _get_whoscored_data(ws_id, league, season)
-    us_data = _get_understat_data_direct(us_id, league, home_team, away_team)
+    us_data = _get_understat_data_direct(us_id, league, season, home_team, away_team)
     
     # Get base events from WhoScored
     events = ws_data.get('events', pd.DataFrame())
@@ -117,14 +117,14 @@ def extract_match_complete(ws_id: int, us_id: Optional[int], league: str, season
     # Each function adds new calculated fields while preserving existing data
     events = _add_carries(events)                    # Ball carrying detection
     events = _add_xthreat(events)                    # Expected threat calculation
-    events = _add_pre_assists(events)               # Pre-assist identification  
+    events = _add_pre_assists(events)               # Pre-assist identification
     events = _add_possession_chains(events)         # Possession sequence tracking
     events = _add_progressive_actions(events)       # Progressive pass/carry detection
     events = _add_box_entries(events)              # Penalty box entry detection
     events = _add_pass_outcomes(events)            # Pass outcome classification
     events = _add_action_classifications(events)    # Offensive/defensive tagging
     events = _add_zone_classification(events)       # 18-zone field classification
-    events = _merge_shot_xg(events, us_data.get('shots', pd.DataFrame()))  # xG integration
+    events = _merge_shot_xg(events, us_data.get('shots', pd.DataFrame()), home_team, away_team)  # xG integration
     
     # Generate spatial analysis data (team positioning)
     hull_data = _generate_team_hulls(events, home_team, away_team)
@@ -171,14 +171,15 @@ def _get_whoscored_data(match_id: int, league: str, season: str) -> Dict:
         print(f"WhoScored error: {e}")
         return {}
 
-def _get_understat_data_direct(match_id: Optional[int], league: str, home_team: str, away_team: str) -> Dict:
+def _get_understat_data_direct(match_id: Optional[int], league: str, season: str, home_team: str, away_team: str) -> Dict:
     """
-    Universal Understat xG extractor bypassing broken schedule.
+    Universal Understat xG extractor using Selenium for dynamic content.
     Works for ALL leagues and ALL teams in current season.
 
     Args:
         match_id: Understat match ID (or None if not available)
         league: League identifier (ESP-La Liga, ENG-Premier League, etc.)
+        season: Season format 'YY-YY' (e.g., '25-26')
         home_team: Home team name for validation
         away_team: Away_team name for validation
 
@@ -189,31 +190,37 @@ def _get_understat_data_direct(match_id: Optional[int], league: str, home_team: 
         return {}
 
     try:
-        # Get league mapping for proper initialization
-        from scrappers._config import LEAGUE_DICT
-        understat_league = LEAGUE_DICT.get(league, {}).get('Understat', league)
-        
-        understat = Understat(leagues=[league], seasons=['25-26'])
+        import json
+        import seleniumbase as sb
+
         match_url = f'https://understat.com/match/{match_id}'
-        
-        data = understat._read_match(match_url, match_id)
-        if not data or 'shotsData' not in data:
+
+        # Use Selenium to get dynamically loaded data
+        with sb.Driver(uc=True, headless=True) as driver:
+            driver.get(match_url)
+            driver.sleep(2)  # Wait for JavaScript to load
+
+            # Extract JavaScript variables
+            try:
+                shots_data = driver.execute_script("return shotsData")
+                match_info = driver.execute_script("return match_info")
+            except:
+                print(f"Warning: Could not extract data from Understat match {match_id}")
+                return {}
+
+        if not shots_data:
             return {}
-        
-        # Validate match teams
-        match_info = data.get('match_info', {})
-        understat_home = match_info.get('team_h', '')
-        understat_away = match_info.get('team_a', '')
-        
+
         # Process all shots into standardized format
         shots = []
-        for team_key, team_shots in data['shotsData'].items():
+        for team_key, team_shots in shots_data.items():
             for shot in team_shots:
-                team_name = shot['h_team'] if shot['h_a'] == 'h' else shot['a_team']
-                
+                # Mark if shot is from home or away (h/a)
+                is_home = shot['h_a'] == 'h'
+
                 shots.append({
                     'minute': float(shot['minute']),
-                    'team': team_name,
+                    'is_home': is_home,  # Use home/away flag instead of team name
                     'player': shot['player'],
                     'xg': float(shot['xG']),
                     'x': float(shot['X']),
@@ -224,18 +231,18 @@ def _get_understat_data_direct(match_id: Optional[int], league: str, home_team: 
                     'player_id': shot.get('player_id', 0),
                     'match_id': match_id
                 })
-        
+
         return {
             'shots': pd.DataFrame(shots),
             'match_info': {
-                'home_team': understat_home,
-                'away_team': understat_away,
+                'home_team': match_info.get('team_h', ''),
+                'away_team': match_info.get('team_a', ''),
                 'total_shots': len(shots)
             }
         }
-        
+
     except Exception as e:
-        print(f"Warning: Understat direct access failed for match {match_id}: {e}")
+        print(f"Warning: Understat Selenium extraction failed for match {match_id}: {e}")
         return {}
 
 # ====================================================================
@@ -653,97 +660,76 @@ def _add_action_classifications(events: pd.DataFrame) -> pd.DataFrame:
     
     return events
 
-def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame) -> pd.DataFrame:
-    """Enhanced xG merging with flexible team name matching"""
+def _merge_shot_xg(events: pd.DataFrame, us_shots: pd.DataFrame, home_team: str, away_team: str) -> pd.DataFrame:
+    """Enhanced xG merging using home/away matching"""
     if us_shots.empty:
         events['xg'] = 0.0
         return events
-    
+
     events['xg'] = 0.0
     shot_events = events[events['event_type'].str.contains('Shot|Goal', case=False, na=False)]
-    
-    # Team name mapping for better matching
-    def _match_team_flexible(whoscored_team: str, understat_team: str) -> bool:
-        """Flexible team matching to handle name variations"""
-        ws_team = whoscored_team.lower().strip()
-        us_team = understat_team.lower().strip()
-        
-        # Exact match
-        if ws_team == us_team:
-            return True
-            
-        # Handle Atletico/Atletico Madrid variants
-        if ('atletico' in ws_team and 'atletico' in us_team) or \
-           ('atlético' in ws_team and 'atlético' in us_team):
-            return True
-            
-        # Handle other common variants
-        team_mappings = {
-            'real madrid': ['madrid', 'real'],
-            'barcelona': ['barça', 'fc barcelona', 'barca'],
-            'athletic bilbao': ['athletic', 'bilbao'],
-            'real sociedad': ['sociedad'],
-            'valencia': ['valencia cf'],
-            'sevilla': ['sevilla fc']
-        }
-        
-        # Check both directions
-        for full_name, variants in team_mappings.items():
-            if (ws_team in [full_name] + variants and us_team in [full_name] + variants):
-                return True
-        
-        # Check if one team name contains the other (last resort)
-        if ws_team in us_team or us_team in ws_team:
-            return True
-            
-        return False
-    
+
+    # Infer actual home/away team names from WhoScored events
+    # (WhoScored uses different team codes like "RBL" vs "RB Leipzig")
+    unique_teams = events['team'].unique()
+    if len(unique_teams) >= 2:
+        # Use the two most common teams in events as home/away
+        team_counts = events['team'].value_counts()
+        ws_home_team = team_counts.index[0]  # Most common is usually home
+        ws_away_team = team_counts.index[1]
+    else:
+        ws_home_team = home_team
+        ws_away_team = away_team
+
     for idx, shot in shot_events.iterrows():
         minute = shot['minute']
         team = shot['team']
         player = shot['player']
-        
-        # Multi-level matching strategy with flexible team matching
+
+        # Determine if WhoScored shot is from home or away team
+        ws_is_home = team == ws_home_team
+
+        # Multi-level matching strategy using home/away
         matches = []
-        
-        # 1. Exact match (minute + flexible team + player)
+
+        # 1. Exact match (minute + home/away + player last name)
         if pd.notna(player):
             player_last_name = str(player).split()[-1] if player else ""
             for _, us_shot in us_shots.iterrows():
                 if (abs(us_shot['minute'] - minute) <= 1 and
-                    _match_team_flexible(team, us_shot['team']) and
+                    us_shot['is_home'] == ws_is_home and
                     player_last_name.lower() in us_shot['player'].lower()):
                     matches.append(('exact', pd.DataFrame([us_shot])))
                     break
-        
-        # 2. Time + flexible team match
+
+        # 2. Time + home/away match
         time_team_matches = []
         for _, us_shot in us_shots.iterrows():
             if (abs(us_shot['minute'] - minute) <= 2 and
-                _match_team_flexible(team, us_shot['team'])):
+                us_shot['is_home'] == ws_is_home):
                 time_team_matches.append(us_shot)
-        
+
         if time_team_matches:
             matches.append(('time_team', pd.DataFrame(time_team_matches)))
-        
-        # 3. Flexible team + result match (for goals)
+
+        # 3. Home/away + result match (for goals)
         if shot.get('is_goal', False) or 'Goal' in shot.get('event_type', ''):
             goal_matches = []
             for _, us_shot in us_shots.iterrows():
-                if (_match_team_flexible(team, us_shot['team']) and
+                if (us_shot['is_home'] == ws_is_home and
                     us_shot['result'] == 'Goal'):
                     goal_matches.append(us_shot)
-            
+
             if goal_matches:
                 matches.append(('goal', pd.DataFrame(goal_matches)))
-        
+
         # Use best match
         for match_type, match_df in matches:
             if not match_df.empty:
                 xg_value = match_df.iloc[0]['xg']
                 events.at[idx, 'xg'] = xg_value
                 break
-    
+
     return events
 
 def _generate_team_hulls(events: pd.DataFrame, home_team: str, away_team: str) -> pd.DataFrame:

@@ -6,6 +6,8 @@ Ve paso a paso, uno a uno. Despacio es el camino más rápido. Escribe siempre e
 
 Antes de realizar cualquier tarea, revisa cuidadosamente el archivo CLAUDE.md.
 
+source ~/anaconda3/bin/activate footballdecoded && python3
+
 ### Development Principles
 
 - **KISS**: Choose straightforward solutions over complex ones
