@@ -1,0 +1,24 @@
+shot_num,match_date,match,minute,type,outcome,is_goal,body_part,xg
+1,2025-08-30,RB Leipzig vs FC Heidenheim,89,MissedShots,Successful,False,Foot,0.4786159098148346
+2,2025-09-13,Mainz 05 vs RB Leipzig,73,SavedShot,Successful,False,Foot,0.0830726101994514
+3,2025-09-20,RB Leipzig vs FC Koln,25,SavedShot,Successful,False,Foot,0.05
+4,2025-09-20,RB Leipzig vs FC Koln,58,SavedShot,Successful,False,Foot,0.5757229924201965
+5,2025-09-27,Wolfsburg vs RB Leipzig,10,SavedShot,Successful,False,Foot,0.0149147631600499
+6,2025-09-27,Wolfsburg vs RB Leipzig,70,SavedShot,Successful,False,Foot,0.0377443768084049
+7,2025-10-25,Augsburg vs RB Leipzig,9,Goal,Successful,True,Foot,0.33
+8,2025-11-01,RB Leipzig vs VfB Stuttgart,52,Goal,Successful,True,Foot,0.09
+9,2025-11-01,RB Leipzig vs VfB Stuttgart,93,SavedShot,Successful,False,Foot,0.12
+10,2025-11-08,Hoffenheim vs RB Leipzig,8,Goal,Successful,True,Foot,0.33
+11,2025-11-08,Hoffenheim vs RB Leipzig,47,MissedShots,Successful,False,Foot,0.02
+12,2025-11-08,Hoffenheim vs RB Leipzig,63,SavedShot,Successful,False,Foot,0.04
+13,2025-11-23,RB Leipzig vs Werder Bremen,1,SavedShot,Successful,False,Foot,0.0288308598101139
+14,2025-11-23,RB Leipzig vs Werder Bremen,15,MissedShots,Successful,False,Foot,0.044382594525814
+15,2025-11-23,RB Leipzig vs Werder Bremen,47,SavedShot,Successful,False,Foot,0.0466578789055347
+16,2025-11-23,RB Leipzig vs Werder Bremen,86,SavedShot,Successful,False,Foot,0.2723119258880615
+17,2025-11-28,Borussia M.Gladbach vs RB Leipzig,41,MissedShots,Successful,False,Foot,0.02
+18,2025-11-28,Borussia M.Gladbach vs RB Leipzig,46,SavedShot,Successful,False,Foot,0.12
+19,2025-12-06,RB Leipzig vs Eintracht Frankfurt,46,Goal,Successful,True,Foot,0.0870672240853309
+20,2025-12-06,RB Leipzig vs Eintracht Frankfurt,54,Goal,Successful,True,Foot,0.0841634199023246
+21,2025-12-06,RB Leipzig vs Eintracht Frankfurt,64,Goal,Successful,True,Foot,0.5373426675796509
+22,2025-12-12,Union Berlin vs RB Leipzig,9,MissedShots,Successful,False,Foot,0.03   
+23,2025-12-12,Union Berlin vs RB Leipzig,16,SavedShot,Successful,False,Foot,0.07
