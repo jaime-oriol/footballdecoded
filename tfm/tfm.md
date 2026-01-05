@@ -236,7 +236,6 @@ El Frankfurt opera con menor frecuencia transaccional que Villarreal pero con m�
 **Evan Ndicka** (agente libre → Roma, valor mercado ~30M€)
 
 → 23/24: **Willian Pacho** (fichado 13,65M€ **LIGA BELGA** → vendido PSG 40M€) _Datos a analizar: 22/23_
-https://fbref.com/en/comps/37/history/Belgian-Pro-League-Seasons
 
 → 24/25: **Arthur Theate** (fichado 13M€) _Datos a analizar: 23/24_
 
