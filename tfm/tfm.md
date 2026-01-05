@@ -227,7 +227,7 @@ El Frankfurt opera con menor frecuencia transaccional que Villarreal pero con m�
 
 → 24/25: **Elye Wahi** (fichado 26M€, invierno 24/25) _Datos a analizar: 23/24_
 
-→ 24/25: **Hugo Ekitike** (fichado 31,5M€, verano 24/25 → vendido Liverpool 90M€) _Datos a analizar: 23/24 (cesión Frankfurt)_
+→ 24/25: **Hugo Ekitike** (fichado 31,5M€, verano 24/25 → vendido Liverpool 90M€)
 
 → 25/26: **Jonathan Burkardt** (fichado Mainz 21M€) _Datos a analizar: 24/25_
 
