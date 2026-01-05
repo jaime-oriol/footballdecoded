@@ -165,12 +165,17 @@ def find_similar_players_cosine(
     # Excluir métricas defensivas que no son relevantes para atacantes
     defensive_exclude = ['goals_against', 'Goals_GA', 'Goals_GK']
 
+    # Excluir métricas derivadas/ratio que no deben ser CORE (causan NaN en jugadores con 0 goles/eventos)
+    ratio_exclude = ['per_shot', 'per_match', 'per_tackle', 'per_touch', 'percentage',
+                     'pct', 'ratio', 'avg', 'average', '_/_']
+
     # Detectar sufijo normalización
     norm_suffix = '_per100touches' if norm_type == 'per 100 touches' else '_per90'
 
     core_metrics = [c for c in fbref_cols
                     if any(c.startswith(kw + '_') or c == kw + norm_suffix for kw in core_base_keywords)
-                    and not any(excl in c for excl in defensive_exclude)]
+                    and not any(excl in c for excl in defensive_exclude)
+                    and not any(excl in c.lower() for excl in ratio_exclude)]
 
     secondary_keywords = ['wins', 'draws', 'losses', 'Goals_CK', 'Goals_GA', 'Goals_PKA',
                          'Crosses_Stp', 'Crosses_Opp', 'Launch', 'errors', 'OG', 'PKcon', 'PKwon',
