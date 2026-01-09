@@ -41,7 +41,7 @@ def extract_shot_events(
         ... )
     """
     try:
-        scraper = SofaScore(no_cache=True)
+        scraper = SofaScore()
         shots_df = scraper.read_shot_events(
             event_id=event_id,
             home_team=home_team,

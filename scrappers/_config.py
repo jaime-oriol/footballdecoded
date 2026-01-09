@@ -12,7 +12,7 @@ from rich.logging import RichHandler
 # Configuration
 NOCACHE = os.environ.get("SOCCERDATA_NOCACHE", "False").lower() in ("true", "1", "t")
 NOSTORE = os.environ.get("SOCCERDATA_NOSTORE", "False").lower() in ("true", "1", "t")
-MAXAGE = None
+MAXAGE = 86400  # 1 día (24 horas) - datos frescos sin sacrificar velocidad
 if os.environ.get("SOCCERDATA_MAXAGE") is not None:
     MAXAGE = int(os.environ.get("SOCCERDATA_MAXAGE", 0))
 LOGLEVEL = os.environ.get("SOCCERDATA_LOGLEVEL", "INFO").upper()

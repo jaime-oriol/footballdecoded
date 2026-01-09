@@ -248,7 +248,7 @@ def extract_data(
             return cached_data
     
     try:
-        understat = Understat(leagues=[league], seasons=[season], no_cache=True)
+        understat = Understat(leagues=[league], seasons=[season])
         
         if entity_type == 'player':
             stats = understat.read_player_season_stats()
@@ -405,7 +405,7 @@ def extract_shot_events(
         if verbose:
             print(f"   Extracting shot data for match {match_id}...")
             
-        understat = Understat(leagues=[league], seasons=[season], no_cache=True)
+        understat = Understat(leagues=[league], seasons=[season])
         shot_events = understat.read_shot_events(match_id=match_id)
         
         if shot_events is None or shot_events.empty:

@@ -254,7 +254,7 @@ def extract_match_events(
         print(f"Extracting spatial data from match {match_id}")
     
     try:
-        whoscored = WhoScored(leagues=[league], seasons=[season], no_cache=True)
+        whoscored = WhoScored(leagues=[league], seasons=[season])
         
         if verbose:
             print("Reading event stream...")
@@ -499,7 +499,7 @@ def extract_league_schedule(
         print(f"Extracting schedule for {league} {season}")
     
     try:
-        whoscored = WhoScored(leagues=[league], seasons=[season], no_cache=True)
+        whoscored = WhoScored(leagues=[league], seasons=[season])
         schedule = whoscored.read_schedule()
         
         if verbose and not schedule.empty:
@@ -527,7 +527,7 @@ def extract_missing_players(
         print(f"Extracting missing players for match {match_id}")
     
     try:
-        whoscored = WhoScored(leagues=[league], seasons=[season], no_cache=True)
+        whoscored = WhoScored(leagues=[league], seasons=[season])
         missing_players = whoscored.read_missing_players(match_id=match_id)
         
         if verbose and not missing_players.empty:
