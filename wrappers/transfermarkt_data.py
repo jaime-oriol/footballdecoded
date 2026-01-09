@@ -55,7 +55,7 @@ def transfermarkt_get_player(
         logger.debug(f"Using cached player_id for {player_name}: {player_id}")
     else:
         try:
-            tm = Transfermarkt()
+            tm = Transfermarkt(no_cache=True)
             player_id = tm.search_player(player_name, birth_year)
 
             if not player_id:
@@ -70,7 +70,7 @@ def transfermarkt_get_player(
             return None
 
     try:
-        tm = Transfermarkt()
+        tm = Transfermarkt(no_cache=True)
 
         # Determine if we should use current or historical market value
         # For season 25-26 and later, use current value (season=None)

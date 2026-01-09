@@ -284,7 +284,7 @@ def extract_data(
             return cached_data
     
     try:
-        fbref = FBref(leagues=[league], seasons=[season])
+        fbref = FBref(leagues=[league], seasons=[season], no_cache=True)
         
         if entity_type == 'player':
             if match_id:
@@ -444,7 +444,7 @@ def extract_league_players(
 ) -> pd.DataFrame:
     """Extraer todos los jugadores de una liga con filtrado opcional."""
     try:
-        fbref = FBref(leagues=[league], seasons=[season])
+        fbref = FBref(leagues=[league], seasons=[season], no_cache=True)
         player_stats = fbref.read_player_season_stats(stat_type='standard')
         
         if player_stats is None or player_stats.empty:
@@ -479,7 +479,7 @@ def extract_match_events(
 ) -> Union[pd.DataFrame, Dict]:
     """Extraer eventos de partido (goles, tarjetas, sustituciones, disparos)."""
     try:
-        fbref = FBref(leagues=[league], seasons=[season])
+        fbref = FBref(leagues=[league], seasons=[season], no_cache=True)
         result = {}
         
         if event_type in ['all', 'events']:
@@ -512,7 +512,7 @@ def extract_league_schedule(
 ) -> pd.DataFrame:
     """Extraer calendario completo de liga con resultados."""
     try:
-        fbref = FBref(leagues=[league], seasons=[season])
+        fbref = FBref(leagues=[league], seasons=[season], no_cache=True)
         schedule = fbref.read_schedule()
         
         return schedule
