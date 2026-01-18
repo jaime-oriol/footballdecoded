@@ -259,7 +259,7 @@ Lille presenta híbrido entre cantera propia (Yoro 62M€, Chevalier 40M€) y d
 
 **Gabriel Gudmundsson** (fichado 6M€ → vendido Fiorentina 11,6M€)
 
-→ 25/26: **Romain Perraud** (fichado 3M€) + **Calvin Verdonk** (fichado 3M€ **HOLANDA**) _Datos a analizar: 24/25_
+→ 25/26: **Romain Perraud** (fichado 3M€)  _Datos a analizar: 24/25_
 
 #### 3.3.3. Mediocampista Defensivo
 
@@ -269,8 +269,7 @@ Lille presenta híbrido entre cantera propia (Yoro 62M€, Chevalier 40M€) y d
 
 → 22/23: **Carlos Baleba** (filial → vendido 27M€) _NO HAY DATA POR SER CANTERA_
 
-→ 23/24: **Nabil Bentaleb** + **Ignacio Miramón (ARGENTINA)** (fichajes fallidos) _Datos a analizar: 22/23_
-https://fbref.com/en/comps/21/history/Liga-Profesional-Argentina-Seasons
+→ 23/24: **Nabil Bentaleb** (fichajes fallidos) _Datos a analizar: 22/23_
 
 #### 3.3.4. Delantero Centro
 
