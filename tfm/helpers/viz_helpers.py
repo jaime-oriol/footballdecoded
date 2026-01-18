@@ -43,12 +43,28 @@ def plot_top10_ranking(
     target_info = result['target_info']
     replacement_info = result.get('replacement_info')
 
-    # Enriquecer con age y market_value
-    similar_df = similar_df.merge(
-        df_data[['unique_player_id', 'age', 'transfermarkt_metrics']],
-        on='unique_player_id',
-        how='left'
-    )
+    # Enriquecer con age y market_value (solo si no vienen pre-calculados)
+    has_age = 'age' in similar_df.columns and similar_df['age'].notna().any()
+    has_market = 'market_value_m' in similar_df.columns and similar_df['market_value_m'].notna().any()
+
+    if not has_age or not has_market:
+        merge_cols = ['unique_player_id']
+        if not has_age:
+            merge_cols.append('age')
+        if not has_market:
+            merge_cols.append('transfermarkt_metrics')
+
+        similar_df = similar_df.merge(
+            df_data[merge_cols],
+            on='unique_player_id',
+            how='left',
+            suffixes=('', '_db')
+        )
+
+        # Si age vino del merge, usarlo
+        if 'age_db' in similar_df.columns:
+            similar_df['age'] = similar_df['age'].fillna(similar_df['age_db'])
+            similar_df = similar_df.drop(columns=['age_db'])
 
     def extract_market_value(row):
         if pd.notna(row.get('transfermarkt_metrics')) and isinstance(row['transfermarkt_metrics'], dict):
@@ -60,7 +76,9 @@ def plot_top10_ranking(
                     return None
         return None
 
-    similar_df['market_value_m'] = similar_df.apply(extract_market_value, axis=1)
+    # Solo calcular market_value_m si no viene pre-calculado
+    if not has_market:
+        similar_df['market_value_m'] = similar_df.apply(extract_market_value, axis=1)
 
     # Si replacement no está en top-10, añadirlo al final
     add_replacement_row = False
@@ -69,7 +87,6 @@ def plot_top10_ranking(
         replacement_id = replacement_info['unique_player_id']
 
         # Construir replacement_row directamente desde replacement_info
-        # (no buscar en similar_players, que solo tiene top-30)
         replacement_row = pd.DataFrame([{
             'unique_player_id': replacement_info['unique_player_id'],
             'player_name': replacement_info['player_name'],
@@ -77,17 +94,33 @@ def plot_top10_ranking(
             'league': replacement_info['league'],
             'season': replacement_info['season'],
             'rank': replacement_info['rank'],
-            'cosine_similarity': replacement_info['cosine_similarity']
+            'cosine_similarity': replacement_info['cosine_similarity'],
+            'age': replacement_info.get('age'),
+            'market_value_m': replacement_info.get('market_value_m')
         }])
 
-        # Enriquecer EXACTAMENTE igual que similar_df (líneas 47-51)
-        replacement_row = replacement_row.merge(
-            df_data[['unique_player_id', 'age', 'transfermarkt_metrics']],
-            on='unique_player_id',
-            how='left'
-        )
-        # Calcular market_value_m igual que similar_df (línea 63)
-        replacement_row['market_value_m'] = replacement_row.apply(extract_market_value, axis=1)
+        # Solo enriquecer desde BD si faltan age o market_value_m
+        needs_age = pd.isna(replacement_row['age'].iloc[0])
+        needs_market = pd.isna(replacement_row['market_value_m'].iloc[0])
+
+        if needs_age or needs_market:
+            merge_cols = ['unique_player_id']
+            if needs_age:
+                merge_cols.append('age')
+            if needs_market:
+                merge_cols.append('transfermarkt_metrics')
+
+            replacement_row = replacement_row.merge(
+                df_data[merge_cols],
+                on='unique_player_id',
+                how='left',
+                suffixes=('', '_db')
+            )
+            if 'age_db' in replacement_row.columns:
+                replacement_row['age'] = replacement_row['age'].fillna(replacement_row['age_db'])
+                replacement_row = replacement_row.drop(columns=['age_db'])
+            if needs_market:
+                replacement_row['market_value_m'] = replacement_row.apply(extract_market_value, axis=1)
 
         # Añadir al dataframe
         similar_df = pd.concat([similar_df, replacement_row], ignore_index=True)
