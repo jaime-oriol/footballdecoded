@@ -35,10 +35,9 @@ Sport Data Campus
       - 3.2.2. [Defensa Central](#322-defensa-central)............................................................................................................. 7
    - 3.3. [LOSC Lille: Desarrollo de Canteranos e Importación Selectiva](#33-losc-lille-desarrollo-de-canteranos-e-importación-selectiva)........................................ 8
       - 3.3.1. [Defensa Central](#331-defensa-central) ............................................................................................................. 8
-      - 3.3.2. [Lateral Izquierdo](#332-lateral-izquierdo)........................................................................................................... 8
-      - 3.3.3. [Mediocampista Defensivo](#333-mediocampista-defensivo) ............................................................................................ 8
-      - 3.3.4. [Delantero Centro](#334-delantero-centro) .......................................................................................................... 8
-      - 3.3.5. [Producción de Cantera de Alto Valor](#335-producción-de-cantera-de-alto-valor)........................................................................... 8
+      - 3.3.2. [Mediocampista Defensivo](#332-mediocampista-defensivo) ............................................................................................ 8
+      - 3.3.3. [Delantero Centro](#333-delantero-centro) .......................................................................................................... 8
+      - 3.3.4. [Producción de Cantera de Alto Valor](#334-producción-de-cantera-de-alto-valor)........................................................................... 8
    - 3.4. [Evolución de Valor de Plantilla y Rendimiento Competitivo](#34-evolución-de-valor-de-plantilla-y-rendimiento-competitivo)........................................... 9
       - 3.4.1. [Villarreal CF](#341-villarreal-cf)................................................................................................................... 9
       - 3.4.2. [LOSC Lille](#342-losc-lille)...................................................................................................................... 9
@@ -507,45 +506,50 @@ Lille presenta un modelo híbrido entre cantera propia (Yoro 62M€, Chevalier 4
 
 #### 3.3.1. Defensa Central
 
-**Gabriel Magalhães** (fichado 3M€ → vendido Arsenal 26M€)
+| Jugador | Fecha | Operación | Precio fichaje | Precio venta | Plusvalía |
+|---------|-------|-----------|----------------|--------------|-----------|
+| Gabriel Magalhães | 31/01/2017 | Avaí FC → Lille → Arsenal | 3 M€ | 26 M€ | **+23 M€** |
+| **↳** Sven Botman | 31/07/2020 | Ajax → Lille → Newcastle | 8 M€ | 37 M€ | **+29 M€** |
+| **↳** Bafodé Diakité | 05/08/2022 | Toulouse → Lille → Bournemouth | 3 M€ | 35 M€ | **+32 M€** |
+| **↳** Nathan Ngoy | 24/07/2025 | Standard Lieja → Lille | 3,5 M€ | — | — |
 
-→ 20/21: **Sven Botman** (fichado 8M€ desde Eredivisie → vendido Newcastle 37M€)
+**Contexto operativo:** Cadena de centrales con patrón de inversión consistente (3-8M€) y multiplicadores de venta superiores a 4x. Gabriel, Botman y Diakité demuestran capacidad de desarrollo desde ligas menores (Brasil, Eredivisie, Ligue 2) hasta transferencias a Premier League. Ngoy continúa el modelo: adquisición temprana desde liga belga a coste controlado.
 
-→ 22/23: **Bafodé Diakité** (fichado 3M€ → vendido 35M€)
+**Cadena analizada:** Gabriel → Botman → Diakité → Ngoy
 
-→ 25/26: **Nathan Ngoy** (fichado 3,5M€ desde Liga Belga)
+#### 3.3.2. Mediocampista Defensivo
 
-#### 3.3.2. Lateral Izquierdo
+| Jugador | Fecha | Operación | Precio fichaje | Precio venta | Plusvalía |
+|---------|-------|-----------|----------------|--------------|-----------|
+| Boubakary Soumaré | 12/07/2017 | PSG B (libre) → Lille → Leicester | Gratis | 20 M€ | **+20 M€** |
+| **↳** Amadou Onana | 05/08/2021 | Hamburgo → Lille → Everton | 13,5 M€ | 40 M€ | **+26,5 M€** |
+| **↳** Carlos Baleba | Cantera | Lille → Brighton | — | 27 M€ | **+27 M€** |
+| **↳** Nabil Bentaleb | 28/08/2023 | Angers → Lille | 4,5 M€ | — | — |
 
-**Gabriel Gudmundsson** (fichado 6M€ → vendido Fiorentina 11,6M€)
+**Contexto operativo:** Posición con alternancia entre productos de cantera (Soumaré, Baleba) y fichajes externos (Onana, Bentaleb). Carlos Baleba no se incluye en el análisis PCA por ausencia de datos previos al debut profesional en Lille. Bentaleb representa perfil veterano de consolidación (32 años, experiencia Bundesliga/Ligue 1) más que proyección de plusvalía.
 
-→ 25/26: **Romain Perraud** (fichado 3M€ desde Betis)
+**Cadena analizada:** Soumaré → Onana → Bentaleb
 
-#### 3.3.3. Mediocampista Defensivo
+#### 3.3.3. Delantero Centro
 
-**Boubakary Soumaré** (cantera → vendido Leicester 20M€)
+| Jugador | Fecha | Operación | Precio fichaje | Precio venta | Plusvalía |
+|---------|-------|-----------|----------------|--------------|-----------|
+| Victor Osimhen | 01/08/2019 | Charleroi → Lille → Napoli | 22,5 M€ | 79 M€ | **+56,5 M€** |
+| **↳** Jonathan David | 11/08/2020 | KAA Gante → Lille → Juventus (libre) | 27 M€ | Gratis | **-27 M€** |
+| **↳** Hamza Igamane | 29/08/2025 | Rangers FC → Lille | 11,5 M€ | — | — |
 
-→ 21/22: **Amadou Onana** (fichado 13,5M€ → vendido Everton 40M€)
+**Contexto operativo:** Caso de contraste entre gestión óptima (Osimhen: +56,5M€) y deficiente (David: -27M€). Osimhen representa el fichaje más rentable del período estudiado en términos absolutos. David, pese a rendimiento deportivo sostenido (84 goles en 5 temporadas), sale como agente libre a la Juventus en 2025, error de planificación contractual que anula la plusvalía potencial (valor de mercado ~50M€ en su pico). Igamane, adquirido de liga escocesa, inicia nuevo ciclo.
 
-→ 22/23: **Carlos Baleba** (filial → vendido Brighton 27M€)
+**Cadena analizada:** Osimhen → David → Igamane
 
-→ 23/24: **Nabil Bentaleb** (agente libre)
+#### 3.3.4. Producción de Cantera de Alto Valor
 
-#### 3.3.4. Delantero Centro
+| Jugador | Posición | Club destino | Precio venta |
+|---------|----------|--------------|--------------|
+| Leny Yoro | Defensa Central | Manchester United | **62 M€** |
+| Lucas Chevalier | Portero | PSG | **40 M€** |
 
-**Victor Osimhen** (fichado 22,5M€ → vendido Napoli 79M€)
-
-→ 20/21: **Jonathan David** (fichado 27M€ desde Liga Belga → agente libre 2025)
-
-→ 25/26: **Hamza Igamane** (fichado 11,5M€ desde Escocia)
-
-#### 3.3.5. Producción de Cantera de Alto Valor
-
-**Leny Yoro** (vendido Manchester United 62M€)
-
-**Lucas Chevalier** (vendido PSG 40M€)
-
-Estos casos representan ROI infinito (coste de formación amortizado). Lille mantiene un pipeline de canteranos con proyección de selección nacional sub-21, fundamental para la sostenibilidad del modelo a largo plazo.
+Estos casos representan ROI infinito (coste de formación amortizado en estructura de cantera). Lille mantiene pipeline de canteranos con proyección de selección nacional sub-21, fundamental para sostenibilidad del modelo a largo plazo. La venta de Yoro (18 años) y Chevalier (23 años) demuestra capacidad de monetizar talento propio antes de alcanzar madurez contractual crítica.
 
 ### 3.4. Evolución de Valor de Plantilla y Rendimiento Competitivo
 
@@ -637,9 +641,8 @@ Esta evidencia empírica refuta la narrativa de que la generación de plusvalía
 ### 4.4. LOSC Lille
 
 #### 4.4.1. Defensa Central
-#### 4.4.2. Lateral Izquierdo
-#### 4.4.3. Mediocampista Defensivo
-#### 4.4.4. Delantero Centro
+#### 4.4.2. Mediocampista Defensivo
+#### 4.4.3. Delantero Centro
 
 ### 4.5. Síntesis Comparativa
 
@@ -1224,7 +1227,6 @@ Las métricas que aparecen en porcentaje (Pass Accuracy %, Tackle Success %, Aer
 ### C.3. LOSC Lille
 
 #### C.3.1. Defensa Central
-#### C.3.2. Lateral Izquierdo
-#### C.3.3. Mediocampista Defensivo
-#### C.3.4. Delantero Centro
+#### C.3.2. Mediocampista Defensivo
+#### C.3.3. Delantero Centro
 
