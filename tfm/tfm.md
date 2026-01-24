@@ -628,21 +628,259 @@ Esta evidencia empírica refuta la narrativa de que la generación de plusvalía
 ### 4.2. Villarreal CF
 
 #### 4.2.1. Delantero Centro
+
+**Nicolas Jackson → Alexander Sørloth (22/23)**
+
+Alexander Sørloth aparece en posición #4 del pool filtrado (≤15M€, ≤26 años) con similitud de 0.137, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un finalizador puro con perfil convergente pese al score moderado.
+
+El radar revela similitud estructural clara en la dimensión fundamental: ambos delanteros comparten el perfil de nueves de área con métricas casi idénticas en xG (1.5 vs 1.6), volumen de disparo (7.8 ambos) y calidad de ocasiones (npxG/shot P95+). La convergencia es evidente: dos finalizadores puros con baja contribución creativa que viven de rematar ocasiones en zona de peligro.
+
+La divergencia está en Goals-xG, y es lo que explica que la similitud sea moderada en lugar de alta. Jackson acumuló +4.2 (P96) en 22/23, un sobrerendimiento brutal que no es sostenible a largo plazo, mientras Sørloth marcó -0.7 (P35), claramente por debajo de lo esperado esa temporada en la Real Sociedad. El Villarreal apostó por que la divergencia era temporal, no estructural, y acertó: Sørloth produjo 0.83 xG/90 en 23/24, marcó 22 goles en liga y fue vendido al Atlético por 32M€. La operación generó +22M€ de plusvalía (10M€ fichaje → 32M€ venta).
+
+**Alexander Sørloth → Thierno Barry (23/24)**
+
+Thierno Barry aparece en posición #10 del pool filtrado (≤15M€, ≤24 años) con similitud de apenas 0.035, clasificándose como NO VALIDADO. El algoritmo detecta divergencia significativa, pero el resultado está fuertemente contaminado por un problema de calidad de datos.
+
+El radar sugiere perfiles radicalmente diferentes: Sørloth domina en múltiples dimensiones ofensivas mientras Barry presenta métricas más limitadas. Sin embargo, el sesgo crítico es que Barry jugaba en la liga suiza, donde FBref ofrece cobertura estadística significativamente inferior a las Big 5. Crucialmente, la Swiss Super League no dispone de datos de toques, lo que obliga al algoritmo a normalizar las métricas por 90 minutos en lugar de per 100 touches. Esto penaliza artificialmente la similitud calculada.
+
+El resultado NO VALIDADO refleja más las limitaciones de los datos disponibles que una evaluación robusta del perfil real de Barry. En contexto profesional, el Villarreal habría empleado proveedores premium (Wyscout, InStat) con cobertura completa de la Swiss League para validar el fichaje antes de invertir 20M€. La operación generó +10M€ de plusvalía (20M€ fichaje → 30M€ venta a Everton).
+
+**Thierno Barry → Tani Oluwaseyi (24/25)**
+
+Tani Oluwaseyi aparece en posición #3 del pool filtrado (≤20M€, ≤24 años) con similitud de 0.274, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un finalizador con perfil convergente desde la MLS.
+
+El radar revela convergencia fundamental entre ambos delanteros: finalizadores de área con métricas de generación de ocasiones en percentiles superiores (xG P95 vs P88, touches in box P96 vs P89). Ambos operan como nueves puros con baja contribución creativa (SCA P15 vs P27) y eficiencia de ocasiones equivalente (npxG per shot 0.17 vs 0.16).
+
+La divergencia está en Goals-xG, que explica la similitud moderada. Barry acumuló -1.5 (P19) en 24/25 con el Villarreal, un subrendimiento severo que contrasta con el +0.40 (P60) de Oluwaseyi en la MLS. El fichaje responde a lógica de corrección estadística: reemplazar un delantero que generaba alto xG pero convertía mal con uno que mantiene perfil de finalización similar a precio inferior (8M€ desde Minnesota). El algoritmo valida correctamente un perfil funcionalmente equivalente, asumiendo que la métrica Goals-xG de Barry era corregible mediante cambio de entorno.
+ 
 #### 4.2.2. Portero
+
+**Filip Jørgensen → Luiz Júnior (23/24)**
+
+Luiz Júnior aparece en posición #15 del pool filtrado (≤15M€, ≤26 años) con similitud de 0.193, clasificándose como NO VALIDADO. El algoritmo detecta divergencias estructurales concentradas en la métrica más crítica para porteros: PSxG +/-.
+
+El radar revela divergencia abismal en rendimiento. Jørgensen acumuló -2.2 (P36) en 23/24, encajando 2.2 goles más de lo esperado según la dificultad de los disparos recibidos, un rendimiento claramente por debajo del estándar. Luiz Júnior presentaba +10 (P98) en la liga portuguesa, evitando 10 goles más de lo esperado, un sobrerendimiento extremo. Esta divergencia de 12.2 goles en la métrica fundamental de calidad de parada invalida la similitud pese a convergencias en otras dimensiones como save % (72 vs 75), juego de pies (pass accuracy 80 vs 75) o posicionamiento como líbero (sweeper actions/distance similares).
+
+El resultado NO VALIDADO confirma que el Villarreal no buscó un perfil estadísticamente equivalente sino un upgrade deliberado, fichando un portero con métricas de rendimiento superiores desde liga secundaria. El algoritmo correctamente rechaza la validación porque la distancia en PSxG +/- supera lo explicable por variabilidad temporal.
+ 
 #### 4.2.3. Defensa Central
+
+**Pau Torres → Logan Costa (22/23)**
+
+Logan Costa aparece en posición #2 del pool filtrado (≤15M€, ≤24 años) con similitud de 0.654, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un central zurdo constructor con perfil convergente desde la liga portuguesa.
+
+El radar revela convergencia clara en la dimensión fundamental: capacidad de construcción desde atrás. Costa replica métricas nucleares de Pau Torres: pass accuracy similar (83% vs 85%), progressive passes en percentiles altos (7.0 P80 vs 7.9 P91), y final third passes comparables (6.3 P82 vs 7.5 P95). Ambos centrales modernos que priorizan juego de pies sobre intensidad defensiva, capaces de romper líneas con pase y progresar balón controlado.
+
+La divergencia está en la fase defensiva, pero refuerza la lógica del fichaje. Costa presenta perfil más físico: mayor volumen de duelos aéreos ganados (3.1 vs 2.4), mejor aerial success % (63 P81 vs 55 P49), y el doble de intercepciones (1.1 P26 vs 0.52 P2). Torres dominaba la construcción pero era vulnerable en duelos directos. Costa mantiene las capacidades de salida de balón añadiendo presencia física que complementa mejor a Albiol/Foyth. El algoritmo valida correctamente un reemplazo que preserva la función principal mientras corrige debilidades secundarias.
+ 
+**Logan Costa → Renato Veiga (24/25)**
+
+Renato Veiga aparece en posición #66 del pool filtrado (≤25M€, ≤26 años) con similitud negativa de -0.078, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque los perfiles son arquetipos opuestos, pero esto no representa un error de fichaje sino un ajuste táctico deliberado.
+
+El radar muestra perfiles complementarios, no equivalentes. Costa es un central constructor con métricas progresivas superiores: final third passes (6.0 P77 vs 4.8 P53), progressive passes (6.5 P72 vs 5.5 P51), y tackle success % élite (82% P97). Veiga es un central defensivo puro con dominio físico brutal: aerial success % (71% P94 vs 55% P53), clearances (11 P93 vs 6.4 P61), interceptions (2.6 P90 vs 1.2 P26), y shot blocks (1.8 P94 vs 0.78 P54).
+
+El contexto explica el resultado NO VALIDADO: tras la lesión de Costa, el Villarreal no buscó un reemplazo like-for-like sino reconfigurar completamente la pareja de centrales. Foyth (lateral convertido a central diestro) + Veiga (zurdo físico) forma una dupla complementaria donde Foyth asume las funciones progresivas que Costa ejecutaba mientras Veiga aporta presencia física. El algoritmo valida que NO existe similitud estadística, confirmando que el fichaje responde a cambio táctico y no a sustitución directa.
+
+**Juan Foyth → Santiago Mouriño (23/24)**
+
+Santiago Mouriño aparece en posición #3 del pool filtrado (≤20M€, ≤26 años) con similitud de 0.460, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un lateral derecho estadísticamente similar a Foyth en su última temporada en esa demarcación.
+
+El radar revela convergencia fundamental en el balance híbrido entre construcción y defensa. Mouriño replica métricas clave de Foyth: aerial duels won comparables (4.0 P86 vs 3.4 P79), shot blocks similares (1.3 P80 vs 1.4 P85), y clearances en percentiles altos (12 P96 vs 10 P89). Ambos laterales con presencia física que aportan solidez defensiva sin renunciar completamente a progresión.
+
+La divergencia está en pass accuracy (78% P25 vs 87% P71) e interceptions (3.0 P95 vs 1.6 P50), reflejando que Mouriño es más defensivo. Sin embargo, esta diferencia no invalida la similitud estructural: el algoritmo detecta correctamente que ambos son laterales completos con énfasis defensivo, donde Foyth priorizaba más la construcción y Mouriño el trabajo sin balón, pero mantienen el perfil funcional equivalente.
+ 
 #### 4.2.4. Lateral Izquierdo
+
+**Pervis Estupiñán → Johan Mojica (22/23)**
+
+Johan Mojica aparece en posición #9 del pool filtrado (≤15M€, ≤28 años) con similitud de 0.114, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un lateral ofensivo con perfil convergente.
+
+El radar revela similitud estructural clara en la dimensión ofensiva. Mojica replicaba métricas nucleares de Estupiñán: progressive passes superior (5.5 P53 vs 5.9 P61), box passes prácticamente idénticos (2.3 P91 vs 2.1 P88), expected assists equivalentes (0.20 P85 vs 0.24 P90), crosses en percentiles altos (5.8 P84 vs 7.2 P91), y touches final third ligeramente inferior (33 P90 vs 27 P78). Ambos laterales izquierdos con perfil ofensivo marcado, capaces de progresar por banda y generar ocasiones.
+
+La divergencia está en tackles+interceptions donde Mojica sale perjudicado (4.8 P49 vs 3.3 P15), pero esto reforzaba la lógica del fichaje: buscar replicar la parte ofensiva por el sistema del Villarreal. El algoritmo validó un reemplazo estadísticamente fundamentado que preservaba las capacidades ofensivas perdiendo algo de trabajo defensivo. El fracaso posterior (cedido, vendido con pérdida) no invalida la similitud del perfil sino que refleja factores no cuantificables: edad (29→32 años), adaptación, competencia con Pedraza, o declive físico acelerado.
+ 
+**Johan Mojica → Sergi Cardona (24/25)**
+
+Sergi Cardona aparece en posición #20 del pool filtrado (≤10M€, ≤26 años) con similitud de 0.024, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque los perfiles son arquetipos opuestos, confirmando que el Villarreal corrigió estratégicamente el fichaje fallido de Mojica.
+
+El radar muestra divergencia radical. Mojica era un lateral ultraofensivo: crosses 8.1 (P93), box passes 2.5 (P94), touches final third 34 (P90), progressive carries 4.0 (P84). Cardona presenta perfil defensivo: tackles+interceptions 5.3 (P69) vs 3.6 (P30), pass accuracy 80% vs 72%, pero métricas ofensivas limitadas (crosses 3.4 P67, box passes 1.5 P71, touches final third 22 P62).
+
+El contexto explica el resultado NO VALIDADO: tras el fracaso de Mojica, el Villarreal cambió completamente la filosofía del puesto. Fichó a Cardona como agente libre (valor mercado 6M€→10M€) para formar rotación complementaria con Alfonso Pedraza. El algoritmo valida correctamente que NO existe similitud con Mojica, confirmando ajuste táctico deliberado en lugar de reemplazo directo.
+
+**Alfonso Pedraza → Sergi Cardona (24/25)**
+
+Sergi Cardona aparece en posición #41 del pool filtrado (≤15M€, ≤26 años) con similitud negativa de -0.443, clasificándose como NO VALIDADO. El algoritmo confirma que estos NO son perfiles equivalentes sino complementarios en rotación táctica.
+
+El radar demuestra divergencia radical. Pedraza es un wing-back ultraofensivo: progressive carries 7.6 (P98), crosses 7.9 (P93), box passes 3.3 (P98), expected assists 0.49 (P98), touches final third 30 (P82). Cardona presenta perfil equilibrado: tackles+interceptions 5.3 (P69), pass accuracy 80%, progressive passes 6.2 (P63), pero métricas ofensivas muy inferiores (crosses 3.4 P67, box passes 1.5 P71, expected assists 0.11 P62).
+
+La similitud negativa valida precisamente la estrategia del Villarreal. El club fichó a Cardona como agente libre NO para reemplazar a Pedraza sino para formar dupla complementaria. Pedraza ataca constantemente como tercer extremo, Cardona entra cuando se necesita solidez defensiva o rotación. El resultado NO VALIDADO confirma diseño táctico intencional: dos laterales con roles diferenciados, no sustitución directa.
+ 
 #### 4.2.5. Mediapunta / Extremo
+
+**Álex Baena → Alberto Moleiro (24/25)**
+
+Alberto Moleiro aparece en posición #16 del pool filtrado (≤30M€, ≤26 años) con similitud de 0.075, clasificándose como PARCIAL. El algoritmo detecta convergencia parcial pero identifica divergencias significativas que explican la similitud moderada-baja.
+
+El radar revela perfiles funcionalmente diferentes pese a compartir demarcación. Baena era un playmaker puro: expected assists 0.75 (P98), shot creating actions 5.9 (P98), crosses 13 (P96). Producción creativa élite en percentiles 95+. Moleiro presenta perfil más desequilibrante: dribbles 4.5 (P93) vs 1.3 (P45), touches in box 7.2 (P74) vs 5.7 (P65), pero creación limitada (xA 0.23 P54, SCA 3.5 P75, crosses 2.3 P40). La similitud fundamental está en el rol: ambos mediapuntas/extremos creativos con capacidad de desequilibrio, compartiendo xG comparable (0.45 P76 vs 0.40 P70).
+
+El fichaje responde a oportunidad de mercado más que a reemplazo equivalente. Moleiro costó 16M€ aprovechando el descenso de Las Palmas (valor mercado 25M€→30M€), fichaje de potencial donde el Villarreal apostó por desarrollar un talento joven complementario a Gerard Moreno, no por replicar el perfil específico de Baena. La similitud PARCIAL refleja correctamente: misma demarcación, divergencia de estilo.
+
+**EXTRA: Gerard Moreno → Georges Mikautadze (24/25)**
+
+Georges Mikautadze aparece en posición #1 del pool filtrado (≤25M€, ≤26 años) con similitud de 0.472, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó anticipadamente un reemplazo generacional con perfil estructural convergente.
+
+El radar revela similitud fundamental en la versatilidad ofensiva. Ambos delanteros completos capaces de finalizar y crear: Mikautadze presenta xG 1.6 (P89), goals 1.7 (P91), xA 0.66 (P94); Gerard mantiene xA 0.89 (P98), SCA 4.9 (P93). Los dos operan como referentes que generan ocasiones propias y para compañeros, no son nueves puros de área.
+
+La divergencia refleja la transición generacional. Gerard acumula Goals-xG -1.2 (P23) y npxG/Shot 0.08 (P24), señales de declive físico que afectan conversión pese a mantener inteligencia táctica. Mikautadze está en pico: Goals-xG +0.70 (P68), touches in box 18 (P92) vs 11 (P63), shots 8.0 vs 5.7. El algoritmo valida correctamente un fichaje de sucesión: Mikautadze aporta más finalización directa preservando la capacidad creativa que define el rol de Gerard en el sistema del Villarreal.
+
+**Nota:** Este no es un caso de cadena de sustitución puro de venta y beneficio, pero muestra cómo en un jugador clave como Gerard, ya más que amortizado, buscar un reemplazo similar es fundamental. Algo a destacar es cómo muchas veces el jugador elegido es de la propia liga española, lo que a nivel de adaptabilidad estará más "validado".
 
 ### 4.3. Eintracht Frankfurt
 
 #### 4.3.1. Delantero Centro
+
+**Randal Kolo Muani → Omar Marmoush (22/23)**
+
+Omar Marmoush aparece en posición #10 del pool filtrado (≤20M€, ≤25 años) con similitud de 0.173, clasificándose como VALIDADO. El algoritmo confirma que el Frankfurt identificó un perfil funcionalmente equivalente a coste cero, replicando su modelo de negocio paradigmático.
+
+El radar demuestra que Marmoush es un "mini Kolo Muani". Mantiene la esencia del perfil: delantero móvil con capacidad de regate (dribbles 5.1 P87 vs 6.7 P95), finalización desde movimiento (xG 0.82 P64 vs 1.2 P83), y presencia en área (touches in box 12 P68 vs 18 P95). La diferencia está en el volumen: Marmoush opera a escala inferior pero preserva las proporciones del arquetipo. La divergencia crítica es xA (0.16 P10 vs 0.61 P93), donde Kolo Muani aportaba creación élite que Marmoush no replica.
+
+Dos factores validan la operación más allá del score algorítmico. Primero, fichaje como agente libre desde Wolfsburgo, ROI infinito que replica el modelo Kolo Muani (gratis→95M€). Segundo, procedencia Bundesliga, eliminando riesgo de adaptación y acelerando integración táctica. El algoritmo valida correctamente un reemplazo data-driven donde el coste cero y la familiaridad contextual compensan la similitud moderada. La operación generó +75M€ de plusvalía (gratis → 75M€ venta a Man City).
+ 
+
+**Randal Kolo Muani → Hugo Ekitike (22/23)**
+
+Hugo Ekitike aparece en posición #8 del pool filtrado (≤25M€, ≤23 años) con similitud de 0.006, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque el Frankfurt ejecutó una estrategia de desarrollo a largo plazo, no un reemplazo inmediato.
+
+El radar confirma divergencias radicales. Ekitike presenta perfil significativamente inferior en todas las dimensiones: xG 0.78 (P62) vs 1.2 (P83), goals 0.63 vs 1.4, touches in box 13 (P76) vs 18 (P95), dribbles 3.4 (P64) vs 6.7 (P95), xA 0.34 (P51) vs 0.61 (P93). Crucialmente, Goals-xG de -0.7 (P35) indica subrendimiento severo que contrasta con el +1.8 (P83) de Kolo Muani.
+
+El contexto explica el resultado NO VALIDADO: el Frankfurt fichó a Ekitike (20 años) primero cedido del PSG para evaluar su potencial sin compromiso. La cesión permitía desarrollo sin riesgo financiero. El algoritmo con filtros de edad restrictivos valida que Ekitike era apuesta de potencial, no sustitución data-driven.
+ 
+**Omar Marmoush → Elye Wahi (24/25)**
+
+Elye Wahi aparece en posición #10 del pool filtrado (≤40M€, ≤24 años) con similitud de 0.244, clasificándose como VALIDADO. El algoritmo identifica correctamente la convergencia estructural pero detecta la divergencia crítica que explica la similitud moderada.
+
+El radar confirma que Wahi es estadísticamente superior en generación: xG 2.4 (P97) vs 1.2 (P80), shots 12 (P96) vs 8.2 (P81), touches in box 23 (P97) vs 16 (P85), npxG per shot 0.18 (P91) vs 0.13 (P66). Números de élite en todas las dimensiones ofensivas. Sin embargo, la métrica Goals-xG revela el problema: -2.5 (P9), un underperformance brutal. Wahi generó 2.4 xG pero solo marcó 1.9 goles, debería haber marcado ~4.4 goles.
+
+Esta divergencia explica perfectamente la similitud moderada. El Frankfurt fichó (primero cedido del Marsella, luego comprado 26M€) un delantero con capacidad de generación de ocasiones superior a Marmoush pero con conversión deficiente. La apuesta era que el underperformance de Wahi era temporal y corregible en mejor contexto. El algoritmo valida un reemplazo donde el perfil funcional converge (delantero móvil, finalizador) pero la eficiencia diverge radicalmente, reflejando fichaje de alto riesgo-alta recompensa.
+ 
+
+**Hugo Ekitike → Jonathan Burkardt (24/25)**
+
+Jonathan Burkardt aparece en posición #9 del pool filtrado (≤40M€, ≤26 años) con similitud de 0.267, clasificándose como VALIDADO. El algoritmo detecta convergencia en la dimensión goleadora fundamental pero identifica el trade-off estratégico que ejecutó el Frankfurt.
+
+El radar revela perfiles complementarios más que idénticos. Ekitike generaba ocasiones de élite: xG 2.0 (P95), xA 0.65 (P94), dribbles 4.9 (P91), SCA 3.5 (P71). Delantero creativo, móvil, asociativo. Pero convertía fatal: Goals-xG -6.6 (P1), el peor underperformance del dataset. Generaba 2.0 xG y solo marcaba 1.4 goles.
+
+Burkardt invierte la ecuación. Genera menos creatividad: xA 0.39 (P62), dribbles 2.0 (P39), SCA 2.3 (P30). Pero convierte brutal: Goals-xG +3.2 (P92), marcó 2.3 goles con 1.9 xG. El Frankfurt sacrificó deliberadamente movilidad y asociación por eficiencia de conversión pura, manteniendo el xG similar (~2.0 vs 1.9) pero fichando un finalizador clínico en lugar de un creador que no remataba. El algoritmo valida un reemplazo donde el perfil goleador converge pero el estilo de juego diverge intencionalmente.
+ 
+
 #### 4.3.2. Defensa Central
 
+**Evan N'Dicka → Willian Pacho (22/23)**
+
+Willian Pacho aparece en posición #1 del pool filtrado (≤25M€, ≤26 años) con similitud de 0.845, clasificándose como VALIDADO con el score más alto del análisis completo. El algoritmo confirma que el Frankfurt identificó un central zurdo con convergencia estructural casi perfecta.
+
+El radar revela similitud brutal en la dimensión constructor: pass accuracy prácticamente idéntico (86% P79 vs 85% P74), progressive passes convergentes (4.4 P20 vs 4.5 P23), aerial success % similar (61% vs 59%). Ambos centrales zurdos modernos con capacidad de salida de balón, perfil que define el estilo Frankfurt en defensa.
+
+La divergencia está en el matiz físico-defensivo. N'Dicka dominaba más el juego aéreo (aerial duels won 3.6 P77, clearances 6.9 P82), mientras Pacho compensa con mayor actividad anticipatoria (interceptions 2.1 P60 vs 1.4 P29, tackles+interceptions 4.4 P41 vs 2.6 P7). Perfiles complementarios dentro del mismo arquetipo fundamental.
+
+El resultado valida completamente el modelo Frankfurt: ficharon a Pacho (20 años, 11M€ desde liga belga) y lo vendieron al PSG por 40M€ tras una temporada. La operación generó +29M€ de plusvalía, replicando exactamente el patrón ejecutado con N'Dicka. El score 0.845 confirma precisión analítica máxima.
+ 
+
+**Willian Pacho → Arthur Theate (24/25)**
+
+Arthur Theate aparece en posición #67 del pool filtrado (≤25M€, ≤26 años) con similitud de 0.017, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque el Frankfurt ejecutó un cambio táctico estructural, no una sustitución directa.
+
+El contexto crítico es el cambio de sistema defensivo. En defensa de 3, Pacho operaba como central zurdo corrector con función física (clearances 5.7 P70, aerial duels), perfil especializado para ese rol específico. El Frankfurt pasó a defensa de 4, donde el central zurdo requiere completitud: Theate presenta progressive passes 8.0 (P92) vs 5.6 (P47), final third passes 6.9 (P89) vs 5.1 (P63), tackle success 64% (P74) vs 58% (P52), shot blocks 1.2 (P77) vs 0.83 (P56).
+
+El radar muestra que Theate no es "similar pero mejor" sino funcionalmente diferente: constructor de élite (P89-92 en progresión) donde Pacho era corrector físico. Crucialmente, Theate puede operar también como falso lateral izquierdo en esquema 4-3-3/4-2-3-1, aportando versatilidad que Pacho no tenía. El resultado NO VALIDADO confirma cambio de filosofía táctica completo, no error algorítmico.
 ### 4.4. LOSC Lille
 
+El caso Lille representa un contraste metodológico fundamental con Villarreal y Frankfurt. Mientras estos clubes buscan reemplazos estadísticamente similares, Lille opera bajo un modelo de desarrollo de talento joven donde la similitud de perfil es secundaria respecto al potencial de crecimiento. Los resultados algorítmicos, mayoritariamente NO VALIDADOS, no representan fracasos de identificación sino confirmación de una filosofía diferente.
+
 #### 4.4.1. Defensa Central
+
+**Gabriel Magalhães → Sven Botman (19/20)**
+
+Sven Botman aparece en posición #8 del pool filtrado (≤15M€, ≤24 años) con similitud de 0.439, clasificándose como VALIDADO. El algoritmo confirma que Lille identificó correctamente un central zurdo constructor con perfil convergente desde la Eredivisie.
+
+El radar revela similitud estructural clara en la dimensión más crítica: capacidad de construcción desde atrás. Botman replica métricas nucleares de Gabriel: pass accuracy convergente (83% P63 vs 81% P59), progressive passes similares (5.7 P51 vs 6.1 P63), y aerial success % comparable (73% P95 vs 64% P82). Ambos centrales zurdos modernos que priorizan salida de balón sobre intensidad defensiva pura.
+
+La divergencia está en el perfil físico-defensivo. Gabriel presentaba más clearances (4.9 P55 vs 6.8 P76) y shot blocks (1.0 P71 vs 0.66 P49), mientras Botman compensaba con mejor tackle success % (77% P67 vs 68% P81). El algoritmo valida correctamente un reemplazo donde el perfil constructor converge preservando la función principal del puesto en el sistema Lille. La operación generó +29M€ de plusvalía (8M€ fichaje → 37M€ venta a Newcastle).
+
+**Sven Botman → Bafodé Diakité (21/22 → 19/20 exógeno)**
+
+Bafodé Diakité (versión 19/20 en Toulouse, 3 años antes del fichaje) aparece en posición #16 del pool filtrado con similitud de 0.091, clasificándose como NO VALIDADO. El algoritmo detecta divergencia significativa pero el contexto explica la lógica operativa.
+
+El radar confirma perfiles diferenciados. Botman 21/22 era un constructor consolidado: pass accuracy 87% (P70), progressive passes 4.5 (P28), aerial success 67% (P81). Diakité 19/20 presentaba perfil más físico-defensivo: tackle success 53% (P40), clearances 9.1 (P70), pero métricas progresivas inferiores (pass accuracy 85% P77, progressive passes 5.2 P46).
+
+El resultado NO VALIDADO refleja la estrategia Lille de identificación temprana. Ficharon a Diakité a los 21 años por 3M€ desde Toulouse, apostando por desarrollo durante 3 temporadas antes de venderlo por 35M€ al Bournemouth. El algoritmo correctamente rechaza la similitud inmediata porque Lille no buscaba un reemplazo estadístico sino un proyecto de desarrollo con potencial de apreciación. La plusvalía de +32M€ valida la estrategia pese al resultado algorítmico.
+
+**Bafodé Diakité → Nathan Ngoy (24/25)**
+
+Nathan Ngoy aparece en posición #57 del pool filtrado (≤10M€, ≤24 años) con similitud negativa de -0.396, clasificándose como NO VALIDADO. El algoritmo rechaza categóricamente la similitud, confirmando que Lille ejecuta nuevamente el mismo patrón de desarrollo.
+
+El radar demuestra divergencia radical. Diakité 24/25 había evolucionado a constructor de élite: pass accuracy 93% (P87), progressive passes 3.6 (P11), aerial success 72% (P96). Ngoy desde la liga belga presenta perfil significativamente inferior en todas las dimensiones: pass accuracy 81% (P44), progressive passes 6.8 (P75), aerial success 57% (P63). La similitud negativa indica perfiles estadísticamente opuestos.
+
+El contexto valida la lógica: Ngoy fichado por 3.5M€ desde Standard Liège replica exactamente el modelo Diakité (fichaje joven desde liga secundaria a precio bajo). Lille apuesta por que Ngoy desarrollará capacidades similares en 2-3 temporadas. El resultado NO VALIDADO confirma que el algoritmo detecta correctamente la ausencia de similitud actual, mientras Lille opera bajo hipótesis de convergencia futura mediante desarrollo interno.
+
 #### 4.4.2. Mediocampista Defensivo
+
+**Boubakary Soumaré → Amadou Onana (20/21 → 21/22)**
+
+Amadou Onana aparece en posición #36 del pool filtrado (≤25M€, ≤25 años) con similitud negativa de -0.325, clasificándose como NO VALIDADO. El algoritmo rechaza la similitud porque los perfiles son arquetipos funcionalmente opuestos, pero esto confirma ajuste táctico deliberado.
+
+El radar revela divergencia estructural clara. Soumaré era un pivote progresivo-técnico: progressive passes 10 (P91), pass accuracy 86% (P88), interceptions 2.3 (P69), pero tackle success % limitado (40% P65). Onana presenta perfil físico-defensivo radicalmente diferente: tackles+interceptions 9.7 (P97), recoveries 12 (P83), progressive carries 3.0 (P46), pero progressive passes muy inferior (7.3 P48).
+
+El contexto explica el resultado NO VALIDADO: tras la venta de Soumaré (20M€), Lille no buscó replicar su perfil técnico sino complementar el sistema con un perfil diferente. Onana aportaba presencia física y capacidad de recuperación que Soumaré no tenía. El fichaje por 6.5M€ y posterior venta por 40M€ al Everton (+33.5M€ plusvalía) valida la estrategia. El algoritmo confirma correctamente que NO son perfiles equivalentes, reflejando cambio de rol táctico deliberado más que error de identificación.
+
+**Carlos Baleba → Nabil Bentaleb (22/23)**
+
+Nabil Bentaleb aparece en posición #35 del pool filtrado (≤20M€, ≤28 años) con similitud negativa de -0.085, clasificándose como NO VALIDADO. El algoritmo rechaza la similitud, confirmando que este fichaje representa un error de identificación más que un cambio táctico deliberado.
+
+El análisis presenta una limitación crítica: Baleba acumuló solo 478 minutos en 22/23 (por debajo del umbral estándar de 1000), lo que reduce la representatividad estadística de su perfil. Sin embargo, el radar disponible revela divergencia estructural clara. Baleba presentaba perfil físico-dinámico: progressive carries 4.2 (P63), recoveries 9.9 (P43), fouls drawn 4.7 (P69), tackle success 64% (P95). Bentaleb desde Angers mostraba perfil técnico-estático radicalmente diferente: progressive passes 8.1 (P57), pass accuracy 81% (P48), pero progressive carries muy inferior (2.1 P30) y recoveries limitadas (10 P56).
+
+La divergencia más significativa está en el dinamismo: Baleba era un box-to-box físico capaz de progresar con balón y recuperar; Bentaleb era un distribuidor posicional sin movilidad. El fichaje como agente libre (27 años, valor residual) no generó pérdida económica directa, pero Bentaleb no logró replicar la función de Baleba en el sistema y fue considerado fichaje fallido. El resultado NO VALIDADO confirma que el algoritmo habría detectado la incompatibilidad de perfiles, validando su utilidad como herramienta de filtrado previo.
+
+**Nota metodológica:** El caso Baleba ilustra una limitación del análisis retrospectivo: jugadores con minutos insuficientes no pueden ser evaluados con la misma robustez estadística. En contexto profesional, el departamento de scouting habría empleado datos de categorías inferiores o métricas cualitativas complementarias para evaluar un jugador de cantera con participación limitada en primer equipo.
+
 #### 4.4.3. Delantero Centro
+
+**Victor Osimhen → Jonathan David (19/20)**
+
+Jonathan David aparece en posición #55 del pool filtrado (≤40M€, ≤24 años) con similitud negativa de -0.440, clasificándose como NO VALIDADO. El algoritmo rechaza categóricamente la similitud porque los perfiles representan arquetipos de delantero centro radicalmente diferentes.
+
+El radar confirma la divergencia fundamental. Osimhen era un finalizador puro de élite: xG 2.3 (P98), goals 1.9 (P94), touches in box 21 (P98), shots 12 (P96). Perfil de nueve de área con presencia física brutal y finalización en volumen. David presentaba perfil técnico-asociativo completamente diferente: xG 1.1 (P76), goals 1.7 (P90), touches in box 13 (P78), pero xA 0.38 (P58) y dribbles 3.7 (P63) superiores.
+
+La métrica crítica es Goals-xG: Osimhen acumuló -2.5 (P6), un underperformance severo que sugería que su producción goleadora era incluso inferior a lo esperado por la calidad de sus ocasiones. David presentaba +0.70 (P64), indicando mejor eficiencia de conversión. El algoritmo rechaza correctamente la similitud porque David no es un "mini Osimhen" sino un delantero funcionalmente diferente: más móvil, más asociativo, menos dependiente de ocasiones en área.
+
+El fichaje por 27M€ desde Gent fue apuesta por perfil complementario, no reemplazo estadístico. Sin embargo, la mala gestión contractual (David sale libre en 2025, -27M€ de pérdida) convierte esta operación en el mayor fracaso financiero del caso Lille, contrastando con el éxito de Osimhen (+56.5M€).
+
+**Jonathan David → Hamza Igamane (24/25)**
+
+Hamza Igamane aparece en posición #24 del pool filtrado (≤15M€, ≤24 años) con similitud negativa de -0.405, clasificándose como NO VALIDADO. El resultado debe contextualizarse por la limitación crítica de datos: la Scottish Premiership dispone solo de 44 métricas en FBref (vs 145 Big 5), forzando el análisis a usar únicamente 20 métricas comunes.
+
+El radar con métricas reducidas muestra convergencia parcial en la dimensión goleadora fundamental. David 24/25 presenta goals 0.56 (P90), G+A 0.74 (P90), shots 2.3 (P62). Igamane desde Rangers muestra goals 0.55 (P89), G+A 0.59 (P79), shots 4.1 (P90). Ambos delanteros con producción goleadora comparable en percentiles altos.
+
+La divergencia está en la eficiencia: David presenta goals per shot 0.18 (P68), Igamane 0.13 (P61). David convierte mejor con menos volumen. Sin embargo, la similitud negativa refleja principalmente la incompatibilidad de datasets más que divergencia de perfiles reales. En contexto profesional, Lille habría empleado proveedores premium con cobertura completa de la Scottish Premiership.
+
+El fichaje por 11.5M€ representa continuidad del modelo Lille: delantero joven (21 años) desde liga secundaria con potencial de desarrollo. El resultado algorítmico NO VALIDADO debe interpretarse con cautela por las limitaciones de datos, no como rechazo definitivo del perfil.
+
+#### 4.4.4. Lateral Izquierdo
+
+**EXTRA: Gabriel Gudmundsson → Romain Perraud (24/25)**
+
+Romain Perraud aparece en posición #4 del pool filtrado (≤15M€, ≤28 años) con similitud de 0.295, clasificándose como VALIDADO. El algoritmo confirma que Perraud representa un perfil convergente con Gudmundsson dentro de las restricciones económicas de Lille.
+
+El radar revela convergencia sólida en las dimensiones fundamentales del lateral moderno. Ambos comparten producción ofensiva casi idéntica: crosses 4.7 (P78) vs 5.0 (P78), expected assists 0.11 (P64) vs 0.11 (P65), touches final third 32 (P86) vs 29 (P81). El trabajo defensivo también converge: tackles+interceptions 4.2 (P46) vs 4.1 (P42). La base funcional del rol es equivalente.
+
+La divergencia está en la progresión y el regate. Gudmundsson destaca en progressive passes 7.2 (P84) vs 4.4 (P24), dribbles 1.6 (P89) vs 0.78 (P64), y progressive carries 5.6 (P94) vs 3.6 (P82). Gudmundsson es un lateral más vertical y desequilibrante; Perraud opera con perfil más conservador pero igualmente efectivo en la fase final. Tackle success % también diverge (63 P63 vs 45 P11), indicando que Gudmundsson gana más duelos individuales.
+
+El ranking #10 en pool completo y #4/48 en pool filtrado demuestra que, aplicando restricciones realistas de mercado (≤15M€, ≤28 años), Perraud emerge como opción viable. Perraud (26 años, Betis, 5M€) aporta experiencia en Big 5 (Southampton, Niza, Betis) a coste reducido, compensando la menor verticalidad con madurez táctica.
+
+**Nota:** Este es un caso de planificación de sucesión prospectiva, no de venta y beneficio inmediato. Gudmundsson (24 años) es titular consolidado; el algoritmo identifica a Perraud como refuerzo o eventual sucesor, permitiendo al club anticiparse a futuras necesidades de rotación.
+
+**Síntesis del caso Lille:** El patrón de resultados mayoritariamente NO VALIDADOS no indica fracaso metodológico sino confirmación de una filosofía diferente. Lille opera bajo modelo de desarrollo de talento donde la similitud estadística inmediata es secundaria respecto al potencial de apreciación. Los únicos casos VALIDADOS (Gabriel→Botman) corresponden a reemplazos entre jugadores ya desarrollados. Los casos NO VALIDADOS reflejan fichajes de proyectos jóvenes cuya convergencia de perfil se espera tras 2-3 temporadas de desarrollo interno. El balance financiero positivo (+193M€ en el período analizado, líder Ligue 1) valida la estrategia pese a que el algoritmo no pueda capturar el potencial de desarrollo futuro.
 
 ### 4.5. Síntesis Comparativa
 
