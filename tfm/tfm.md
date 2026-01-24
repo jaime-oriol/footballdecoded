@@ -51,6 +51,8 @@ Sport Data Campus
    - 4.4. [LOSC Lille](#44-losc-lille)............................................................................................................................. 12
    - 4.5. [Síntesis Comparativa](#45-síntesis-comparativa)....................................................................................................... 13
 
+5. [Conclusiones](#5-conclusiones)................................................................................................................................ 14
+
 [ANEXOS](#anexos) ....................................................................................................................................... 14
    - [ANEXO A: Métricas Utilizadas](#anexo-a-métricas-utilizadas)........................................................................................... 14
    - [ANEXO B: Perfiles de Radar por Posición](#anexo-b-perfiles-de-radar-por-posición)...................................................................... 14
@@ -129,9 +131,7 @@ _El diseño metodológico de este trabajo combina análisis descriptivo de caden
 
 **Criterios de interpretación.** _Un reemplazo clasificado como VALIDADO confirma que el departamento de scouting identificó correctamente un perfil estadísticamente equivalente al vendido, demostrando proceso analítico robusto. Un reemplazo PARCIAL sugiere que, aunque existe similitud cuantificable, el club pudo haber optimizado la decisión considerando alternativas de mayor proximidad estadística. Un reemplazo NO_VALIDADO no implica fracaso deportivo, sino que la decisión priorizó factores no capturados por métricas de rendimiento: precio de oportunidad (agente libre, fin de contrato), potencial de desarrollo (juveniles), encaje táctico específico, o restricciones económicas que limitaron el universo de targets viables. El algoritmo valida la fundamentación estadística de decisiones ejecutadas, no predice éxito futuro ni considera viabilidad real de fichajes alternativos._
 
-**Limitaciones del método.** _El algoritmo retiene 85% de varianza explicada mediante PCA, descartando 15% de información presente en el espacio original (~150-170 dimensiones). Esta compresión puede eliminar matices distintivos entre perfiles híbridos o roles tácticos específicos. Adicionalmente, dado que los datos se estandarizan mediante z-score antes del PCA, la similitud coseno no solo captura proporciones entre métricas sino también posición relativa en la distribución: dos jugadores con idéntica distribución proporcional entre goles, asistencias y creación pero con volúmenes de producción muy diferentes (uno en percentil 50, otro en percentil 95) pueden obtener similitud moderada en lugar de alta. Finalmente, el método no captura factores cualitativos determinantes: intensidad defensiva sin balón, liderazgo, adaptación a sistemas tácticos específicos, o compatibilidad con compañeros de línea._
-
-**Limitaciones reconocidas.** _Este diseño no permite identificar el universo completo de alternativas que los clubes consideraron durante el proceso de fichaje, solo valida la fundamentación estadística de las decisiones ejecutadas. Asimismo, el análisis cuantitativo no captura factores cualitativos determinantes en contexto real: viabilidad económica del traspaso, disposición del jugador a fichar, encaje con filosofía del entrenador, o consideraciones extradeportivas (edad, situación contractual, potencial de reventa). La metodología debe interpretarse como condición necesaria pero no suficiente: la similitud estadística entre vendido y fichado demuestra criterio analítico, pero no garantiza éxito deportivo ni explica por qué un club seleccionó ese target específico entre múltiples opciones estadísticamente equivalentes._
+**Limitaciones del método.** _El algoritmo retiene 85% de varianza explicada mediante PCA, descartando 15% de información que puede contener matices distintivos entre perfiles híbridos. La estandarización z-score implica que jugadores con perfiles proporcionales idénticos pero diferente nivel de producción (percentil 50 vs percentil 95) obtienen similitud moderada, no alta. Adicionalmente, el diseño no permite identificar alternativas que los clubes consideraron, solo valida decisiones ejecutadas. Factores cualitativos (liderazgo, adaptación táctica, viabilidad económica) quedan fuera del alcance del análisis cuantitativo. La sección 2.3 documenta exhaustivamente estas limitaciones._
 
 ### 2.1. Workflow del Algoritmo PCA + Similitud Coseno
 
@@ -217,49 +217,13 @@ La distancia euclidiana amplificaría excesivamente las diferencias absolutas, m
 
 **El objetivo del algoritmo es validar criterio analítico, no predecir éxito deportivo.**
 
-Cuando un fichaje se clasifica como VALIDADO, significa que el club identificó un jugador estadísticamente similar al vendido. Esto demuestra proceso de scouting fundamentado en datos. Sin embargo, similar no implica mejor ni garantiza rendimiento futuro.
+Un fichaje VALIDADO significa que el club identificó un jugador estadísticamente similar al vendido, demostrando proceso de scouting fundamentado en datos. Sin embargo, similar no implica mejor ni garantiza rendimiento futuro. Un fichaje NO_VALIDADO indica que la decisión priorizó otros criterios (cambio táctico deliberado, potencial de desarrollo, restricciones económicas, oportunidad de mercado) igualmente válidos pero no capturables mediante métricas históricas.
 
-**Escenario 1: Buscar similar tiene sentido cuando el vendido funcionaba.**
+**La similitud estadística es condición suficiente para validar criterio analítico, pero no es condición necesaria para éxito deportivo.** Un fichaje VALIDADO puede fracasar por factores no estadísticos (adaptación, lesiones, contexto táctico). Un fichaje NO_VALIDADO puede triunfar si el club deliberadamente buscó un perfil diferente o si el jugador mejora en el nuevo contexto.
 
-Si el Villarreal vende a Nicolas Jackson (delantero goleador, 17 goles en temporada) y ficha a Sørloth (perfil similar según PCA), la lógica es clara: replicar un perfil que ya demostró encajar en el sistema táctico del equipo. El algoritmo valida que esta decisión tiene fundamento estadístico.
+**Caso especial: Upgrades que aparecen como NO_VALIDADO.** Un fichaje objetivamente superior puede clasificarse como NO_VALIDADO cuando el club busca un upgrade significativo, no un reemplazo equivalente. _Ejemplo:_ vender delantero con 0.45 xG/90 (percentil 60) y fichar uno con 0.85 xG/90 (percentil 95). La estandarización z-score sitúa sus vectores en posiciones distantes pese a perfil funcional análogo. **El método no distingue dirección de la diferencia**: NO_VALIDADO indica "perfil estadísticamente distante" sin especificar si es distante-inferior o distante-superior. Cuando el fichaje demuestre rendimiento superior al vendido, la explicación correcta es "el club buscó mejora, no equivalencia".
 
-**Escenario 2: NO similar no implica peor fichaje.**
-
-Supongamos que el Frankfurt vende a Kolo Muani (delantero móvil, asociativo, xA alto) y ficha a un 9 puro de área (perfil diferente, baja similitud). El algoritmo clasificaría esto como NO_VALIDADO, pero esto no significa fracaso:
-
-- Quizás el entrenador cambió de sistema y ahora necesita un perfil diferente
-- Quizás Kolo Muani no encajaba tan bien como sugieren sus números y el cambio de perfil es intencional
-- Quizás el jugador fichado tiene potencial de desarrollo no capturado en métricas históricas
-- Quizás era la única opción viable dentro del presupuesto disponible
-
-**La similitud estadística es condición suficiente para validar criterio analítico, pero no es condición necesaria para éxito deportivo.**
-
-Un fichaje NO_VALIDADO puede triunfar si:
-- El club deliberadamente buscó un perfil diferente para cambiar dinámica táctica
-- El jugador mejora en el nuevo contexto (mejor equipo, más minutos, confianza del entrenador)
-- Factores no estadísticos (liderazgo, mentalidad, adaptación) compensan la diferencia de perfil
-
-Un fichaje VALIDADO puede fracasar si:
-- El jugador no se adapta al nuevo país/liga/idioma/cultura
-- Sufre lesiones que no permiten mostrar su nivel previo
-- El contexto táctico del nuevo equipo es diferente pese a la similitud estadística
-- Factores psicológicos (presión, expectativas) afectan rendimiento
-
-**Caso especial: Upgrades que aparecen como NO_VALIDADO.**
-
-En la mayoría de sustituciones exitosas, el fichaje aparece como similar al vendido. Sin embargo, existe un escenario donde un fichaje objetivamente superior puede clasificarse como NO_VALIDADO: cuando el club deliberadamente busca un upgrade significativo, no un reemplazo equivalente.
-
-_Ejemplo concreto:_ Un equipo vende un delantero con 0.45 xG/90 (percentil 60 entre delanteros Big 5) y ficha uno con 0.85 xG/90 (percentil 95). Aunque ambos sean "delanteros goleadores", el proceso de estandarización z-score sitúa sus vectores en posiciones muy distantes del espacio multidimensional: uno está cerca de la media poblacional, el otro en el extremo superior. La similitud coseno, calculada sobre estos vectores estandarizados, puede ser moderada o baja pese a que el perfil funcional sea análogo.
-
-Este escenario NO representa un fallo del algoritmo sino una limitación inherente: **el método no distingue dirección de la diferencia**. Un resultado NO_VALIDADO indica "perfil estadísticamente distante" sin especificar si es distante-inferior o distante-superior. La interpretación requiere contexto adicional: si el fichaje produce más xG, más goles, más xA que el vendido, la baja similitud refleja upgrade deliberado, no error de scouting.
-
-_Implicación práctica:_ Cuando un caso de uso resulte NO_VALIDADO pero el fichaje demuestre rendimiento superior al vendido, la explicación correcta es "el club buscó mejora, no equivalencia" y no "el club falló en identificar perfil similar". El algoritmo valida búsqueda de similitud; no penaliza búsqueda de superioridad.
-
-**Conclusión metodológica:**
-
-El algoritmo responde a la pregunta: "¿El fichaje ejecutado tiene fundamento estadístico respecto al jugador vendido?" Si la respuesta es VALIDADO, el club demostró criterio analítico. Si la respuesta es NO_VALIDADO, el fichaje responde a otros criterios (oportunidad, proyecto, restricciones) que pueden ser igualmente válidos pero no son capturables mediante métricas de rendimiento histórico.
-
-La utilidad del método radica en distinguir decisiones data-driven de decisiones oportunistas, no en predecir cuáles funcionarán mejor a futuro.
+**Conclusión:** El algoritmo responde a "¿El fichaje tiene fundamento estadístico respecto al vendido?" La utilidad radica en distinguir decisiones data-driven de decisiones oportunistas, no en predecir cuáles funcionarán mejor.
 
 ### 2.3. Factores No Capturados por el Análisis
 
@@ -274,6 +238,8 @@ El proceso real de fichaje de un jugador profesional involucra docenas de variab
 **Datos médicos e historial de lesiones.** _La propensión a lesiones, historial de problemas musculares, recuperación de intervenciones quirúrgicas, y estado físico actual son factores decisivos en cualquier operación de fichaje. Un jugador con métricas excelentes pero tres roturas de ligamento cruzado representa un riesgo que ningún análisis estadístico de rendimiento puede capturar. Los clubes acceden a informes médicos confidenciales durante las negociaciones; las fuentes públicas solo registran lesiones reportadas en prensa, con información incompleta y frecuentemente inexacta._
 
 **Factores psicológicos y de personalidad.** _La mentalidad competitiva, capacidad de liderazgo, comportamiento en vestuario, adaptabilidad a nuevos entornos culturales y lingüísticos, resistencia a la presión mediática, y estabilidad emocional son variables que los clubes evalúan mediante entrevistas, informes de entorno, y consultas con representantes y excompañeros. Ninguna métrica estadística captura si un jugador rendirá bajo la presión de 80.000 espectadores hostiles o si su personalidad encajará con la dinámica de grupo existente._
+
+**Jugadores de cantera y categorías inferiores.** _Los jugadores procedentes de canteras o categorías inferiores no disponen de datos estadísticos en fuentes públicas gratuitas. FBref y Understat solo cubren primeras divisiones de las Big 5 más ligas secundarias seleccionadas (Eredivisie, Liga Portuguesa, etc.). Esto implica que fichajes como Carlos Baleba (cantera Lille) o canteranos promovidos no pueden evaluarse con datos previos a su debut profesional en primera división. En contexto real, los departamentos de scouting emplean datos propietarios de categorías inferiores, informes de ojeadores, y métricas internas que este análisis no puede replicar._
 
 #### 2.3.2. Factores de Mercado No Scrapeables
 
@@ -309,7 +275,7 @@ El proceso real de fichaje de un jugador profesional involucra docenas de variab
 
 **Sesgo de supervivencia.** _El filtro de minutos mínimos (≥1000) excluye sistemáticamente a jugadores jóvenes con alto potencial pero poca participación. Un canterano de 19 años con 400 minutos excepcionales no aparece en el pool de análisis, pese a poder ser el reemplazo óptimo a largo plazo. Este sesgo favorece jugadores establecidos sobre talentos emergentes, contradiciendo parcialmente el modelo de negocio de clubes como Lille que apuestan por desarrollo temprano._
 
-**Sesgo temporal (look-ahead invertido).** _El análisis usa datos de temporada X-1 para evaluar fichajes de temporada X, replicando las condiciones de información del momento de decisión. Sin embargo, la forma actual de un jugador en el momento exacto del fichaje (pretemporada, primeros partidos de temporada) puede diferir significativamente de sus métricas de temporada anterior. Un jugador que terminó lesionado la temporada X-1 pero llegó recuperado a pretemporada presenta métricas que subestiman su estado real._
+**Sesgo temporal.** _La forma actual de un jugador en el momento exacto del fichaje (pretemporada, primeros partidos de temporada) puede diferir significativamente de sus métricas de temporada anterior. Un jugador que terminó lesionado la temporada X-1 pero llegó recuperado a pretemporada presenta métricas que subestiman su estado real. Este desfase temporal es inherente al uso de datos históricos._
 
 **Sesgo de liga y nivel de oposición.** _Comparar jugadores de Ligue 1 con jugadores de Premier League asume equivalencia de contexto competitivo que no existe. Las métricas defensivas en Ligue 1 (liga con menor intensidad de presión media) no son equivalentes a las mismas métricas en Premier League. El algoritmo no ajusta por dificultad de liga, introduciendo sesgo cuando el pool mezcla jugadores de contextos competitivos heterogéneos._
 
@@ -378,6 +344,8 @@ LILLE:
 -->
 
 Los tres equipos seleccionados presentan modelos de negocio convergentes, pero con matices tácticos distintivos. A continuación se documentan las principales cadenas de sustitución ejecutadas entre 2022 y 2026, estructuradas por posición y secuencia temporal.
+
+**Nota sobre período de análisis:** El período principal del estudio abarca 2022-2026. Sin embargo, algunas cadenas de sustitución incluyen operaciones anteriores (Gabriel 2017, Soumaré 2017, Osimhen 2019) para documentar la secuencia completa y demostrar la continuidad del modelo de negocio. El análisis algorítmico (PCA + similitud coseno) se aplica únicamente a sustituciones donde la disponibilidad de datos FBref lo permite, típicamente desde temporada 2019/20 en adelante para Big 5.
 
 ### 3.1. Villarreal CF: Modelo de Renovación Continua
 
@@ -623,268 +591,339 @@ Esta evidencia empírica refuta la narrativa de que la generación de plusvalía
 
 ### 4.1. Resumen Ejecutivo
 
-[TODO]
+El análisis algorítmico evalúa 26 sustituciones ejecutadas por los tres clubes entre 2019 y 2025, aplicando PCA + similitud coseno para determinar si los fichajes presentan proximidad estadística con los jugadores vendidos.
+
+**Resultados agregados:**
+
+| Clasificación | Casos | Porcentaje | Criterio |
+|---------------|-------|------------|----------|
+| VALIDADO | 12 | 46% | Rank 1-10 en pool filtrado |
+| PARCIAL | 4 | 15% | Rank 11-30 en pool filtrado |
+| NO VALIDADO | 10 | 38% | Rank >30 en pool filtrado |
+
+**Distribución por equipo:**
+
+| Equipo | VAL | PAR | NO VAL | Plusvalía |
+|--------|-----|-----|--------|-----------|
+| Villarreal CF | 6 | 3 | 3 | +137M€ |
+| Eintracht Frankfurt | 4 | 1 | 1 | +155M€ |
+| LOSC Lille | 2 | 0 | 6 | +193M€ |
+
+**Rango de similitud observado:**
+
+| Métrica | Caso | Score |
+|---------|------|-------|
+| Máximo | Ndicka → Pacho | 0.845 |
+| Mínimo VALIDADO | Kolo Muani → Ekitike | 0.006 |
+| Mínimo PARCIAL | Sørloth → Barry | 0.035 |
+| Mínimo (negativo) | Osimhen → David | -0.440 |
+
+**Distribución por posición:**
+
+| Posición | Casos | VALIDADO | Tasa |
+|----------|-------|----------|------|
+| Delantero Centro (ST) | 11 | 6 | 55% |
+| Defensa Central (CB) | 7 | 3 | 43% |
+| Lateral (LB/RB) | 5 | 3 | 60% |
+| Mediocampista (CM/CDM) | 2 | 0 | 0% |
+| Portero (GK) | 1 | 0 | 0% |
+
+Las posiciones ofensivas y de banda presentan tasas de validación superiores, mientras que mediocampistas y porteros muestran mayor divergencia entre perfiles vendidos y fichados. Esto sugiere que las métricas disponibles capturan mejor los roles de finalización y progresión que los de organización y distribución.
+
+La interpretación de estos resultados y la comparación entre modelos operativos se desarrolla en la sección 4.5.
 
 ### 4.2. Villarreal CF
-
-#### 4.2.1. Delantero Centro
-
-**Nicolas Jackson → Alexander Sørloth (22/23)**
-
+4.2.1. Delantero Centro
+Nicolas Jackson → Alexander Sørloth (22/23)
 Alexander Sørloth aparece en posición #4 del pool filtrado (≤15M€, ≤26 años) con similitud de 0.137, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un finalizador puro con perfil convergente pese al score moderado.
-
 El radar revela similitud estructural clara en la dimensión fundamental: ambos delanteros comparten el perfil de nueves de área con métricas casi idénticas en xG (1.5 vs 1.6), volumen de disparo (7.8 ambos) y calidad de ocasiones (npxG/shot P95+). La convergencia es evidente: dos finalizadores puros con baja contribución creativa que viven de rematar ocasiones en zona de peligro.
-
 La divergencia está en Goals-xG, y es lo que explica que la similitud sea moderada en lugar de alta. Jackson acumuló +4.2 (P96) en 22/23, un sobrerendimiento brutal que no es sostenible a largo plazo, mientras Sørloth marcó -0.7 (P35), claramente por debajo de lo esperado esa temporada en la Real Sociedad. El Villarreal apostó por que la divergencia era temporal, no estructural, y acertó: Sørloth produjo 0.83 xG/90 en 23/24, marcó 22 goles en liga y fue vendido al Atlético por 32M€. La operación generó +22M€ de plusvalía (10M€ fichaje → 32M€ venta).
+ 
 
-**Alexander Sørloth → Thierno Barry (23/24)**
 
-Thierno Barry aparece en posición #10 del pool filtrado (≤15M€, ≤24 años) con similitud de apenas 0.035, clasificándose como NO VALIDADO. El algoritmo detecta divergencia significativa, pero el resultado está fuertemente contaminado por un problema de calidad de datos.
 
+Alexander Sørloth → Thierno Barry (23/24)
+Thierno Barry aparece en posición #10 del pool filtrado (≤15M€, ≤24 años) con similitud de apenas 0.035, clasificándose como PARCIAL (por score, no por posición). El algoritmo detecta divergencia significativa, pero el resultado está fuertemente contaminado por un problema de calidad de datos.
 El radar sugiere perfiles radicalmente diferentes: Sørloth domina en múltiples dimensiones ofensivas mientras Barry presenta métricas más limitadas. Sin embargo, el sesgo crítico es que Barry jugaba en la liga suiza, donde FBref ofrece cobertura estadística significativamente inferior a las Big 5. Crucialmente, la Swiss Super League no dispone de datos de toques, lo que obliga al algoritmo a normalizar las métricas por 90 minutos en lugar de per 100 touches. Esto penaliza artificialmente la similitud calculada.
+El resultado PARCIAL refleja más las limitaciones de los datos disponibles que una evaluación robusta del perfil real de Barry. En contexto profesional, el Villarreal habría empleado proveedores premium (Wyscout, InStat) con cobertura completa de la Swiss League para validar el fichaje antes de invertir 20M€. La operación generó +10M€ de plusvalía (20M€ fichaje → 30M€ venta a Everton).
+ 
 
-El resultado NO VALIDADO refleja más las limitaciones de los datos disponibles que una evaluación robusta del perfil real de Barry. En contexto profesional, el Villarreal habría empleado proveedores premium (Wyscout, InStat) con cobertura completa de la Swiss League para validar el fichaje antes de invertir 20M€. La operación generó +10M€ de plusvalía (20M€ fichaje → 30M€ venta a Everton).
 
-**Thierno Barry → Tani Oluwaseyi (24/25)**
 
+
+Thierno Barry → Tani Oluwaseyi (24/25)
 Tani Oluwaseyi aparece en posición #3 del pool filtrado (≤20M€, ≤24 años) con similitud de 0.274, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un finalizador con perfil convergente desde la MLS.
-
 El radar revela convergencia fundamental entre ambos delanteros: finalizadores de área con métricas de generación de ocasiones en percentiles superiores (xG P95 vs P88, touches in box P96 vs P89). Ambos operan como nueves puros con baja contribución creativa (SCA P15 vs P27) y eficiencia de ocasiones equivalente (npxG per shot 0.17 vs 0.16).
-
 La divergencia está en Goals-xG, que explica la similitud moderada. Barry acumuló -1.5 (P19) en 24/25 con el Villarreal, un subrendimiento severo que contrasta con el +0.40 (P60) de Oluwaseyi en la MLS. El fichaje responde a lógica de corrección estadística: reemplazar un delantero que generaba alto xG pero convertía mal con uno que mantiene perfil de finalización similar a precio inferior (8M€ desde Minnesota). El algoritmo valida correctamente un perfil funcionalmente equivalente, asumiendo que la métrica Goals-xG de Barry era corregible mediante cambio de entorno.
  
-#### 4.2.2. Portero
 
-**Filip Jørgensen → Luiz Júnior (23/24)**
 
-Luiz Júnior aparece en posición #15 del pool filtrado (≤15M€, ≤26 años) con similitud de 0.193, clasificándose como NO VALIDADO. El algoritmo detecta divergencias estructurales concentradas en la métrica más crítica para porteros: PSxG +/-.
 
+4.2.2. Portero
+Filip Jørgensen → Luiz Júnior (23/24)
+Luiz Júnior aparece en posición #15 del pool filtrado (≤15M€, ≤26 años) con similitud de 0.193, clasificándose como PARCIAL. El algoritmo detecta divergencias estructurales concentradas en la métrica más crítica para porteros: PSxG +/-.
 El radar revela divergencia abismal en rendimiento. Jørgensen acumuló -2.2 (P36) en 23/24, encajando 2.2 goles más de lo esperado según la dificultad de los disparos recibidos, un rendimiento claramente por debajo del estándar. Luiz Júnior presentaba +10 (P98) en la liga portuguesa, evitando 10 goles más de lo esperado, un sobrerendimiento extremo. Esta divergencia de 12.2 goles en la métrica fundamental de calidad de parada invalida la similitud pese a convergencias en otras dimensiones como save % (72 vs 75), juego de pies (pass accuracy 80 vs 75) o posicionamiento como líbero (sweeper actions/distance similares).
-
-El resultado NO VALIDADO confirma que el Villarreal no buscó un perfil estadísticamente equivalente sino un upgrade deliberado, fichando un portero con métricas de rendimiento superiores desde liga secundaria. El algoritmo correctamente rechaza la validación porque la distancia en PSxG +/- supera lo explicable por variabilidad temporal.
+El resultado PARCIAL confirma que el Villarreal no buscó un perfil estadísticamente equivalente sino un upgrade deliberado, fichando un portero con métricas de rendimiento superiores desde liga secundaria. El algoritmo correctamente rechaza la validación porque la distancia en PSxG +/- supera lo explicable por variabilidad temporal.
  
-#### 4.2.3. Defensa Central
 
-**Pau Torres → Logan Costa (22/23)**
 
-Logan Costa aparece en posición #2 del pool filtrado (≤15M€, ≤24 años) con similitud de 0.654, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un central zurdo constructor con perfil convergente desde la liga portuguesa.
-
+4.2.3. Defensa Central
+Pau Torres → Logan Costa (22/23)
+Logan Costa aparece en posición #2 del pool filtrado (≤15M€, ≤24 años) con similitud de 0.654, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un central similar constructor con perfil convergente desde la liga francesa.
 El radar revela convergencia clara en la dimensión fundamental: capacidad de construcción desde atrás. Costa replica métricas nucleares de Pau Torres: pass accuracy similar (83% vs 85%), progressive passes en percentiles altos (7.0 P80 vs 7.9 P91), y final third passes comparables (6.3 P82 vs 7.5 P95). Ambos centrales modernos que priorizan juego de pies sobre intensidad defensiva, capaces de romper líneas con pase y progresar balón controlado.
-
 La divergencia está en la fase defensiva, pero refuerza la lógica del fichaje. Costa presenta perfil más físico: mayor volumen de duelos aéreos ganados (3.1 vs 2.4), mejor aerial success % (63 P81 vs 55 P49), y el doble de intercepciones (1.1 P26 vs 0.52 P2). Torres dominaba la construcción pero era vulnerable en duelos directos. Costa mantiene las capacidades de salida de balón añadiendo presencia física que complementa mejor a Albiol/Foyth. El algoritmo valida correctamente un reemplazo que preserva la función principal mientras corrige debilidades secundarias.
  
-**Logan Costa → Renato Veiga (24/25)**
 
+
+
+Logan Costa → Renato Veiga (24/25)
 Renato Veiga aparece en posición #66 del pool filtrado (≤25M€, ≤26 años) con similitud negativa de -0.078, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque los perfiles son arquetipos opuestos, pero esto no representa un error de fichaje sino un ajuste táctico deliberado.
-
 El radar muestra perfiles complementarios, no equivalentes. Costa es un central constructor con métricas progresivas superiores: final third passes (6.0 P77 vs 4.8 P53), progressive passes (6.5 P72 vs 5.5 P51), y tackle success % élite (82% P97). Veiga es un central defensivo puro con dominio físico brutal: aerial success % (71% P94 vs 55% P53), clearances (11 P93 vs 6.4 P61), interceptions (2.6 P90 vs 1.2 P26), y shot blocks (1.8 P94 vs 0.78 P54).
-
 El contexto explica el resultado NO VALIDADO: tras la lesión de Costa, el Villarreal no buscó un reemplazo like-for-like sino reconfigurar completamente la pareja de centrales. Foyth (lateral convertido a central diestro) + Veiga (zurdo físico) forma una dupla complementaria donde Foyth asume las funciones progresivas que Costa ejecutaba mientras Veiga aporta presencia física. El algoritmo valida que NO existe similitud estadística, confirmando que el fichaje responde a cambio táctico y no a sustitución directa.
+ 
 
-**Juan Foyth → Santiago Mouriño (23/24)**
 
+
+
+Juan Foyth → Santiago Mouriño (24/25)
 Santiago Mouriño aparece en posición #3 del pool filtrado (≤20M€, ≤26 años) con similitud de 0.460, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un lateral derecho estadísticamente similar a Foyth en su última temporada en esa demarcación.
-
 El radar revela convergencia fundamental en el balance híbrido entre construcción y defensa. Mouriño replica métricas clave de Foyth: aerial duels won comparables (4.0 P86 vs 3.4 P79), shot blocks similares (1.3 P80 vs 1.4 P85), y clearances en percentiles altos (12 P96 vs 10 P89). Ambos laterales con presencia física que aportan solidez defensiva sin renunciar completamente a progresión.
-
 La divergencia está en pass accuracy (78% P25 vs 87% P71) e interceptions (3.0 P95 vs 1.6 P50), reflejando que Mouriño es más defensivo. Sin embargo, esta diferencia no invalida la similitud estructural: el algoritmo detecta correctamente que ambos son laterales completos con énfasis defensivo, donde Foyth priorizaba más la construcción y Mouriño el trabajo sin balón, pero mantienen el perfil funcional equivalente.
  
-#### 4.2.4. Lateral Izquierdo
 
-**Pervis Estupiñán → Johan Mojica (22/23)**
 
+
+
+4.2.4. Lateral Izquierdo
+Pervis Estupiñán → Johan Mojica (21/22)
 Johan Mojica aparece en posición #9 del pool filtrado (≤15M€, ≤28 años) con similitud de 0.114, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó un lateral ofensivo con perfil convergente.
-
 El radar revela similitud estructural clara en la dimensión ofensiva. Mojica replicaba métricas nucleares de Estupiñán: progressive passes superior (5.5 P53 vs 5.9 P61), box passes prácticamente idénticos (2.3 P91 vs 2.1 P88), expected assists equivalentes (0.20 P85 vs 0.24 P90), crosses en percentiles altos (5.8 P84 vs 7.2 P91), y touches final third ligeramente inferior (33 P90 vs 27 P78). Ambos laterales izquierdos con perfil ofensivo marcado, capaces de progresar por banda y generar ocasiones.
-
 La divergencia está en tackles+interceptions donde Mojica sale perjudicado (4.8 P49 vs 3.3 P15), pero esto reforzaba la lógica del fichaje: buscar replicar la parte ofensiva por el sistema del Villarreal. El algoritmo validó un reemplazo estadísticamente fundamentado que preservaba las capacidades ofensivas perdiendo algo de trabajo defensivo. El fracaso posterior (cedido, vendido con pérdida) no invalida la similitud del perfil sino que refleja factores no cuantificables: edad (29→32 años), adaptación, competencia con Pedraza, o declive físico acelerado.
  
-**Johan Mojica → Sergi Cardona (24/25)**
 
+
+
+Johan Mojica → Sergi Cardona (23/24)
 Sergi Cardona aparece en posición #20 del pool filtrado (≤10M€, ≤26 años) con similitud de 0.024, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque los perfiles son arquetipos opuestos, confirmando que el Villarreal corrigió estratégicamente el fichaje fallido de Mojica.
-
 El radar muestra divergencia radical. Mojica era un lateral ultraofensivo: crosses 8.1 (P93), box passes 2.5 (P94), touches final third 34 (P90), progressive carries 4.0 (P84). Cardona presenta perfil defensivo: tackles+interceptions 5.3 (P69) vs 3.6 (P30), pass accuracy 80% vs 72%, pero métricas ofensivas limitadas (crosses 3.4 P67, box passes 1.5 P71, touches final third 22 P62).
-
 El contexto explica el resultado NO VALIDADO: tras el fracaso de Mojica, el Villarreal cambió completamente la filosofía del puesto. Fichó a Cardona como agente libre (valor mercado 6M€→10M€) para formar rotación complementaria con Alfonso Pedraza. El algoritmo valida correctamente que NO existe similitud con Mojica, confirmando ajuste táctico deliberado en lugar de reemplazo directo.
+ 
 
-**Alfonso Pedraza → Sergi Cardona (24/25)**
 
+
+
+Alfonso Pedraza → Sergi Cardona (24/25)
 Sergi Cardona aparece en posición #41 del pool filtrado (≤15M€, ≤26 años) con similitud negativa de -0.443, clasificándose como NO VALIDADO. El algoritmo confirma que estos NO son perfiles equivalentes sino complementarios en rotación táctica.
-
 El radar demuestra divergencia radical. Pedraza es un wing-back ultraofensivo: progressive carries 7.6 (P98), crosses 7.9 (P93), box passes 3.3 (P98), expected assists 0.49 (P98), touches final third 30 (P82). Cardona presenta perfil equilibrado: tackles+interceptions 5.3 (P69), pass accuracy 80%, progressive passes 6.2 (P63), pero métricas ofensivas muy inferiores (crosses 3.4 P67, box passes 1.5 P71, expected assists 0.11 P62).
-
 La similitud negativa valida precisamente la estrategia del Villarreal. El club fichó a Cardona como agente libre NO para reemplazar a Pedraza sino para formar dupla complementaria. Pedraza ataca constantemente como tercer extremo, Cardona entra cuando se necesita solidez defensiva o rotación. El resultado NO VALIDADO confirma diseño táctico intencional: dos laterales con roles diferenciados, no sustitución directa.
  
-#### 4.2.5. Mediapunta / Extremo
 
-**Álex Baena → Alberto Moleiro (24/25)**
 
+
+
+
+
+4.2.5. Mediapunta / Extremo
+Álex Baena → Alberto Moleiro (24/25)
 Alberto Moleiro aparece en posición #16 del pool filtrado (≤30M€, ≤26 años) con similitud de 0.075, clasificándose como PARCIAL. El algoritmo detecta convergencia parcial pero identifica divergencias significativas que explican la similitud moderada-baja.
-
 El radar revela perfiles funcionalmente diferentes pese a compartir demarcación. Baena era un playmaker puro: expected assists 0.75 (P98), shot creating actions 5.9 (P98), crosses 13 (P96). Producción creativa élite en percentiles 95+. Moleiro presenta perfil más desequilibrante: dribbles 4.5 (P93) vs 1.3 (P45), touches in box 7.2 (P74) vs 5.7 (P65), pero creación limitada (xA 0.23 P54, SCA 3.5 P75, crosses 2.3 P40). La similitud fundamental está en el rol: ambos mediapuntas/extremos creativos con capacidad de desequilibrio, compartiendo xG comparable (0.45 P76 vs 0.40 P70).
-
 El fichaje responde a oportunidad de mercado más que a reemplazo equivalente. Moleiro costó 16M€ aprovechando el descenso de Las Palmas (valor mercado 25M€→30M€), fichaje de potencial donde el Villarreal apostó por desarrollar un talento joven complementario a Gerard Moreno, no por replicar el perfil específico de Baena. La similitud PARCIAL refleja correctamente: misma demarcación, divergencia de estilo.
+ 
 
-**EXTRA: Gerard Moreno → Georges Mikautadze (24/25)**
 
+
+
+EXTRA: Gerard Moreno → Georges Mikautadze (24/25)
 Georges Mikautadze aparece en posición #1 del pool filtrado (≤25M€, ≤26 años) con similitud de 0.472, clasificándose como VALIDADO. El algoritmo confirma que el Villarreal identificó anticipadamente un reemplazo generacional con perfil estructural convergente.
-
 El radar revela similitud fundamental en la versatilidad ofensiva. Ambos delanteros completos capaces de finalizar y crear: Mikautadze presenta xG 1.6 (P89), goals 1.7 (P91), xA 0.66 (P94); Gerard mantiene xA 0.89 (P98), SCA 4.9 (P93). Los dos operan como referentes que generan ocasiones propias y para compañeros, no son nueves puros de área.
-
 La divergencia refleja la transición generacional. Gerard acumula Goals-xG -1.2 (P23) y npxG/Shot 0.08 (P24), señales de declive físico que afectan conversión pese a mantener inteligencia táctica. Mikautadze está en pico: Goals-xG +0.70 (P68), touches in box 18 (P92) vs 11 (P63), shots 8.0 vs 5.7. El algoritmo valida correctamente un fichaje de sucesión: Mikautadze aporta más finalización directa preservando la capacidad creativa que define el rol de Gerard en el sistema del Villarreal.
+ 
+Nota: Este no es un caso de cadena de sustitución puro de venta y beneficio, pero muestra cómo en un jugador clave como Gerard, ya más que amortizado, buscar un reemplazo similar es fundamental. Algo a destacar es cómo muchas veces el jugador elegido es de la propia liga española, lo que a nivel de adaptabilidad estará más "validado".
 
-**Nota:** Este no es un caso de cadena de sustitución puro de venta y beneficio, pero muestra cómo en un jugador clave como Gerard, ya más que amortizado, buscar un reemplazo similar es fundamental. Algo a destacar es cómo muchas veces el jugador elegido es de la propia liga española, lo que a nivel de adaptabilidad estará más "validado".
-
-### 4.3. Eintracht Frankfurt
-
-#### 4.3.1. Delantero Centro
-
-**Randal Kolo Muani → Omar Marmoush (22/23)**
-
+4.3. Eintracht Frankfurt
+4.3.1. Delantero Centro
+Randal Kolo Muani → Omar Marmoush (22/23)
 Omar Marmoush aparece en posición #10 del pool filtrado (≤20M€, ≤25 años) con similitud de 0.173, clasificándose como VALIDADO. El algoritmo confirma que el Frankfurt identificó un perfil funcionalmente equivalente a coste cero, replicando su modelo de negocio paradigmático.
-
 El radar demuestra que Marmoush es un "mini Kolo Muani". Mantiene la esencia del perfil: delantero móvil con capacidad de regate (dribbles 5.1 P87 vs 6.7 P95), finalización desde movimiento (xG 0.82 P64 vs 1.2 P83), y presencia en área (touches in box 12 P68 vs 18 P95). La diferencia está en el volumen: Marmoush opera a escala inferior pero preserva las proporciones del arquetipo. La divergencia crítica es xA (0.16 P10 vs 0.61 P93), donde Kolo Muani aportaba creación élite que Marmoush no replica.
-
 Dos factores validan la operación más allá del score algorítmico. Primero, fichaje como agente libre desde Wolfsburgo, ROI infinito que replica el modelo Kolo Muani (gratis→95M€). Segundo, procedencia Bundesliga, eliminando riesgo de adaptación y acelerando integración táctica. El algoritmo valida correctamente un reemplazo data-driven donde el coste cero y la familiaridad contextual compensan la similitud moderada. La operación generó +75M€ de plusvalía (gratis → 75M€ venta a Man City).
  
 
-**Randal Kolo Muani → Hugo Ekitike (22/23)**
 
-Hugo Ekitike aparece en posición #8 del pool filtrado (≤25M€, ≤23 años) con similitud de 0.006, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque el Frankfurt ejecutó una estrategia de desarrollo a largo plazo, no un reemplazo inmediato.
-
+Randal Kolo Muani → Hugo Ekitike (22/23)
+Hugo Ekitike aparece en posición #8 del pool filtrado (≤25M€, ≤23 años) con similitud de 0.006, clasificándose como PARCIAL (por score, no por posición). El algoritmo rechaza correctamente la similitud porque el Frankfurt ejecutó una estrategia de desarrollo a largo plazo, no un reemplazo inmediato.
 El radar confirma divergencias radicales. Ekitike presenta perfil significativamente inferior en todas las dimensiones: xG 0.78 (P62) vs 1.2 (P83), goals 0.63 vs 1.4, touches in box 13 (P76) vs 18 (P95), dribbles 3.4 (P64) vs 6.7 (P95), xA 0.34 (P51) vs 0.61 (P93). Crucialmente, Goals-xG de -0.7 (P35) indica subrendimiento severo que contrasta con el +1.8 (P83) de Kolo Muani.
-
-El contexto explica el resultado NO VALIDADO: el Frankfurt fichó a Ekitike (20 años) primero cedido del PSG para evaluar su potencial sin compromiso. La cesión permitía desarrollo sin riesgo financiero. El algoritmo con filtros de edad restrictivos valida que Ekitike era apuesta de potencial, no sustitución data-driven.
+El contexto explica el resultado PARCIAL: el Frankfurt fichó a Ekitike (20 años) primero cedido del PSG para evaluar su potencial sin compromiso. La cesión permitía desarrollo sin riesgo financiero. El algoritmo con filtros de edad restrictivos valida que Ekitike era apuesta de potencial, no sustitución data-driven.
  
-**Omar Marmoush → Elye Wahi (24/25)**
 
+
+
+
+
+
+Omar Marmoush → Elye Wahi (23/24)
 Elye Wahi aparece en posición #10 del pool filtrado (≤40M€, ≤24 años) con similitud de 0.244, clasificándose como VALIDADO. El algoritmo identifica correctamente la convergencia estructural pero detecta la divergencia crítica que explica la similitud moderada.
-
 El radar confirma que Wahi es estadísticamente superior en generación: xG 2.4 (P97) vs 1.2 (P80), shots 12 (P96) vs 8.2 (P81), touches in box 23 (P97) vs 16 (P85), npxG per shot 0.18 (P91) vs 0.13 (P66). Números de élite en todas las dimensiones ofensivas. Sin embargo, la métrica Goals-xG revela el problema: -2.5 (P9), un underperformance brutal. Wahi generó 2.4 xG pero solo marcó 1.9 goles, debería haber marcado ~4.4 goles.
-
 Esta divergencia explica perfectamente la similitud moderada. El Frankfurt fichó (primero cedido del Marsella, luego comprado 26M€) un delantero con capacidad de generación de ocasiones superior a Marmoush pero con conversión deficiente. La apuesta era que el underperformance de Wahi era temporal y corregible en mejor contexto. El algoritmo valida un reemplazo donde el perfil funcional converge (delantero móvil, finalizador) pero la eficiencia diverge radicalmente, reflejando fichaje de alto riesgo-alta recompensa.
  
 
-**Hugo Ekitike → Jonathan Burkardt (24/25)**
 
+
+
+
+Hugo Ekitike → Jonathan Burkardt (24/25)
 Jonathan Burkardt aparece en posición #9 del pool filtrado (≤40M€, ≤26 años) con similitud de 0.267, clasificándose como VALIDADO. El algoritmo detecta convergencia en la dimensión goleadora fundamental pero identifica el trade-off estratégico que ejecutó el Frankfurt.
-
 El radar revela perfiles complementarios más que idénticos. Ekitike generaba ocasiones de élite: xG 2.0 (P95), xA 0.65 (P94), dribbles 4.9 (P91), SCA 3.5 (P71). Delantero creativo, móvil, asociativo. Pero convertía fatal: Goals-xG -6.6 (P1), el peor underperformance del dataset. Generaba 2.0 xG y solo marcaba 1.4 goles.
-
 Burkardt invierte la ecuación. Genera menos creatividad: xA 0.39 (P62), dribbles 2.0 (P39), SCA 2.3 (P30). Pero convierte brutal: Goals-xG +3.2 (P92), marcó 2.3 goles con 1.9 xG. El Frankfurt sacrificó deliberadamente movilidad y asociación por eficiencia de conversión pura, manteniendo el xG similar (~2.0 vs 1.9) pero fichando un finalizador clínico en lugar de un creador que no remataba. El algoritmo valida un reemplazo donde el perfil goleador converge pero el estilo de juego diverge intencionalmente.
  
 
-#### 4.3.2. Defensa Central
 
-**Evan N'Dicka → Willian Pacho (22/23)**
 
+
+
+4.3.2. Defensa Central
+Evan N'Dicka → Willian Pacho (22/23)
 Willian Pacho aparece en posición #1 del pool filtrado (≤25M€, ≤26 años) con similitud de 0.845, clasificándose como VALIDADO con el score más alto del análisis completo. El algoritmo confirma que el Frankfurt identificó un central zurdo con convergencia estructural casi perfecta.
-
 El radar revela similitud brutal en la dimensión constructor: pass accuracy prácticamente idéntico (86% P79 vs 85% P74), progressive passes convergentes (4.4 P20 vs 4.5 P23), aerial success % similar (61% vs 59%). Ambos centrales zurdos modernos con capacidad de salida de balón, perfil que define el estilo Frankfurt en defensa.
-
 La divergencia está en el matiz físico-defensivo. N'Dicka dominaba más el juego aéreo (aerial duels won 3.6 P77, clearances 6.9 P82), mientras Pacho compensa con mayor actividad anticipatoria (interceptions 2.1 P60 vs 1.4 P29, tackles+interceptions 4.4 P41 vs 2.6 P7). Perfiles complementarios dentro del mismo arquetipo fundamental.
-
 El resultado valida completamente el modelo Frankfurt: ficharon a Pacho (20 años, 11M€ desde liga belga) y lo vendieron al PSG por 40M€ tras una temporada. La operación generó +29M€ de plusvalía, replicando exactamente el patrón ejecutado con N'Dicka. El score 0.845 confirma precisión analítica máxima.
  
 
-**Willian Pacho → Arthur Theate (24/25)**
 
+
+
+Willian Pacho → Arthur Theate (23/24)
 Arthur Theate aparece en posición #67 del pool filtrado (≤25M€, ≤26 años) con similitud de 0.017, clasificándose como NO VALIDADO. El algoritmo rechaza correctamente la similitud porque el Frankfurt ejecutó un cambio táctico estructural, no una sustitución directa.
-
 El contexto crítico es el cambio de sistema defensivo. En defensa de 3, Pacho operaba como central zurdo corrector con función física (clearances 5.7 P70, aerial duels), perfil especializado para ese rol específico. El Frankfurt pasó a defensa de 4, donde el central zurdo requiere completitud: Theate presenta progressive passes 8.0 (P92) vs 5.6 (P47), final third passes 6.9 (P89) vs 5.1 (P63), tackle success 64% (P74) vs 58% (P52), shot blocks 1.2 (P77) vs 0.83 (P56).
-
 El radar muestra que Theate no es "similar pero mejor" sino funcionalmente diferente: constructor de élite (P89-92 en progresión) donde Pacho era corrector físico. Crucialmente, Theate puede operar también como falso lateral izquierdo en esquema 4-3-3/4-2-3-1, aportando versatilidad que Pacho no tenía. El resultado NO VALIDADO confirma cambio de filosofía táctica completo, no error algorítmico.
-### 4.4. LOSC Lille
+ 
 
+
+
+
+4.4. LOSC Lille
 El caso Lille representa un contraste metodológico fundamental con Villarreal y Frankfurt. Mientras estos clubes buscan reemplazos estadísticamente similares, Lille opera bajo un modelo de desarrollo de talento joven donde la similitud de perfil es secundaria respecto al potencial de crecimiento. Los resultados algorítmicos, mayoritariamente NO VALIDADOS, no representan fracasos de identificación sino confirmación de una filosofía diferente.
-
-#### 4.4.1. Defensa Central
-
-**Gabriel Magalhães → Sven Botman (19/20)**
-
+4.4.1. Defensa Central
+Gabriel Magalhães → Sven Botman (19/20)
 Sven Botman aparece en posición #8 del pool filtrado (≤15M€, ≤24 años) con similitud de 0.439, clasificándose como VALIDADO. El algoritmo confirma que Lille identificó correctamente un central zurdo constructor con perfil convergente desde la Eredivisie.
-
 El radar revela similitud estructural clara en la dimensión más crítica: capacidad de construcción desde atrás. Botman replica métricas nucleares de Gabriel: pass accuracy convergente (83% P63 vs 81% P59), progressive passes similares (5.7 P51 vs 6.1 P63), y aerial success % comparable (73% P95 vs 64% P82). Ambos centrales zurdos modernos que priorizan salida de balón sobre intensidad defensiva pura.
-
 La divergencia está en el perfil físico-defensivo. Gabriel presentaba más clearances (4.9 P55 vs 6.8 P76) y shot blocks (1.0 P71 vs 0.66 P49), mientras Botman compensaba con mejor tackle success % (77% P67 vs 68% P81). El algoritmo valida correctamente un reemplazo donde el perfil constructor converge preservando la función principal del puesto en el sistema Lille. La operación generó +29M€ de plusvalía (8M€ fichaje → 37M€ venta a Newcastle).
-
-**Sven Botman → Bafodé Diakité (21/22 → 19/20 exógeno)**
-
-Bafodé Diakité (versión 19/20 en Toulouse, 3 años antes del fichaje) aparece en posición #16 del pool filtrado con similitud de 0.091, clasificándose como NO VALIDADO. El algoritmo detecta divergencia significativa pero el contexto explica la lógica operativa.
-
+ 
+Sven Botman → Bafodé Diakité (21/22 → 19/20 exógeno)
+Bafodé Diakité (versión 19/20 en Toulouse, 3 años antes del fichaje) aparece en posición #16 del pool filtrado con similitud de 0.091, clasificándose como NO VALIDADO.
+Nota metodológica: Se emplea temporada 19/20 porque Toulouse militaba en Ligue 2 durante 20/21 y 21/22, donde FBref no dispone de cobertura de datos. Esta limitación temporal debe considerarse al interpretar el resultado. El algoritmo detecta divergencia significativa pero el contexto explica la lógica operativa.
 El radar confirma perfiles diferenciados. Botman 21/22 era un constructor consolidado: pass accuracy 87% (P70), progressive passes 4.5 (P28), aerial success 67% (P81). Diakité 19/20 presentaba perfil más físico-defensivo: tackle success 53% (P40), clearances 9.1 (P70), pero métricas progresivas inferiores (pass accuracy 85% P77, progressive passes 5.2 P46).
+El resultado PARCIAL refleja la estrategia Lille de identificación temprana. Ficharon a Diakité a los 21 años por 3M€ desde Toulouse, apostando por desarrollo durante 3 temporadas antes de venderlo por 35M€ al Bournemouth. El algoritmo correctamente rechaza la similitud inmediata porque Lille no buscaba un reemplazo estadístico sino un proyecto de desarrollo con potencial de apreciación. La plusvalía de +32M€ valida la estrategia pese al resultado algorítmico.
+ 
 
-El resultado NO VALIDADO refleja la estrategia Lille de identificación temprana. Ficharon a Diakité a los 21 años por 3M€ desde Toulouse, apostando por desarrollo durante 3 temporadas antes de venderlo por 35M€ al Bournemouth. El algoritmo correctamente rechaza la similitud inmediata porque Lille no buscaba un reemplazo estadístico sino un proyecto de desarrollo con potencial de apreciación. La plusvalía de +32M€ valida la estrategia pese al resultado algorítmico.
 
-**Bafodé Diakité → Nathan Ngoy (24/25)**
 
+Bafodé Diakité → Nathan Ngoy (24/25)
 Nathan Ngoy aparece en posición #57 del pool filtrado (≤10M€, ≤24 años) con similitud negativa de -0.396, clasificándose como NO VALIDADO. El algoritmo rechaza categóricamente la similitud, confirmando que Lille ejecuta nuevamente el mismo patrón de desarrollo.
-
-El radar demuestra divergencia radical. Diakité 24/25 había evolucionado a constructor de élite: pass accuracy 93% (P87), progressive passes 3.6 (P11), aerial success 72% (P96). Ngoy desde la liga belga presenta perfil significativamente inferior en todas las dimensiones: pass accuracy 81% (P44), progressive passes 6.8 (P75), aerial success 57% (P63). La similitud negativa indica perfiles estadísticamente opuestos.
-
+El radar demuestra divergencia radical. Diakité 24/25 había evolucionado a constructor de élite: pass accuracy 93% (P87), progressive passes 3.6 (P11), aerial success 72% (P96). Ngoy desde la liga belga presenta perfil inferior en construcción: pass accuracy 81% (P44), aerial success 57% (P63). Sin embargo, Ngoy destaca abismalmente en métricas defensivas respecto a Diakité: tackles+interceptions, clearances, y progressive passes 6.8 (P75) vs 3.6 (P11). La similitud negativa indica perfiles estadísticamente opuestos, similar al patrón observado en Botman → Diakité: central constructor reemplazado por central más físico-defensivo con potencial de desarrollo.
 El contexto valida la lógica: Ngoy fichado por 3.5M€ desde Standard Liège replica exactamente el modelo Diakité (fichaje joven desde liga secundaria a precio bajo). Lille apuesta por que Ngoy desarrollará capacidades similares en 2-3 temporadas. El resultado NO VALIDADO confirma que el algoritmo detecta correctamente la ausencia de similitud actual, mientras Lille opera bajo hipótesis de convergencia futura mediante desarrollo interno.
+ 
 
-#### 4.4.2. Mediocampista Defensivo
 
-**Boubakary Soumaré → Amadou Onana (20/21 → 21/22)**
 
-Amadou Onana aparece en posición #36 del pool filtrado (≤25M€, ≤25 años) con similitud negativa de -0.325, clasificándose como NO VALIDADO. El algoritmo rechaza la similitud porque los perfiles son arquetipos funcionalmente opuestos, pero esto confirma ajuste táctico deliberado.
-
+4.4.2. Mediocampista Defensivo
+Boubakary Soumaré → Amadou Onana (20/21 → 21/22)
+Nota metodológica: Este es un análisis post-hoc. Onana fichó por Lille en agosto 2021 procedente del Hamburgo (2ª Bundesliga), donde no existían datos FBref disponibles. El análisis compara Soumaré 20/21 (última temporada en Lille) con Onana 21/22 (primera temporada completa en Lille), evaluando retrospectivamente si el fichaje "cumplió" el patrón de divergencia de perfil con éxito deportivo y financiero.
+Amadou Onana aparece en posición #36 del pool filtrado (≤25M€, ≤25 años) con similitud negativa de -0.325, clasificándose como NO VALIDADO. El algoritmo rechaza la similitud porque los perfiles son arquetipos funcionalmente opuestos.
 El radar revela divergencia estructural clara. Soumaré era un pivote progresivo-técnico: progressive passes 10 (P91), pass accuracy 86% (P88), interceptions 2.3 (P69), pero tackle success % limitado (40% P65). Onana presenta perfil físico-defensivo radicalmente diferente: tackles+interceptions 9.7 (P97), recoveries 12 (P83), progressive carries 3.0 (P46), pero progressive passes muy inferior (7.3 P48).
+El análisis post-hoc confirma el patrón "NO SIMILAR pero TOP": Onana, pese a no replicar estadísticamente a Soumaré, demostró ser fichaje élite. Tras la venta de Soumaré (20M€), Lille no buscó replicar su perfil técnico sino complementar el sistema con características diferentes. Onana aportaba presencia física y capacidad de recuperación que Soumaré no tenía. El resultado NO VALIDADO confirma que el algoritmo detecta correctamente perfiles diferentes, pero el éxito financiero demuestra que la divergencia fue deliberada y rentable.
+ 
 
-El contexto explica el resultado NO VALIDADO: tras la venta de Soumaré (20M€), Lille no buscó replicar su perfil técnico sino complementar el sistema con un perfil diferente. Onana aportaba presencia física y capacidad de recuperación que Soumaré no tenía. El fichaje por 6.5M€ y posterior venta por 40M€ al Everton (+33.5M€ plusvalía) valida la estrategia. El algoritmo confirma correctamente que NO son perfiles equivalentes, reflejando cambio de rol táctico deliberado más que error de identificación.
-
-**Carlos Baleba → Nabil Bentaleb (22/23)**
-
+Carlos Baleba → Nabil Bentaleb (22/23)
 Nabil Bentaleb aparece en posición #35 del pool filtrado (≤20M€, ≤28 años) con similitud negativa de -0.085, clasificándose como NO VALIDADO. El algoritmo rechaza la similitud, confirmando que este fichaje representa un error de identificación más que un cambio táctico deliberado.
-
 El análisis presenta una limitación crítica: Baleba acumuló solo 478 minutos en 22/23 (por debajo del umbral estándar de 1000), lo que reduce la representatividad estadística de su perfil. Sin embargo, el radar disponible revela divergencia estructural clara. Baleba presentaba perfil físico-dinámico: progressive carries 4.2 (P63), recoveries 9.9 (P43), fouls drawn 4.7 (P69), tackle success 64% (P95). Bentaleb desde Angers mostraba perfil técnico-estático radicalmente diferente: progressive passes 8.1 (P57), pass accuracy 81% (P48), pero progressive carries muy inferior (2.1 P30) y recoveries limitadas (10 P56).
-
 La divergencia más significativa está en el dinamismo: Baleba era un box-to-box físico capaz de progresar con balón y recuperar; Bentaleb era un distribuidor posicional sin movilidad. El fichaje como agente libre (27 años, valor residual) no generó pérdida económica directa, pero Bentaleb no logró replicar la función de Baleba en el sistema y fue considerado fichaje fallido. El resultado NO VALIDADO confirma que el algoritmo habría detectado la incompatibilidad de perfiles, validando su utilidad como herramienta de filtrado previo.
-
-**Nota metodológica:** El caso Baleba ilustra una limitación del análisis retrospectivo: jugadores con minutos insuficientes no pueden ser evaluados con la misma robustez estadística. En contexto profesional, el departamento de scouting habría empleado datos de categorías inferiores o métricas cualitativas complementarias para evaluar un jugador de cantera con participación limitada en primer equipo.
-
-#### 4.4.3. Delantero Centro
-
-**Victor Osimhen → Jonathan David (19/20)**
-
+ 
+Nota metodológica: El caso Baleba ilustra una limitación del análisis retrospectivo: jugadores con minutos insuficientes no pueden ser evaluados con la misma robustez estadística. En contexto profesional, el departamento de scouting habría empleado datos de categorías inferiores o métricas cualitativas complementarias para evaluar un jugador de cantera con participación limitada en primer equipo.
+4.4.3. Delantero Centro
+Victor Osimhen → Jonathan David (19/20)
 Jonathan David aparece en posición #55 del pool filtrado (≤40M€, ≤24 años) con similitud negativa de -0.440, clasificándose como NO VALIDADO. El algoritmo rechaza categóricamente la similitud porque los perfiles representan arquetipos de delantero centro radicalmente diferentes.
-
 El radar confirma la divergencia fundamental. Osimhen era un finalizador puro de élite: xG 2.3 (P98), goals 1.9 (P94), touches in box 21 (P98), shots 12 (P96). Perfil de nueve de área con presencia física brutal y finalización en volumen. David presentaba perfil técnico-asociativo completamente diferente: xG 1.1 (P76), goals 1.7 (P90), touches in box 13 (P78), pero xA 0.38 (P58) y dribbles 3.7 (P63) superiores.
-
-La métrica crítica es Goals-xG: Osimhen acumuló -2.5 (P6), un underperformance severo que sugería que su producción goleadora era incluso inferior a lo esperado por la calidad de sus ocasiones. David presentaba +0.70 (P64), indicando mejor eficiencia de conversión. El algoritmo rechaza correctamente la similitud porque David no es un "mini Osimhen" sino un delantero funcionalmente diferente: más móvil, más asociativo, menos dependiente de ocasiones en área.
-
+La métrica crítica es Goals-xG: Osimhen acumuló -2.5 (P6), un underperformance severo que sugería que su producción goleadora era incluso inferior a lo esperado por la calidad de sus ocasiones. David presentaba +6.4 (P98), elite absoluta, indicando una mejor eficiencia de conversión. El algoritmo rechaza correctamente la similitud porque David no es un "mini Osimhen" sino un delantero funcionalmente diferente: más móvil, más asociativo, menos dependiente de ocasiones en área.
 El fichaje por 27M€ desde Gent fue apuesta por perfil complementario, no reemplazo estadístico. Sin embargo, la mala gestión contractual (David sale libre en 2025, -27M€ de pérdida) convierte esta operación en el mayor fracaso financiero del caso Lille, contrastando con el éxito de Osimhen (+56.5M€).
+ 
 
-**Jonathan David → Hamza Igamane (24/25)**
-
-Hamza Igamane aparece en posición #24 del pool filtrado (≤15M€, ≤24 años) con similitud negativa de -0.405, clasificándose como NO VALIDADO. El resultado debe contextualizarse por la limitación crítica de datos: la Scottish Premiership dispone solo de 44 métricas en FBref (vs 145 Big 5), forzando el análisis a usar únicamente 20 métricas comunes.
-
+Jonathan David → Hamza Igamane (24/25)
+Hamza Igamane aparece en posición #24 del pool filtrado (≤15M€, ≤24 años) con similitud negativa de -0.405, clasificándose como NO VALIDADO. El resultado debe contextualizarse por la limitación crítica de datos: la Scottish Premiership dispone solo de 44 métricas en FBref (vs +145 Big 5), forzando el análisis a usar únicamente 20 métricas comunes (como en Sorloth vs Barry)
 El radar con métricas reducidas muestra convergencia parcial en la dimensión goleadora fundamental. David 24/25 presenta goals 0.56 (P90), G+A 0.74 (P90), shots 2.3 (P62). Igamane desde Rangers muestra goals 0.55 (P89), G+A 0.59 (P79), shots 4.1 (P90). Ambos delanteros con producción goleadora comparable en percentiles altos.
-
 La divergencia está en la eficiencia: David presenta goals per shot 0.18 (P68), Igamane 0.13 (P61). David convierte mejor con menos volumen. Sin embargo, la similitud negativa refleja principalmente la incompatibilidad de datasets más que divergencia de perfiles reales. En contexto profesional, Lille habría empleado proveedores premium con cobertura completa de la Scottish Premiership.
-
 El fichaje por 11.5M€ representa continuidad del modelo Lille: delantero joven (21 años) desde liga secundaria con potencial de desarrollo. El resultado algorítmico NO VALIDADO debe interpretarse con cautela por las limitaciones de datos, no como rechazo definitivo del perfil.
+ 
 
-#### 4.4.4. Lateral Izquierdo
 
-**EXTRA: Gabriel Gudmundsson → Romain Perraud (24/25)**
 
-Romain Perraud aparece en posición #4 del pool filtrado (≤15M€, ≤28 años) con similitud de 0.295, clasificándose como VALIDADO. El algoritmo confirma que Perraud representa un perfil convergente con Gudmundsson dentro de las restricciones económicas de Lille.
-
+4.4.4. Lateral Izquierdo
+EXTRA: Gabriel Gudmundsson → Romain Perraud (24/25)
+Romain omain Perraud aparece en posición #4 del pool filtrado (≤15M€, ≤28 años) con similitud de 0.295, clasificándose como VALIDADO. El algoritmo confirma que Perraud representa un perfil convergente con Gudmundsson dentro de las restricciones económicas de Lille.
 El radar revela convergencia sólida en las dimensiones fundamentales del lateral moderno. Ambos comparten producción ofensiva casi idéntica: crosses 4.7 (P78) vs 5.0 (P78), expected assists 0.11 (P64) vs 0.11 (P65), touches final third 32 (P86) vs 29 (P81). El trabajo defensivo también converge: tackles+interceptions 4.2 (P46) vs 4.1 (P42). La base funcional del rol es equivalente.
-
 La divergencia está en la progresión y el regate. Gudmundsson destaca en progressive passes 7.2 (P84) vs 4.4 (P24), dribbles 1.6 (P89) vs 0.78 (P64), y progressive carries 5.6 (P94) vs 3.6 (P82). Gudmundsson es un lateral más vertical y desequilibrante; Perraud opera con perfil más conservador pero igualmente efectivo en la fase final. Tackle success % también diverge (63 P63 vs 45 P11), indicando que Gudmundsson gana más duelos individuales.
-
 El ranking #10 en pool completo y #4/48 en pool filtrado demuestra que, aplicando restricciones realistas de mercado (≤15M€, ≤28 años), Perraud emerge como opción viable. Perraud (26 años, Betis, 5M€) aporta experiencia en Big 5 (Southampton, Niza, Betis) a coste reducido, compensando la menor verticalidad con madurez táctica.
-
-**Nota:** Este es un caso de planificación de sucesión prospectiva, no de venta y beneficio inmediato. Gudmundsson (24 años) es titular consolidado; el algoritmo identifica a Perraud como refuerzo o eventual sucesor, permitiendo al club anticiparse a futuras necesidades de rotación.
-
-**Síntesis del caso Lille:** El patrón de resultados mayoritariamente NO VALIDADOS no indica fracaso metodológico sino confirmación de una filosofía diferente. Lille opera bajo modelo de desarrollo de talento donde la similitud estadística inmediata es secundaria respecto al potencial de apreciación. Los únicos casos VALIDADOS (Gabriel→Botman) corresponden a reemplazos entre jugadores ya desarrollados. Los casos NO VALIDADOS reflejan fichajes de proyectos jóvenes cuya convergencia de perfil se espera tras 2-3 temporadas de desarrollo interno. El balance financiero positivo (+193M€ en el período analizado, líder Ligue 1) valida la estrategia pese a que el algoritmo no pueda capturar el potencial de desarrollo futuro.
+Nota: Este es un caso de planificación de sucesión prospectiva, no de venta y beneficio inmediato. Demuestra cómo el algoritmo puede emplearse para identificar refuerzos o sucesores de jugadores titulares actuales, permitiendo al club anticiparse a futuras salidas o necesidades de rotación.
+ 
 
 ### 4.5. Síntesis Comparativa
 
-[TODO]
+Los resultados numéricos (sección 4.1) revelan tres modelos operativos diferenciados que explican las divergencias en tasas de validación:
+
+**Villarreal: Equilibrio entre continuidad y adaptación**
+
+El club alterna entre replicar perfiles exitosos (Jackson→Sørloth, Torres→Costa) y ejecutar ajustes tácticos deliberados donde la divergencia es intencional. Costa→Veiga ilustra este segundo caso: tras lesión de Costa, Foyth migra a central y Veiga cubre un rol diferente (central zurdo con salida de balón), no una sustitución directa. Mojica→Cardona representa corrección de error previo, no búsqueda de similitud. Los casos PARCIAL (Barry, Luiz Júnior, Moleiro) comparten denominador común: fichajes desde ligas con cobertura de datos limitada donde el algoritmo opera con información incompleta.
+
+**Frankfurt: Precisión en ventanas cortas**
+
+El modelo de desarrollo acelerado (12-18 meses de exposición antes de venta) requiere transiciones tácticas fluidas, lo que explica la búsqueda sistemática de perfiles convergentes. Ndicka→Pacho ejemplifica esta precisión: central zurdo constructor reemplazado por central zurdo constructor con métricas casi idénticas. Los dos casos NO VALIDADO (Ekitike, Theate) corresponden a cambios de sistema documentados post-salida del entrenador Glasner, no a fallos de identificación.
+
+**Lille: Desarrollo sobre similitud**
+
+La tasa baja refleja un modelo donde la similitud estadística inmediata es secundaria. Lille opera en mercados de captación temprana (Pro League belga, Ligue 2, ligas menores) donde: (a) los datos disponibles son limitados, (b) los jugadores están en fase formativa con perfiles incompletos, (c) la apuesta es por potencial de desarrollo, no por rendimiento actual comparable. Los casos validados (Gabriel→Botman, Gudmundsson→Perraud) demuestran que cuando opera en mercados con datos completos, Lille identifica perfiles con precisión equivalente a Frankfurt.
+
+**Tipología de casos NO VALIDADO:**
+
+El análisis identifica tres categorías distintas que invalidan la interpretación de "NO VALIDADO = error de scouting":
+
+1. **Cambio táctico deliberado**: Costa→Veiga, Pacho→Theate, Mojica→Cardona. La divergencia es intencional porque el club busca un perfil diferente al vendido.
+
+2. **Fichaje de desarrollo**: Botman→Diakité, Diakité→Ngoy, Kolo Muani→Ekitike. El club ficha potencial proyectado, no rendimiento actual comparable. El éxito se mide en plusvalía futura, no en similitud estadística.
+
+3. **Limitación de datos**: Barry, Igamane, Onana (pre-fichaje). El algoritmo opera con información incompleta por cobertura insuficiente de ligas secundarias o ausencia de historial en primera división.
+
+Solo **Baleba→Bentaleb** se identifica como potencial error de identificación: fichaje de perfil veterano que no replica las características del canterano vendido ni responde a cambio táctico documentado.
+
+---
+
+## 5. Conclusiones
+
+Este trabajo ha analizado 26 sustituciones ejecutadas por Villarreal CF, Eintracht Frankfurt y LOSC Lille entre 2019 y 2025, aplicando un algoritmo de PCA + similitud coseno para determinar si los fichajes presentan proximidad estadística con los jugadores vendidos. Los tres clubes acumulan plusvalías combinadas de 485M€ manteniendo competitividad europea constante, validando la hipótesis de que existen estrategias data-driven replicables en el mercado de fichajes.
+
+**Hallazgos principales:**
+
+El análisis revela que el 61% de las sustituciones (VALIDADO + PARCIAL) presenta fundamentación estadística cuantificable, confirmando que estos clubes integran análisis de datos en sus procesos de decisión. Sin embargo, la distribución heterogénea entre equipos (Frankfurt 67%, Villarreal 50%, Lille 25%) demuestra que no existe un modelo único: cada club adapta el uso de datos a su estrategia operativa específica.
+
+Frankfurt maximiza precisión estadística para facilitar transiciones tácticas en ventanas cortas de desarrollo. Villarreal equilibra continuidad de perfiles con ajustes tácticos deliberados donde la divergencia es intencional. Lille prioriza potencial de apreciación sobre similitud inmediata, operando en mercados de captación temprana donde los datos disponibles son estructuralmente limitados.
+
+**El dato como apoyo, no como dogma:**
+
+El hallazgo más relevante no es la tasa de validación agregada, sino la constatación de que los casos NO VALIDADO no implican fracaso. De las 10 sustituciones clasificadas como NO VALIDADO, solo una (Bentaleb) se identifica como potencial error de identificación. Las restantes responden a cambios tácticos deliberados, fichajes de desarrollo proyectado, o limitaciones inherentes de cobertura de datos en ligas secundarias.
+
+Esta evidencia refuta la dicotomía simplista entre "scouting tradicional" y "análisis de datos". Los clubes exitosos no eligen entre ambos enfoques: los integran. El análisis cuantitativo identifica candidatos con perfiles convergentes, acota el universo de opciones, y fundamenta decisiones con criterio objetivo. El scouting tradicional evalúa factores no capturables (adaptación, mentalidad, contexto táctico específico), valida la viabilidad real de operaciones, y aporta juicio experto sobre potencial de desarrollo.
+
+El algoritmo desarrollado en este trabajo no pretende reemplazar el criterio humano ni predecir éxito deportivo. Su valor reside en distinguir decisiones fundamentadas estadísticamente de decisiones puramente oportunistas, proporcionando una capa adicional de validación que complementa —nunca sustituye— el proceso integral de scouting profesional.
+
+**Limitaciones y líneas futuras:**
+
+El análisis opera con datos públicos gratuitos, excluyendo métricas físicas (tracking GPS), información contractual detallada, y cobertura completa de ligas secundarias. Estas limitaciones explican parcialmente los resultados NO VALIDADO en fichajes procedentes de Swiss Super League, Scottish Premiership o categorías inferiores. Futuras investigaciones podrían incorporar datos propietarios para evaluar si la tasa de validación aumenta con información más completa.
+
+Adicionalmente, el enfoque retrospectivo (post-hoc) no permite evaluar la capacidad predictiva del algoritmo. Un estudio longitudinal que aplicara el método prospectivamente —identificando candidatos antes de que los clubes ejecuten fichajes— proporcionaría evidencia más robusta sobre su utilidad práctica en contexto real de scouting.
+
+**Reflexión final:**
+
+Este trabajo demuestra que Villarreal, Frankfurt y Lille han desarrollado la capacidad de convertir métricas de rendimiento en decisiones de mercado rentables, no porque los datos dicten sus fichajes, sino porque los datos informan un proceso de decisión donde el juicio experto sigue siendo insustituible.
+
+*Dato sin contexto es ruido. Dato con contexto es información. Información con análisis es conocimiento. Conocimiento con capacidad de acción es insight.*
 
 ---
 
@@ -1049,195 +1088,197 @@ Este anexo documenta las 169+ métricas empleadas en el análisis cuantitativo d
 
 ### A.1. FBref - Estadísticas Avanzadas (185 métricas totales, ~150 normalizadas)
 
+_Definiciones oficiales derivadas de StatsBomb vía FBref._
+
 **Categoría A: Goles y Finalización**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| goals | per100touches | Big 5 + Extras |
-| non_penalty_goals | per100touches | Big 5 + Extras |
-| penalty_kicks_made | per100touches | Big 5 + Extras |
-| penalty_kicks_attempted | per100touches | Big 5 + Extras |
-| shots | per100touches | Big 5 + Extras |
-| shots_on_target | per100touches | Big 5 + Extras |
-| shots_on_target_pct | NO (porcentaje) | Big 5 + Extras |
-| avg_shot_distance | NO (métrica absoluta) | Big 5 + Extras |
-| shots_free_kicks | per100touches | Big 5 + Extras |
-| penalty_kicks_won | per100touches | Big 5 + Extras |
-| penalty_kicks_conceded | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| goals | per100t | Goles totales anotados |
+| non_penalty_goals | per100t | Goles excluyendo penaltis |
+| penalty_kicks_made | per100t | Penaltis convertidos |
+| penalty_kicks_attempted | per100t | Penaltis lanzados |
+| shots | per100t | Disparos totales (excluye penaltis) |
+| shots_on_target | per100t | Disparos a puerta (habrían entrado sin portero/defensa) |
+| shots_on_target_pct | % | Porcentaje de disparos a puerta |
+| avg_shot_distance | abs | Distancia media de disparo en metros |
+| shots_free_kicks | per100t | Disparos directos de falta |
+| penalty_kicks_won | per100t | Penaltis provocados a favor |
+| penalty_kicks_conceded | per100t | Penaltis cometidos |
 
 **Categoría B: Pases**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| passes_completed | per100touches | Big 5 + Extras |
-| passes_attempted | per100touches | Big 5 + Extras |
-| pass_completion_pct | NO (porcentaje) | Big 5 + Extras |
-| passes_total_distance | per100touches | Big 5 + Extras |
-| passes_progressive_distance | per100touches | Big 5 + Extras |
-| passes_completed_short | per100touches | Big 5 + Extras |
-| passes_attempted_short | per100touches | Big 5 + Extras |
-| passes_completed_medium | per100touches | Big 5 + Extras |
-| passes_attempted_medium | per100touches | Big 5 + Extras |
-| passes_completed_long | per100touches | Big 5 + Extras |
-| passes_attempted_long | per100touches | Big 5 + Extras |
-| assists | per100touches | Big 5 + Extras |
-| expected_assists | per100touches | Big 5 + Extras |
-| key_passes | per100touches | Big 5 + Extras |
-| passes_into_final_third | per100touches | Big 5 + Extras |
-| passes_into_penalty_area | per100touches | Big 5 + Extras |
-| crosses_into_penalty_area | per100touches | Big 5 + Extras |
-| progressive_passes | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| passes_completed | per100t | Pases completados |
+| passes_attempted | per100t | Pases intentados |
+| pass_completion_pct | % | Porcentaje de pases completados |
+| passes_total_distance | per100t | Distancia total de pases en metros |
+| passes_progressive_distance | per100t | Distancia progresiva de pases hacia portería rival |
+| passes_completed_short | per100t | Pases cortos completados (<5 metros) |
+| passes_attempted_short | per100t | Pases cortos intentados |
+| passes_completed_medium | per100t | Pases medios completados (5-25 metros) |
+| passes_attempted_medium | per100t | Pases medios intentados |
+| passes_completed_long | per100t | Pases largos completados (>25 metros) |
+| passes_attempted_long | per100t | Pases largos intentados |
+| assists | per100t | Asistencias de gol |
+| expected_assists | per100t | xA: probabilidad de que un pase termine en gol |
+| key_passes | per100t | Pases que generan disparo (excluye asistencias) |
+| passes_into_final_third | per100t | Pases completados al último tercio |
+| passes_into_penalty_area | per100t | Pases completados al área rival |
+| crosses_into_penalty_area | per100t | Centros completados al área rival |
+| progressive_passes | per100t | Pases que avanzan ≥10 metros hacia portería o entran en área |
 
 **Categoría C: Tipos de Pase (Pass Types)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| passes_live | per100touches | Big 5 + Extras |
-| passes_dead | per100touches | Big 5 + Extras |
-| passes_from_free_kicks | per100touches | Big 5 + Extras |
-| through_balls | per100touches | Big 5 + Extras |
-| switches | per100touches | Big 5 + Extras |
-| crosses | per100touches | Big 5 + Extras |
-| throw_ins | per100touches | Big 5 + Extras |
-| corner_kicks | per100touches | Big 5 + Extras |
-| corner_kicks_inswinging | per100touches | Big 5 + Extras |
-| corner_kicks_outswinging | per100touches | Big 5 + Extras |
-| corner_kicks_straight | per100touches | Big 5 + Extras |
-| passes_offside | per100touches | Big 5 + Extras |
-| passes_blocked | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| passes_live | per100t | Pases en juego vivo |
+| passes_dead | per100t | Pases de balón parado |
+| passes_from_free_kicks | per100t | Pases desde falta |
+| through_balls | per100t | Pases entre líneas que rompen defensa |
+| switches | per100t | Cambios de orientación (>40 metros) |
+| crosses | per100t | Centros al área |
+| throw_ins | per100t | Saques de banda |
+| corner_kicks | per100t | Córners lanzados |
+| corner_kicks_inswinging | per100t | Córners cerrados (hacia portería) |
+| corner_kicks_outswinging | per100t | Córners abiertos (alejándose de portería) |
+| corner_kicks_straight | per100t | Córners rectos |
+| passes_offside | per100t | Pases que dejan en fuera de juego |
+| passes_blocked | per100t | Pases bloqueados por rival |
 
-**Categoría D: Creación de Ocasiones (Goal and Shot Creation - SCA/GCA)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| SCA_SCA | per100touches | Big 5 + Extras |
-| SCA_PassLive | per100touches | Big 5 + Extras |
-| SCA_PassDead | per100touches | Big 5 + Extras |
-| SCA_TO | per100touches | Big 5 + Extras |
-| SCA_Sh | per100touches | Big 5 + Extras |
-| SCA_Fld | per100touches | Big 5 + Extras |
-| SCA_Def | per100touches | Big 5 + Extras |
-| GCA_GCA | per100touches | Big 5 + Extras |
-| GCA_PassLive | per100touches | Big 5 + Extras |
-| GCA_PassDead | per100touches | Big 5 + Extras |
-| GCA_TO | per100touches | Big 5 + Extras |
-| GCA_Sh | per100touches | Big 5 + Extras |
-| GCA_Fld | per100touches | Big 5 + Extras |
-| GCA_Def | per100touches | Big 5 + Extras |
+**Categoría D: Creación de Ocasiones (SCA/GCA)**
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| SCA_SCA | per100t | Shot-Creating Actions: acciones que generan disparo (2 previas) |
+| SCA_PassLive | per100t | SCA mediante pase en juego vivo |
+| SCA_PassDead | per100t | SCA mediante balón parado |
+| SCA_TO | per100t | SCA mediante regate exitoso |
+| SCA_Sh | per100t | SCA mediante disparo (rebote/bloqueo) |
+| SCA_Fld | per100t | SCA mediante falta recibida |
+| SCA_Def | per100t | SCA mediante acción defensiva |
+| GCA_GCA | per100t | Goal-Creating Actions: acciones que generan gol (2 previas) |
+| GCA_PassLive | per100t | GCA mediante pase en juego vivo |
+| GCA_PassDead | per100t | GCA mediante balón parado |
+| GCA_TO | per100t | GCA mediante regate exitoso |
+| GCA_Sh | per100t | GCA mediante disparo (rebote/bloqueo) |
+| GCA_Fld | per100t | GCA mediante falta recibida |
+| GCA_Def | per100t | GCA mediante acción defensiva |
 
 **Categoría E: Acciones Defensivas**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| tackles | per100touches | Big 5 + Extras |
-| tackles_won | per100touches | Big 5 + Extras |
-| tackles_def_3rd | per100touches | Big 5 + Extras |
-| tackles_mid_3rd | per100touches | Big 5 + Extras |
-| tackles_att_3rd | per100touches | Big 5 + Extras |
-| challenge_tackles | per100touches | Big 5 + Extras |
-| challenges | per100touches | Big 5 + Extras |
-| challenge_tackles_pct | NO (porcentaje) | Big 5 + Extras |
-| challenges_lost | per100touches | Big 5 + Extras |
-| blocked_shots | per100touches | Big 5 + Extras |
-| blocked_passes | per100touches | Big 5 + Extras |
-| interceptions | per100touches | Big 5 + Extras |
-| clearances | per100touches | Big 5 + Extras |
-| errors | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| tackles | per100t | Entradas totales intentadas |
+| tackles_won | per100t | Entradas ganadas (equipo recupera posesión) |
+| tackles_def_3rd | per100t | Entradas en tercio defensivo |
+| tackles_mid_3rd | per100t | Entradas en tercio medio |
+| tackles_att_3rd | per100t | Entradas en tercio ofensivo |
+| challenge_tackles | per100t | Entradas en duelos 1v1 |
+| challenges | per100t | Duelos 1v1 intentados |
+| challenge_tackles_pct | % | Porcentaje de duelos ganados |
+| challenges_lost | per100t | Duelos perdidos (rival supera) |
+| blocked_shots | per100t | Disparos bloqueados |
+| blocked_passes | per100t | Pases bloqueados |
+| interceptions | per100t | Intercepciones de pase rival |
+| clearances | per100t | Despejes |
+| errors | per100t | Errores que generan disparo rival |
 
 **Categoría F: Posesión y Toques (Possession)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| touches | per100touches | Big 5 + Extras |
-| touches_def_pen_area | per100touches | Big 5 + Extras |
-| touches_def_3rd | per100touches | Big 5 + Extras |
-| touches_mid_3rd | per100touches | Big 5 + Extras |
-| touches_att_3rd | per100touches | Big 5 + Extras |
-| touches_att_pen_area | per100touches | Big 5 + Extras |
-| touches_live_ball | per100touches | Big 5 + Extras |
-| take_ons_attempted | per100touches | Big 5 + Extras |
-| take_ons_successful | per100touches | Big 5 + Extras |
-| take_ons_successful_pct | NO (porcentaje) | Big 5 + Extras |
-| take_ons_tackled | per100touches | Big 5 + Extras |
-| carries | per100touches | Big 5 + Extras |
-| carries_total_distance | per100touches | Big 5 + Extras |
-| carries_progressive_distance | per100touches | Big 5 + Extras |
-| progressive_carries | per100touches | Big 5 + Extras |
-| carries_into_final_third | per100touches | Big 5 + Extras |
-| carries_into_penalty_area | per100touches | Big 5 + Extras |
-| miscontrols | per100touches | Big 5 + Extras |
-| dispossessed | per100touches | Big 5 + Extras |
-| passes_received | per100touches | Big 5 + Extras |
-| progressive_passes_received | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| touches | per100t | Toques totales de balón |
+| touches_def_pen_area | per100t | Toques en área propia |
+| touches_def_3rd | per100t | Toques en tercio defensivo |
+| touches_mid_3rd | per100t | Toques en tercio medio |
+| touches_att_3rd | per100t | Toques en tercio ofensivo |
+| touches_att_pen_area | per100t | Toques en área rival |
+| touches_live_ball | per100t | Toques en juego vivo (excluye balón parado) |
+| take_ons_attempted | per100t | Regates intentados |
+| take_ons_successful | per100t | Regates completados |
+| take_ons_successful_pct | % | Porcentaje de regates exitosos |
+| take_ons_tackled | per100t | Regates fallidos por entrada rival |
+| carries | per100t | Conducciones (>1m con balón controlado) |
+| carries_total_distance | per100t | Distancia total conducida en metros |
+| carries_progressive_distance | per100t | Distancia progresiva conducida hacia portería |
+| progressive_carries | per100t | Conducciones que avanzan ≥10 metros o entran en área |
+| carries_into_final_third | per100t | Conducciones al último tercio |
+| carries_into_penalty_area | per100t | Conducciones al área rival |
+| miscontrols | per100t | Malos controles (pérdida de posesión) |
+| dispossessed | per100t | Robos de balón sufridos |
+| passes_received | per100t | Pases recibidos completados |
+| progressive_passes_received | per100t | Pases progresivos recibidos |
 
 **Categoría G: Duelos Aéreos**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| aerials_won | per100touches | Big 5 + Extras |
-| aerials_lost | per100touches | Big 5 + Extras |
-| aerials_won_pct | NO (porcentaje) | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| aerials_won | per100t | Duelos aéreos ganados |
+| aerials_lost | per100t | Duelos aéreos perdidos |
+| aerials_won_pct | % | Porcentaje de duelos aéreos ganados |
 
 **Categoría H: Disciplina**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| fouls_committed | per100touches | Big 5 + Extras |
-| fouls_drawn | per100touches | Big 5 + Extras |
-| offsides | per100touches | Big 5 + Extras |
-| yellow_cards | per100touches | Big 5 + Extras |
-| red_cards | per100touches | Big 5 + Extras |
-| second_yellow_cards | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| fouls_committed | per100t | Faltas cometidas |
+| fouls_drawn | per100t | Faltas recibidas |
+| offsides | per100t | Fueras de juego |
+| yellow_cards | per100t | Tarjetas amarillas |
+| red_cards | per100t | Tarjetas rojas directas |
+| second_yellow_cards | per100t | Segundas amarillas (expulsión) |
 
 **Categoría I: Expected Goals (xG)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| expected_goals | per100touches | Big 5 + Extras |
-| non_penalty_expected_goals | per100touches | Big 5 + Extras |
-| non_penalty_expected_goals_plus_assists | NO (suma compuesta) | Big 5 + Extras |
-| expected_goals_on_target | per100touches | Big 5 + Extras |
-| expected_goals_buildup | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| expected_goals | per100t | xG: probabilidad acumulada de gol según calidad de disparos |
+| non_penalty_expected_goals | per100t | npxG: xG excluyendo penaltis |
+| non_penalty_expected_goals_plus_assists | abs | npxG + xA combinado |
+| expected_goals_on_target | per100t | xGOT: xG solo de disparos a puerta |
+| expected_goals_buildup | per100t | xG generado en fase de construcción |
 
 **Categoría J: Porteros (excluidas del análisis outfield)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| saves | per100touches | Big 5 + Extras |
-| save_pct | NO (porcentaje) | Big 5 + Extras |
-| clean_sheets | NO (absoluto) | Big 5 + Extras |
-| goals_against_per_90 | Ya per90 | Big 5 + Extras |
-| psxg_minus_goals_allowed | per100touches | Big 5 + Extras |
-| launched_passes_completed | per100touches | Big 5 + Extras |
-| goal_kicks_launched | per100touches | Big 5 + Extras |
-| sweeper_defensive_actions_outside_pen_area | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| saves | per100t | Paradas realizadas |
+| save_pct | % | Porcentaje de paradas sobre disparos a puerta |
+| clean_sheets | abs | Porterías a cero |
+| goals_against_per_90 | per90 | Goles encajados por 90 minutos |
+| psxg_minus_goals_allowed | per100t | PSxG-GA: goles evitados vs esperados (calidad de parada) |
+| launched_passes_completed | per100t | Pases largos completados (>40 metros) |
+| goal_kicks_launched | per100t | Saques de puerta largos |
+| sweeper_defensive_actions_outside_pen_area | per100t | Acciones de líbero fuera del área |
 
 **Categoría K: Métricas de Equipo (Team Success)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| on_goals_for | NO (contexto) | Big 5 + Extras |
-| on_goals_against | NO (contexto) | Big 5 + Extras |
-| plus_minus | NO (diferencial) | Big 5 + Extras |
-| on_xg_for | NO (contexto) | Big 5 + Extras |
-| on_xg_against | NO (contexto) | Big 5 + Extras |
-| xg_plus_minus | NO (diferencial) | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| on_goals_for | ctx | Goles a favor con jugador en campo |
+| on_goals_against | ctx | Goles en contra con jugador en campo |
+| plus_minus | ctx | Diferencial goles (GF - GA) con jugador en campo |
+| on_xg_for | ctx | xG a favor con jugador en campo |
+| on_xg_against | ctx | xG en contra con jugador en campo |
+| xg_plus_minus | ctx | Diferencial xG con jugador en campo |
 
 **Categoría L: Participación (Playing Time)**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| minutes_played | NO (base normalización) | Big 5 + Extras |
-| games | NO (absoluto) | Big 5 + Extras |
-| games_started | NO (absoluto) | Big 5 + Extras |
-| minutes_per_game | NO (promedio) | Big 5 + Extras |
-| games_subs | NO (absoluto) | Big 5 + Extras |
-| unused_sub | NO (absoluto) | Big 5 + Extras |
-| points_per_game | NO (métrica equipo) | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| minutes_played | abs | Minutos totales jugados |
+| games | abs | Partidos participados (titular o suplente) |
+| games_started | abs | Partidos como titular |
+| minutes_per_game | avg | Promedio de minutos por partido |
+| games_subs | abs | Partidos entrando desde banquillo |
+| unused_sub | abs | Convocatorias sin participar |
+| points_per_game | ctx | Puntos promedio del equipo con jugador en campo |
 
 **Categoría M: Resultados de Equipo**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| wins | NO (absoluto) | Big 5 + Extras |
-| draws | NO (absoluto) | Big 5 + Extras |
-| losses | NO (absoluto) | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| wins | abs | Victorias con jugador en campo |
+| draws | abs | Empates con jugador en campo |
+| losses | abs | Derrotas con jugador en campo |
 
 **Categoría N: Eventos Específicos**
-| Métrica | Normalización | Disponibilidad |
-|---------|---------------|----------------|
-| own_goals | per100touches | Big 5 + Extras |
-| goals_against | per100touches | Big 5 + Extras |
-| goals_from_penalties | per100touches | Big 5 + Extras |
-| goals_from_free_kicks | per100touches | Big 5 + Extras |
-| goals_from_corners | per100touches | Big 5 + Extras |
+| Métrica | Norm. | Descripción |
+|---------|-------|-------------|
+| own_goals | per100t | Autogoles |
+| goals_against | per100t | Goles encajados (contexto defensivo) |
+| goals_from_penalties | per100t | Goles desde penalti |
+| goals_from_free_kicks | per100t | Goles desde falta directa |
+| goals_from_corners | per100t | Goles desde córner |
 
 ### A.2. Understat - Métricas xG Granulares (10 métricas totales, 7 normalizadas)
 
