@@ -22,41 +22,51 @@ source ~/anaconda3/bin/activate footballdecoded && python3
 
 ```
 FootballDecoded/
-├── scrappers/              # Data extraction (~4,400 lines)
+├── scrappers/              # Data extraction (~5,000 lines)
 │   ├── _common.py          # Base classes (880 lines)
-│   ├── _config.py          # LEAGUE_DICT with 30+ leagues (268 lines)
-│   ├── fbref.py            # 15 methods, 11 stat types (1,440 lines)
+│   ├── _config.py          # LEAGUE_DICT with 23 leagues (268 lines)
+│   ├── fbref.py            # 19 methods, 11 stat types (1,440 lines)
 │   ├── understat.py        # xG specialist, Big 5 only (727 lines)
 │   ├── sofascore.py        # xG data, all leagues (285 lines)
 │   ├── whoscored.py        # Spatial events with x/y coords (853 lines)
-│   └── transfermarkt.py    # Player profiles, market values
+│   └── transfermarkt.py    # Player profiles, market values (581 lines)
 │
-├── wrappers/               # Simplified API (~3,400 lines)
+├── wrappers/               # Simplified API (~3,600 lines)
 │   ├── README.md           # Complete API documentation
 │   ├── fbref_data.py       # 15 functions, 24h cache (762 lines)
-│   ├── understat_data.py   # 16 functions, merge capabilities (1,130 lines)
+│   ├── understat_data.py   # 15 functions, merge capabilities (1,130 lines)
 │   ├── sofascore_data.py   # Shot events with xG (115 lines)
-│   ├── whoscored_data.py   # 18 functions, spatial analysis (1,250 lines)
+│   ├── whoscored_data.py   # 21 functions, spatial analysis (1,250 lines)
 │   └── transfermarkt_data.py  # 2 functions (118 lines)
 │
-├── database/               # PostgreSQL layer (~2,050 lines)
+├── database/               # PostgreSQL layer (~2,750 lines)
 │   ├── connection.py       # Pool, retry logic (539 lines)
 │   ├── data_loader.py      # Parallel processing, checkpoints (1,194 lines)
 │   ├── database_checker.py # 8 CLI health commands (1,018 lines)
-│   ├── setup.sql           # 4 tables, 28 indices
-│   └── setup_extras.sql    # 2 extras tables
+│   ├── setup.sql           # 4 tables, 32 indices
+│   └── setup_extras.sql    # 2 extras tables, 17 indices
 │
-├── viz/                    # Visualization (~4,800 lines)
-│   ├── templates/          # 6 Jupyter notebooks
-│   ├── match_data.py       # 10-step pipeline, 5 CSV outputs (Understat)
-│   ├── match_data_v2.py    # 10-step pipeline, 5 CSV outputs (SofaScore)
-│   ├── pass_network.py     # Network plots
-│   ├── shot_xg.py          # xG maps
-│   └── swarm_radar.py      # Player comparison radars
+├── viz/                    # Visualization (~8,700 lines)
+│   ├── templates/          # 7 Jupyter notebooks
+│   ├── match_data.py       # 10-step pipeline, 5 CSV outputs (Understat xG)
+│   ├── match_data_v2.py    # 10-step pipeline, 5 CSV outputs (SofaScore xG)
+│   ├── pass_network.py     # Network plots (379 lines)
+│   ├── shot_xg.py          # xG maps (371 lines)
+│   ├── swarm_radar.py      # Player comparison radars (582 lines)
+│   ├── stats_radar.py      # Radar charts (470 lines)
+│   ├── stats_table.py      # Statistical tables (531 lines)
+│   ├── pass_analysis.py    # Pass analysis (877 lines)
+│   ├── shot_map_report.py  # Shot map reports (343 lines)
+│   ├── scatter.py          # Scatter plots (347 lines)
+│   ├── assist_passes.py    # Assist visualizations (235 lines)
+│   ├── assisted_goals.py   # Assisted goals (207 lines)
+│   ├── dribbles_heatmap.py # Dribble heatmaps (236 lines)
+│   ├── goals_origin.py     # Goal origin maps (192 lines)
+│   └── impact_timeline.py  # Impact timelines (250 lines)
 │
 └── blog/                   # Assets & Utilities
     ├── logos/              # Team logos (6 leagues)
-    ├── notebooks/          # Analysis notebooks
+    ├── caras/              # Player face photos
     └── get_match_ids.py    # Match ID extractor (WhoScored/Understat)
 ```
 
@@ -65,7 +75,7 @@ FootballDecoded/
 ### 1. Environment Setup
 
 ```bash
-# Create environment (see CONDA_SETUP.md for details)
+# Create environment from environment.yml
 conda env create -f environment.yml
 conda activate footballdecoded
 ```
@@ -191,7 +201,7 @@ VISUALIZATION (viz/)
 - **Transfermarkt** (transfermarkt.py): Market values, positions
 
 **Key Config** (_config.py):
-- `LEAGUE_DICT`: 30+ leagues with source mappings
+- `LEAGUE_DICT`: 23 leagues/competitions with source mappings
 - Rate limits, cache settings
 
 ### Wrappers (wrappers/)
@@ -285,7 +295,7 @@ python database/database_checker.py --full     # Complete analysis
 - Background: #313332
 - Typography: DejaVu Sans
 
-**Templates**: 6 Jupyter notebooks in viz/templates/
+**Templates**: 7 Jupyter notebooks in viz/templates/
 
 ### Utilities (blog/)
 
@@ -414,8 +424,6 @@ Format: `COUNTRY-League Name`
 
 ## Environment Management (Conda)
 
-**Ver CONDA_SETUP.md para guía completa**
-
 ```bash
 # Crear entorno (primera vez)
 conda env create -f environment.yml
@@ -532,8 +540,7 @@ Each record includes:
 
 - **Wrappers API**: wrappers/README.md
 - **Visualization**: viz/README.md
-- **Database Schema**: database/setup.sql
-- **Conda Setup**: CONDA_SETUP.md
+- **Database Schema**: database/setup.sql, database/setup_extras.sql
 
 ### External
 

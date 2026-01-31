@@ -19,12 +19,10 @@ dependencies:
   # Selenium and web scraping
   - selenium>=4.38.0
   - requests>=2.32.0
-  - beautifulsoup4>=4.13.3
 
   # Visualization
   - matplotlib>=3.10.0
   - seaborn>=0.13.2
-  - plotly>=5.17.0
   - scipy>=1.16.0
   - shapely>=2.1.0
   - pillow>=11.0.0
@@ -34,36 +32,14 @@ dependencies:
   - psycopg2>=2.9.10
   - python-dotenv>=1.0.0
 
-  # Development tools
+  # Development tools (Jupyter for viz/templates notebooks)
   - jupyter>=1.1.0
   - ipykernel>=6.0.0
-  - pygments>=2.13.0
-  - ruff
-  - mypy
-  - pep8-naming>=0.15.0
-  - pre-commit>=4.0.0
-
-  # Testing
-  - pytest>=8.0.0
-  - pytest-mock>=3.10.0
-  - coverage>=7.0
-
-  # Documentation
-  - sphinx>=7.0.0
-  - nbsphinx>=0.9.0
 
   # pip-only packages (not available in conda)
   - pip
   - pip:
-    - unidecode>=1.4.0
     - wrapper-tls-requests>=1.1.6,<2.0.0
     - seleniumbase>=4.44.0
     - mplsoccer>=1.6.0
-    - socceraction==1.5.3
-    - pytest-deadfixtures>=2.2.1
-    - time-machine>=2.8.2
-    - bumpversion>=0.6.0
-    - darglint>=1.8.1
-    - pre-commit-hooks>=5.0.0
-    - furo>=2024.0.0
-    - sphinx-autobuild>=2024.0.0
+    - adjustText>=1.2.0
