@@ -2,22 +2,6 @@
 
 ---
 
-## TFM - FASE ACTUAL: REDACCIÓN FINAL
-
-**Estado**: Notebooks de casos de uso 100% finalizados (Villarreal, Frankfurt, Lille)
-
-**Tarea actual**: Redacción del Trabajo de Fin de Máster FINAL
-
-**Estilo de escritura**:
-- Paper-wise: profesional y académico
-- Estadísticamente riguroso y correcto
-- Humano y natural (no robótico ni generado)
-- Sin florituras innecesarias
-
-**Referencia principal**: `tfm/tfm.md` contiene la estructura, casos y metodología
-
----
-
 ## Core Philosophy
 
 Ve paso a paso, uno a uno. Despacio es el camino más rápido. Escribe siempre el código lo más compacto y conciso posible, y que cumpla exactamente lo pedido al 100%. Sin emojis ni florituras. Usa nombres claros y estándar. Incluye solo comentarios útiles y necesarios.
