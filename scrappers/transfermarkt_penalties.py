@@ -274,9 +274,12 @@ class TransfermarktPenalties(BaseRequestsReader):
                         if pen_id not in seen_penalties:
                             seen_penalties.add(pen_id)
                             new_missed.append(penalty)
+                        else:
+                            logger.debug(f"DUPLICATE missed: {penalty['player']} vs {penalty['keeper']}, min {penalty['minute']}")
 
                     if not new_missed:
                         has_more_missed = False
+                        page_data_missed = []  # Explicitly set to empty
                     else:
                         page_data_missed = new_missed
 
@@ -290,9 +293,12 @@ class TransfermarktPenalties(BaseRequestsReader):
                         if pen_id not in seen_penalties:
                             seen_penalties.add(pen_id)
                             new_scored.append(penalty)
+                        else:
+                            logger.debug(f"DUPLICATE scored: {penalty['player']} vs {penalty['keeper']}, min {penalty['minute']}")
 
                     if not new_scored:
                         has_more_scored = False
+                        page_data_scored = []  # Explicitly set to empty
                     else:
                         page_data_scored = new_scored
 

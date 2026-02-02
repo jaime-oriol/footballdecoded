@@ -17,7 +17,7 @@ def main():
     print("EXTRACCIÓN DE PENALTIS LALIGA (2004-2025)")
     print("="*60)
 
-    tp = TransfermarktPenalties()
+    tp = TransfermarktPenalties(no_cache=True)  # Force fresh download
 
     all_received = []
     all_conceded = []
