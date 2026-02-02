@@ -52,6 +52,8 @@ conda-meta/
 !.gitignore
 !.travis.yml
 !.env
+!.vscode/
+!.claude/
 
 # Football data folders (PRIVATE)
 # viz/
