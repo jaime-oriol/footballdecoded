@@ -1,10 +1,10 @@
 """Scraper for Transfermarkt penalty statistics.
 
-Extracts penalty data from LaLiga (2004-2026):
+Extracts complete penalty data from LaLiga (2004-2026):
 - Team penalties received (a favor)
 - Team penalties conceded (en contra)
 - Penalty scorers (goleadores)
-- Penalty misses detail (fallos con minuto, marcador, portero)
+- ALL penalties detail (scored + missed with minute, score, keeper)
 """
 
 import re
@@ -224,94 +224,182 @@ class TransfermarktPenalties(BaseRequestsReader):
         return pd.DataFrame(data)
 
     def get_all_penalties_detail(self, season: int) -> pd.DataFrame:
-        """Get detailed info about MISSED penalties (only these have minute/score data).
+        """Get detailed info about ALL penalties (scored and missed) with pagination.
 
-        Note: Transfermarkt only provides detailed info (minute, score at penalty)
-        for missed penalties. Scored penalties don't have this detail available.
+        Extracts complete penalty data including minute, score at penalty,
+        player, keeper, teams, and final result for both scored and missed penalties.
+        Handles pagination to get all penalties, not just first page.
+
+        Note: Both tables (missed/scored) share the same pagination, but one may
+        run out of data before the other. We track each table independently to avoid
+        duplicates when one exhausts before the other.
 
         Args:
             season: Year of season start (e.g., 2023 for 2023-24)
 
         Returns:
-            DataFrame with missed penalty details: player, keeper, minute, score, etc.
+            DataFrame with all penalty details: player, keeper, minute, score, scored/missed, etc.
         """
-        # Only missed penalties have detailed info (minute, score)
-        url_missed = f"{TRANSFERMARKT_URL}/laliga/elfmeterstatistik/wettbewerb/{LALIGA_ID}/saison_id/{season}/plus/1"
-        filepath_missed = self.data_dir / "missed_detail" / f"{season}.html"
-        filepath_missed.parent.mkdir(parents=True, exist_ok=True)
+        all_data = []
+        page = 1
+        has_more_missed = True
+        has_more_scored = True
+        seen_penalties = set()  # Track unique penalties to avoid duplicates
 
-        try:
-            reader = self.get(url_missed, filepath_missed, max_age=30)
-            tree = html.parse(reader)
-            data = self._parse_penalty_detail_table(tree, season, scored=False)
-            return pd.DataFrame(data)
-        except Exception as e:
-            logger.warning(f"Error getting missed penalties for {season}: {e}")
-            return pd.DataFrame()
+        while has_more_missed or has_more_scored:
+            # Build URL with pagination
+            if page == 1:
+                url = f"{TRANSFERMARKT_URL}/laliga/elfmeterstatistik/wettbewerb/{LALIGA_ID}/saison_id/{season}/plus/1"
+            else:
+                url = f"{TRANSFERMARKT_URL}/laliga/elfmeterstatistik/wettbewerb/{LALIGA_ID}/saison_id/{season}/plus/1/page/{page}"
+
+            filepath = self.data_dir / "detail" / f"{season}_page{page}.html"
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+
+            try:
+                reader = self.get(url, filepath, max_age=30)
+                tree = html.parse(reader)
+
+                # Parse both tables (only if they still have data)
+                page_data_missed = []
+                page_data_scored = []
+
+                if has_more_missed:
+                    page_data_missed = self._parse_penalty_detail_table(tree, season, scored=False)
+
+                    # Check for duplicates (when table exhausts, Transfermarkt shows last page again)
+                    new_missed = []
+                    for penalty in page_data_missed:
+                        pen_id = (penalty['player'], penalty['keeper'], penalty['minute'], penalty['score_at_penalty'])
+                        if pen_id not in seen_penalties:
+                            seen_penalties.add(pen_id)
+                            new_missed.append(penalty)
+
+                    if not new_missed:
+                        has_more_missed = False
+                    else:
+                        page_data_missed = new_missed
+
+                if has_more_scored:
+                    page_data_scored = self._parse_penalty_detail_table(tree, season, scored=True)
+
+                    # Check for duplicates
+                    new_scored = []
+                    for penalty in page_data_scored:
+                        pen_id = (penalty['player'], penalty['keeper'], penalty['minute'], penalty['score_at_penalty'])
+                        if pen_id not in seen_penalties:
+                            seen_penalties.add(pen_id)
+                            new_scored.append(penalty)
+
+                    if not new_scored:
+                        has_more_scored = False
+                    else:
+                        page_data_scored = new_scored
+
+                # Combine data from both tables
+                page_data = page_data_missed + page_data_scored
+
+                if page_data:
+                    all_data.extend(page_data)
+                    logger.info(f"Season {season} page {page}: {len(page_data_missed)} missed + {len(page_data_scored)} scored = {len(page_data)} total")
+
+                page += 1
+
+                # Safety limit to avoid infinite loops
+                if page > 20:
+                    logger.warning(f"Reached page limit (20) for season {season}")
+                    break
+
+            except Exception as e:
+                logger.warning(f"Error getting page {page} for {season}: {e}")
+                break
+
+        logger.info(f"Season {season} TOTAL: {len(all_data)} penalties extracted")
+        return pd.DataFrame(all_data)
 
     def _parse_penalty_detail_table(self, tree, season: int, scored: bool) -> List[Dict]:
-        """Parse penalty detail table.
+        """Parse penalty detail table (scored or missed).
 
-        Structure for missed (13 cells):
-        [0]: Matchday, [4]: Player name, [7]: Keeper, [8]: Score at penalty, [9]: Minute, [11]: Final result
+        Args:
+            tree: HTML tree
+            season: Season year
+            scored: True for scored penalties, False for missed
 
-        Structure for scored (11 cells):
-        [0]: Matchday, [4]: Player name, [7]: Keeper, [9]: Final result (no minute)
+        Returns:
+            List of penalty records with all details
         """
-        tables = tree.xpath("//table[.//th[contains(text(), 'Matchday')]]")
+        # Tables are in divs with IDs: yw1 (missed), yw2 (scored)
+        div_id = 'yw2' if scored else 'yw1'
+        tables = tree.xpath(f"//div[@id='{div_id}']//table[@class='items']")
+
+        if not tables:
+            logger.warning(f"No {'scored' if scored else 'missed'} penalty table found for {season}")
+            return []
+
+        table = tables[0]
+        rows = table.xpath(".//tbody//tr")
 
         data = []
-        for table in tables:
-            rows = table.xpath(".//tbody//tr")
+        for row in rows:
+            cells = row.xpath(".//td")
+            if len(cells) < 13:
+                continue
 
-            for row in rows:
-                cells = row.xpath(".//td")
-                if len(cells) < 10:
-                    continue
+            try:
+                # Cell structure (both scored and missed have same 13-cell layout):
+                # 0: Matchday
+                # 1: Player team logo (link title)
+                # 4: Player name (hauptlink)
+                # 6: Keeper team logo (link title)
+                # 7: Keeper name
+                # 8: Score at penalty (e.g., "2:1")
+                # 9: Minute (e.g., "45'")
+                # 11: Final result (e.g., "3:1")
 
-                # Matchday (cell 0)
                 matchday = self._parse_int(cells[0].text_content())
 
-                # Player (cell 4 has hauptlink class)
-                player_cell = row.xpath(".//td[@class='hauptlink']")
-                player = player_cell[0].text_content().strip() if player_cell else None
+                # Player
+                player = cells[4].text_content().strip()
+                if not player or len(player) <= 1:
+                    continue
 
-                # Keeper (cell 7)
-                keeper = cells[7].text_content().strip() if len(cells) > 7 else None
+                # Player team (from cell 1 link title)
+                player_team_link = cells[1].xpath(".//a/@title")
+                player_team = player_team_link[0] if player_team_link else None
 
-                # Teams from links with title attribute
-                team_links = row.xpath(".//a[contains(@href, '/verein/')]/@title")
-                player_team = team_links[0] if len(team_links) > 0 else None
-                keeper_team = team_links[1] if len(team_links) > 1 else None
+                # Keeper
+                keeper = cells[7].text_content().strip()
 
-                # For missed penalties (13 cells): minute is in cell 9, scores in cells 8 and 11
-                # For scored penalties (11 cells): no minute, result in cell 9
-                minute = None
-                score_at_penalty = None
-                final_result = None
+                # Keeper team (from cell 6 link title)
+                keeper_team_link = cells[6].xpath(".//a/@title")
+                keeper_team = keeper_team_link[0] if keeper_team_link else None
 
-                if len(cells) >= 13:  # Missed penalties with minute
-                    minute_text = cells[9].text_content().strip()
-                    minute_match = re.search(r"(\d+)", minute_text)
-                    minute = int(minute_match.group(1)) if minute_match else None
-                    score_at_penalty = cells[8].text_content().strip()
-                    final_result = cells[11].text_content().strip()
-                elif len(cells) >= 10:  # Scored penalties without minute
-                    final_result = cells[9].text_content().strip()
+                # Score at penalty
+                score_at_penalty = cells[8].text_content().strip()
 
-                if player and len(player) > 1:
-                    data.append({
-                        'season': f"{season}-{str(season+1)[-2:]}",
-                        'matchday': matchday,
-                        'player': player,
-                        'player_team': player_team,
-                        'keeper': keeper,
-                        'keeper_team': keeper_team,
-                        'minute': minute,
-                        'score_at_penalty': score_at_penalty,
-                        'final_result': final_result,
-                        'scored': scored,
-                    })
+                # Minute (remove ')
+                minute_text = cells[9].text_content().strip().replace("'", "")
+                minute = int(minute_text) if minute_text.isdigit() else None
+
+                # Final result
+                final_result = cells[11].text_content().strip()
+
+                data.append({
+                    'season': f"{season}-{str(season+1)[-2:]}",
+                    'matchday': matchday,
+                    'player': player,
+                    'player_team': player_team,
+                    'keeper': keeper,
+                    'keeper_team': keeper_team,
+                    'minute': minute,
+                    'score_at_penalty': score_at_penalty,
+                    'final_result': final_result,
+                    'scored': scored,
+                })
+
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"Error parsing penalty row: {e}")
+                continue
 
         return data
 
@@ -327,7 +415,7 @@ class TransfermarktPenalties(BaseRequestsReader):
             - 'received': team penalties received
             - 'conceded': team penalties conceded
             - 'scorers': player penalty scorers
-            - 'detail': all penalties with minute/score
+            - 'detail': ALL penalties (scored + missed) with minute, score, keeper
         """
         all_received = []
         all_conceded = []

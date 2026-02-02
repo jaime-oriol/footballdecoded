@@ -55,12 +55,14 @@ def main():
         except Exception as e:
             print(f"    ERROR goleadores: {e}")
 
-        # Detalle (con minutos para fallados)
+        # Detalle completo (convertidos + fallados con minuto y marcador)
         try:
             detail = tp.get_all_penalties_detail(year)
             if not detail.empty:
                 all_detail.append(detail)
-                print(f"    Detalle: {len(detail)} penaltis")
+                scored_count = len(detail[detail['scored'] == True])
+                missed_count = len(detail[detail['scored'] == False])
+                print(f"    Detalle: {len(detail)} penaltis ({scored_count} gol, {missed_count} fallo)")
         except Exception as e:
             print(f"    ERROR detalle: {e}")
 
@@ -118,7 +120,7 @@ def main():
         team_conceded['save_rate'] = (team_conceded['total_saved'] / team_conceded['total_conceded'] * 100).round(1)
         team_conceded = team_conceded.sort_values('total_conceded', ascending=False)
 
-    # Análisis por minuto (solo fallados que tienen minuto)
+    # Análisis por minuto (todos los penaltis tienen minuto y marcador)
     if not df_detail.empty:
         df_with_minute = df_detail[df_detail['minute'].notna()].copy()
         if not df_with_minute.empty:
@@ -128,7 +130,7 @@ def main():
                 bins=[0, 15, 30, 45, 60, 75, 90, 120],
                 labels=['1-15', '16-30', '31-45', '46-60', '61-75', '76-90', '90+']
             )
-            minute_analysis = df_with_minute.groupby('minute_range').size().reset_index(name='count')
+            minute_analysis = df_with_minute.groupby('minute_range', observed=True).size().reset_index(name='count')
 
     # Análisis por marcador
     if not df_detail.empty:
@@ -168,7 +170,7 @@ def main():
     print("  1. Penaltis_A_Favor - Por equipo y temporada")
     print("  2. Penaltis_En_Contra - Por equipo y temporada")
     print("  3. Goleadores_Por_Temporada - Jugadores por temporada")
-    print("  4. Detalle_Penaltis - Cada penal con info")
+    print("  4. Detalle_Penaltis - TODOS con minuto, marcador, portero (scored/missed)")
     print("  5. Top_Goleadores_Historico - Ranking histórico")
     print("  6. Equipos_A_Favor_Historico - Ranking equipos")
     print("  7. Equipos_En_Contra_Historico - Ranking equipos")
