@@ -170,7 +170,7 @@ def main():
     print("  1. Penaltis_A_Favor - Por equipo y temporada")
     print("  2. Penaltis_En_Contra - Por equipo y temporada")
     print("  3. Goleadores_Por_Temporada - Jugadores por temporada")
-    print("  4. Detalle_Penaltis - TODOS con minuto, marcador, portero (scored/missed)")
+    print("  4. Detalle_Penaltis - TODOS con minuto, marcador, home/away, is_home (scored/missed)")
     print("  5. Top_Goleadores_Historico - Ranking histórico")
     print("  6. Equipos_A_Favor_Historico - Ranking equipos")
     print("  7. Equipos_En_Contra_Historico - Ranking equipos")

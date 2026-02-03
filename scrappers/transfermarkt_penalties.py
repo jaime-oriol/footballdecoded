@@ -4,7 +4,7 @@ Extracts complete penalty data from LaLiga (2004-2026):
 - Team penalties received (a favor)
 - Team penalties conceded (en contra)
 - Penalty scorers (goleadores)
-- ALL penalties detail (scored + missed with minute, score, keeper)
+- ALL penalties detail (scored + missed with minute, score, home/away)
 """
 
 import re
@@ -227,7 +227,7 @@ class TransfermarktPenalties(BaseRequestsReader):
         """Get detailed info about ALL penalties (scored and missed) with pagination.
 
         Extracts complete penalty data including minute, score at penalty,
-        player, keeper, teams, and final result for both scored and missed penalties.
+        player, home/away teams, and final result for both scored and missed penalties.
         Handles pagination to get all penalties, not just first page.
 
         Note: Both tables (missed/scored) share the same pagination, but one may
@@ -238,7 +238,7 @@ class TransfermarktPenalties(BaseRequestsReader):
             season: Year of season start (e.g., 2023 for 2023-24)
 
         Returns:
-            DataFrame with all penalty details: player, keeper, minute, score, scored/missed, etc.
+            DataFrame with all penalty details: player, minute, score, home/away, is_home, scored/missed.
         """
         all_data = []
         page = 1
@@ -270,12 +270,12 @@ class TransfermarktPenalties(BaseRequestsReader):
                     # Check for duplicates (when table exhausts, Transfermarkt shows last page again)
                     new_missed = []
                     for penalty in page_data_missed:
-                        pen_id = (penalty['player'], penalty['keeper'], penalty['minute'], penalty['score_at_penalty'])
+                        pen_id = (penalty['player'], penalty['home_team'], penalty['minute'], penalty['score_at_penalty'])
                         if pen_id not in seen_penalties:
                             seen_penalties.add(pen_id)
                             new_missed.append(penalty)
                         else:
-                            logger.debug(f"DUPLICATE missed: {penalty['player']} vs {penalty['keeper']}, min {penalty['minute']}")
+                            logger.debug(f"DUPLICATE missed: {penalty['player']}, min {penalty['minute']}, {penalty['home_team']}")
 
                     if not new_missed:
                         has_more_missed = False
@@ -289,12 +289,12 @@ class TransfermarktPenalties(BaseRequestsReader):
                     # Check for duplicates
                     new_scored = []
                     for penalty in page_data_scored:
-                        pen_id = (penalty['player'], penalty['keeper'], penalty['minute'], penalty['score_at_penalty'])
+                        pen_id = (penalty['player'], penalty['home_team'], penalty['minute'], penalty['score_at_penalty'])
                         if pen_id not in seen_penalties:
                             seen_penalties.add(pen_id)
                             new_scored.append(penalty)
                         else:
-                            logger.debug(f"DUPLICATE scored: {penalty['player']} vs {penalty['keeper']}, min {penalty['minute']}")
+                            logger.debug(f"DUPLICATE scored: {penalty['player']}, min {penalty['minute']}, {penalty['home_team']}")
 
                     if not new_scored:
                         has_more_scored = False
@@ -352,15 +352,15 @@ class TransfermarktPenalties(BaseRequestsReader):
                 continue
 
             try:
-                # Cell structure (both scored and missed have same 13-cell layout):
+                # Cell structure (13 cells):
                 # 0: Matchday
                 # 1: Player team logo (link title)
-                # 4: Player name (hauptlink)
-                # 6: Keeper team logo (link title)
-                # 7: Keeper name
-                # 8: Score at penalty (e.g., "2:1")
+                # 4: Player name
+                # 8: Score at penalty (e.g., "2:1" = home:away)
                 # 9: Minute (e.g., "45'")
+                # 10: Home team logo (link title) - LOCAL
                 # 11: Final result (e.g., "3:1")
+                # 12: Away team logo (link title) - VISITANTE
 
                 matchday = self._parse_int(cells[0].text_content())
 
@@ -373,33 +373,38 @@ class TransfermarktPenalties(BaseRequestsReader):
                 player_team_link = cells[1].xpath(".//a/@title")
                 player_team = player_team_link[0] if player_team_link else None
 
-                # Keeper
-                keeper = cells[7].text_content().strip()
-
-                # Keeper team (from cell 6 link title)
-                keeper_team_link = cells[6].xpath(".//a/@title")
-                keeper_team = keeper_team_link[0] if keeper_team_link else None
-
-                # Score at penalty
+                # Score at penalty (format: home:away)
                 score_at_penalty = cells[8].text_content().strip()
 
-                # Minute (remove ')
+                # Minute
                 minute_text = cells[9].text_content().strip().replace("'", "")
                 minute = int(minute_text) if minute_text.isdigit() else None
 
+                # Home team (LOCAL)
+                home_team_link = cells[10].xpath(".//a/@title")
+                home_team = home_team_link[0] if home_team_link else None
+
                 # Final result
                 final_result = cells[11].text_content().strip()
+
+                # Away team (VISITANTE)
+                away_team_link = cells[12].xpath(".//a/@title")
+                away_team = away_team_link[0] if away_team_link else None
+
+                # Determine if player_team is home or away
+                is_home = (player_team == home_team) if player_team and home_team else None
 
                 data.append({
                     'season': f"{season}-{str(season+1)[-2:]}",
                     'matchday': matchday,
                     'player': player,
                     'player_team': player_team,
-                    'keeper': keeper,
-                    'keeper_team': keeper_team,
                     'minute': minute,
                     'score_at_penalty': score_at_penalty,
+                    'home_team': home_team,
+                    'away_team': away_team,
                     'final_result': final_result,
+                    'is_home': is_home,
                     'scored': scored,
                 })
 
@@ -421,7 +426,7 @@ class TransfermarktPenalties(BaseRequestsReader):
             - 'received': team penalties received
             - 'conceded': team penalties conceded
             - 'scorers': player penalty scorers
-            - 'detail': ALL penalties (scored + missed) with minute, score, keeper
+            - 'detail': ALL penalties (scored + missed) with minute, score, home/away, is_home
         """
         all_received = []
         all_conceded = []
