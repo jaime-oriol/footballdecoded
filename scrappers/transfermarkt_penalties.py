@@ -129,16 +129,21 @@ class TransfermarktPenalties(BaseRequestsReader):
             cells = row.xpath(".//td")
             if len(cells) >= 7:
                 team = cells[2].text_content().strip()
-                saved = self._parse_int(cells[3].text_content())
+                # Cell 3 = "Successful" = goles encajados (éxito del LANZADOR)
+                goals_against = self._parse_int(cells[3].text_content())
+                # Cell 4 = "Conceded penalties" = total penaltis en contra
                 conceded = self._parse_int(cells[4].text_content())
+                # Cell 5 = "Missed" = fallados por el rival
                 missed = self._parse_int(cells[5].text_content())
+                # Saved = total - goles - fallados
+                saved = conceded - goals_against - missed if conceded and goals_against is not None else None
 
                 data.append({
                     'season': f"{season}-{str(season+1)[-2:]}",
                     'team': team,
                     'penalties_conceded': conceded,
+                    'goals_against': goals_against,
                     'saved': saved,
-                    'goals_against': conceded - saved if conceded and saved else None,
                     'missed_by_opponent': missed,
                     'save_rate': self._parse_pct(cells[6].text_content()),
                 })
