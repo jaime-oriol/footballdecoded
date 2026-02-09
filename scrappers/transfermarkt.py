@@ -1,14 +1,10 @@
-"""Scraper for transfermarkt.com.
-
-Transfermarkt provides detailed player information including specific positions,
-dominant foot, market values, and contract details.
-"""
+"""Transfermarkt scraper: player profiles, positions, market values, contracts."""
 
 import re
 import unicodedata
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Union
 from urllib.parse import quote
 
 from lxml import html
@@ -19,6 +15,7 @@ from ._config import DATA_DIR, NOCACHE, NOSTORE, logger
 TRANSFERMARKT_DATADIR = DATA_DIR / "Transfermarkt"
 TRANSFERMARKT_URL = "https://www.transfermarkt.com"
 
+# Translate Transfermarkt's verbose position names to standard abbreviations
 POSITION_MAPPING = {
     "Goalkeeper": "GK",
     "Centre-Back": "CB",
@@ -46,21 +43,13 @@ FOOT_MAPPING = {
 
 
 class Transfermarkt(BaseRequestsReader):
-    """Provides data from https://www.transfermarkt.com.
+    """Scraper for transfermarkt.com player data.
 
-    Data will be downloaded as necessary and cached locally in
-    ``~/soccerdata/data/Transfermarkt``.
+    Extracts player profiles (position, foot, market value, contract dates)
+    via HTML scraping and Transfermarkt's internal JSON API for market value
+    history. Includes fuzzy name search with birth year disambiguation.
 
-    Parameters
-    ----------
-    proxy : 'tor' or dict or list(dict) or callable, optional
-        Use a proxy to hide your IP address.
-    no_cache : bool
-        If True, will not use cached data.
-    no_store : bool
-        If True, will not store downloaded data.
-    data_dir : Path
-        Path to directory where data will be cached.
+    Cached locally in ``data/Transfermarkt/``.
     """
 
     def __init__(
@@ -78,24 +67,19 @@ class Transfermarkt(BaseRequestsReader):
             no_store=no_store,
             data_dir=data_dir,
         )
-        # Transfermarkt rate limiting - adjusted to avoid 429 errors
-        # Based on FBref's conservative approach (7s) but slightly faster
-        # Total delay: 6-9 seconds per request
-        self.rate_limit = 6       # 6-second minimum delay (conservative approach)
-        self.max_delay = 3        # Additional random delay 0-3s for realistic timing
+        # Rate limiting: 6-9s total per request to avoid 429 errors
+        self.rate_limit = 6
+        self.max_delay = 3
 
     def search_player(
         self, player_name: str, birth_year: Optional[int] = None
     ) -> Optional[str]:
-        """Search for player and return Transfermarkt ID.
+        """Search for a player by name and return their Transfermarkt ID.
 
-        Args:
-            player_name: Player name to search
-            birth_year: Optional birth year for filtering results
-
-        Returns:
-            Transfermarkt player ID or None if not found
+        Uses fuzzy matching (85% threshold) with optional birth year filtering
+        to disambiguate common names.
         """
+        # "schnellsuche" = German for "quick search"
         query = quote(player_name)
         url = f"{TRANSFERMARKT_URL}/schnellsuche/ergebnis/schnellsuche?query={query}"
 
@@ -117,6 +101,7 @@ class Transfermarkt(BaseRequestsReader):
 
         for result in results:
             try:
+                # "hauptlink" = "main link" (German) - player profile link
                 player_link = result.xpath(".//td[@class='hauptlink']//a/@href")
                 if not player_link:
                     continue
@@ -134,7 +119,9 @@ class Transfermarkt(BaseRequestsReader):
 
                 similarity = self._calculate_similarity(normalized_search, normalized_result)
 
+                # Filter by birth year (+-1 year tolerance for age rounding)
                 if birth_year:
+                    # "zentriert" = "centered" (German) - 3rd column holds age
                     age_elem = result.xpath(".//td[@class='zentriert'][3]/text()")
                     if age_elem:
                         try:
@@ -156,6 +143,7 @@ class Transfermarkt(BaseRequestsReader):
                 logger.debug(f"Error processing search result: {e}")
                 continue
 
+        # 85% threshold avoids false positives (e.g. "Dani Olmo" vs "Dani Alves")
         if best_score >= 0.85:
             return best_match
 
@@ -165,13 +153,9 @@ class Transfermarkt(BaseRequestsReader):
         return None
 
     def read_player_market_value_history(self, player_id: str) -> list:
-        """Extract market value history from API.
+        """Extract market value history from Transfermarkt's internal JSON API.
 
-        Args:
-            player_id: Transfermarkt player ID
-
-        Returns:
-            List of dictionaries with date and market_value
+        Returns list of dicts with 'date' (ISO) and 'market_value' keys.
         """
         url = f"{TRANSFERMARKT_URL}/ceapi/marketValueDevelopment/graph/{player_id}"
 
@@ -186,6 +170,7 @@ class Transfermarkt(BaseRequestsReader):
             history = []
             if 'list' in data:
                 for entry in data['list']:
+                    # "datum_mw" = market value date, "mw" = market value (German)
                     if 'datum_mw' in entry and 'mw' in entry:
                         date_str = entry['datum_mw']
                         try:
@@ -204,15 +189,12 @@ class Transfermarkt(BaseRequestsReader):
             return []
 
     def read_player_profile(self, player_id: str, season: Optional[str] = None) -> Dict[str, Any]:
-        """Extract complete player profile.
+        """Extract complete player profile (position, foot, value, contract, birth date, club).
 
-        Args:
-            player_id: Transfermarkt player ID
-            season: Season in YY-YY format (e.g., '20-21') for historical market value
-
-        Returns:
-            Dictionary with player data
+        If season is provided (YY-YY format), fetches historical market value
+        from the API instead of the current value shown on the profile page.
         """
+        # "spieler" = "player" (German), slug "-" is ignored by Transfermarkt
         url = f"{TRANSFERMARKT_URL}/-/profil/spieler/{player_id}"
 
         filepath = self.data_dir / "players" / f"{player_id}.html"
@@ -221,7 +203,7 @@ class Transfermarkt(BaseRequestsReader):
         tree = html.parse(reader)
 
         profile = {
-            "transfermarkt_player_id": player_id,
+            "player_id": player_id,
             "position_specific": None,
             "primary_foot": None,
             "market_value_eur": None,
@@ -247,18 +229,10 @@ class Transfermarkt(BaseRequestsReader):
         return profile
 
     def _get_market_value_for_season(self, player_id: str, season: str) -> Optional[float]:
-        """Get market value for specific season.
+        """Get market value closest to a season (YY-YY format).
 
-        Priority:
-        1. June 1st of second year (end of season)
-        2. October 1st of first year (start of season)
-
-        Args:
-            player_id: Transfermarkt player ID
-            season: Season in YY-YY format (e.g., '20-21')
-
-        Returns:
-            Market value in EUR or None
+        Tries end-of-season (June, +-90 days) first, then start-of-season
+        (October, +-60 days) as fallback.
         """
         try:
             from datetime import datetime
@@ -267,11 +241,11 @@ class Transfermarkt(BaseRequestsReader):
             if len(parts) != 2:
                 return None
 
-            first_year = int('20' + parts[0])
-            second_year = int('20' + parts[1])
+            first_year = int('20' + parts[0])   # "24-25" -> 2024
+            second_year = int('20' + parts[1])  # "24-25" -> 2025
 
-            target_date_primary = f"{second_year}-06-01"
-            target_date_fallback = f"{first_year}-10-01"
+            target_date_primary = f"{second_year}-06-01"    # End of season
+            target_date_fallback = f"{first_year}-10-01"    # Start of season
 
             history = self.read_player_market_value_history(player_id)
 
@@ -303,6 +277,7 @@ class Transfermarkt(BaseRequestsReader):
                 value_str = best_match['market_value']
                 return self._parse_market_value(value_str)
 
+            # Fallback: start-of-season (October) within 60 days
             for entry in history:
                 entry_date = entry['date']
 
@@ -328,7 +303,7 @@ class Transfermarkt(BaseRequestsReader):
             return None
 
     def _extract_position(self, tree) -> Optional[str]:
-        """Extract main position from profile."""
+        """Extract main position, mapped to standard abbreviation (e.g. ST, CB)."""
         try:
             xpath = "//dt[contains(text(),'Main position:')]//following::dd[1]//text()"
             position_text = tree.xpath(xpath)
@@ -340,7 +315,7 @@ class Transfermarkt(BaseRequestsReader):
         return None
 
     def _extract_foot(self, tree) -> Optional[str]:
-        """Extract dominant foot from profile."""
+        """Extract dominant foot (Left, Right, or Ambidextrous)."""
         try:
             xpath = "//span[text()='Foot:']//following::span[1]//text()"
             foot_text = tree.xpath(xpath)
@@ -352,11 +327,12 @@ class Transfermarkt(BaseRequestsReader):
         return None
 
     def _extract_market_value(self, tree) -> Optional[float]:
-        """Extract market value in EUR."""
+        """Extract current market value in EUR from profile header."""
         try:
             xpath = "//a[@class='data-header__market-value-wrapper']"
             value_elem = tree.xpath(xpath)
             if value_elem:
+                # Exclude <p> children ("last updated" text)
                 texts = value_elem[0].xpath(".//text()[not(parent::p)]")
                 value_str = "".join(texts).strip()
                 return self._parse_market_value(value_str)
@@ -365,7 +341,7 @@ class Transfermarkt(BaseRequestsReader):
         return None
 
     def _extract_contract_expires(self, tree) -> Optional[str]:
-        """Extract contract expiration date."""
+        """Extract contract expiration date as ISO string."""
         try:
             xpath = "//span[contains(text(),'Contract expires')]//following::span[1]//text()"
             date_text = tree.xpath(xpath)
@@ -377,7 +353,7 @@ class Transfermarkt(BaseRequestsReader):
         return None
 
     def _extract_contract_joined(self, tree) -> Optional[str]:
-        """Extract date player joined current club."""
+        """Extract date player joined current club as ISO string."""
         try:
             xpath = "//span[contains(text(),'Joined')]//following::span[1]//text()"
             date_text = tree.xpath(xpath)
@@ -389,12 +365,14 @@ class Transfermarkt(BaseRequestsReader):
         return None
 
     def _extract_birth_date(self, tree) -> Optional[str]:
-        """Extract birth date."""
+        """Extract birth date as ISO string."""
         try:
+            # schema.org itemprop is stable across layout changes
             xpath = "//span[@itemprop='birthDate']//text()"
             date_text = tree.xpath(xpath)
             if date_text:
-                date_str = date_text[0].strip()
+                # Strip age suffix: '21/08/1988 (37)' -> '21/08/1988'
+                date_str = date_text[0].strip().split('(')[0].strip()
                 return self._parse_date(date_str)
         except Exception as e:
             logger.debug(f"Error extracting birth date: {e}")
@@ -406,14 +384,16 @@ class Transfermarkt(BaseRequestsReader):
             xpath = "//span[@class='data-header__club']//text()"
             club_text = tree.xpath(xpath)
             if club_text:
-                return club_text[0].strip()
+                # Skip whitespace-only text nodes
+                club = next((t.strip() for t in club_text if t.strip()), None)
+                return club
         except Exception as e:
             logger.debug(f"Error extracting club: {e}")
         return None
 
     @staticmethod
     def _extract_player_id(url: str) -> Optional[str]:
-        """Extract player ID from URL."""
+        """Extract numeric player ID from Transfermarkt URL."""
         match = re.search(r"/spieler/(\d+)", url)
         if match:
             return match.group(1)
@@ -421,8 +401,9 @@ class Transfermarkt(BaseRequestsReader):
 
     @staticmethod
     def _normalize_name(name: str) -> str:
-        """Normalize player name for matching."""
+        """Normalize name for comparison: lowercase, strip accents and punctuation."""
         name = name.lower().strip()
+        # Decompose unicode then remove accent marks (category "Mn")
         name = unicodedata.normalize("NFD", name)
         name = "".join(c for c in name if unicodedata.category(c) != "Mn")
         name = re.sub(r"[^\w\s]", "", name)
@@ -431,18 +412,12 @@ class Transfermarkt(BaseRequestsReader):
 
     @staticmethod
     def _calculate_similarity(name1: str, name2: str) -> float:
-        """Calculate similarity between two names."""
+        """Calculate name similarity ratio (0.0 to 1.0) via SequenceMatcher."""
         return SequenceMatcher(None, name1, name2).ratio()
 
     @staticmethod
     def _parse_market_value(value_str: str) -> Optional[float]:
-        """Parse market value string to EUR float.
-
-        Examples:
-            '€25.00m' -> 25000000.0
-            '€1.50m' -> 1500000.0
-            '€750k' -> 750000.0
-        """
+        """Parse market value string to EUR float (e.g. '€25.00m' -> 25000000.0)."""
         try:
             value_str = value_str.replace("€", "").replace(" ", "").lower()
 
@@ -460,21 +435,17 @@ class Transfermarkt(BaseRequestsReader):
 
     @staticmethod
     def _parse_date(date_str: str) -> Optional[str]:
-        """Parse date string to ISO format YYYY-MM-DD.
-
-        Examples:
-            'Jul 1, 2022' -> '2022-07-01'
-            'Jun 30, 2027' -> '2027-06-30'
-        """
+        """Parse date string to ISO format YYYY-MM-DD (e.g. 'Jul 1, 2022' -> '2022-07-01')."""
         try:
             from datetime import datetime
 
+            # Transfermarkt uses different formats depending on locale/page section
             date_formats = [
-                "%b %d, %Y",
-                "%d %b %Y",
-                "%d/%m/%Y",
-                "%Y-%m-%d",
-                "%d.%m.%Y",
+                "%b %d, %Y",   # "Jul 1, 2022" (English)
+                "%d %b %Y",   # "01 Jul 2022"
+                "%d/%m/%Y",   # "01/07/2022" (market value API)
+                "%Y-%m-%d",   # "2022-07-01" (already ISO)
+                "%d.%m.%Y",   # "01.07.2022" (German)
             ]
 
             for fmt in date_formats:
@@ -487,26 +458,3 @@ class Transfermarkt(BaseRequestsReader):
         except Exception:
             pass
         return None
-
-
-def _as_int(value: Any) -> Optional[int]:
-    """Convert value to int safely."""
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def _as_float(value: Any) -> Optional[float]:
-    """Convert value to float safely."""
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def _as_str(value: Any) -> Optional[str]:
-    """Convert value to str safely."""
-    if value is None or (isinstance(value, str) and not value.strip()):
-        return None
-    return str(value).strip()

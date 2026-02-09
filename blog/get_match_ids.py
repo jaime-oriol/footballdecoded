@@ -1,28 +1,24 @@
 #!/usr/bin/env python3
 """
-Match ID Extractor for WhoScored and Understat
-==============================================
+Match ID extractor for WhoScored and Understat.
 
-Extrae automáticamente los IDs de partidos de un equipo específico
-desde WhoScored y Understat para una liga y temporada determinadas.
+Extracts match IDs for a given team from WhoScored and Understat,
+then merges them by date into a single DataFrame. Useful for feeding
+IDs into viz/match_data.py and viz/match_data_v2.py pipelines.
 
-Uso:
+Usage:
     from get_match_ids import get_match_ids
 
-    ids = get_match_ids("Atlético Madrid", "ESP-La Liga", "24-25")
-    print(ids)
-
-    # Exportar a CSV
+    ids = get_match_ids("Atletico Madrid", "ESP-La Liga", "24-25")
     ids.to_csv("atm_matches_24-25.csv", index=False)
 """
 
 import sys
 import os
-from pathlib import Path
-from typing import Optional
 import pandas as pd
 import warnings
 
+# Allow imports from project root when running standalone
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from scrappers import WhoScored, Understat
 from scrappers._config import LEAGUE_DICT
@@ -31,7 +27,7 @@ warnings.filterwarnings('ignore')
 
 
 def _normalize_team_name(team_name: str) -> list[str]:
-    """Generar variaciones del nombre de equipo para matching flexible."""
+    """Return name variations for fuzzy team matching (accents, aliases)."""
     variations = [team_name]
 
     clean_name = (team_name.replace('é', 'e').replace('ñ', 'n').replace('í', 'i')
@@ -39,6 +35,7 @@ def _normalize_team_name(team_name: str) -> list[str]:
     if clean_name != team_name:
         variations.append(clean_name)
 
+    # Teams whose names differ between WhoScored and Understat
     common_mappings = {
         'Atlético Madrid': ['Atletico Madrid', 'Atlético', 'Atletico', 'ATM'],
         'Athletic Club': ['Athletic Bilbao', 'Athletic'],
@@ -54,11 +51,11 @@ def _normalize_team_name(team_name: str) -> list[str]:
         if team_name in [key] + values:
             variations.extend([key] + values)
 
-    return list(dict.fromkeys(variations))
+    return list(dict.fromkeys(variations))  # deduplicate, preserve order
 
 
 def _filter_team_matches(schedule: pd.DataFrame, team_name: str) -> pd.DataFrame:
-    """Filtrar partidos donde juega el equipo especificado."""
+    """Filter schedule to matches where team appears as home or away."""
     if schedule.empty:
         return schedule
 
@@ -80,56 +77,35 @@ def get_match_ids(
     season: str,
     verbose: bool = True
 ) -> pd.DataFrame:
-    """
-    Extraer IDs de partidos de WhoScored y Understat para un equipo.
+    """Extract match IDs from WhoScored and Understat for a team.
 
     Args:
-        team_name: Nombre del equipo (e.g., "Atlético Madrid", "Barcelona")
-        league: Código de liga (e.g., "ESP-La Liga", "ENG-Premier League")
-        season: Temporada en formato YY-YY (e.g., "24-25", "23-24")
-        verbose: Mostrar información de progreso
+        team_name: Team name (e.g., "Atletico Madrid", "Barcelona").
+        league: League code (e.g., "ESP-La Liga", "ENG-Premier League").
+        season: Season in YY-YY format (e.g., "24-25", "23-24").
+        verbose: Print progress info.
 
     Returns:
-        DataFrame con columnas:
-            - date: Fecha del partido
-            - home_team: Equipo local
-            - away_team: Equipo visitante
-            - whoscored_id: ID de WhoScored (int)
-            - understat_id: ID de Understat (int)
-            - league: Liga
-            - season: Temporada
+        DataFrame with columns: date, home_team, away_team,
+        whoscored_id, understat_id, league, season.
 
     Raises:
-        ValueError: Si la liga no es válida o no está en LEAGUE_DICT
-
-    Examples:
-        >>> # Atlético Madrid temporada 24-25
-        >>> ids = get_match_ids("Atlético Madrid", "ESP-La Liga", "24-25")
-        >>> print(f"Encontrados {len(ids)} partidos")
-        >>>
-        >>> # Exportar a CSV
-        >>> ids.to_csv("atm_matches.csv", index=False)
+        ValueError: If league is not found in LEAGUE_DICT.
     """
 
     if league not in LEAGUE_DICT:
-        raise ValueError(f"Liga '{league}' no encontrada en LEAGUE_DICT")
+        raise ValueError(f"League '{league}' not found in LEAGUE_DICT")
 
     if verbose:
-        print(f"\n{'='*60}")
-        print(f"Extrayendo IDs de partidos para:")
-        print(f"  Equipo: {team_name}")
-        print(f"  Liga: {league}")
-        print(f"  Temporada: {season}")
-        print(f"{'='*60}\n")
+        print(f"\nExtracting match IDs for: {team_name} | {league} | {season}\n")
 
     whoscored_matches = pd.DataFrame()
     understat_matches = pd.DataFrame()
 
-    # Extraer de WhoScored
     if 'WhoScored' in LEAGUE_DICT[league]:
         try:
             if verbose:
-                print("Extrayendo de WhoScored...")
+                print("Extracting from WhoScored...")
 
             ws = WhoScored(leagues=[league], seasons=[season])
             ws_schedule = ws.read_schedule()
@@ -144,22 +120,21 @@ def get_match_ids(
                     whoscored_matches['date'] = pd.to_datetime(whoscored_matches['date']).dt.tz_localize(None)
 
                     if verbose:
-                        print(f"   ✓ Encontrados {len(whoscored_matches)} partidos en WhoScored")
+                        print(f"  Found {len(whoscored_matches)} matches in WhoScored")
                 else:
                     if verbose:
-                        print(f"   ⚠ No se encontraron partidos de '{team_name}' en WhoScored")
+                        print(f"  WARN: No matches for '{team_name}' in WhoScored")
         except Exception as e:
             if verbose:
-                print(f"   ✗ Error extrayendo de WhoScored: {e}")
+                print(f"  ERROR extracting from WhoScored: {e}")
     else:
         if verbose:
-            print(f"   ℹ Liga '{league}' no disponible en WhoScored")
+            print(f"  League '{league}' not available in WhoScored")
 
-    # Extraer de Understat
     if 'Understat' in LEAGUE_DICT[league]:
         try:
             if verbose:
-                print("\nExtrayendo de Understat...")
+                print("Extracting from Understat...")
 
             us = Understat(leagues=[league], seasons=[season])
             us_schedule = us.read_schedule()
@@ -174,18 +149,18 @@ def get_match_ids(
                     understat_matches['date'] = pd.to_datetime(understat_matches['date']).dt.tz_localize(None)
 
                     if verbose:
-                        print(f"   ✓ Encontrados {len(understat_matches)} partidos en Understat")
+                        print(f"  Found {len(understat_matches)} matches in Understat")
                 else:
                     if verbose:
-                        print(f"   ⚠ No se encontraron partidos de '{team_name}' en Understat")
+                        print(f"  WARN: No matches for '{team_name}' in Understat")
         except Exception as e:
             if verbose:
-                print(f"   ✗ Error extrayendo de Understat: {e}")
+                print(f"  ERROR extracting from Understat: {e}")
     else:
         if verbose:
-            print(f"   ℹ Liga '{league}' no disponible en Understat")
+            print(f"  League '{league}' not available in Understat")
 
-    # Merge de ambas fuentes
+    # Outer join keeps matches found by either source
     if not whoscored_matches.empty and not understat_matches.empty:
         merged = pd.merge(
             whoscored_matches,
@@ -201,7 +176,7 @@ def get_match_ids(
         merged['whoscored_id'] = None
     else:
         if verbose:
-            print("\nNo se encontraron partidos en ninguna fuente")
+            print("\nNo matches found in any source")
         return pd.DataFrame(columns=['date', 'home_team', 'away_team', 'whoscored_id', 'understat_id', 'league', 'season'])
 
     merged['league'] = league
@@ -210,47 +185,36 @@ def get_match_ids(
     merged = merged.sort_values('date').reset_index(drop=True)
 
     if verbose:
-        print(f"\n{'='*60}")
-        print(f"RESUMEN:")
-        print(f"   Total partidos encontrados: {len(merged)}")
-
         ws_count = merged['whoscored_id'].notna().sum()
         us_count = merged['understat_id'].notna().sum()
         both_count = (merged['whoscored_id'].notna() & merged['understat_id'].notna()).sum()
-
-        print(f"   - Con ID WhoScored: {ws_count}")
-        print(f"   - Con ID Understat: {us_count}")
-        print(f"   - Con ambos IDs: {both_count}")
-        print(f"{'='*60}\n")
+        print(f"\nSummary: {len(merged)} matches "
+              f"(WhoScored: {ws_count}, Understat: {us_count}, both: {both_count})\n")
 
     return merged
 
 
 def main():
-    """Ejemplo de uso del script."""
+    """Run usage examples for Atletico Madrid and Barcelona."""
 
-    print("\n🔍 MATCH ID EXTRACTOR - WhoScored & Understat\n")
+    print("\nMATCH ID EXTRACTOR - WhoScored & Understat\n")
 
-    # Ejemplo 1: Atlético Madrid temporada 24-25
-    print("Ejemplo 1: Atlético Madrid 24-25")
-    atm_ids = get_match_ids("Atlético Madrid", "ESP-La Liga", "24-25")
+    print("Example 1: Atletico Madrid 24-25")
+    atm_ids = get_match_ids("Atletico Madrid", "ESP-La Liga", "24-25")
 
     if not atm_ids.empty:
-        print("\nPrimeros 5 partidos:")
+        print("\nFirst 5 matches:")
         print(atm_ids.head())
 
-        # Guardar a CSV
         output_file = "atm_match_ids_24-25.csv"
         atm_ids.to_csv(output_file, index=False)
-        print(f"\nGuardado en: {output_file}")
+        print(f"\nSaved to: {output_file}")
 
-    # Ejemplo 2: Barcelona temporada 23-24
-    print("\n" + "="*60 + "\n")
-    print("Ejemplo 2: Barcelona 23-24")
+    print("\nExample 2: Barcelona 23-24")
     barca_ids = get_match_ids("Barcelona", "ESP-La Liga", "23-24")
 
     if not barca_ids.empty:
-        print("\nPrimeros 5 partidos:")
+        print("\nFirst 5 matches:")
         print(barca_ids.head())
 
 

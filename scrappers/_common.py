@@ -1,4 +1,9 @@
-# Standard library imports
+"""Base classes and utilities for all scrapers.
+
+Provides caching, rate limiting, proxy rotation, TLS fingerprinting,
+Selenium automation, and season/league normalization.
+"""
+
 import io
 import json
 import pprint
@@ -13,24 +18,23 @@ from enum import Enum
 from pathlib import Path
 from typing import IO, Callable, Optional, Union
 
-# Third-party imports
 import numpy as np
 import pandas as pd
 import seleniumbase as sb
 
-# Silence verbose tls_requests output during import and usage
+# Suppress tls_requests debug output on import
 import sys
 _original_stdout = sys.stdout
-sys.stdout = io.StringIO()  # Temporarily redirect stdout
+sys.stdout = io.StringIO()
 import tls_requests
-sys.stdout = _original_stdout  # Restore stdout
+sys.stdout = _original_stdout
 
-# Monkey-patch print in tls_requests library module to prevent future prints
+# Disable tls_requests print statements permanently
 try:
     import tls_requests.models.libraries as _tls_lib
     _tls_lib.print = lambda *args, **kwargs: None
 except (ImportError, AttributeError):
-    pass  # If module structure changes, silently continue
+    pass
 
 from dateutil.relativedelta import relativedelta
 from lxml.etree import _Element
@@ -40,41 +44,21 @@ from ._config import DATA_DIR, LEAGUE_DICT, MAXAGE, TEAMNAME_REPLACEMENTS, logge
 
 
 class SeasonCode(Enum):
-    """How to interpret season codes.
-
-    Attributes
-    ----------
-    SINGLE_YEAR: The season code is a single year, e.g. '2021'.
-    MULTI_YEAR: The season code is a range of years, e.g. '2122'.
-    """
+    """Season code format: single year ('2021') or multi-year ('2122')."""
 
     SINGLE_YEAR = "single-year"
     MULTI_YEAR = "multi-year"
 
     @staticmethod
     def from_league(league: str) -> "SeasonCode":
-        """Return the default season code for a league.
-
-        Parameters
-        ----------
-        league : str
-            The league to consider.
-
-        Raises
-        ------
-        ValueError
-            If the league is not recognized.
-
-        Returns
-        -------
-        SeasonCode
-            The season code format to use.
-        """
+        """Return the default season code format for a league."""
         if league not in LEAGUE_DICT:
             raise ValueError(f"Invalid league '{league}'")
         select_league_dict = LEAGUE_DICT[league]
+        # Explicit override in config takes precedence (e.g. World Cup = single-year)
         if "season_code" in select_league_dict:
             return SeasonCode(select_league_dict["season_code"])
+        # Infer from calendar: if end < start, season spans two years
         start_month = datetime.strptime(  # noqa: DTZ007
             select_league_dict.get("season_start", "Aug"),
             "%b",
@@ -87,21 +71,7 @@ class SeasonCode(Enum):
 
     @staticmethod
     def from_leagues(leagues: list[str]) -> "SeasonCode":
-        """Determine the season code to use for a set of leagues.
-
-        If the given leagues have different default season codes,
-        the multi-year format is usded.
-
-        Parameters
-        ----------
-        leagues : list of str
-            The leagues to consider.
-
-        Returns
-        -------
-        SeasonCode
-            The season code format to use.
-        """
+        """Determine season code for a set of leagues. Defaults to multi-year if mixed."""
         season_codes = {SeasonCode.from_league(league) for league in leagues}
         if len(season_codes) == 1:
             return season_codes.pop()
@@ -112,18 +82,9 @@ class SeasonCode(Enum):
         return SeasonCode.MULTI_YEAR
 
     def parse(self, season: Union[str, int]) -> str:  # noqa: C901
-        """Convert a string or int to a standard season format.
-        
-        This method handles multiple season format inputs and converts them to
-        a standardized format based on the season code type (single-year vs multi-year).
-        
-        Examples of supported formats:
-        - Single digits: '94' -> '1994' or '2094'
-        - Four digits: '1994' -> '1994' or '9495'
-        - Range formats: '1994-95', '94-95', '1994/1995'
-        """
+        """Normalize season input to standard format (e.g. '94' -> '9495' or '1994')."""
         season = str(season)
-        # Define regex patterns and their corresponding processing functions
+        # Order matters: 4-digit before 2-digit, full ranges before short
         patterns = [
             (
                 re.compile(r"^[0-9]{4}$"),  # 1994 | 9495
@@ -158,11 +119,7 @@ class SeasonCode(Enum):
         current_year = datetime.now(tz=timezone.utc).year
 
         def process_four_digit_year(season: str) -> str:
-            """Process a 4-digit string like '1994' or '9495'.
-            
-            For multi-year format: converts '1994' to '9495' or '9900' for edge cases.
-            For single-year format: handles ambiguous cases like '2021' and '1920'.
-            """
+            """Handle '1994' or '9495' depending on season code type."""
             if self == SeasonCode.MULTI_YEAR:
                 if int(season[2:]) == int(season[:2]) + 1:
                     if season == "2021":
@@ -186,11 +143,7 @@ class SeasonCode(Enum):
             return "19" + season[:2]
 
         def process_two_digit_year(season: str) -> str:
-            """Process a 2-digit string like '94'.
-            
-            Determines century based on current year and season code type.
-            For multi-year: '94' -> '9495', for single-year: '94' -> '1994' or '2094'.
-            """
+            """Handle '94' -> '9495' (multi) or '1994'/'2094' (single)."""
             if self == SeasonCode.MULTI_YEAR:
                 if season == "99":
                     return "9900"
@@ -200,68 +153,34 @@ class SeasonCode(Enum):
             return "19" + season
 
         def process_full_year_range(season: str) -> str:
-            """Process a range of 4-digit strings like '1994-1995'.
-            
-            Extracts the appropriate format based on season code type.
-            Multi-year: '1994-1995' -> '9495', Single-year: '1994-1995' -> '1994'
-            """
+            """Handle '1994-1995' -> '9495' (multi) or '1994' (single)."""
             if self == SeasonCode.MULTI_YEAR:
                 return season[2:4] + season[-2:]
             return season[:4]
 
         def process_partial_year_range(season: str) -> str:
-            """Process a range of 4-digit and 2-digit string like '1994-95'.
-            
-            Similar to full year range but handles mixed digit formats.
-            """
+            """Handle '1994-95' -> '9495' (multi) or '1994' (single)."""
             if self == SeasonCode.MULTI_YEAR:
                 return season[2:4] + season[-2:]
             return season[:4]
 
         def process_short_year_range(season: str) -> str:
-            """Process a range of 2-digit strings like '94-95'.
-            
-            Handles short format ranges with century determination logic.
-            """
+            """Handle '94-95' -> '9495' (multi) or '1994'/'2094' (single)."""
             if self == SeasonCode.MULTI_YEAR:
                 return season[:2] + season[-2:]
             if int("20" + season[:2]) <= current_year:
                 return "20" + season[:2]
             return "19" + season[:2]
 
-        # Try each pattern until one matches
         for pattern, action in patterns:
             if pattern.match(season):
                 return action(season)
 
-        # If no pattern matches, raise error
         raise ValueError(f"Unrecognized season code: '{season}'")
 
 
 class BaseReader(ABC):
-    """Base class for data readers.
-
-    Parameters
-    ----------
-    leagues : str or list of str, optional
-        The leagues to read. If None, all available leagues are read.
-    proxy : 'tor' or or dict or list(dict) or callable, optional
-        Use a proxy to hide your IP address. Valid options are:
-            - "tor": Uses the Tor network. Tor should be running in
-              the background on port 9050.
-            - str: The address of the proxy server to use.
-            - list(str): A list of proxies to choose from. A different proxy will
-              be selected from this list after failed requests, allowing rotating
-              proxies.
-            - callable: A function that returns a valid proxy. This function will
-              be called after failed requests, allowing rotating proxies.
-    no_cache : bool
-        If True, will not use cached data.
-    no_store : bool
-        If True, will not store downloaded data.
-    data_dir : Path
-        Path to directory where data will be cached.
-    """
+    """Abstract base for all data readers. Handles caching, proxies, and league/season config."""
 
     def __init__(
         self,
@@ -272,6 +191,7 @@ class BaseReader(ABC):
         data_dir: Path = DATA_DIR,
     ):
         """Create a new data reader."""
+        # Normalize proxy to a callable returning a proxy string
         if isinstance(proxy, str) and proxy.lower() == "tor":
             self.proxy = lambda: "socks5://127.0.0.1:9050"
         elif isinstance(proxy, str):
@@ -303,43 +223,11 @@ class BaseReader(ABC):
         no_cache: bool = False,
         var: Optional[Union[str, Iterable[str]]] = None,
     ) -> IO[bytes]:
-        """Load data from `url` with caching support.
-
-        By default, the source of `url` is downloaded and saved to `filepath`.
-        If `filepath` exists, the `url` is not visited and the cached data is
-        returned. This is the core method for all data fetching in scrapers.
-
-        Parameters
-        ----------
-        url : str
-            URL to download.
-        filepath : Path, optional
-            Path to save downloaded file. If None, downloaded data is not cached.
-        max_age : int for age in days, or timedelta object
-            The max. age of locally cached file before re-download.
-        no_cache : bool
-            If True, will not use cached data. Overrides the class property.
-        var : str or list of str, optional
-            Return a JavaScript variable instead of the page source.
-            Used for extracting specific JS variables from pages.
-
-        Raises
-        ------
-        TypeError
-            If max_age is not an integer or timedelta object.
-
-        Returns
-        -------
-        io.BufferedIOBase
-            File-like object of downloaded data.
-        """
-        # Check if we have a valid cached version
+        """Fetch url with caching. Returns cached file if fresh, otherwise downloads."""
         is_cached = self._is_cached(filepath, max_age)
         if no_cache or self.no_cache or not is_cached:
-            # Download fresh data
             logger.debug("Fetching %s", url)
             return self._download_and_save(url, filepath, var)
-        # Use cached data
         logger.debug("Cache hit: %s", url)
         if filepath is None:
             raise ValueError("No filepath provided for cached data.")
@@ -350,26 +238,7 @@ class BaseReader(ABC):
         filepath: Optional[Path] = None,
         max_age: Optional[Union[int, timedelta]] = None,
     ) -> bool:
-        """Check if `filepath` contains valid cached data.
-
-        Parameters
-        ----------
-        filepath : Path, optional
-            Path where file should be cached. If None, return False.
-        max_age : int for age in days, or timedelta object
-            The max. age of locally cached file.
-
-        Raises
-        ------
-        TypeError
-            If max_age is not an integer or timedelta object.
-
-        Returns
-        -------
-        bool
-            True in case of a cache hit, otherwise False.
-        """
-        # Validate and normalize max_age parameter
+        """Return True if filepath exists and is younger than max_age."""
         if max_age is not None:
             if isinstance(max_age, int):
                 _max_age = timedelta(days=max_age)
@@ -381,7 +250,6 @@ class BaseReader(ABC):
             _max_age = None
 
         cache_invalid = False
-        # Check if cached file exists and is not too old
         if _max_age is not None and filepath is not None and filepath.exists():
             last_modified = datetime.fromtimestamp(filepath.stat().st_mtime, tz=timezone.utc)
             now = datetime.now(timezone.utc)
@@ -397,22 +265,7 @@ class BaseReader(ABC):
         filepath: Optional[Path] = None,
         var: Optional[Union[str, Iterable[str]]] = None,
     ) -> IO[bytes]:
-        """Download data at `url` to `filepath`.
-
-        Parameters
-        ----------
-        url : str
-            URL to download.
-        filepath : Path, optional
-            Path to save downloaded file. If None, downloaded data is not cached.
-        var : str or list of str, optional
-            Return a JavaScript variable instead of the page source.
-
-        Returns
-        -------
-        io.BufferedIOBase
-            File-like object of downloaded data.
-        """
+        """Download url and optionally save to filepath. Returns file-like object."""
 
     @classmethod
     def available_leagues(cls) -> list[str]:
@@ -421,7 +274,7 @@ class BaseReader(ABC):
 
     @classmethod
     def _all_leagues(cls) -> dict[str, str]:
-        """Return a dict mapping all canonical league IDs to source league IDs."""
+        """Return dict mapping canonical league IDs to source-specific IDs. Cached per class."""
         if not hasattr(cls, "_all_leagues_dict"):
             cls._all_leagues_dict = {  # type: ignore
                 k: v[cls.__name__] for k, v in LEAGUE_DICT.items() if cls.__name__ in v
@@ -430,7 +283,7 @@ class BaseReader(ABC):
 
     @classmethod
     def _translate_league(cls, df: pd.DataFrame, col: str = "league") -> pd.DataFrame:
-        """Map source league ID to canonical ID."""
+        """Map source league ID to canonical ID (e.g. 'EPL' -> 'ENG-Premier League')."""
         flip = {v: k for k, v in cls._all_leagues().items()}
         mask = ~df[col].isin(flip)
         df.loc[mask, col] = np.nan
@@ -444,6 +297,7 @@ class BaseReader(ABC):
 
     @_selected_leagues.setter
     def _selected_leagues(self, ids: Optional[Union[str, list[str]]] = None) -> None:
+        """Validate and set the selected leagues. None selects all available."""
         if ids is None:
             self._leagues_dict = self._all_leagues()
         else:
@@ -465,10 +319,11 @@ class BaseReader(ABC):
 
     @property
     def _season_code(self) -> SeasonCode:
+        """Infer season code format from selected leagues."""
         return SeasonCode.from_leagues(self.leagues)
 
     def _is_complete(self, league: str, season: str) -> bool:
-        """Check if a season is complete."""
+        """Check if a season is complete (past its end date)."""
         if league in LEAGUE_DICT:
             league_dict = LEAGUE_DICT[league]
         else:
@@ -507,6 +362,7 @@ class BaseReader(ABC):
 
     @seasons.setter
     def seasons(self, seasons: Optional[Union[str, int, Iterable[Union[str, int]]]]) -> None:
+        """Set and normalize seasons. Defaults to last 5 if None."""
         if seasons is None:
             logger.debug("No seasons specified - using last 5 seasons")
             year = datetime.now(tz=timezone.utc).year
@@ -517,7 +373,7 @@ class BaseReader(ABC):
 
 
 class BaseRequestsReader(BaseReader):
-    """Base class for readers that use the Python requests module."""
+    """Base class for HTTP scrapers. Uses tls_requests for TLS fingerprint evasion."""
 
     def __init__(
         self,
@@ -539,6 +395,7 @@ class BaseRequestsReader(BaseReader):
         self._session = self._init_session()
 
     def _init_session(self) -> tls_requests.Client:
+        """Create a new TLS client session with current proxy."""
         return tls_requests.Client(proxy=self.proxy())
 
     def _get_random_headers(self) -> dict:
@@ -589,13 +446,14 @@ class BaseRequestsReader(BaseReader):
         filepath: Optional[Path] = None,
         var: Optional[Union[str, Iterable[str]]] = None,
     ) -> IO[bytes]:
-        """Download file at url to filepath. Overwrites if filepath exists."""
+        """Download url with retry (5 attempts). Resets session on failure."""
         for i in range(5):
             try:
                 response = self._session.get(url, headers=self._get_random_headers())
                 time.sleep(self.rate_limit + random.random() * self.max_delay)
                 response.raise_for_status()
                 if var is not None:
+                    # Extract JS variables matching: varName = JSON.parse('...')
                     if isinstance(var, str):
                         var = [var]
                     var_names = "|".join(var)
@@ -628,7 +486,7 @@ class BaseRequestsReader(BaseReader):
 
 
 class BaseSeleniumReader(BaseReader):
-    """Base class for readers that use Selenium."""
+    """Base class for browser-based scrapers. Uses SeleniumBase with UC mode for anti-bot bypass."""
 
     def __init__(
         self,
@@ -660,12 +518,11 @@ class BaseSeleniumReader(BaseReader):
             )
 
     def _init_webdriver(self) -> "sb.Driver":
-        """Start the Selenium driver."""
-        # Quit existing driver
+        """Start a new Selenium driver with undetected-chromedriver mode."""
         if hasattr(self, "_driver"):
             self._driver.quit()
-        # Start a new driver
         proxy_str = self.proxy()
+        # Force DNS through proxy to prevent DNS leaks
         resolver_rules = None
         if proxy_str is not None:
             resolver_rules = "MAP * ~NOTFOUND , EXCLUDE 127.0.0.1"
@@ -683,11 +540,12 @@ class BaseSeleniumReader(BaseReader):
         filepath: Optional[Path] = None,
         var: Optional[Union[str, Iterable[str]]] = None,
     ) -> IO[bytes]:
-        """Download file at url to filepath. Overwrites if filepath exists."""
+        """Download url via browser with retry (5 attempts). Exponential backoff on failure."""
         for i in range(5):
             try:
                 self._driver.get(url)
                 time.sleep(self.rate_limit + random.random() * self.max_delay)
+                # Incapsula (Imperva WAF) = IP blocked
                 if "Incapsula incident ID" in self._driver.page_source:
                     raise WebDriverException(
                         "Your IP is blocked. Use tor or a proxy to continue scraping."
@@ -744,22 +602,7 @@ def make_game_id(row: pd.Series) -> str:
 
 
 def add_alt_team_names(team: Union[str, list[str]]) -> set[str]:
-    """Add a set of alternative team names for a standardized team name.
-
-    If a standardized team name is given, add the set of alternative
-    names used by the data sources. If a non-standardized name is given,
-    a set only containing the given name is returned.
-
-    Parameters
-    ----------
-    team : str or list of str
-        The team name(s) to consider.
-
-    Returns
-    -------
-    set of str
-        A set contraining the given team name(s) and alternative names.
-    """
+    """Return set of all known alternative names for the given team(s)."""
     teams = [team] if isinstance(team, str) else team
 
     alt_teams = set()
@@ -772,22 +615,7 @@ def add_alt_team_names(team: Union[str, list[str]]) -> set[str]:
 
 
 def add_standardized_team_name(team: Union[str, list[str]]) -> set[str]:
-    """Add the standardized team name for a non-standardized team name.
-
-    If a non-standardized team name is given, add the standardized
-    name. If a standardized name is given, a set only containing the given
-    name is returned.
-
-    Parameters
-    ----------
-    team : str or list of str
-        The team name(s) to consider.
-
-    Returns
-    -------
-    set of str
-        A set contraining the given team name(s) and standardized names.
-    """
+    """Return set including the canonical name for any non-standard team name(s)."""
     teams = [team] if isinstance(team, str) else team
     std_teams = set()
     for team in teams:
@@ -799,16 +627,16 @@ def add_standardized_team_name(team: Union[str, list[str]]) -> set[str]:
 
 
 def standardize_colnames(df: pd.DataFrame, cols: Optional[list[str]] = None) -> pd.DataFrame:
-    """Convert DataFrame column names to snake case."""
+    """Convert DataFrame column names to snake_case (e.g. 'xGChain' -> 'x_g_chain')."""
 
     def to_snake(name: str) -> str:
+        """Convert camelCase/PascalCase to snake_case."""
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         name = re.sub("__([A-Z])", r"_\1", name)
         name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", name)
         return name.lower().replace("-", "_").replace(" ", "")
 
     if df.columns.nlevels > 1 and cols is None:
-        # only standardize the first level
         new_df = df.copy()
         new_cols = [to_snake(c) for c in df.columns.levels[0]]
         new_df.columns = new_df.columns.set_levels(new_cols, level=0)
@@ -821,14 +649,11 @@ def standardize_colnames(df: pd.DataFrame, cols: Optional[list[str]] = None) -> 
 
 
 def get_proxy() -> dict[str, str]:
-    """Return a public proxy."""
-    # list of free proxy apis
-    # protocols: http, https, socks4 and socks5
+    """Fetch a working public proxy from GeoNode API. Returns empty dict if none work."""
     list_of_proxy_content = [
         "https://proxylist.geonode.com/api/proxy-list?sort_by=lastChecked&sort_type=desc",
     ]
 
-    # extracting json data from this list of proxies
     full_proxy_list = []
     for proxy_url in list_of_proxy_content:
         proxy_json = json.loads(tls_requests.get(proxy_url).text)["data"]
@@ -839,7 +664,6 @@ def get_proxy() -> dict[str, str]:
             return {}
         logger.debug(f"Found {len(full_proxy_list)} proxy servers, checking...")
 
-    # creating proxy dict
     final_proxy_list = []
     for proxy in full_proxy_list:
         protocol = proxy["protocols"][0]
@@ -853,7 +677,6 @@ def get_proxy() -> dict[str, str]:
 
         final_proxy_list.append(proxy)
 
-    # trying proxy
     for proxy in final_proxy_list:
         if check_proxy(proxy):
             return proxy
@@ -873,6 +696,7 @@ def check_proxy(proxy: dict) -> bool:
 
 
 def safe_xpath_text(node: _Element, xpath_expr: str, warn: Optional[str] = None) -> Optional[str]:
+    """Extract text via xpath, returning None (with optional warning) if not found."""
     result = node.xpath(xpath_expr)
     if not result and warn is not None:
         warnings.warn(warn, stacklevel=2)

@@ -1,55 +1,24 @@
-# ====================================================================
-# FootballDecoded - Understat Optimized Advanced Metrics Extractor
-# ====================================================================
-"""
-Understat Wrapper especializado en métricas avanzadas únicas:
+"""Understat wrapper: advanced metrics (xG Chain, xG Buildup, PPDA, shots).
 
-MÉTRICAS EXCLUSIVAS DE UNDERSTAT (no disponibles en FBref):
-- xG Chain: xG generado en jugadas donde participó el jugador
-- xG Buildup: xG en jugadas que el jugador ayudó a construir  
-- npxG + xA: Métricas combinadas sin penales
-- Key Passes: Pases clave que llevan a ocasiones
-- PPDA: Presión defensiva (Passes Allowed Per Defensive Action)
-- Deep Completions: Pases completados en último tercio rival
+Big 5 leagues only. Provides player/team extraction, shot events,
+match ID lookup, and batch processing with parallel support.
 
-CARACTERÍSTICAS AVANZADAS:
-- Sistema de caché inteligente para métricas complejas
-- Procesamiento paralelo optimizado con rate limiting
-- Merge robusto con datos de FBref automático
-- Búsqueda automática de match IDs y jugadores
-- Validación específica para datos Understat
-
-FUNCIONES CLAVE:
-- extract_data(): Métricas avanzadas Understat
-- merge_with_fbref(): Fusión automática FBref + Understat
-- extract_shot_events(): Eventos de disparos con xG
-- get_match_ids(): Búsqueda automática de IDs de partidos
-
-USO TÍPICO:
+Usage:
     from wrappers import understat_data
-    
-    # Métricas avanzadas individuales
-    player = understat_data.get_player("Messi", "ESP-La Liga", "23-24")
-    
-    # Fusión automática con FBref
-    fbref_players = fbref_data.get_players(["Messi", "Benzema"], ...)
-    merged = understat_data.merge_with_fbref(fbref_players, "ESP-La Liga", "23-24")
+    player = understat_data.get_player("Lewandowski", "ESP-La Liga", "24-25")
+    team = understat_data.get_team("Barcelona", "ESP-La Liga", "24-25")
+    shots = understat_data.get_shots(26982, "ESP-La Liga", "24-25")
 """
 
-import sys
-import os
-import pandas as pd
-import numpy as np
-import warnings
-import pickle
-import hashlib
 import time
+import warnings
 from typing import Dict, List, Optional, Union, Any
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Try to import tqdm for progress bars
+import numpy as np
+import pandas as pd
+
 try:
     from tqdm import tqdm
     TQDM_AVAILABLE = True
@@ -58,35 +27,29 @@ except ImportError:
     def tqdm(iterable, **kwargs):
         return iterable
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scrappers import Understat
 from scrappers._config import LEAGUE_DICT
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-# ====================================================================
-# INPUT VALIDATION SYSTEM
-# ====================================================================
-
 def _validate_inputs(entity_name: str, entity_type: str, league: str, season: str) -> bool:
-    """Validar entradas de manera robusta."""
+    """Validate entity name, type, league and season format (YY-YY)."""
     if not entity_name or not isinstance(entity_name, str) or entity_name.strip() == "":
         raise ValueError("entity_name must be a non-empty string")
-    
-    valid_types = ['player', 'team']
-    if entity_type not in valid_types:
-        raise ValueError(f"entity_type must be one of {valid_types}, got '{entity_type}'")
-    
+
+    if entity_type not in ('player', 'team'):
+        raise ValueError(f"entity_type must be 'player' or 'team', got '{entity_type}'")
+
     if not league or not isinstance(league, str):
         raise ValueError("league must be a non-empty string")
-    
+
     if not season or not isinstance(season, str):
         raise ValueError("season must be a string")
-    
+
     season_parts = season.split('-')
     if len(season_parts) != 2:
         raise ValueError(f"season must be in YY-YY format, got '{season}'")
-    
+
     try:
         year1, year2 = int(season_parts[0]), int(season_parts[1])
         if not (0 <= year1 <= 99 and 0 <= year2 <= 99):
@@ -97,166 +60,61 @@ def _validate_inputs(entity_name: str, entity_type: str, league: str, season: st
         if "invalid literal" in str(e):
             raise ValueError(f"season must contain valid numbers, got '{season}'")
         raise
-    
+
     return True
 
-def validate_inputs_with_suggestions(entity_name: str, entity_type: str, league: str, season: str) -> Dict[str, Any]:
-    """Validar entradas con sugerencias de corrección."""
-    result = {'valid': True, 'errors': [], 'suggestions': []}
-    
-    try:
-        _validate_inputs(entity_name, entity_type, league, season)
-    except ValueError as e:
-        result['valid'] = False
-        result['errors'].append(str(e))
-        
-        if 'entity_type' in str(e):
-            result['suggestions'].append("Use 'player' or 'team' for entity_type")
-        if 'season' in str(e) and 'format' in str(e):
-            result['suggestions'].append("Use season format like '23-24', '22-23', etc.")
-        if 'league' in str(e):
-            valid_leagues = [league for league in LEAGUE_DICT.keys() if 'Understat' in LEAGUE_DICT[league]]
-            result['suggestions'].append(f"Valid leagues for Understat: {', '.join(valid_leagues[:3])}{'...' if len(valid_leagues) > 3 else ''}")
-    
-    return result
-
-# ====================================================================
-# INTELLIGENT CACHE SYSTEM
-# ====================================================================
-
-CACHE_DIR = Path.home() / ".footballdecoded_cache" / "understat"
-CACHE_EXPIRY_HOURS = 24
-
-def _ensure_cache_dir():
-    """Crear directorio de caché si no existe."""
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
-def _generate_cache_key(entity_name: str, entity_type: str, league: str, season: str, **kwargs) -> str:
-    """Generar clave única para cache.
-
-    Incluye team_name en la clave para evitar colisiones cuando hay jugadores
-    con nombres similares en equipos diferentes.
-    """
-    cache_data = f"{entity_name}:{entity_type}:{league}:{season}:{str(sorted(kwargs.items()))}"
-    return hashlib.md5(cache_data.encode()).hexdigest()
-
-def _get_cache_path(cache_key: str) -> Path:
-    """Obtener ruta completa del archivo de cache."""
-    return CACHE_DIR / f"{cache_key}.pkl"
-
-def _is_cache_valid(cache_path: Path) -> bool:
-    """Verificar si el cache es válido."""
-    if not cache_path.exists():
-        return False
-    
-    file_time = datetime.fromtimestamp(cache_path.stat().st_mtime)
-    expiry_time = datetime.now() - timedelta(hours=CACHE_EXPIRY_HOURS)
-    return file_time > expiry_time
-
-def _save_to_cache(data: Union[Dict, pd.DataFrame], cache_key: str):
-    """Guardar datos en cache."""
-    try:
-        _ensure_cache_dir()
-        cache_path = _get_cache_path(cache_key)
-        
-        cache_data = {
-            'data': data,
-            'timestamp': datetime.now(),
-            'cache_key': cache_key
-        }
-        
-        with open(cache_path, 'wb') as f:
-            pickle.dump(cache_data, f)
-            
-    except Exception as e:
-        print(f"Warning: Could not save to cache: {e}")
-
-def _load_from_cache(cache_key: str) -> Optional[Union[Dict, pd.DataFrame]]:
-    """Cargar datos del cache si existen y son válidos."""
-    try:
-        cache_path = _get_cache_path(cache_key)
-        
-        if not _is_cache_valid(cache_path):
-            return None
-            
-        with open(cache_path, 'rb') as f:
-            cache_data = pickle.load(f)
-            
-        return cache_data.get('data')
-        
-    except Exception as e:
-        print(f"Warning: Could not load from cache: {e}")
-        return None
 
 def clear_cache():
-    """Limpiar todo el cache de Understat."""
+    """Delete all cached JSON files from the Understat scraper directory."""
+    from pathlib import Path
+    from scrappers._config import DATA_DIR
+    cache_dir = DATA_DIR / "Understat"
     try:
-        if CACHE_DIR.exists():
-            for cache_file in CACHE_DIR.glob("*.pkl"):
-                cache_file.unlink()
-            print("Understat cache cleared successfully")
+        if cache_dir.exists():
+            count = 0
+            for f in cache_dir.glob("*.json"):
+                f.unlink()
+                count += 1
+            print(f"Understat cache cleared ({count} files)")
     except Exception as e:
         print(f"Error clearing cache: {e}")
 
-# ====================================================================
-# CORE ENGINE - UNIFIED EXTRACTION
-# ====================================================================
 
 def extract_data(
     entity_name: str,
     entity_type: str,
     league: str,
     season: str,
-    use_cache: bool = True,
     team_name: Optional[str] = None
 ) -> Optional[Dict]:
-    """
-    Motor de extracción unificado para métricas avanzadas de Understat con cache.
+    """Extract Understat advanced metrics for a player or team.
 
     Args:
-        entity_name: Nombre del jugador o equipo
-        entity_type: 'player' o 'team'
-        league: ID de liga
-        season: ID de temporada
-        use_cache: Usar sistema de cache (default: True)
-        team_name: Nombre del equipo para desambiguar jugadores con nombres similares (opcional)
+        entity_name: Player or team name.
+        entity_type: 'player' or 'team'.
+        league: League code (e.g. 'ESP-La Liga').
+        season: Season in YY-YY format (e.g. '24-25').
+        team_name: Team name for player disambiguation.
 
     Returns:
-        Dict con métricas únicas de Understat (NO en FBref)
+        Dict with understat_ prefixed metrics, or None if not found.
     """
-    # Validar entradas
     try:
         _validate_inputs(entity_name, entity_type, league, season)
     except ValueError as e:
         print(f"Understat input validation failed: {e}")
-        validation_result = validate_inputs_with_suggestions(entity_name, entity_type, league, season)
-        if validation_result['suggestions']:
-            print("Suggestions:")
-            for suggestion in validation_result['suggestions']:
-                print(f"  - {suggestion}")
         return None
-    
-    # Generar clave de cache (incluye team_name para evitar colisiones)
-    cache_kwargs = {'team_name': team_name} if team_name else {}
-    cache_key = _generate_cache_key(entity_name, entity_type, league, season, **cache_kwargs)
 
-    # Intentar cargar desde cache
-    if use_cache:
-        cached_data = _load_from_cache(cache_key)
-        if cached_data:
-            print(f"Loading {entity_name} from Understat cache")
-            return cached_data
-    
     try:
         understat = Understat(leagues=[league], seasons=[season])
-        
+
         if entity_type == 'player':
             stats = understat.read_player_season_stats()
             entity_row = _find_entity(stats, entity_name, 'player', team_name=team_name)
 
             if entity_row is None:
                 return None
-            
+
             basic_info = {
                 'player_name': entity_name,
                 'league': league,
@@ -264,40 +122,29 @@ def extract_data(
                 'team': entity_row.index.get_level_values('team')[0],
                 'official_player_name': entity_row.index.get_level_values('player')[0]
             }
-            
             understat_metrics = _extract_player_metrics(entity_row)
-            
+
         else:
             team_stats = understat.read_team_match_stats()
             team_matches = _find_team_matches(team_stats, entity_name)
-            
+
             if team_matches is None or team_matches.empty:
                 return None
-            
+
             basic_info = {
                 'team_name': entity_name,
                 'league': league,
                 'season': season,
                 'official_team_name': team_matches.iloc[0]['home_team'] if 'home_team' in team_matches.columns else entity_name
             }
-            
-            understat_metrics = _calculate_team_metrics(team_matches)
-        
-        final_data = {**basic_info, **understat_metrics}
-        
-        # Guardar en cache si está habilitado
-        if use_cache and final_data:
-            _save_to_cache(final_data, cache_key)
-        
-        return final_data
-        
-    except Exception:
+            understat_metrics = _calculate_team_metrics(team_matches, entity_name)
+
+        return {**basic_info, **understat_metrics}
+
+    except Exception as e:
+        print(f"Error extracting Understat data for {entity_name}: {e}")
         return None
 
-
-# ====================================================================
-# BATCH EXTRACTION
-# ====================================================================
 
 def extract_multiple(
     entities: List[str],
@@ -306,78 +153,50 @@ def extract_multiple(
     season: str,
     max_workers: int = 3,
     show_progress: bool = True,
-    use_cache: bool = True
 ) -> pd.DataFrame:
-    """
-    Extraer múltiples entidades con procesamiento paralelo optimizado.
-    
-    Args:
-        entities: Lista de nombres de entidades
-        entity_type: 'player' o 'team'
-        league: Identificador de liga
-        season: Identificador de temporada
-        max_workers: Número máximo de hilos paralelos (default: 3)
-        show_progress: Mostrar barra de progreso (default: True)
-        use_cache: Usar sistema de cache (default: True)
-        
-    Returns:
-        DataFrame con métricas de Understat de todas las entidades
+    """Extract metrics for multiple players/teams in parallel.
+
+    Returns standardized DataFrame with one row per entity.
     """
     if not entities:
         return pd.DataFrame()
-    
-    def extract_single_entity(entity_name: str) -> Optional[Dict]:
-        """Extract single entity with rate limiting."""
+
+    def extract_single(name: str) -> Optional[Dict]:
         try:
-            # Add delay to respect rate limits (Understat is more sensitive)
             time.sleep(1.0)
-            return extract_data(entity_name, entity_type, league, season, use_cache=use_cache)
+            return extract_data(name, entity_type, league, season)
         except Exception as e:
             if show_progress:
-                print(f"Error extracting {entity_name}: {e}")
+                print(f"Error extracting {name}: {e}")
             return None
-    
+
     all_data = []
-    
-    # Use ThreadPoolExecutor for parallel processing
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit all tasks
-        future_to_entity = {
-            executor.submit(extract_single_entity, entity): entity 
-            for entity in entities
-        }
-        
-        # Process completed tasks with progress bar
+        future_to_entity = {executor.submit(extract_single, e): e for e in entities}
+
         if show_progress and TQDM_AVAILABLE:
-            futures = tqdm(as_completed(future_to_entity), total=len(entities), 
+            futures = tqdm(as_completed(future_to_entity), total=len(entities),
                           desc=f"Extracting Understat {entity_type}s")
         else:
             futures = as_completed(future_to_entity)
             if show_progress:
                 print(f"Processing {len(entities)} Understat {entity_type}s...")
-        
+
         for future in futures:
-            entity_name = future_to_entity[future]
             try:
-                entity_data = future.result()
-                if entity_data:
-                    all_data.append(entity_data)
+                result = future.result()
+                if result:
+                    all_data.append(result)
             except Exception as e:
                 if show_progress:
-                    print(f"Failed to extract {entity_name}: {e}")
-    
+                    print(f"Failed: {e}")
+
     if show_progress:
-        success_count = len(all_data)
-        total_count = len(entities)
-        print(f"Successfully extracted {success_count}/{total_count} Understat {entity_type}s")
-    
+        print(f"Extracted {len(all_data)}/{len(entities)} Understat {entity_type}s")
+
     df = pd.DataFrame(all_data) if all_data else pd.DataFrame()
     return _standardize_dataframe(df, entity_type)
 
-
-# ====================================================================
-# SHOT EVENTS EXTRACTION
-# ====================================================================
 
 def extract_shot_events(
     match_id: int,
@@ -385,225 +204,45 @@ def extract_shot_events(
     season: str,
     player_filter: Optional[str] = None,
     team_filter: Optional[str] = None,
-    verbose: bool = False  # ← AGREGAR ESTE PARÁMETRO
+    verbose: bool = False
 ) -> pd.DataFrame:
-    """
-    Extraer eventos de disparos con información espacial y táctica completa.
-    
-    Args:
-        match_id: ID de partido de Understat (entero)
-        league: Identificador de liga
-        season: Identificador de temporada
-        player_filter: Filtro opcional de nombre de jugador
-        team_filter: Filtro opcional de nombre de equipo
-        verbose: Mostrar información de progreso
-        
-    Returns:
-        DataFrame con eventos de disparos completos y análisis táctico
+    """Extract shot events for a match with xG, coordinates, and derived analytics.
+
+    Returns DataFrame with shot details, zone classification, and goal flags.
     """
     try:
         if verbose:
             print(f"   Extracting shot data for match {match_id}...")
-            
+
         understat = Understat(leagues=[league], seasons=[season])
         shot_events = understat.read_shot_events(match_id=match_id)
-        
+
         if shot_events is None or shot_events.empty:
             if verbose:
                 print(f"   No shot events found for match {match_id}")
             return pd.DataFrame()
-        
-        enhanced_events = _process_shot_events(shot_events)
-        filtered_events = _apply_shot_filters(enhanced_events, player_filter, team_filter)
-        
-        if not filtered_events.empty:
-            filtered_events['match_id'] = match_id
-            filtered_events['data_source'] = 'understat'
-            
+
+        enhanced = _process_shot_events(shot_events)
+        filtered = _apply_shot_filters(enhanced, player_filter, team_filter)
+
+        if not filtered.empty:
+            filtered['match_id'] = match_id
+            filtered['data_source'] = 'understat'
+
         if verbose:
-            print(f"   Found {len(filtered_events)} shot events")
-        
-        return filtered_events
-        
+            print(f"   Found {len(filtered)} shot events")
+
+        return filtered
+
     except Exception as e:
         if verbose:
             print(f"   Error extracting shot events: {e}")
         return pd.DataFrame()
 
 
-# ====================================================================
-# INTEGRATION WITH FBREF
-# ====================================================================
-
-def merge_with_fbref(
-    fbref_data: Union[pd.DataFrame, Dict],
-    league: str,
-    season: str,
-    data_type: str = 'player',
-    show_progress: bool = True,
-    fallback_matching: bool = True
-) -> Union[pd.DataFrame, Dict]:
-    """
-    Fusionar datos de FBref con métricas de Understat con robustez mejorada al 100%.
-
-    Args:
-        fbref_data: DataFrame o Dict de FBref
-        league: Identificador de liga
-        season: Identificador de temporada
-        data_type: 'player' o 'team'
-        show_progress: Mostrar progreso de la fusión (default: True)
-        fallback_matching: Usar matching alternativo si falla el estándar (default: True)
-
-    Returns:
-        DataFrame o Dict con métricas combinadas FBref + Understat (mismo tipo que entrada)
-    """
-    # Validación de entrada
-    if fbref_data is None:
-        if show_progress:
-            print("Warning: No FBref data provided")
-        return pd.DataFrame()
-
-    # Track if input was dict to return same type
-    input_was_dict = isinstance(fbref_data, dict)
-
-    if input_was_dict:
-        fbref_df = pd.DataFrame([fbref_data])
-    else:
-        fbref_df = fbref_data.copy()
-
-    if fbref_df.empty:
-        if show_progress:
-            print("Warning: Empty FBref DataFrame provided")
-        return fbref_data if input_was_dict else fbref_df
-    
-    # Determinar clave de merge y entidades
-    if data_type == 'player':
-        if 'player_name' not in fbref_df.columns:
-            if show_progress:
-                print("Error: 'player_name' column not found in FBref data")
-            return fbref_data if input_was_dict else fbref_df
-        entities = fbref_df['player_name'].unique().tolist()
-        merge_key = 'player_name'
-    else:
-        if 'team_name' not in fbref_df.columns:
-            if show_progress:
-                print("Error: 'team_name' column not found in FBref data")
-            return fbref_data if input_was_dict else fbref_df
-        entities = fbref_df['team_name'].unique().tolist()
-        merge_key = 'team_name'
-
-    if show_progress:
-        print(f"Merging {len(entities)} {data_type}s with Understat data...")
-
-    # Extraer datos de Understat
-    understat_df = extract_multiple(
-        entities, data_type, league, season,
-        show_progress=show_progress
-    )
-
-    if understat_df.empty:
-        if show_progress:
-            print("Warning: No Understat data found for any entities")
-        return fbref_data if input_was_dict else fbref_df
-    
-    # Intentar merge estándar
-    try:
-        # Verificar columnas necesarias para merge
-        required_cols = [merge_key, 'league', 'season']
-        
-        # Usar solo columnas que existen en ambos DataFrames
-        merge_cols = []
-        for col in required_cols:
-            if col in fbref_df.columns and col in understat_df.columns:
-                merge_cols.append(col)
-        
-        # Añadir 'team' si está disponible en ambos
-        if 'team' in fbref_df.columns and 'team' in understat_df.columns:
-            merge_cols.append('team')
-        
-        if show_progress:
-            print(f"Merging on columns: {merge_cols}")
-        
-        merged_df = pd.merge(
-            fbref_df, understat_df,
-            on=merge_cols,
-            how='left', suffixes=('', '_understat_dup')
-        )
-        
-        # Limpiar columnas duplicadas
-        dup_cols = [col for col in merged_df.columns if col.endswith('_understat_dup')]
-        if dup_cols:
-            merged_df = merged_df.drop(columns=dup_cols)
-        
-        # Verificar el éxito del merge
-        understat_cols = [col for col in merged_df.columns if col.startswith('understat_')]
-        successful_merges = merged_df[understat_cols[0]].notna().sum() if understat_cols else 0
-        
-        if show_progress:
-            print(f"Successfully merged {successful_merges}/{len(fbref_df)} entities with Understat data")
-        
-        # Si el merge falló y está habilitado el fallback, intentar matching alternativo
-        if successful_merges < len(entities) * 0.5 and fallback_matching:
-            if show_progress:
-                print("Standard merge had low success rate. Attempting fallback matching...")
-            
-            # Merge solo por nombre de entidad (menos restrictivo)
-            fallback_df = pd.merge(
-                fbref_df, understat_df,
-                on=merge_key,
-                how='left', suffixes=('', '_understat_fallback')
-            )
-            
-            # Limpiar duplicados del fallback
-            fallback_dup_cols = [col for col in fallback_df.columns if col.endswith('_understat_fallback')]
-            if fallback_dup_cols:
-                fallback_df = fallback_df.drop(columns=fallback_dup_cols)
-            
-            fallback_understat_cols = [col for col in fallback_df.columns if col.startswith('understat_')]
-            fallback_successful_merges = fallback_df[fallback_understat_cols[0]].notna().sum() if fallback_understat_cols else 0
-            
-            # Usar el mejor resultado
-            if fallback_successful_merges > successful_merges:
-                merged_df = fallback_df
-                if show_progress:
-                    print(f"Fallback matching improved success to {fallback_successful_merges}/{len(fbref_df)} entities")
-
-        # Return same type as input
-        if input_was_dict:
-            return merged_df.iloc[0].to_dict()
-        return merged_df
-
-    except Exception as e:
-        if show_progress:
-            print(f"Error during merge: {e}")
-            print("Returning original FBref data without Understat metrics")
-        return fbref_data if input_was_dict else fbref_df
-
-
-# ====================================================================
-# CORE PROCESSING FUNCTIONS
-# ====================================================================
-
 def _find_entity(stats: pd.DataFrame, entity_name: str, entity_type: str,
                  team_name: Optional[str] = None) -> Optional[pd.DataFrame]:
-    """Encontrar entidad con coincidencia flexible de nombres y equipo.
-
-    Args:
-        stats: DataFrame con estadísticas de Understat
-        entity_name: Nombre del jugador o equipo a buscar
-        entity_type: Tipo de entidad ('player' o 'team')
-        team_name: Nombre del equipo para desambiguar (opcional)
-
-    Returns:
-        DataFrame con los datos de la entidad encontrada, o None
-
-    Notes:
-        Usa matching flexible con prioridad:
-        1. Match exacto de nombre + equipo (si team_name proporcionado)
-        2. Match exacto de nombre solo
-        3. Match parcial de nombre + equipo (si team_name proporcionado)
-        4. Match parcial de nombre solo (fallback)
-    """
+    """Find a player/team row by name with fuzzy matching and team disambiguation."""
     if stats is None or stats.empty:
         return None
 
@@ -611,13 +250,12 @@ def _find_entity(stats: pd.DataFrame, entity_name: str, entity_type: str,
     index_level = entity_type
     all_matches = []
 
-    # Buscar matches exactos por nombre
     for variation in variations:
         matches = stats[stats.index.get_level_values(index_level).str.lower() == variation.lower()]
         if not matches.empty:
             all_matches.append(matches)
 
-    # Si no hay matches exactos, buscar con contains
+    # Fall back to partial (substring) matching
     if not all_matches:
         for variation in variations:
             matches = stats[stats.index.get_level_values(index_level).str.contains(
@@ -625,76 +263,58 @@ def _find_entity(stats: pd.DataFrame, entity_name: str, entity_type: str,
             if not matches.empty:
                 all_matches.append(matches)
 
-    # Si no hay matches, retornar None
     if not all_matches:
         return None
 
-    # Combinar todos los matches
-    combined_matches = pd.concat(all_matches).drop_duplicates()
+    combined = pd.concat(all_matches).drop_duplicates()
 
-    # Si solo hay un match, devolverlo
-    if len(combined_matches) == 1:
-        return combined_matches
+    if len(combined) == 1:
+        return combined
 
-    # Si hay múltiples matches y tenemos team_name, desambiguar por equipo
-    if len(combined_matches) > 1 and team_name:
-        team_variations = _generate_name_variations(team_name)
-
-        for team_var in team_variations:
-            team_matches = combined_matches[
-                combined_matches.index.get_level_values('team').str.contains(
+    # Multiple matches found: narrow down by team name
+    if len(combined) > 1 and team_name:
+        for team_var in _generate_name_variations(team_name):
+            team_matches = combined[
+                combined.index.get_level_values('team').str.contains(
                     team_var, case=False, na=False, regex=False
                 )
             ]
             if not team_matches.empty:
-                # Match encontrado con equipo correcto
                 return team_matches.iloc[:1]
 
-        # Si no se encontró match con el equipo, usar primer match pero con warning
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(
-            f"Multiple matches found for '{entity_name}', team '{team_name}' not matched. "
-            f"Using first match: {combined_matches.iloc[0].name}"
-        )
-
-    # Devolver primer match (ya sea porque no hay team_name o no se pudo desambiguar)
-    return combined_matches.iloc[:1]
+    return combined.iloc[:1]
 
 
 def _find_team_matches(stats: pd.DataFrame, team_name: str) -> Optional[pd.DataFrame]:
-    """Encontrar partidos de equipo en formato Understat."""
+    """Find all matches involving a team (home or away) by fuzzy name matching."""
     if stats is None or stats.empty:
         return None
-    
-    variations = _generate_name_variations(team_name)
-    
-    for variation in variations:
-        home_matches = stats[stats['home_team'].str.contains(variation, case=False, na=False, regex=False)]
-        away_matches = stats[stats['away_team'].str.contains(variation, case=False, na=False, regex=False)]
-        
-        if not home_matches.empty or not away_matches.empty:
-            return pd.concat([home_matches, away_matches]).drop_duplicates()
-    
+
+    for variation in _generate_name_variations(team_name):
+        home = stats[stats['home_team'].str.contains(variation, case=False, na=False, regex=False)]
+        away = stats[stats['away_team'].str.contains(variation, case=False, na=False, regex=False)]
+        if not home.empty or not away.empty:
+            return pd.concat([home, away]).drop_duplicates()
+
     return None
 
 
 def _generate_name_variations(name: str) -> List[str]:
-    """Generar variaciones de nombres para convenciones de nomenclatura de Understat."""
+    """Generate name variations: diacritics removal, split parts, known aliases."""
     variations = [name]
-    
-    clean_name = (name.replace('é', 'e').replace('ñ', 'n').replace('í', 'i')
-                  .replace('ó', 'o').replace('á', 'a').replace('ú', 'u')
-                  .replace('ç', 'c').replace('ü', 'u').replace('ø', 'o'))
-    if clean_name != name:
-        variations.append(clean_name)
-    
+
+    clean = (name.replace('é', 'e').replace('ñ', 'n').replace('í', 'i')
+             .replace('ó', 'o').replace('á', 'a').replace('ú', 'u')
+             .replace('ç', 'c').replace('ü', 'u').replace('ø', 'o'))
+    if clean != name:
+        variations.append(clean)
+
     if ' ' in name:
         parts = name.split()
         variations.extend(parts)
         if len(parts) >= 2:
             variations.append(f"{parts[0]} {parts[-1]}")
-    
+
     mappings = {
         "Kylian Mbappé": ["Kylian Mbappe", "K. Mbappe", "Mbappe"],
         "Erling Haaland": ["E. Haaland", "Haaland"],
@@ -705,426 +325,415 @@ def _generate_name_variations(name: str) -> List[str]:
         'Real Madrid': ['Madrid'],
         'Barcelona': ['Barça', 'FC Barcelona']
     }
-    
+
     if name in mappings:
         variations.extend(mappings[name])
-    
+
     return list(dict.fromkeys(variations))
 
 
 def _extract_player_metrics(player_row: pd.DataFrame) -> Dict:
-    """Extraer métricas de jugador específicas de Understat (NO en FBref)."""
-    understat_data = {}
-    
-    core_metrics = {
+    """Extract raw metrics, compute derived stats (npxG+xA), and per-90 rates."""
+    data = {}
+    metrics_map = {
+        'player_id': 'understat_player_id',
+        'team_id': 'understat_team_id',
+        'position': 'understat_position',
+        'matches': 'understat_matches',
+        'minutes': 'understat_minutes',
+        'goals': 'understat_goals',
+        'xg': 'understat_xg',
+        'np_goals': 'understat_np_goals',
+        'np_xg': 'understat_np_xg',
+        'assists': 'understat_assists',
+        'xa': 'understat_xa',
+        'shots': 'understat_shots',
+        'key_passes': 'understat_key_passes',
+        'yellow_cards': 'understat_yellow_cards',
+        'red_cards': 'understat_red_cards',
         'xg_chain': 'understat_xg_chain',
         'xg_buildup': 'understat_xg_buildup',
-        'key_passes': 'understat_key_passes',
-        'np_xg': 'understat_np_xg',
-        'xa': 'understat_xa',
-        'np_goals': 'understat_np_goals',
-        'player_id': 'understat_player_id',
-        'team_id': 'understat_team_id'
     }
-    
-    for col in player_row.columns:
-        if col in core_metrics:
+
+    for col, key in metrics_map.items():
+        if col in player_row.columns:
             value = player_row.iloc[0][col]
-            understat_data[core_metrics[col]] = value if pd.notna(value) else None
-    
-    _add_derived_player_metrics(understat_data)
-    
-    return understat_data
+            data[key] = value if pd.notna(value) else None
 
-
-def _add_derived_player_metrics(data: Dict) -> None:
-    """Añadir métricas calculadas únicas para análisis de Understat."""
-    if data.get('understat_np_xg') and data.get('understat_xa'):
-        np_xg = data['understat_np_xg'] or 0
-        xa = data['understat_xa'] or 0
+    np_xg = data.get('understat_np_xg') or 0
+    xa = data.get('understat_xa') or 0
+    if np_xg or xa:
         data['understat_npxg_plus_xa'] = np_xg + xa
-    
-    if data.get('understat_xg_chain') and data.get('understat_np_xg'):
-        xg_chain = data['understat_xg_chain'] or 0
-        np_xg = data['understat_np_xg'] or 0
-        if np_xg > 0:
-            data['understat_buildup_involvement_pct'] = (xg_chain / np_xg) * 100
+    xg_chain = data.get('understat_xg_chain') or 0
+    if xg_chain and np_xg > 0:
+        data['understat_buildup_involvement_pct'] = (xg_chain / np_xg) * 100
+
+    minutes = data.get('understat_minutes') or 0
+    if minutes > 0:
+        p90 = 90 / minutes
+        data['understat_xg_per90'] = (data.get('understat_xg') or 0) * p90
+        data['understat_xa_per90'] = xa * p90
+        data['understat_npxg_per90'] = np_xg * p90
+        data['understat_npxg_plus_xa_per90'] = (np_xg + xa) * p90
+        data['understat_xg_chain_per90'] = xg_chain * p90
+        data['understat_xg_buildup_per90'] = (data.get('understat_xg_buildup') or 0) * p90
+        data['understat_key_passes_per90'] = (data.get('understat_key_passes') or 0) * p90
+        data['understat_shots_per90'] = (data.get('understat_shots') or 0) * p90
+
+    return data
 
 
-def _calculate_team_metrics(team_matches: pd.DataFrame) -> Dict:
-    """Calcular métricas de equipo específicas de Understat."""
-    team_metrics = {}
-    
-    total_matches = len(team_matches)
-    team_metrics['understat_matches_analyzed'] = total_matches
-    
-    if total_matches == 0:
-        return team_metrics
-    
-    ppda_values = _extract_column_values(team_matches, ['home_ppda', 'away_ppda'])
-    if ppda_values:
-        team_metrics['understat_ppda_avg'] = np.mean(ppda_values)
-        team_metrics['understat_ppda_std'] = np.std(ppda_values)
-    
-    deep_values = _extract_column_values(team_matches, ['home_deep_completions', 'away_deep_completions'])
-    if deep_values:
-        team_metrics['understat_deep_completions_total'] = np.sum(deep_values)
-        team_metrics['understat_deep_completions_avg'] = np.mean(deep_values)
-    
-    xpts_values = _extract_column_values(team_matches, ['home_expected_points', 'away_expected_points'])
-    if xpts_values:
-        team_metrics['understat_expected_points_total'] = np.sum(xpts_values)
-        team_metrics['understat_expected_points_avg'] = np.mean(xpts_values)
-    
-    np_xg_values = _extract_column_values(team_matches, ['home_np_xg', 'away_np_xg'])
-    if np_xg_values:
-        team_metrics['understat_np_xg_total'] = np.sum(np_xg_values)
-        team_metrics['understat_np_xg_avg'] = np.mean(np_xg_values)
-    
-    _add_derived_team_metrics(team_metrics)
-    
-    return team_metrics
+def _calculate_team_metrics(team_matches: pd.DataFrame, team_name: str) -> Dict:
+    """Aggregate team metrics across all matches, resolving home/away sides.
+
+    Each match stat is extracted from the correct column (home_ or away_)
+    depending on which side the team played. Opponent metrics use the opposite side.
+    """
+    metrics = {}
+    total = len(team_matches)
+    metrics['understat_matches_analyzed'] = total
+    if total == 0:
+        return metrics
+
+    stat_keys = {
+        'ppda': ('avg', 'std'),
+        'deep_completions': ('total', 'avg'),
+        'expected_points': ('total', 'avg'),
+        'np_xg': ('total', 'avg'),
+        'xg': ('total', 'avg'),
+        'goals': ('total', 'avg'),
+        'points': ('total', 'avg'),
+        'np_xg_difference': ('total', 'avg'),
+    }
+
+    for stat, agg_types in stat_keys.items():
+        vals = _extract_team_side_values(team_matches, team_name, stat)
+        if not vals:
+            continue
+        for agg in agg_types:
+            if agg == 'total':
+                metrics[f'understat_{stat}_total'] = np.sum(vals)
+            elif agg == 'avg':
+                metrics[f'understat_{stat}_avg'] = np.mean(vals)
+            elif agg == 'std':
+                metrics[f'understat_{stat}_std'] = np.std(vals)
+
+    opp_xg = _extract_team_side_values(team_matches, team_name, 'xg', opponent=True)
+    opp_npxg = _extract_team_side_values(team_matches, team_name, 'np_xg', opponent=True)
+    opp_goals = _extract_team_side_values(team_matches, team_name, 'goals', opponent=True)
+    opp_ppda = _extract_team_side_values(team_matches, team_name, 'ppda', opponent=True)
+    if opp_xg:
+        metrics['understat_xg_against_total'] = np.sum(opp_xg)
+        metrics['understat_xg_against_avg'] = np.mean(opp_xg)
+    if opp_npxg:
+        metrics['understat_np_xg_against_total'] = np.sum(opp_npxg)
+        metrics['understat_np_xg_against_avg'] = np.mean(opp_npxg)
+    if opp_goals:
+        metrics['understat_goals_against_total'] = np.sum(opp_goals)
+        metrics['understat_goals_against_avg'] = np.mean(opp_goals)
+    if opp_ppda:
+        metrics['understat_ppda_against_avg'] = np.mean(opp_ppda)
+
+    if 'understat_expected_points_total' in metrics:
+        metrics['understat_points_efficiency'] = metrics['understat_expected_points_total'] / total
+    if 'understat_xg_total' in metrics and 'understat_xg_against_total' in metrics:
+        metrics['understat_xg_difference_total'] = metrics['understat_xg_total'] - metrics['understat_xg_against_total']
+
+    return metrics
 
 
-def _extract_column_values(df: pd.DataFrame, columns: List[str]) -> List[float]:
-    """Extraer y combinar valores de múltiples columnas."""
+def _extract_team_side_values(
+    matches: pd.DataFrame, team_name: str, stat_suffix: str,
+    opponent: bool = False
+) -> List[float]:
+    """Extract per-match values from the correct home/away column.
+
+    If opponent=True, returns the opposite side's values instead.
+    """
+    home_col = f'home_{stat_suffix}'
+    away_col = f'away_{stat_suffix}'
+    if home_col not in matches.columns or away_col not in matches.columns:
+        return []
+
     values = []
-    for col in columns:
-        if col in df.columns:
-            col_values = df[col].dropna()
-            values.extend(col_values.tolist())
+    team_lower = team_name.lower()
+    for _, row in matches.iterrows():
+        home_team = str(row.get('home_team', '')).lower()
+        away_team = str(row.get('away_team', '')).lower()
+        if team_lower in home_team or home_team in team_lower:
+            val = row[away_col if opponent else home_col]
+        elif team_lower in away_team or away_team in team_lower:
+            val = row[home_col if opponent else away_col]
+        else:
+            continue
+        if pd.notna(val):
+            values.append(float(val))
     return values
 
 
-def _add_derived_team_metrics(metrics: Dict) -> None:
-    """Añadir métricas de equipo calculadas únicas para análisis."""
-    if 'understat_expected_points_total' in metrics:
-        xpts = metrics['understat_expected_points_total']
-        if xpts > 0:
-            metrics['understat_points_efficiency'] = xpts / metrics.get('understat_matches_analyzed', 1)
-
-
 def _process_shot_events(shot_events: pd.DataFrame) -> pd.DataFrame:
-    """Procesar y mejorar datos de eventos de disparos."""
+    """Rename columns, add goal/target flags, distance, and zone classification."""
     if shot_events.empty:
         return shot_events
-    
+
     df = shot_events.copy()
-    
-    column_mapping = {
-        'xg': 'shot_xg',
-        'location_x': 'shot_location_x',
-        'location_y': 'shot_location_y',
-        'body_part': 'shot_body_part',
-        'situation': 'shot_situation',
-        'result': 'shot_result',
-        'minute': 'shot_minute',
-        'player': 'shot_player',
-        'team': 'shot_team',
-        'assist_player': 'assist_player_name'
+    rename_map = {
+        'xg': 'shot_xg', 'location_x': 'shot_location_x',
+        'location_y': 'shot_location_y', 'body_part': 'shot_body_part',
+        'situation': 'shot_situation', 'result': 'shot_result',
+        'minute': 'shot_minute', 'player': 'shot_player',
+        'team': 'shot_team', 'assist_player': 'assist_player_name'
     }
-    
-    rename_dict = {k: v for k, v in column_mapping.items() if k in df.columns}
-    df = df.rename(columns=rename_dict)
-    
-    _add_shot_analytics(df)
-    
-    return df
+    df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
 
-
-def _add_shot_analytics(df: pd.DataFrame) -> None:
-    """Añadir campos de análisis de disparos calculados."""
     if 'shot_result' in df.columns:
         df['is_goal'] = (df['shot_result'] == 'Goal').astype(int)
         df['is_on_target'] = df['shot_result'].isin(['Goal', 'Saved Shot']).astype(int)
         df['is_blocked'] = (df['shot_result'] == 'Blocked Shot').astype(int)
-    
+
     if 'shot_location_x' in df.columns and 'shot_location_y' in df.columns:
-        df['shot_distance_to_goal'] = _calculate_shot_distance(df['shot_location_x'], df['shot_location_y'])
-        df['shot_zone'] = _classify_shot_zones(df['shot_location_x'], df['shot_location_y'])
-    
+        x, y = df['shot_location_x'].astype(float), df['shot_location_y'].astype(float)
+        # Understat coords are 0-1 normalized; goal center is at (1.0, 0.5)
+        df['shot_distance_to_goal'] = np.sqrt((x - 1.0)**2 + (y - 0.5)**2) * 100
+        df['shot_zone'] = pd.cut(
+            x * 100, bins=[0, 67, 83, 88, 100],
+            labels=['Long_Range', 'Penalty_Area_Edge', 'Penalty_Box', 'Six_Yard_Box']
+        )
+
     if 'assist_player_name' in df.columns:
         df['is_assisted'] = (~df['assist_player_name'].isna()).astype(int)
 
-
-def _calculate_shot_distance(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
-    """Calcular distancia desde ubicación del disparo al centro de la portería."""
-    distances = []
-    goal_x, goal_y = 1.0, 0.5
-    
-    for x, y in zip(x_coords, y_coords):
-        if pd.isna(x) or pd.isna(y):
-            distances.append(None)
-            continue
-        
-        distance = np.sqrt((float(x) - goal_x)**2 + (float(y) - goal_y)**2) * 100
-        distances.append(distance)
-    
-    return pd.Series(distances, index=x_coords.index)
+    return df
 
 
-def _classify_shot_zones(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
-    """Clasificar disparos en zonas tácticas."""
-    zones = []
-    
-    for x, y in zip(x_coords, y_coords):
-        if pd.isna(x) or pd.isna(y):
-            zones.append('Unknown')
-            continue
-        
-        x_pct = float(x) * 100
-        y_pct = float(y) * 100
-        
-        if x_pct >= 88:
-            zones.append('Six_Yard_Box')
-        elif x_pct >= 83:
-            zones.append('Penalty_Box')
-        elif x_pct >= 67:
-            zones.append('Penalty_Area_Edge')
-        else:
-            zones.append('Long_Range')
-    
-    return pd.Series(zones, index=x_coords.index)
+def _apply_shot_filters(df: pd.DataFrame, player_filter: Optional[str],
+                        team_filter: Optional[str]) -> pd.DataFrame:
+    """Filter shot events by player and/or team name (fuzzy matching)."""
+    result = df.copy()
 
+    if player_filter and 'shot_player' in result.columns:
+        mask = pd.Series(False, index=result.index)
+        for var in _generate_name_variations(player_filter):
+            mask |= result['shot_player'].str.contains(var, case=False, na=False, regex=False)
+        result = result[mask]
 
-def _apply_shot_filters(df: pd.DataFrame, player_filter: Optional[str], team_filter: Optional[str]) -> pd.DataFrame:
-    """Aplicar filtros a eventos de disparos."""
-    filtered_df = df.copy()
-    
-    if player_filter and 'shot_player' in filtered_df.columns:
-        player_variations = _generate_name_variations(player_filter)
-        mask = pd.Series([False] * len(filtered_df))
-        
-        for variation in player_variations:
-            mask |= filtered_df['shot_player'].str.contains(variation, case=False, na=False, regex=False)
-        
-        filtered_df = filtered_df[mask]
-    
-    if team_filter and 'shot_team' in filtered_df.columns:
-        team_variations = _generate_name_variations(team_filter)
-        mask = pd.Series([False] * len(filtered_df))
-        
-        for variation in team_variations:
-            mask |= filtered_df['shot_team'].str.contains(variation, case=False, na=False, regex=False)
-        
-        filtered_df = filtered_df[mask]
-    
-    return filtered_df
+    if team_filter and 'shot_team' in result.columns:
+        mask = pd.Series(False, index=result.index)
+        for var in _generate_name_variations(team_filter):
+            mask |= result['shot_team'].str.contains(var, case=False, na=False, regex=False)
+        result = result[mask]
+
+    return result
 
 
 def _standardize_dataframe(df: pd.DataFrame, entity_type: str) -> pd.DataFrame:
-    """Asegurar orden adecuado de columnas."""
+    """Reorder columns with key identifiers and metrics first."""
     if df.empty:
         return df
-    
+
     if entity_type == 'player':
-        priority_columns = [
+        priority = [
             'player_name', 'team', 'league', 'season', 'official_player_name',
-            'understat_xg_chain', 'understat_xg_buildup', 'understat_npxg_plus_xa',
-            'understat_key_passes', 'understat_np_xg', 'understat_xa'
+            'understat_position', 'understat_matches', 'understat_minutes',
+            'understat_goals', 'understat_xg', 'understat_np_goals', 'understat_np_xg',
+            'understat_assists', 'understat_xa', 'understat_npxg_plus_xa',
+            'understat_shots', 'understat_key_passes',
+            'understat_xg_chain', 'understat_xg_buildup',
+            'understat_xg_per90', 'understat_npxg_per90', 'understat_xa_per90',
+            'understat_npxg_plus_xa_per90', 'understat_xg_chain_per90',
+            'understat_xg_buildup_per90', 'understat_key_passes_per90', 'understat_shots_per90',
         ]
     else:
-        priority_columns = [
+        priority = [
             'team_name', 'league', 'season', 'official_team_name',
-            'understat_ppda_avg', 'understat_deep_completions_total',
-            'understat_expected_points_total', 'understat_np_xg_total'
+            'understat_matches_analyzed',
+            'understat_xg_total', 'understat_xg_against_total', 'understat_xg_difference_total',
+            'understat_np_xg_total', 'understat_np_xg_against_total',
+            'understat_goals_total', 'understat_goals_against_total',
+            'understat_expected_points_total', 'understat_points_total',
+            'understat_ppda_avg', 'understat_ppda_against_avg',
+            'understat_deep_completions_total',
         ]
-    
-    available_priority = [col for col in priority_columns if col in df.columns]
-    remaining_columns = sorted([col for col in df.columns if col not in priority_columns])
-    
-    final_order = available_priority + remaining_columns
-    return df[final_order]
 
+    available = [c for c in priority if c in df.columns]
+    remaining = sorted([c for c in df.columns if c not in priority])
+    return df[available + remaining]
 
-# ====================================================================
-# EXPORT UTILITIES
-# ====================================================================
 
 def export_to_csv(data: Union[Dict, pd.DataFrame], filename: str, include_timestamp: bool = True) -> str:
-    """Exportar datos a CSV con formato adecuado."""
-    if isinstance(data, dict):
-        df = pd.DataFrame([data])
-    else:
-        df = data
-    
+    """Export dict or DataFrame to CSV. Returns the output file path."""
+    df = pd.DataFrame([data]) if isinstance(data, dict) else data
     if include_timestamp:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        full_filename = f"{filename}_{timestamp}.csv"
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        full = f"{filename}_{ts}.csv"
     else:
-        full_filename = f"{filename}.csv"
-    
-    df.to_csv(full_filename, index=False, encoding='utf-8')
-    
-    return full_filename
+        full = f"{filename}.csv"
+    df.to_csv(full, index=False, encoding='utf-8')
+    return full
 
-
-# ====================================================================
-# AUTOMATIC ID RETRIEVAL FUNCTIONS
-# ====================================================================
 
 def get_match_ids(league: str, season: str, team_filter: Optional[str] = None) -> pd.DataFrame:
-    """
-    Extraer automáticamente IDs de partidos de Understat para una liga y temporada.
-    
-    Args:
-        league: Código de liga (e.g., 'ESP-La Liga', 'ENG-Premier League')
-        season: Temporada en formato YY-YY (e.g., '23-24')
-        team_filter: Filtro opcional por nombre de equipo
-        
-    Returns:
-        DataFrame con columnas: match_id, home_team, away_team, date
-        
-    Raises:
-        ValueError: Si la liga o temporada no son válidas
-        ConnectionError: Si falla la conexión con Understat
+    """Retrieve all match IDs for a league/season from Understat.
+
+    Returns DataFrame with: match_id, home_team, away_team, date, league, season.
+    Optional team_filter narrows results to matches involving that team.
     """
     try:
-        from ..scrappers.understat import UnderstatReader
-        
-        scraper = UnderstatReader(league=league, season=season)
-        schedule_data = scraper.read_schedule()
-        
-        if schedule_data.empty:
+        scraper = Understat(leagues=[league], seasons=[season])
+        schedule = scraper.read_schedule()
+
+        if schedule.empty:
             print(f"No matches found for {league} {season}")
             return pd.DataFrame()
-        
-        # Extraer match_ids y información básica
-        match_info = []
-        for _, match in schedule_data.iterrows():
-            if 'id' in match and pd.notna(match['id']):
-                match_info.append({
-                    'match_id': int(match['id']),
-                    'home_team': match.get('home_team', 'Unknown'),
-                    'away_team': match.get('away_team', 'Unknown'), 
-                    'date': match.get('datetime', 'Unknown'),
-                    'league': league,
-                    'season': season
-                })
-        
-        result_df = pd.DataFrame(match_info)
-        
-        # Aplicar filtro de equipo si se especifica
-        if team_filter and not result_df.empty:
-            team_variations = _generate_name_variations(team_filter)
-            mask = pd.Series([False] * len(result_df))
-            
-            for variation in team_variations:
-                mask |= result_df['home_team'].str.contains(variation, case=False, na=False, regex=False)
-                mask |= result_df['away_team'].str.contains(variation, case=False, na=False, regex=False)
-            
-            result_df = result_df[mask]
-        
-        print(f"Found {len(result_df)} matches for {league} {season}")
-        if team_filter:
-            print(f"Filtered by team: {team_filter}")
-            
-        return result_df.sort_values('date').reset_index(drop=True)
-        
-    except ImportError as e:
-        raise ConnectionError(f"Cannot import Understat scraper: {e}")
+
+        result = schedule.reset_index()[['game_id', 'home_team', 'away_team', 'date']].copy()
+        result = result.rename(columns={'game_id': 'match_id'})
+        result['league'] = league
+        result['season'] = season
+
+        if team_filter and not result.empty:
+            mask = pd.Series(False, index=result.index)
+            for var in _generate_name_variations(team_filter):
+                mask |= result['home_team'].str.contains(var, case=False, na=False, regex=False)
+                mask |= result['away_team'].str.contains(var, case=False, na=False, regex=False)
+            result = result[mask]
+
+        print(f"Found {len(result)} matches for {league} {season}")
+        return result.sort_values('date').reset_index(drop=True)
+
     except Exception as e:
         raise ConnectionError(f"Error retrieving match IDs from Understat: {e}")
 
 
 def search_player_id(player_name: str, league: str, season: str) -> Optional[Dict[str, Any]]:
-    """
-    Buscar automáticamente información de jugador en Understat.
-    
-    Args:
-        player_name: Nombre del jugador a buscar
-        league: Código de liga
-        season: Temporada en formato YY-YY
-        
-    Returns:
-        Dict con player_id y datos básicos del jugador, o None si no se encuentra
-    """
+    """Look up a player's official name and team in Understat."""
     try:
-        # Usar extract_data existente para verificar si el jugador existe
-        player_data = extract_data(player_name, 'player', league, season)
-        
-        if player_data:
+        data = extract_data(player_name, 'player', league, season)
+        if data:
             return {
-                'player_name': player_data.get('official_player_name', player_name),
-                'team': player_data.get('team'),
+                'player_name': data.get('official_player_name', player_name),
+                'team': data.get('team'),
                 'league': league,
                 'season': season,
                 'found': True,
-                'understat_data_available': True
             }
-        
         return None
-        
     except Exception as e:
         print(f"Error searching for player {player_name}: {e}")
         return None
 
 
 def search_team_id(team_name: str, league: str, season: str) -> Optional[Dict[str, Any]]:
-    """
-    Buscar automáticamente información de equipo en Understat.
-    
-    Args:
-        team_name: Nombre del equipo a buscar
-        league: Código de liga
-        season: Temporada en formato YY-YY
-        
-    Returns:
-        Dict con team_id y datos básicos del equipo, o None si no se encuentra
-    """
+    """Look up a team's official name in Understat."""
     try:
-        # Usar extract_data existente para verificar si el equipo existe
-        team_data = extract_data(team_name, 'team', league, season)
-        
-        if team_data:
+        data = extract_data(team_name, 'team', league, season)
+        if data:
             return {
-                'team_name': team_data.get('official_team_name', team_name),
+                'team_name': data.get('official_team_name', team_name),
                 'league': league,
                 'season': season,
                 'found': True,
-                'understat_data_available': True
             }
-        
         return None
-        
     except Exception as e:
         print(f"Error searching for team {team_name}: {e}")
         return None
 
 
-# ====================================================================
-# QUICK ACCESS FUNCTIONS - SIMPLIFIED API
-# ====================================================================
-
-def get_player(player_name: str, league: str, season: str, use_cache: bool = True,
+def get_player(player_name: str, league: str, season: str,
                team_name: Optional[str] = None) -> Optional[Dict]:
-    """Extracción rápida de métricas avanzadas de jugador.
+    """Get advanced metrics for a single player."""
+    return extract_data(player_name, 'player', league, season, team_name=team_name)
 
-    Args:
-        player_name: Nombre del jugador
-        league: Código de liga
-        season: Temporada en formato YY-YY
-        use_cache: Usar cache (default: True)
-        team_name: Nombre del equipo para desambiguar (opcional, recomendado)
+def get_team(team_name: str, league: str, season: str) -> Optional[Dict]:
+    """Get advanced metrics for a single team."""
+    return extract_data(team_name, 'team', league, season)
 
-    Returns:
-        Dict con métricas de Understat o None
-    """
-    return extract_data(player_name, 'player', league, season, use_cache=use_cache,
-                        team_name=team_name)
+def get_players(players: List[str], league: str, season: str,
+                max_workers: int = 3, show_progress: bool = True) -> pd.DataFrame:
+    """Get advanced metrics for multiple players in parallel."""
+    return extract_multiple(players, 'player', league, season,
+                            max_workers=max_workers, show_progress=show_progress)
 
-def get_team(team_name: str, league: str, season: str, use_cache: bool = True) -> Optional[Dict]:
-    """Extracción rápida de métricas avanzadas de equipo."""
-    return extract_data(team_name, 'team', league, season, use_cache=use_cache)
+def get_teams(teams: List[str], league: str, season: str,
+              max_workers: int = 3, show_progress: bool = True) -> pd.DataFrame:
+    """Get advanced metrics for multiple teams in parallel."""
+    return extract_multiple(teams, 'team', league, season,
+                            max_workers=max_workers, show_progress=show_progress)
 
-def get_players(players: List[str], league: str, season: str, max_workers: int = 3, show_progress: bool = True) -> pd.DataFrame:
-    """Extracción rápida de múltiples jugadores con procesamiento paralelo."""
-    return extract_multiple(players, 'player', league, season, max_workers=max_workers, show_progress=show_progress)
-
-def get_teams(teams: List[str], league: str, season: str, max_workers: int = 3, show_progress: bool = True) -> pd.DataFrame:
-    """Extracción rápida de múltiples equipos con procesamiento paralelo."""
-    return extract_multiple(teams, 'team', league, season, max_workers=max_workers, show_progress=show_progress)
-
-def get_shots(match_id: int, league: str, season: str, player_filter: Optional[str] = None) -> pd.DataFrame:
-    """Extracción rápida de eventos de disparos."""
+def get_shots(match_id: int, league: str, season: str,
+              player_filter: Optional[str] = None) -> pd.DataFrame:
+    """Get shot events for a match, optionally filtered by player."""
     return extract_shot_events(match_id, league, season, player_filter=player_filter)
+
+
+def get_team_advanced(team_name: str, league: str, season: str) -> Optional[Dict]:
+    """Get advanced team stats (~200 keys across 7 categories).
+
+    Categories: situation, formation, gameState, timing, shotZone,
+    attackSpeed, result. All keys prefixed with understat_adv_.
+    """
+    try:
+        understat = Understat(leagues=[league], seasons=[season])
+        adv_df = understat.read_team_advanced_stats()
+
+        if adv_df is None or adv_df.empty:
+            return None
+
+        # Index is (league, season, team); match on idx[2]
+        team_lower = team_name.lower()
+        for idx in adv_df.index:
+            if team_lower in idx[2].lower() or idx[2].lower() in team_lower:
+                row = adv_df.loc[idx]
+                result = {}
+                for col in row.index:
+                    val = row[col]
+                    if pd.notna(val):
+                        # Convert numpy types to native Python for JSON serialization
+                        result[f"understat_adv_{col}"] = val if not hasattr(val, 'item') else val.item()
+                return result
+
+        return None
+
+    except Exception as e:
+        print(f"Error extracting advanced stats for {team_name}: {e}")
+        return None
+
+
+def get_player_shots(player_name: str, league: str, season: str) -> pd.DataFrame:
+    """Get all shot events for a player in a season.
+
+    Resolves the player's Understat ID, fetches career shots,
+    and filters to the requested season.
+    """
+    try:
+        understat = Understat(leagues=[league], seasons=[season])
+
+        stats = understat.read_player_season_stats()
+        if stats is None or stats.empty:
+            return pd.DataFrame()
+
+        entity_row = _find_entity(stats, player_name, 'player')
+        if entity_row is None:
+            return pd.DataFrame()
+
+        player_id = entity_row.iloc[0]['player_id']
+        if pd.isna(player_id):
+            return pd.DataFrame()
+
+        result = understat.read_player_career_shots(int(player_id))
+        shots_df = result.get("shots", pd.DataFrame())
+
+        if shots_df.empty:
+            return shots_df
+
+        # Convert "24-25" -> 2024 to match Understat's season year format
+        season_parts = season.split('-')
+        season_year = int(f"20{season_parts[0]}")
+        shots_df = shots_df[shots_df['season'] == season_year]
+
+        return shots_df.reset_index(drop=True)
+
+    except Exception as e:
+        print(f"Error extracting player shots for {player_name}: {e}")
+        return pd.DataFrame()

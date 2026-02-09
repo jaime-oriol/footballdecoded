@@ -1,42 +1,19 @@
-# ====================================================================
-# FootballDecoded - WhoScored Optimized Spatial Data Extractor
-# ====================================================================
-"""
-WhoScored Wrapper especializado en datos espaciales y eventos de partido:
+"""WhoScored spatial data extractor.
 
-DATOS ÚNICOS DE WHOSCORED (imposibles de obtener en FBref/Understat):
-- Coordenadas x,y EXACTAS de todos los eventos del partido
-- Qualifiers detallados: longball, cross, through ball, etc.
-- Redes de pases con posiciones promedio de jugadores
-- Mapas de calor de jugadores por zonas tácticas
-- Análisis de ocupación del campo por equipos
-- Secuencias de posesión con conexiones jugador-jugador
+Provides match events with x/y coordinates, pass networks, player heatmaps,
+shot maps, and field occupation analysis. All data includes tactical zone
+classification and spatial calculations.
 
-ANÁLISIS ESPACIALES AVANZADOS:
-- extract_match_events(): TODOS los eventos con coordenadas
-- extract_pass_network(): Red completa de pases con posiciones
-- extract_player_heatmap(): Mapa de calor individual por zonas
-- extract_shot_map(): Mapa de disparos con ubicaciones exactas
-- extract_field_occupation(): Análisis de ocupación por zonas
+Main functions:
+    extract_match_events()     - All events with coordinates and qualifiers
+    extract_pass_network()     - Pass network with positions and connections
+    extract_player_heatmap()   - Player action frequency by field zone
+    extract_shot_map()         - Shot locations with distance/angle analysis
+    extract_field_occupation() - Territorial control by zones
 
-CARACTERÍSTICAS TÉCNICAS:
-- Sistema de caché optimizado para datos espaciales complejos
-- Procesamiento de eventos JavaScript en tiempo real
-- Clasificación automática de zonas tácticas del campo
-- Validación específica para match IDs de WhoScored
-- Exportación optimizada para herramientas de visualización
-
-USO TÍPICO:
-    from wrappers import whoscored_data
-    
-    # Todos los eventos espaciales de un partido
-    events = whoscored_data.get_match_events(1234567, "ESP-La Liga", "23-24")
-    
-    # Red de pases de un equipo
-    network = whoscored_data.get_pass_network(1234567, "Barcelona", "ESP-La Liga", "23-24")
-    
-    # Mapa de calor de jugador específico
-    heatmap = whoscored_data.get_player_heatmap(1234567, "Messi", "ESP-La Liga", "23-24")
+Quick access (no verbose):
+    get_match_events(), get_pass_network(), get_player_heatmap(),
+    get_shot_map(), get_field_occupation(), get_schedule()
 """
 
 import sys
@@ -58,31 +35,29 @@ from scrappers._config import LEAGUE_DICT
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 # ====================================================================
-# INPUT VALIDATION SYSTEM
+# INPUT VALIDATION
 # ====================================================================
 
 def _validate_match_inputs(match_id: int, league: str, season: str) -> bool:
-    """Validar entradas específicas de WhoScored."""
-    # Validar match_id
+    """Validate match_id, league, and season format. Raises ValueError on failure."""
     if not isinstance(match_id, int) or match_id <= 0:
         raise ValueError("match_id must be a positive integer")
-    
-    # Validar league
+
     if not league or not isinstance(league, str):
         raise ValueError("league must be a non-empty string")
-    
-    # Validar season format (YY-YY)
+
     if not season or not isinstance(season, str):
         raise ValueError("season must be a string")
-    
+
     season_parts = season.split('-')
     if len(season_parts) != 2:
         raise ValueError(f"season must be in YY-YY format, got '{season}'")
-    
+
     try:
         year1, year2 = int(season_parts[0]), int(season_parts[1])
         if not (0 <= year1 <= 99 and 0 <= year2 <= 99):
             raise ValueError(f"season years must be 00-99, got '{season}'")
+        # Ensure years are consecutive (handles 99->00 wrap with modulo)
         if year2 != (year1 + 1) % 100:
             raise ValueError(f"season must be consecutive years, got '{season}'")
     except ValueError as e:
@@ -93,7 +68,7 @@ def _validate_match_inputs(match_id: int, league: str, season: str) -> bool:
     return True
 
 def validate_match_inputs_with_suggestions(match_id: int, league: str, season: str) -> Dict[str, Any]:
-    """Validar entradas de match con sugerencias."""
+    """Validate inputs and return dict with errors and user-friendly suggestions."""
     result = {'valid': True, 'errors': [], 'suggestions': []}
     
     try:
@@ -113,36 +88,36 @@ def validate_match_inputs_with_suggestions(match_id: int, league: str, season: s
     return result
 
 # ====================================================================
-# INTELLIGENT CACHE SYSTEM
+# CACHE SYSTEM
 # ====================================================================
 
 CACHE_DIR = Path.home() / ".footballdecoded_cache" / "whoscored"
 CACHE_EXPIRY_HOURS = 24
 
 def _ensure_cache_dir():
-    """Crear directorio de caché si no existe."""
+    """Create cache directory if it does not exist."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 def _generate_cache_key(match_id: int, league: str, season: str, **kwargs) -> str:
-    """Generar clave única para cache."""
+    """Generate deterministic MD5 cache key from all parameters."""
     cache_data = f"{match_id}:{league}:{season}:{str(sorted(kwargs.items()))}"
     return hashlib.md5(cache_data.encode()).hexdigest()
 
 def _get_cache_path(cache_key: str) -> Path:
-    """Obtener ruta completa del archivo de cache."""
+    """Return full path for a cache key."""
     return CACHE_DIR / f"{cache_key}.pkl"
 
 def _is_cache_valid(cache_path: Path) -> bool:
-    """Verificar si el cache es válido."""
+    """Check if cache file exists and is within the 24h expiry window."""
     if not cache_path.exists():
         return False
-    
+
     file_time = datetime.fromtimestamp(cache_path.stat().st_mtime)
     expiry_time = datetime.now() - timedelta(hours=CACHE_EXPIRY_HOURS)
     return file_time > expiry_time
 
 def _save_to_cache(data: Union[Dict, pd.DataFrame], cache_key: str):
-    """Guardar datos en cache."""
+    """Serialize data to pickle cache file."""
     try:
         _ensure_cache_dir()
         cache_path = _get_cache_path(cache_key)
@@ -160,7 +135,7 @@ def _save_to_cache(data: Union[Dict, pd.DataFrame], cache_key: str):
         print(f"Warning: Could not save to cache: {e}")
 
 def _load_from_cache(cache_key: str) -> Optional[Union[Dict, pd.DataFrame]]:
-    """Cargar datos del cache si existen y son válidos."""
+    """Load data from cache if valid, otherwise return None."""
     try:
         cache_path = _get_cache_path(cache_key)
         
@@ -177,7 +152,7 @@ def _load_from_cache(cache_key: str) -> Optional[Union[Dict, pd.DataFrame]]:
         return None
 
 def clear_cache():
-    """Limpiar todo el cache de WhoScored."""
+    """Delete all WhoScored pickle cache files."""
     try:
         if CACHE_DIR.exists():
             for cache_file in CACHE_DIR.glob("*.pkl"):
@@ -187,7 +162,7 @@ def clear_cache():
         print(f"Error clearing cache: {e}")
 
 # ====================================================================
-# CORE ENGINE - SPATIAL EVENTS EXTRACTION
+# CORE - SPATIAL EVENTS EXTRACTION
 # ====================================================================
 
 def extract_match_events(
@@ -201,29 +176,22 @@ def extract_match_events(
     verbose: bool = False,
     use_cache: bool = True
 ) -> pd.DataFrame:
-    """
-    Extract ALL match events with complete spatial coordinates with cache.
-    
-    Core function - gets EVERYTHING FBref doesn't provide:
-    - All events with x/y coordinates (start + end positions)
-    - Parsed qualifiers (pass types, body parts, etc.)
-    - Tactical zones and spatial analysis
-    
+    """Extract all match events with x/y coordinates, qualifiers, and tactical zones.
+
     Args:
-        match_id: WhoScored match ID
-        league: League identifier
-        season: Season identifier
-        event_filter: Optional event type filter
-        player_filter: Optional player name filter
-        team_filter: Optional team name filter
-        for_viz: If True, optimize for visualization tools
-        verbose: Show extraction progress
-        use_cache: Usar sistema de cache (default: True)
-        
+        match_id: WhoScored match ID.
+        league: League code (e.g. 'ESP-La Liga').
+        season: Season in YY-YY format.
+        event_filter: Filter by event type (case-insensitive substring).
+        player_filter: Filter by player name (case-insensitive substring).
+        team_filter: Filter by team name (case-insensitive substring).
+        for_viz: If True, clean types and drop internal columns.
+        verbose: Print extraction progress.
+        use_cache: Use 24h pickle cache.
+
     Returns:
-        DataFrame with ALL spatial events and tactical context
+        DataFrame with spatial events, or empty DataFrame on failure.
     """
-    # Validar entradas
     try:
         _validate_match_inputs(match_id, league, season)
     except ValueError as e:
@@ -235,14 +203,12 @@ def extract_match_events(
                 print(f"  - {suggestion}")
         return pd.DataFrame()
     
-    # Generar clave de cache
     cache_key = _generate_cache_key(
         match_id, league, season,
         event_filter=event_filter, player_filter=player_filter,
         team_filter=team_filter, for_viz=for_viz
     )
-    
-    # Intentar cargar desde cache
+
     if use_cache:
         cached_data = _load_from_cache(cache_key)
         if cached_data is not None:
@@ -280,7 +246,6 @@ def extract_match_events(
             print(f"SUCCESS: {total_events} spatial events with coordinates")
             print(f"Players: {unique_players} | Event types: {event_types}")
         
-        # Guardar en cache si está habilitado
         if use_cache and not filtered_events.empty:
             _save_to_cache(filtered_events, cache_key)
         
@@ -304,16 +269,11 @@ def extract_pass_network(
     min_passes: int = 3,
     verbose: bool = False
 ) -> Dict[str, pd.DataFrame]:
-    """
-    Extract complete pass network with coordinates and connections.
-    
-    Creates what FBref cannot: actual pass networks with:
-    - Average positions per player with coordinates
-    - Pass connections between players (frequency + success rates)
-    - Spatial distribution of passes
-    
+    """Extract pass network with average positions and player-to-player connections.
+
     Returns:
-        Dict with 'passes', 'positions', and 'connections' DataFrames
+        Dict with 'passes' (successful passes), 'positions' (avg x/y per player),
+        and 'connections' (passer->receiver links filtered by min_passes).
     """
     if verbose:
         print(f"Creating pass network for {team_name}")
@@ -352,14 +312,7 @@ def extract_player_heatmap(
     event_types: Optional[List[str]] = None,
     verbose: bool = False
 ) -> pd.DataFrame:
-    """
-    Extract player heatmap with precise spatial distribution.
-    
-    Creates detailed spatial analysis FBref cannot provide:
-    - Action frequency by field zones
-    - Average positions per zone
-    - Success rates by spatial location
-    """
+    """Extract player action frequency, success rate, and avg position per field zone."""
     if verbose:
         print(f"Creating spatial heatmap for {player_name}")
     
@@ -403,14 +356,7 @@ def extract_shot_map(
     player_filter: Optional[str] = None,
     verbose: bool = False
 ) -> pd.DataFrame:
-    """
-    Extract detailed shot map with coordinates and spatial analysis.
-    
-    Provides shot location data FBref doesn't have:
-    - Exact shot coordinates (x, y)
-    - Distance and angle to goal
-    - Shot zones classification
-    """
+    """Extract shot events with coordinates, distance to goal, and zone classification."""
     if verbose:
         print("Creating shot map with spatial analysis")
     
@@ -448,14 +394,7 @@ def extract_field_occupation(
     time_period: Optional[str] = None,
     verbose: bool = False
 ) -> pd.DataFrame:
-    """
-    Extract field occupation patterns by zones.
-    
-    Analyzes spatial dominance FBref cannot provide:
-    - Event density by field zones
-    - Territorial control percentages
-    - Zone-specific activity patterns
-    """
+    """Extract event density and territorial control percentage per field zone."""
     if verbose:
         print(f"Analyzing field occupation for {team_name}")
     
@@ -494,7 +433,7 @@ def extract_league_schedule(
     season: str,
     verbose: bool = False
 ) -> pd.DataFrame:
-    """Extract complete league schedule for match ID discovery."""
+    """Extract league schedule with match IDs, teams, dates, and scores."""
     if verbose:
         print(f"Extracting schedule for {league} {season}")
     
@@ -522,7 +461,7 @@ def extract_missing_players(
     season: str,
     verbose: bool = False
 ) -> pd.DataFrame:
-    """Extract injured and suspended players for tactical context."""
+    """Extract injured and suspended players for a match."""
     if verbose:
         print(f"Extracting missing players for match {match_id}")
     
@@ -549,34 +488,30 @@ def extract_missing_players(
 # ====================================================================
 
 def _process_spatial_events(events_df: pd.DataFrame, match_id: int, for_viz: bool = False) -> pd.DataFrame:
-    """Process raw events into spatial analysis format."""
-    
+    """Enrich raw events with zones, qualifiers, sequences, and spatial calculations."""
     if events_df.empty:
         return events_df
-    
+
     enhanced_df = events_df.copy()
-    
     enhanced_df['match_id'] = match_id
     enhanced_df['data_source'] = 'whoscored'
-    
+
     enhanced_df = _unify_coordinates(enhanced_df)
     enhanced_df = _parse_qualifiers(enhanced_df)
-    
     enhanced_df['field_zone'] = _classify_field_zones(enhanced_df['x'], enhanced_df['y'])
     enhanced_df['is_successful'] = _classify_event_success(enhanced_df)
     enhanced_df['event_type'] = enhanced_df['type'].fillna('Unknown')
-    
     enhanced_df = _add_sequence_tracking(enhanced_df)
     enhanced_df = _add_spatial_calculations(enhanced_df)
-    
+
     if for_viz:
         enhanced_df = _optimize_for_visualization(enhanced_df)
-    
+
     return enhanced_df
 
 
 def _unify_coordinates(df: pd.DataFrame) -> pd.DataFrame:
-    """Unify coordinate system for consistent spatial analysis."""
+    """Coerce x/y and end_x/end_y columns to numeric."""
     if 'x' in df.columns and 'y' in df.columns:
         df['x'] = pd.to_numeric(df['x'], errors='coerce')
         df['y'] = pd.to_numeric(df['y'], errors='coerce')
@@ -589,8 +524,7 @@ def _unify_coordinates(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _parse_qualifiers(df: pd.DataFrame) -> pd.DataFrame:
-    """Parse key qualifiers into separate usable columns."""
-    
+    """Parse qualifier dicts into boolean/value columns (longball, cross, header, etc.)."""
     qualifier_columns = {
         'pass_length': None,
         'is_longball': False,
@@ -601,21 +535,21 @@ def _parse_qualifiers(df: pd.DataFrame) -> pd.DataFrame:
         'card_type': None,
         'is_assist': False
     }
-    
+
     for col, default_value in qualifier_columns.items():
         df[col] = default_value
-    
+
     for idx in range(len(df)):
         try:
             qualifiers_str = str(df.iloc[idx]['qualifiers'])
-            
+
             if qualifiers_str and qualifiers_str != '[]' and qualifiers_str != 'nan':
                 qualifiers = ast.literal_eval(qualifiers_str)
-                
+
                 for q in qualifiers:
                     if isinstance(q, dict) and 'type' in q:
                         qualifier_name = q['type'].get('displayName', '')
-                        
+
                         if qualifier_name == 'Longball':
                             df.iloc[idx, df.columns.get_loc('is_longball')] = True
                         elif qualifier_name == 'Cross':
@@ -626,25 +560,24 @@ def _parse_qualifiers(df: pd.DataFrame) -> pd.DataFrame:
                             df.iloc[idx, df.columns.get_loc('shot_body_part')] = 'Head'
                         elif qualifier_name == 'KeyPass':
                             df.iloc[idx, df.columns.get_loc('is_assist')] = True
-                        
+
         except Exception:
             continue
-    
+
     return df
 
 
 def _classify_field_zones(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
-    """Classify field positions into 9 tactical zones."""
-    
+    """Classify positions into 3x3 tactical grid (defensive/middle/attacking x left/center/right)."""
     zones = []
     for x, y in zip(x_coords, y_coords):
         if pd.isna(x) or pd.isna(y):
             zones.append('Unknown')
             continue
-        
+
         x_pct = float(x)
         y_pct = float(y)
-        
+
         if x_pct <= 33.33:
             if y_pct <= 33.33:
                 zone = 'Defensive_Left'
@@ -666,54 +599,54 @@ def _classify_field_zones(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series
                 zone = 'Attacking_Center'
             else:
                 zone = 'Attacking_Right'
-        
+
         zones.append(zone)
-    
+
     return pd.Series(zones, index=x_coords.index)
 
 
 def _classify_event_success(events_df: pd.DataFrame) -> pd.Series:
-    """Classify event success based on outcome type."""
+    """Return boolean series: True if outcome_type indicates success."""
     if 'outcome_type' not in events_df.columns:
         return pd.Series([False] * len(events_df))
-    
+
     successful_outcomes = ['Successful', 'Goal', 'Assist', 'Won']
     return events_df['outcome_type'].isin(successful_outcomes)
 
 
 def _add_sequence_tracking(df: pd.DataFrame) -> pd.DataFrame:
-    """Add possession sequence tracking for pass network analysis."""
-    
+    """Add possession_sequence IDs and next_player links for pass chains."""
     df = df.sort_values(['minute', 'second']).reset_index(drop=True)
-    
+
     df['possession_sequence'] = 0
     df['next_player'] = None
-    
+
     current_sequence = 0
     current_team = None
-    
+
     for idx in range(len(df)):
         if current_team != df.iloc[idx]['team']:
             current_sequence += 1
             current_team = df.iloc[idx]['team']
-        
+
         df.iloc[idx, df.columns.get_loc('possession_sequence')] = current_sequence
-        
+
         if idx < len(df) - 1:
             next_event = df.iloc[idx + 1]
-            
+
             time_current = df.iloc[idx]['minute'] * 60 + df.iloc[idx]['second']
             time_next = next_event['minute'] * 60 + next_event['second']
             time_diff = time_next - time_current
-            
+
+            # Same team + within 10s = same possession chain
             if (next_event['team'] == df.iloc[idx]['team'] and 0 <= time_diff <= 10):
                 df.iloc[idx, df.columns.get_loc('next_player')] = next_event['player']
-    
+
     return df
 
 
 def _add_spatial_calculations(df: pd.DataFrame) -> pd.DataFrame:
-    """Add spatial calculation columns."""
+    """Add distance_to_goal and pass_distance columns."""
     
     df['distance_to_goal'] = _calculate_distance_to_goal(df['x'], df['y'])
     df['pass_distance'] = _calculate_pass_distance(df['x'], df['y'], df['end_x'], df['end_y'])
@@ -722,76 +655,71 @@ def _add_spatial_calculations(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _calculate_distance_to_goal(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
-    """Calculate distance to goal center."""
-    
+    """Euclidean distance to goal center (x=100, y=50) in percentage-unit space."""
     distances = []
     goal_x, goal_y = 100, 50
-    
+
     for x, y in zip(x_coords, y_coords):
         if pd.isna(x) or pd.isna(y):
             distances.append(None)
             continue
-        
+
         distance = np.sqrt((x - goal_x)**2 + (y - goal_y)**2)
         distances.append(round(distance, 2))
-    
+
     return pd.Series(distances, index=x_coords.index)
 
 
 def _calculate_pass_distance(x1: pd.Series, y1: pd.Series, x2: pd.Series, y2: pd.Series) -> pd.Series:
-    """Calculate pass distance from coordinates."""
-    
+    """Euclidean distance between pass origin and destination."""
     distances = []
-    
+
     for start_x, start_y, end_x, end_y in zip(x1, y1, x2, y2):
         if pd.isna(start_x) or pd.isna(end_x):
             distances.append(None)
             continue
-        
+
         distance = np.sqrt((end_x - start_x)**2 + (end_y - start_y)**2)
         distances.append(round(distance, 2))
-    
+
     return pd.Series(distances, index=x1.index)
 
 
 def _optimize_for_visualization(df: pd.DataFrame) -> pd.DataFrame:
-    """Optimize DataFrame for visualization tools."""
-    
+    """Enforce strict types and drop internal columns for clean viz output."""
     viz_df = df.copy()
-    
+
     bool_cols = ['is_successful', 'is_longball', 'is_header', 'is_cross', 'is_through_ball', 'is_assist']
-    
+
     for col in bool_cols:
         if col in viz_df.columns:
             viz_df[col] = viz_df[col].astype(bool)
-    
+
     numeric_cols = ['x', 'y', 'end_x', 'end_y', 'minute', 'second', 'distance_to_goal', 'pass_distance']
-    
+
     for col in numeric_cols:
         if col in viz_df.columns:
             viz_df[col] = pd.to_numeric(viz_df[col], errors='coerce')
-    
+
     processing_cols = ['qualifiers', 'goal_mouth_y', 'goal_mouth_z', 'blocked_x', 'blocked_y']
     viz_df = viz_df.drop([col for col in processing_cols if col in viz_df.columns], axis=1)
-    
+
     return viz_df
 
 def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passes: int) -> Dict[str, pd.DataFrame]:
-    """Calculate pass network components."""
-    
+    """Build pass network: avg positions, directional connections filtered by min_passes."""
     results = {
         'passes': pd.DataFrame(),
         'positions': pd.DataFrame(),
         'connections': pd.DataFrame()
     }
-    
+
     if pass_events.empty:
         return results
-    
+
     successful_passes = pass_events[pass_events['is_successful'] == True]
-    
     results['passes'] = successful_passes.copy()
-    
+
     if not successful_passes.empty:
         positions = successful_passes.groupby('player').agg({
             'x': 'mean',
@@ -800,13 +728,13 @@ def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passe
             'is_cross': 'sum',
             'is_longball': 'sum'
         }).round(2)
-        
+
         positions.columns = ['avg_x', 'avg_y', 'total_passes', 'crosses', 'longballs']
         positions['team'] = team_name
         results['positions'] = positions.reset_index()
-    
+
     connections = []
-    
+
     for _, event in successful_passes.iterrows():
         if pd.notna(event['next_player']) and event['next_player'] != event['player']:
             connections.append({
@@ -818,43 +746,44 @@ def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passe
                 'target_x': event['end_x'] if pd.notna(event['end_x']) else None,
                 'target_y': event['end_y'] if pd.notna(event['end_y']) else None
             })
-    
+
     if connections:
         connections_df = pd.DataFrame(connections)
-        
+
         directional_counts = connections_df.groupby(['team', 'source', 'target']).agg({
             'source_x': 'mean',
-            'source_y': 'mean', 
+            'source_y': 'mean',
             'target_x': 'mean',
             'target_y': 'mean',
             'team': 'count'
         }).round(2)
-        
+
         directional_counts.columns = ['avg_source_x', 'avg_source_y', 'avg_target_x', 'avg_target_y', 'pass_count']
         directional_counts = directional_counts.reset_index()
-        
+
+        # Merge A->B and B->A into bidirectional pairs, keeping directions above min_passes
         bidirectional_connections = []
         processed_pairs = set()
-        
+
         for _, conn in directional_counts.iterrows():
             source = conn['source']
             target = conn['target']
             pass_count_a_to_b = conn['pass_count']
-            
+
             reverse_conn = directional_counts[
-                (directional_counts['source'] == target) & 
+                (directional_counts['source'] == target) &
                 (directional_counts['target'] == source)
             ]
-            
+
             pass_count_b_to_a = reverse_conn['pass_count'].iloc[0] if not reverse_conn.empty else 0
-            
+
             pair_id = tuple(sorted([source, target]))
-            
+
             if pair_id not in processed_pairs:
                 processed_pairs.add(pair_id)
-                
+
                 if pass_count_a_to_b >= min_passes or pass_count_b_to_a >= min_passes:
-                    
+
                     if pass_count_a_to_b >= min_passes:
                         bidirectional_connections.append({
                             'team': conn['team'],
@@ -867,7 +796,7 @@ def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passe
                             'avg_target_x': conn['avg_target_x'],
                             'avg_target_y': conn['avg_target_y']
                         })
-                    
+
                     if pass_count_b_to_a >= min_passes and not reverse_conn.empty:
                         bidirectional_connections.append({
                             'team': conn['team'],
@@ -880,58 +809,55 @@ def _calculate_pass_network(pass_events: pd.DataFrame, team_name: str, min_passe
                             'avg_target_x': reverse_conn.iloc[0]['avg_target_x'],
                             'avg_target_y': reverse_conn.iloc[0]['avg_target_y']
                         })
-        
+
         results['connections'] = pd.DataFrame(bidirectional_connections)
-    
+
     return results
 
 def _calculate_player_heatmap(events_df: pd.DataFrame, player_name: str) -> pd.DataFrame:
-    """Calculate spatial heatmap for player."""
-    
+    """Aggregate actions per zone: count, success rate, avg position, zone percentage."""
     zone_analysis = events_df.groupby('field_zone').agg({
         'match_id': 'count',
         'is_successful': ['sum', 'mean'],
         'x': 'mean',
         'y': 'mean'
     }).round(2)
-    
+
     zone_analysis.columns = ['action_count', 'successful_actions', 'success_rate', 'avg_x', 'avg_y']
-    
+
     zone_analysis['player'] = player_name
     zone_analysis['total_actions'] = len(events_df)
     zone_analysis['zone_percentage'] = (zone_analysis['action_count'] / zone_analysis['total_actions'] * 100).round(2)
     zone_analysis['success_rate'] = (zone_analysis['success_rate'] * 100).round(2)
-    
+
     return zone_analysis.reset_index()
 
 
 def _analyze_shot_events(shot_events: pd.DataFrame) -> pd.DataFrame:
-    """Enhance shot events with spatial analysis."""
-    
+    """Add is_goal, is_on_target, is_blocked flags and shot_zone classification."""
     enhanced_df = shot_events.copy()
-    
+
     if 'outcome_type' in enhanced_df.columns:
         enhanced_df['is_goal'] = enhanced_df['outcome_type'].str.contains('Goal', case=False, na=False)
         enhanced_df['is_on_target'] = enhanced_df['outcome_type'].isin(['Goal', 'Saved', 'SavedShot'])
         enhanced_df['is_blocked'] = enhanced_df['outcome_type'].str.contains('Block', case=False, na=False)
-    
+
     enhanced_df['shot_zone'] = _classify_shot_zones(enhanced_df['x'], enhanced_df['y'])
-    
+
     return enhanced_df
 
 
 def _classify_shot_zones(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
-    """Classify shots into tactical zones."""
-    
+    """Classify shots by zone: Six_Yard_Box, Central/Wide_Penalty_Box, Penalty_Area_Edge, Long_Range."""
     zones = []
     for x, y in zip(x_coords, y_coords):
         if pd.isna(x) or pd.isna(y):
             zones.append('Unknown')
             continue
-        
+
         x_pct = float(x)
         y_pct = float(y)
-        
+
         if x_pct >= 88:
             zones.append('Six_Yard_Box')
         elif x_pct >= 83:
@@ -943,32 +869,31 @@ def _classify_shot_zones(x_coords: pd.Series, y_coords: pd.Series) -> pd.Series:
             zones.append('Penalty_Area_Edge')
         else:
             zones.append('Long_Range')
-    
+
     return pd.Series(zones, index=x_coords.index)
 
 
 def _calculate_field_occupation(team_events: pd.DataFrame, team_name: str) -> pd.DataFrame:
-    """Calculate field occupation by zones."""
-    
+    """Aggregate event density and success rate per field zone for a team."""
     occupation_data = team_events.groupby('field_zone').agg({
         'match_id': 'count',
         'is_successful': ['sum', 'mean'],
         'x': 'mean',
         'y': 'mean'
     }).round(2)
-    
+
     occupation_data.columns = ['event_count', 'successful_events', 'success_rate', 'avg_x', 'avg_y']
-    
+
     total_events = occupation_data['event_count'].sum()
     occupation_data['occupation_percentage'] = (occupation_data['event_count'] / total_events * 100).round(2)
     occupation_data['success_rate'] = (occupation_data['success_rate'] * 100).round(2)
     occupation_data['team'] = team_name
-    
+
     return occupation_data.reset_index()
 
 
 def _filter_by_time_period(events: pd.DataFrame, time_period: str) -> pd.DataFrame:
-    """Filter events by specific time periods."""
+    """Filter events by time period: first_half, second_half, first_30, last_30."""
     
     if time_period == 'first_half':
         return events[events['minute'] <= 45]
@@ -989,28 +914,27 @@ def _apply_filters(
     team_filter: Optional[str],
     verbose: bool
 ) -> pd.DataFrame:
-    """Apply various filters to event data."""
-    
+    """Apply case-insensitive substring filters for event type, player, and team."""
     filtered_df = events_df.copy()
-    
+
     if event_filter:
         if verbose:
             print(f"Applying event filter: {event_filter}")
         mask = filtered_df['event_type'].str.contains(event_filter, case=False, na=False)
         filtered_df = filtered_df[mask]
-    
+
     if player_filter:
         if verbose:
             print(f"Applying player filter: {player_filter}")
         mask = filtered_df['player'].str.contains(player_filter, case=False, na=False)
         filtered_df = filtered_df[mask]
-    
+
     if team_filter:
         if verbose:
             print(f"Applying team filter: {team_filter}")
         mask = filtered_df['team'].str.contains(team_filter, case=False, na=False)
         filtered_df = filtered_df[mask]
-    
+
     return filtered_df
 
 
@@ -1024,21 +948,21 @@ def export_to_csv(
     include_timestamp: bool = True,
     for_viz: bool = False
 ) -> str:
-    """Export spatial data to CSV optimized for analysis and visualization."""
+    """Export DataFrame or dict of DataFrames to CSV. Returns filename(s)."""
     if isinstance(data, dict):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") if include_timestamp else ""
         files_created = []
-        
+
         for key, df in data.items():
             if isinstance(df, pd.DataFrame) and not df.empty:
                 if for_viz:
                     df = _optimize_for_visualization(df)
-                
+
                 file_suffix = f"_{timestamp}" if timestamp else ""
                 full_filename = f"{filename}_{key}{file_suffix}.csv"
                 df.to_csv(full_filename, index=False, encoding='utf-8')
                 files_created.append(full_filename)
-        
+
         print(f"Exported {len(files_created)} spatial data files")
         return ", ".join(files_created)
     else:
@@ -1064,25 +988,11 @@ def export_to_csv(
 
 
 # ====================================================================
-# AUTOMATIC ID RETRIEVAL FUNCTIONS
+# ID RETRIEVAL
 # ====================================================================
 
 def get_match_ids(league: str, season: str, team_filter: Optional[str] = None) -> pd.DataFrame:
-    """
-    Extraer automáticamente IDs de partidos de WhoScored para una liga y temporada.
-    
-    Args:
-        league: Código de liga (e.g., 'ESP-La Liga', 'ENG-Premier League')
-        season: Temporada en formato YY-YY (e.g., '23-24')
-        team_filter: Filtro opcional por nombre de equipo
-        
-    Returns:
-        DataFrame con columnas: match_id, home_team, away_team, date
-        
-    Raises:
-        ValueError: Si la liga o temporada no son válidas
-        ConnectionError: Si falla la conexión con WhoScored
-    """
+    """Extract match IDs from WhoScored schedule. Returns DataFrame with match_id, teams, date."""
     try:
         from ..scrappers.whoscored import WhoScoredReader
         
@@ -1093,7 +1003,6 @@ def get_match_ids(league: str, season: str, team_filter: Optional[str] = None) -
             print(f"No matches found for {league} {season}")
             return pd.DataFrame()
         
-        # Extraer match_ids y información básica
         match_info = []
         for _, match in schedule_data.iterrows():
             if 'match_id' in match and pd.notna(match['match_id']):
@@ -1108,7 +1017,6 @@ def get_match_ids(league: str, season: str, team_filter: Optional[str] = None) -
         
         result_df = pd.DataFrame(match_info)
         
-        # Aplicar filtro de equipo si se especifica
         if team_filter and not result_df.empty:
             mask = (
                 result_df['home_team'].str.contains(team_filter, case=False, na=False, regex=False) |
@@ -1129,26 +1037,13 @@ def get_match_ids(league: str, season: str, team_filter: Optional[str] = None) -
 
 
 def search_player_id(player_name: str, match_id: int, league: str, season: str) -> Optional[Dict[str, Any]]:
-    """
-    Buscar automáticamente información de jugador en eventos de partido de WhoScored.
-    
-    Args:
-        player_name: Nombre del jugador a buscar
-        match_id: ID del partido donde buscar
-        league: Código de liga
-        season: Temporada en formato YY-YY
-        
-    Returns:
-        Dict con información del jugador encontrado, o None si no se encuentra
-    """
+    """Search for a player in match events. Returns player info dict or None."""
     try:
-        # Extraer eventos del partido
         match_events = extract_match_events(match_id, league, season, verbose=False)
-        
+
         if match_events.empty:
             return None
-        
-        # Buscar jugador en los eventos
+
         player_events = match_events[
             match_events['player'].str.contains(player_name, case=False, na=False, regex=False)
         ]
@@ -1174,26 +1069,12 @@ def search_player_id(player_name: str, match_id: int, league: str, season: str) 
 
 
 def search_team_id(team_name: str, league: str, season: str) -> Optional[Dict[str, Any]]:
-    """
-    Buscar automáticamente información de equipo en WhoScored schedule.
-    
-    Args:
-        team_name: Nombre del equipo a buscar
-        league: Código de liga
-        season: Temporada en formato YY-YY
-        
-    Returns:
-        Dict con información del equipo encontrado, o None si no se encuentra
-    """
+    """Search for a team in league schedule. Returns team info dict or None."""
     try:
-        # Usar get_match_ids para obtener el schedule
         schedule_data = get_match_ids(league, season, team_filter=team_name)
-        
+
         if not schedule_data.empty:
-            # Obtener información del primer partido encontrado
             first_match = schedule_data.iloc[0]
-            
-            # Determinar si es equipo local o visitante
             is_home = team_name.lower() in first_match['home_team'].lower()
             actual_team_name = first_match['home_team'] if is_home else first_match['away_team']
             
@@ -1214,37 +1095,37 @@ def search_team_id(team_name: str, league: str, season: str) -> Optional[Dict[st
 
 
 # ====================================================================
-# QUICK ACCESS FUNCTIONS - SIMPLIFIED API
+# QUICK ACCESS (no verbose)
 # ====================================================================
 
 def get_match_events(match_id: int, league: str, season: str) -> pd.DataFrame:
-    """Quick access to complete match events with spatial data."""
+    """Get all match events with spatial data."""
     return extract_match_events(match_id, league, season, verbose=False)
 
 def get_match_events_viz(match_id: int, league: str, season: str) -> pd.DataFrame:
-    """Quick access to visualization-optimized match events."""
+    """Get match events optimized for visualization."""
     return extract_match_events(match_id, league, season, for_viz=True, verbose=False)
 
 def get_pass_network(match_id: int, team: str, league: str, season: str) -> Dict[str, pd.DataFrame]:
-    """Quick access to complete pass network analysis."""
+    """Get pass network with positions and connections."""
     return extract_pass_network(match_id, team, league, season, verbose=False)
 
 def get_player_heatmap(match_id: int, player: str, league: str, season: str) -> pd.DataFrame:
-    """Quick access to player spatial heatmap."""
+    """Get player action heatmap by field zone."""
     return extract_player_heatmap(match_id, player, league, season, verbose=False)
 
 def get_shot_map(match_id: int, league: str, season: str, team: Optional[str] = None) -> pd.DataFrame:
-    """Quick access to shot map with coordinates."""
+    """Get shot map with coordinates and zone classification."""
     return extract_shot_map(match_id, league, season, team_filter=team, verbose=False)
 
 def get_field_occupation(match_id: int, team: str, league: str, season: str) -> pd.DataFrame:
-    """Quick access to field occupation analysis."""
+    """Get field occupation analysis by zones."""
     return extract_field_occupation(match_id, team, league, season, verbose=False)
 
 def get_schedule(league: str, season: str) -> pd.DataFrame:
-    """Quick access to league schedule."""
+    """Get league schedule with match IDs."""
     return extract_league_schedule(league, season, verbose=False)
 
 def get_missing_players(match_id: int, league: str, season: str) -> pd.DataFrame:
-    """Quick access to missing players data."""
+    """Get injured and suspended players for a match."""
     return extract_missing_players(match_id, league, season, verbose=False)

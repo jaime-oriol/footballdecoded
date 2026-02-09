@@ -29,33 +29,33 @@ help:
 install:
 	pip install -e .
 	pip install -e ".[dev,analysis]"
-	@echo "✅ FootballDecoded dependencies installed"
+	@echo "OK: FootballDecoded dependencies installed"
 
 setup-db:
 	createdb footballdecoded_dev || echo "Database already exists"
 	psql footballdecoded_dev -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 	psql footballdecoded_dev -c "CREATE EXTENSION IF NOT EXISTS btree_gist;"
-	@echo "✅ Database setup completed"
+	@echo "OK: Database setup completed"
 
 # Development workflow
 extract:
 	python pipelines/extraction_pipeline.py --league "ENG-Premier League" --season 2024
-	@echo "✅ Data extraction completed"
+	@echo "OK: Data extraction completed"
 
 analyze:
 	python analytics/tactical_analytics/pressure_analysis.py
 	python analytics/tactical_analytics/space_control.py
-	@echo "✅ Tactical analysis completed"
+	@echo "OK: Tactical analysis completed"
 
 test:
 	pytest tests/ -v --cov=core --cov=analytics
-	@echo "✅ Tests completed"
+	@echo "OK: Tests completed"
 
 lint:
 	black core/ analytics/ pipelines/ visualizations/ tools/
 	isort core/ analytics/ pipelines/ visualizations/ tools/
 	flake8 core/ analytics/ pipelines/ visualizations/ tools/
-	@echo "✅ Code formatting completed"
+	@echo "OK: Code formatting completed"
 
 # Data management
 clean:
@@ -63,26 +63,26 @@ clean:
 	rm -rf logs/*.log
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	@echo "✅ Cache and logs cleaned"
+	@echo "OK: Cache and logs cleaned"
 
 backup:
 	pg_dump footballdecoded_dev > backups/footballdecoded_$(shell date +%Y%m%d_%H%M%S).sql
-	@echo "✅ Database backup created"
+	@echo "OK: Database backup created"
 
 # Deployment
 deploy:
 	docker-compose up --build -d
-	@echo "✅ FootballDecoded stack deployed"
+	@echo "OK: FootballDecoded stack deployed"
 
 # Quick development cycle
 dev-cycle: lint extract analyze
-	@echo "✅ Full development cycle completed"
+	@echo "OK: Full development cycle completed"
 
 # Database operations
 reset-db:
 	dropdb footballdecoded_dev --if-exists
 	make setup-db
-	@echo "✅ Database reset completed"
+	@echo "OK: Database reset completed"
 
 # Monitoring
 logs:

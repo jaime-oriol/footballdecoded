@@ -488,7 +488,7 @@ result = extract_match_complete(
 # 3. player_network.csv: 258 records
 # 4. spatial_analysis.csv: 50 spatial records
 # 5. match_info.csv: 90 info records
-# ✅ 5 optimized visualization CSVs saved to: viz/data
+# 5 optimized visualization CSVs saved to: viz/data
 ```
 
 ## Notas de Implementación

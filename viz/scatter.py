@@ -1,6 +1,7 @@
-"""
-Diamond scatter plot visualization adapted from original threat creators code.
-Maintains exact visual aesthetic but works with FootballDecoded database structure.
+"""Diamond scatter plot (45-degree rotated axes) for two-metric player comparison.
+
+Points colored by combined metric value. Top players labeled with adjustText.
+Shaded region shows P20-P80 in either metric.
 """
 
 import numpy as np
@@ -18,39 +19,33 @@ import os
 BACKGROUND_COLOR = '#313332'
 FONT_FAMILY = 'DejaVu Sans'
 
-# Tu colormap personalizado
 node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
     'deepskyblue', 'cyan', 'lawngreen', 'yellow',
     'gold', 'lightpink', 'tomato'
 ])
 
 def format_axis_number(value):
-    """
-    Format axis numbers intelligently based on magnitude:
-    - Numbers ≥100 (3+ digits): show as integer without decimals
-    - Numbers <100 (1-2 digits): show with 2 decimals
-    """
-    if abs(value) >= 100:  # 3+ dígitos antes del punto
+    """Format axis number: integer if >=100, else 2 decimals."""
+    if abs(value) >= 100:
         return str(int(round(value)))
-    else:  # 1-2 dígitos antes del punto
+    else:
         return str(round(value, 2))
 
 def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
-    """
-    Create diamond scatter plot (45° rotated axes) for two metrics.
+    """Create diamond scatter plot (45-degree rotated axes) for two metrics.
 
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        DataFrame with processed player data including metrics
-    x_metric : str
-        Column name for x-axis metric
-    y_metric : str
-        Column name for y-axis metric
-    title : str
-        Main title for the plot
-    save_filename : str
-        Filename to save the plot (will be saved in figures/ directory)
+    Labels top 10 players (P81+ in both metrics, falling back to P75+ or top 10).
+    Saves to figures/{save_filename}.
+
+    Args:
+        df: Player DataFrame with metric columns and optional _pct percentile columns.
+        x_metric: Column name for left axis metric.
+        y_metric: Column name for bottom axis metric.
+        title: Plot title.
+        save_filename: Output filename (saved in figures/ directory).
+
+    Returns:
+        matplotlib Figure object.
     """
 
     # Ensure figures directory exists
@@ -71,34 +66,33 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     left_ax_quantile = left_ax_norm_plot.quantile([0.2, 0.5, 0.8]).tolist()
     right_ax_quantile = right_ax_norm_plot.quantile([0.2, 0.5, 0.8]).tolist()
 
-    # Find top players to label (percentil 98+ en cualquiera de las dos métricas)
-    # Asumiendo que el DF ya tiene columnas de percentiles con sufijo '_pct'
+    # Find top players to label using percentile columns (suffix '_pct')
     x_pct_col = f"{x_metric}_pct"
     y_pct_col = f"{y_metric}_pct"
 
     if x_pct_col in df.columns and y_pct_col in df.columns:
-        # NUEVA LÓGICA: Mínimo percentil 81 en ambas, luego TOP 10 por suma
+        # P81+ in both metrics, then top 10 by sum of percentiles
         plot_player = df[(df[x_pct_col] >= 81) & (df[y_pct_col] >= 81)]
 
-        # Si no hay suficientes con 81+, bajar
+        # Fall back to P75+ if too few players
         if len(plot_player) < 5:
             plot_player = df[(df[x_pct_col] >= 75) & (df[y_pct_col] >= 75)]
-        # Seleccionar TOP 10 por suma de percentiles
+        # Select top 10 by sum of percentiles
         if len(plot_player) > 0:
             plot_player_temp = plot_player.copy()
             plot_player_temp['_total_pct'] = plot_player_temp[x_pct_col] + plot_player_temp[y_pct_col]
             plot_player = plot_player_temp.nlargest(10, '_total_pct').drop(columns=['_total_pct'])
         else:
-            # Último recurso: TOP 10 sin filtros
+            # Last resort: top 10 without filters
             df_temp = df.copy()
             df_temp['_total_pct'] = df_temp[x_pct_col] + df_temp[y_pct_col]
             plot_player = df_temp.nlargest(10, '_total_pct').drop(columns=['_total_pct'])
     else:
-        # Fallback al método original si no hay percentiles
+        # Fallback if no percentile columns available
         plot_quantile_left = left_ax_norm_plot.quantile([0, 0.5, 0.9]).tolist()
         plot_quantile_right = right_ax_norm_plot.quantile([0, 0.5, 0.9]).tolist()
         plot_player = df[(left_ax_norm_plot > plot_quantile_left[2]) | (right_ax_norm_plot > plot_quantile_right[2])]
-        # También limitar a 10 en el fallback
+        # Also limit to 10 in fallback
         if len(plot_player) > 10:
             plot_player = plot_player.head(10)
 
@@ -110,7 +104,7 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     right_extent = 1.001
     plot_extents = 0, right_extent, 0, left_extent
 
-    # Create reference dictionary for ticks (como original)
+    # Reference dictionary for axis tick labels
     ticks = list(np.arange(0, 1.1, 0.1))
     right_dict = {}
     left_dict = {}
@@ -183,7 +177,7 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     # Axis grid
     ax.grid(alpha=0.2, color='w')
 
-    # Plot points on auxiliary axis usando tu estética
+    # Plot points on auxiliary axis
     aux_ax.scatter(right_ax_norm_plot, left_ax_norm_plot,
                    c=left_ax_norm_plot + right_ax_norm_plot,
                    cmap=node_cmap, edgecolor='white', s=50, lw=0.5, zorder=2, alpha=0.7)
@@ -226,12 +220,12 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
                                                linewidth=1.2, connectionstyle='arc3,rad=0.05'))
             texts.append(text)
 
-        # Use adjustText to prevent overlaps - labels alejados de nodos
+        # Prevent label overlaps
         adjustText.adjust_text(texts, ax=aux_ax,
-                             force_points=0.05,     # Mínima repulsión de puntos
-                             force_text=1.5,        # Máxima separación entre textos
-                             expand_points=(3.0, 3.0),  # Zona grande alrededor de puntos
-                             expand_text=(2.0, 2.0),    # Separación grande entre textos
+                             force_points=0.05,
+                             force_text=1.5,
+                             expand_points=(3.0, 3.0),
+                             expand_text=(2.0, 2.0),
                              avoid_self_intersecting=True,
                              only_move={'points': 'xy', 'text': 'xy'},
                              arrowprops=dict(arrowstyle='-', color='yellow', alpha=0.9, linewidth=1.5))
@@ -265,9 +259,7 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
                 color='w', lw=1, alpha=0.3, ls='dashed', zorder=0)
 
     # Add explanatory text areas
-    # Left text axis
-    text_ax_left = fig.add_axes([0.085, 0.47, 0.415, 0.392])   
-    # Más arriba y más a la izquierda → restamos a x, sumamos a y
+    text_ax_left = fig.add_axes([0.085, 0.47, 0.415, 0.392])
     dx, dy = -0.125, +0
     text_ax_left.plot([0.39+dx, 0.59+dx], [0.41+dy, 0.61+dy],
                     color='w', alpha=0.9, lw=0.5)
@@ -281,10 +273,8 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
 
 
         
-    # Right text axis
-    text_ax_right = fig.add_axes([0.5, 0.47, 0.415, 0.392])    
-    # Más arriba y más a la derecha → sumamos a x, sumamos a y
-    dx, dy = +0.2, +0.05  
+    text_ax_right = fig.add_axes([0.5, 0.47, 0.415, 0.392])
+    dx, dy = +0.2, +0.05
     text_ax_right.plot([0.61+dx, 0.41+dx], [0.41+dy, 0.61+dy],
                     color='w', alpha=0.9, lw=0.5)
     text_ax_right.plot([0.51+dx, 0.64+dx], [0.51+dy, 0.64+dy],
@@ -303,10 +293,9 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
     text_ax_bottom.set_xlim([0, 1])
     text_ax_bottom.set_ylim([0, 1])
 
-    # Title (sin subtítulo)
+    # Title
     fig.text(0.12, 0.935, title, fontweight="bold", fontsize=16, color='w', fontfamily=FONT_FAMILY)
 
-    # Add competition logo (con fallback)
     try:
         logo_path = "../logos/competition_logo.png"
         if os.path.exists(logo_path):
@@ -315,13 +304,13 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
             comp_logo = Image.open(logo_path)
             comp_ax.imshow(comp_logo)
     except:
-        pass  # No logo si no existe
+        pass
 
     # Footer
     fig.text(0.05, 0.0, "Created by Jaime Oriol", fontweight='bold', fontsize=10,
              color="white", fontfamily=FONT_FAMILY)
 
-    # Try to add logo
+    # Project logo
     try:
         logo_path = "../blog/logo/Logo-blanco.png"
         if os.path.exists(logo_path):
@@ -342,7 +331,7 @@ def create_diamond_scatter(df, x_metric, y_metric, title, save_filename):
 
     return fig
 
-# Overwrite rcparams for consistent styling
+# Global rcParams for consistent styling
 mpl.rcParams['xtick.color'] = 'w'
 mpl.rcParams['ytick.color'] = 'w'
 mpl.rcParams['text.color'] = 'w'

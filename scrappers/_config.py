@@ -1,4 +1,4 @@
-"""Configurations."""
+"""Global configuration: caching, logging, directories, league mappings."""
 
 import json
 import logging
@@ -9,10 +9,10 @@ from pathlib import Path
 
 from rich.logging import RichHandler
 
-# Configuration
+# Cache settings
 NOCACHE = os.environ.get("SOCCERDATA_NOCACHE", "False").lower() in ("true", "1", "t")
 NOSTORE = os.environ.get("SOCCERDATA_NOSTORE", "False").lower() in ("true", "1", "t")
-MAXAGE = 86400  # 1 día (24 horas) - datos frescos sin sacrificar velocidad
+MAXAGE = 86400  # 24 hours
 if os.environ.get("SOCCERDATA_MAXAGE") is not None:
     MAXAGE = int(os.environ.get("SOCCERDATA_MAXAGE", 0))
 LOGLEVEL = os.environ.get("SOCCERDATA_LOGLEVEL", "INFO").upper()
@@ -55,7 +55,7 @@ logging_config = {
         "info": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": Path(LOGS_DIR, "info.log"),
-            "maxBytes": 10485760,  # 1 MB
+            "maxBytes": 10485760,  # 10 MB
             "backupCount": 10,
             "formatter": "info_clean",
             "level": logging.INFO,
@@ -63,7 +63,7 @@ logging_config = {
         "error": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": Path(LOGS_DIR, "error.log"),
-            "maxBytes": 10485760,  # 1 MB
+            "maxBytes": 10485760,  # 10 MB
             "backupCount": 10,
             "formatter": "detailed_clean",
             "level": logging.ERROR,
@@ -100,7 +100,7 @@ else:
         _f_custom_teamnname_replacements.name,
     )
 
-# League dict - Only sources used in FootballDecoded: FBref, WhoScored, Understat, FotMob
+# League mappings: source-specific names, season boundaries, and season code overrides
 LEAGUE_DICT = {
     "ENG-Premier League": {
         "FBref": "Premier League",

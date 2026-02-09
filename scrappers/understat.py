@@ -1,11 +1,9 @@
-"""Scraper for understat.com.
+"""Scraper for understat.com -- xG, xA, PPDA and advanced stats.
 
-Understat specializes in advanced metrics like xG, xA, PPDA.
-Uses regex to extract JavaScript variables from HTML pages
-and provides model-based statistics not available in other sources.
+Extracts data from Understat's AJAX API and embedded JavaScript.
+Coverage: Big 5 European leagues only.
 """
 
-# Standard library imports
 import itertools
 import json
 from collections.abc import Iterable
@@ -13,18 +11,15 @@ from html import unescape
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 
-# Third-party imports
 import pandas as pd
 
 from ._common import BaseRequestsReader, make_game_id
 from ._config import DATA_DIR, NOCACHE, NOSTORE, TEAMNAME_REPLACEMENTS
 
-# Understat configuration
 UNDERSTAT_DATADIR = DATA_DIR / "Understat"
 UNDERSTAT_URL = "https://understat.com"
 
-# Mappings for Understat's internal codes to readable names
-# These standardize the shot event data
+# Understat internal codes -> human-readable labels
 SHOT_SITUATIONS = {
     "OpenPlay": "Open Play",
     "FromCorner": "From Corner",
@@ -49,29 +44,26 @@ SHOT_RESULTS = {
 
 
 class Understat(BaseRequestsReader):
-    """Provides pd.DataFrames from data at https://understat.com.
+    """Scraper for understat.com xG data (Big 5 leagues only).
 
-    Data will be downloaded as necessary and cached locally in
-    ``~/soccerdata/data/Understat``.
+    Fetches league standings, match schedules, player/team stats, shot events,
+    and advanced breakdowns (situation, formation, gameState, timing, etc.)
+    via Understat's AJAX API. Raw responses are cached locally for 30 days.
 
     Parameters
     ----------
-    proxy : 'tor' or or dict or list(dict) or callable, optional
-        Use a proxy to hide your IP address. Valid options are:
-            - "tor": Uses the Tor network. Tor should be running in
-              the background on port 9050.
-            - str: The address of the proxy server to use.
-            - list(str): A list of proxies to choose from. A different proxy will
-              be selected from this list after failed requests, allowing rotating
-              proxies.
-            - callable: A function that returns a valid proxy. This function will
-              be called after failed requests, allowing rotating proxies.
+    leagues : str or list of str, optional
+        League codes to scrape (e.g. "ESP-La Liga").
+    seasons : str, int, or iterable, optional
+        Seasons to scrape (e.g. "24-25" or 2024).
+    proxy : str, list of str, or callable, optional
+        Proxy configuration for requests.
     no_cache : bool
-        If True, will not use cached data.
+        If True, bypass cached data.
     no_store : bool
-        If True, will not store downloaded data.
+        If True, do not store downloaded data.
     data_dir : Path
-        Path to directory where data will be cached.
+        Directory for cached data.
     """
 
     def __init__(
@@ -94,24 +86,16 @@ class Understat(BaseRequestsReader):
         self.seasons = seasons  # type: ignore
 
     def read_leagues(self) -> pd.DataFrame:
-        """Retrieve the selected leagues from the datasource.
-
-        Returns
-        -------
-        pd.DataFrame
-        """
-        # Extract league data from Understat's main page JavaScript
+        """Retrieve available leagues as a DataFrame indexed by league name."""
         data = self._read_leagues()
 
         leagues = {}
 
-        # Parse statData JavaScript variable containing league information
         league_data = data["statData"]
         for league_stat in league_data:
             league_id = league_stat["league_id"]
             if league_id not in leagues:
                 league = league_stat["league"]
-                # Create URL-friendly slug from league name
                 league_slug = league.replace(" ", "_")
                 leagues[league_id] = {
                     "league_id": league_id,
@@ -135,24 +119,17 @@ class Understat(BaseRequestsReader):
         return df.loc[valid_leagues]
 
     def read_seasons(self) -> pd.DataFrame:
-        """Retrieve the selected seasons from the datasource.
-
-        Returns
-        -------
-        pd.DataFrame
-        """
-        # Extract available seasons from league data
+        """Retrieve available seasons for selected leagues."""
         data = self._read_leagues()
 
         seasons = {}
 
-        # Process statData to extract season information
         league_data = data["statData"]
         for league_stat in league_data:
             league_id = league_stat["league_id"]
             year = int(league_stat["year"])
             month = int(league_stat["month"])
-            # Determine season based on month (seasons start in July/August)
+            # Seasons start in July/August
             season_id = year if month >= 7 else year - 1
             key = (league_id, season_id)
             if key not in seasons:
@@ -186,21 +163,14 @@ class Understat(BaseRequestsReader):
     def read_schedule(
         self, include_matches_without_data: bool = True, force_cache: bool = False
     ) -> pd.DataFrame:
-        """Retrieve the matches for the selected leagues and seasons.
+        """Retrieve match schedule for selected leagues and seasons.
 
         Parameters
         ----------
         include_matches_without_data : bool
-            By default matches with and without data are returned.
-            If False, will only return matches with data.
-
+            If False, only return matches that have xG data.
         force_cache : bool
-             By default no cached data is used for the current season.
-             If True, will force the use of cached data anyway.
-
-        Returns
-        -------
-        pd.DataFrame
+            If True, use cached data even for the current season.
         """
         df_seasons = self.read_seasons()
 
@@ -216,11 +186,10 @@ class Understat(BaseRequestsReader):
 
             data = self._read_league_season(url, league_id, season_id, no_cache)
 
-            # Process match data from datesData JavaScript variable
             matches_data = data["datesData"]
             for match in matches_data:
                 match_id = _as_int(match["id"])
-                # Check if match has xG data (indicates processed match)
+                # xG != 0 means Understat has processed this match
                 has_home_xg = match["xG"]["h"] not in ("0", None)
                 has_away_xg = match["xG"]["a"] not in ("0", None)
                 has_data = has_home_xg or has_away_xg
@@ -273,17 +242,12 @@ class Understat(BaseRequestsReader):
         return df
 
     def read_team_match_stats(self, force_cache: bool = False) -> pd.DataFrame:
-        """Retrieve the team match stats for the selected leagues and seasons.
+        """Retrieve per-match team stats (xG, PPDA, deep completions, etc.).
 
         Parameters
         ----------
         force_cache : bool
-             By default no cached data is used for the current season.
-             If True, will force the use of cached data anyway.
-
-        Returns
-        -------
-        pd.DataFrame
+            If True, use cached data even for the current season.
         """
         df_seasons = self.read_seasons()
 
@@ -299,11 +263,9 @@ class Understat(BaseRequestsReader):
 
             data = self._read_league_season(url, league_id, season_id, no_cache)
 
-            # Build lookup structures for efficient data matching
-            schedule = {}  # Match metadata by match_id
-            matches = {}   # Match_id by (date, team_id)
+            schedule = {}  # match_id -> match metadata
+            matches = {}   # (date, team_id) -> match_id
 
-            # Process match schedule data
             matches_data = data["datesData"]
             for match in matches_data:
                 match_id = _as_int(match["id"])
@@ -322,16 +284,13 @@ class Understat(BaseRequestsReader):
                     "away_team_code": _as_str(match["a"]["short_title"]),
                     "home_team_code": _as_str(match["h"]["short_title"]),
                 }
-                # Create lookup by date and team for team history matching
                 for side in ("h", "a"):
                     team_id = _as_int(match[side]["id"])
                     matches[(match_date, team_id)] = match_id
 
-            # Process detailed team performance data
             teams_data = data["teamsData"]
             for team in teams_data.values():
                 team_id = _as_int(team["id"])
-                # Process each match in team's history
                 for match in team["history"]:
                     match_date = match["date"]
                     match_id = matches[(match_date, team_id)]
@@ -341,7 +300,7 @@ class Understat(BaseRequestsReader):
                     if match_id not in stats:
                         stats[match_id] = schedule[match_id]
 
-                    # Calculate PPDA (Passes per Defensive Action)
+                    # PPDA = Passes Allowed per Defensive Action
                     ppda = match["ppda"]
                     team_ppda = (ppda["att"] / ppda["def"]) if ppda["def"] != 0 else pd.NA
 
@@ -378,17 +337,12 @@ class Understat(BaseRequestsReader):
         )
 
     def read_player_season_stats(self, force_cache: bool = False) -> pd.DataFrame:
-        """Retrieve the player season stats for the selected leagues and seasons.
+        """Retrieve aggregated player stats per season (xG, xA, xGChain, etc.).
 
         Parameters
         ----------
         force_cache : bool
-             By default no cached data is used for the current season.
-             If True, will force the use of cached data anyway.
-
-        Returns
-        -------
-        pd.DataFrame
+            If True, use cached data even for the current season.
         """
         df_seasons = self.read_seasons()
 
@@ -410,11 +364,10 @@ class Understat(BaseRequestsReader):
                 team_id = _as_int(team["id"])
                 team_mapping[team_name] = team_id
 
-            # Process player season statistics
             players_data = data["playersData"]
             for player in players_data:
                 player_team_name = player["team_title"]
-                # Handle players who played for multiple teams in the season
+                # Multi-team players: take the first (most recent) team
                 if "," in player_team_name:
                     player_team_name = player_team_name.split(",")[0]
                 player_team_name = _as_str(player_team_name)
@@ -466,21 +419,17 @@ class Understat(BaseRequestsReader):
     def read_player_match_stats(
         self, match_id: Optional[Union[int, list[int]]] = None
     ) -> pd.DataFrame:
-        """Retrieve the player match stats for the selected leagues and seasons.
+        """Retrieve per-match player stats (xG, xA, xGChain, xGBuildup).
 
         Parameters
         ----------
         match_id : int or list of int, optional
-            Retrieve the player match stats for a specific match.
+            Filter to specific match(es). If None, all matches in selected seasons.
 
         Raises
         ------
         ValueError
-            If the given match_id could not be found in the selected seasons.
-
-        Returns
-        -------
-        pd.DataFrame
+            If match_id not found in selected seasons.
         """
         df_schedule = self.read_schedule(include_matches_without_data=False)
         df_results = self._select_matches(df_schedule, match_id)
@@ -552,21 +501,17 @@ class Understat(BaseRequestsReader):
         )
 
     def read_shot_events(self, match_id: Optional[Union[int, list[int]]] = None) -> pd.DataFrame:
-        """Retrieve the shot events for the selected matches or the selected leagues and seasons.
+        """Retrieve shot events with xG, coordinates, body part, situation, and result.
 
         Parameters
         ----------
         match_id : int or list of int, optional
-            Retrieve the shot events for a specific match.
+            Filter to specific match(es). If None, all matches in selected seasons.
 
         Raises
         ------
         ValueError
-            If the given match_id could not be found in the selected seasons.
-
-        Returns
-        -------
-        pd.DataFrame
+            If match_id not found in selected seasons.
         """
         df_schedule = self.read_schedule(include_matches_without_data=False)
         df_results = self._select_matches(df_schedule, match_id)
@@ -647,11 +592,139 @@ class Understat(BaseRequestsReader):
             .convert_dtypes()
         )
 
+    def read_team_advanced_stats(self, force_cache: bool = False) -> pd.DataFrame:
+        """Retrieve advanced team stats from getTeamData endpoint.
+
+        Fetches 7 stat categories (situation, formation, gameState, timing,
+        shotZone, attackSpeed, result) per team and flattens them into ~200 columns.
+
+        Parameters
+        ----------
+        force_cache : bool
+            If True, use cached data even for the current season.
+        """
+        df_seasons = self.read_seasons()
+        records = []
+
+        for (league, season), league_season in df_seasons.iterrows():
+            season_id = league_season["season_id"]
+            url = league_season["url"]
+
+            is_current_season = not self._is_complete(league, season)
+            no_cache = is_current_season and not force_cache
+
+            data = self._read_league_season(url, league_season["league_id"], season_id, no_cache)
+            teams_data = data["teamsData"]
+
+            for team in teams_data.values():
+                team_name = _as_str(team["title"])
+                team_id = _as_int(team["id"])
+                team_slug = team_name.replace(" ", "_")
+
+                endpoint = f"{UNDERSTAT_URL}/getTeamData/{team_slug}/{season_id}"
+                filepath = self.data_dir / f"team_{team_id}_{season_id}_advanced.json"
+
+                try:
+                    team_data = self._fetch_ajax(endpoint, filepath, no_cache)
+                except Exception as e:
+                    from ._config import logger
+                    logger.debug(f"Error fetching advanced stats for {team_name}: {e}")
+                    continue
+
+                record = {
+                    "league": league,
+                    "season": season,
+                    "team": team_name,
+                    "team_id": team_id,
+                }
+
+                # Flatten: {cat}_{for|against}_{sub_key}_{metric}
+                statistics = team_data.get("statistics", {})
+                stat_categories = ["situation", "formation", "gameState", "timing", "shotZone", "attackSpeed", "result"]
+                for cat in stat_categories:
+                    cat_data = statistics.get(cat)
+                    if not cat_data:
+                        continue
+                    for sub_key, sub_val in cat_data.items():
+                        if not isinstance(sub_val, dict):
+                            continue
+                        for metric in ("shots", "goals", "xG", "time"):
+                            if metric in sub_val:
+                                record[f"{cat}_for_{sub_key}_{metric}"] = _as_float(sub_val[metric])
+                        against = sub_val.get("against")
+                        if isinstance(against, dict):
+                            for metric, val in against.items():
+                                record[f"{cat}_against_{sub_key}_{metric}"] = _as_float(val)
+
+                dates = team_data.get("dates")
+                if dates:
+                    record["forecast_matches"] = len(dates)
+
+                records.append(record)
+
+        index = ["league", "season", "team"]
+        if not records:
+            return pd.DataFrame()
+
+        return (
+            pd.DataFrame.from_records(records)
+            .replace({"team": TEAMNAME_REPLACEMENTS})
+            .set_index(index)
+            .sort_index()
+            .convert_dtypes()
+        )
+
+    def read_player_career_shots(self, player_id: int) -> dict:
+        """Retrieve all career shots for a player via getPlayerData endpoint.
+
+        Parameters
+        ----------
+        player_id : int
+            Understat player ID (from read_player_season_stats).
+
+        Returns
+        -------
+        dict
+            'shots': DataFrame with xG, coords, result per shot.
+            'groups': Category breakdowns (situation, shotZone, etc.).
+        """
+        endpoint = f"{UNDERSTAT_URL}/getPlayerData/{player_id}"
+        filepath = self.data_dir / f"player_{player_id}_data.json"
+        data = self._fetch_ajax(endpoint, filepath)
+
+        shots_raw = data.get("shots", [])
+        shots = []
+        for shot in shots_raw:
+            is_home = shot.get("h_a") == "h"
+            shots.append({
+                "match_id": _as_int(shot.get("match_id")),
+                "season": _as_int(shot.get("season")),
+                "date": shot.get("date"),
+                "player_id": player_id,
+                "player": _as_str(shot.get("player")),
+                "team": _as_str(shot.get("h_team") if is_home else shot.get("a_team")),
+                "xg": _as_float(shot.get("xG")),
+                "location_x": _as_float(shot.get("X")),
+                "location_y": _as_float(shot.get("Y")),
+                "minute": _as_int(shot.get("minute")),
+                "body_part": SHOT_BODY_PARTS.get(shot.get("shotType"), shot.get("shotType")),
+                "situation": SHOT_SITUATIONS.get(shot.get("situation"), shot.get("situation")),
+                "result": SHOT_RESULTS.get(shot.get("result"), shot.get("result")),
+                "shot_id": _as_int(shot.get("id")),
+            })
+
+        shots_df = pd.DataFrame(shots) if shots else pd.DataFrame()
+
+        groups = data.get("groups", {})
+
+        return {"shots": shots_df, "groups": groups}
+
     def _select_matches(
         self,
         df_schedule: pd.DataFrame,
         match_id: Optional[Union[int, list[int]]] = None,
     ) -> pd.DataFrame:
+        """Filter schedule to specific match IDs, or return all if None."""
         if match_id is not None:
             match_ids = [match_id] if isinstance(match_id, int) else match_id
             df = df_schedule[df_schedule["game_id"].isin(match_ids)]
@@ -662,40 +735,87 @@ class Understat(BaseRequestsReader):
 
         return df
 
+    def _fetch_ajax(self, endpoint: str, filepath: Path, no_cache: bool = False) -> dict:
+        """Fetch JSON from Understat AJAX endpoint with 30-day file cache."""
+        is_cached = self._is_cached(filepath, max_age=30)
+        if not no_cache and not self.no_cache and is_cached:
+            with filepath.open("rb") as f:
+                return json.load(f)
+
+        import time as _time
+        import random as _random
+
+        headers = self._get_random_headers()
+        headers["X-Requested-With"] = "XMLHttpRequest"
+
+        response = self._session.get(endpoint, headers=headers)
+        _time.sleep(self.rate_limit + _random.random() * self.max_delay)
+        response.raise_for_status()
+        data = response.json()
+
+        if not self.no_store and filepath is not None:
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            with filepath.open("wb") as fh:
+                fh.write(json.dumps(data).encode("utf-8"))
+
+        return data
+
     def _read_leagues(self, no_cache: bool = False) -> dict:
-        url = UNDERSTAT_URL
+        """Fetch league metadata from getStatData endpoint."""
         filepath = self.data_dir / "leagues.json"
-        response = self.get(url, filepath, no_cache=no_cache, var="statData")
-        return json.load(response)
+        data = self._fetch_ajax(f"{UNDERSTAT_URL}/getStatData", filepath, no_cache)
+        return {"statData": data["stat"]}
 
     def _read_league_season(
         self, url: str, league_id: int, season_id: int, no_cache: bool = False
     ) -> dict:
+        """Fetch matches, players, and teams for a league-season."""
+        league_slug = url.split("/league/")[1].split("/")[0]
+        endpoint = f"{UNDERSTAT_URL}/getLeagueData/{league_slug}/{season_id}"
         filepath = self.data_dir / f"league_{league_id}_season_{season_id}.json"
-        response = self.get(
-            url,
-            filepath,
-            no_cache=no_cache,
-            var=["datesData", "playersData", "teamsData"],
-        )
-        return json.load(response)
+        data = self._fetch_ajax(endpoint, filepath, no_cache)
+        return {
+            "datesData": data["dates"],
+            "playersData": data["players"],
+            "teamsData": data["teams"],
+        }
 
     def _read_match(self, url: str, match_id: int) -> Optional[dict]:
+        """Fetch match data: info from HTML, rosters+shots from AJAX. Returns None on error."""
         try:
-            filepath = self.data_dir / f"match_{match_id}.json"
-            response = self.get(url, filepath, var=["match_info", "rostersData", "shotsData"])
-            data = json.load(response)
-        except ConnectionError:
-            data = None
+            filepath_html = self.data_dir / f"match_{match_id}_info.json"
+            response = self.get(url, filepath_html, var="match_info")
+            match_info_wrapper = json.load(response)
+            match_info = match_info_wrapper.get("match_info", match_info_wrapper)
 
-        return data
+            filepath_data = self.data_dir / f"match_{match_id}_data.json"
+            ajax_data = self._fetch_ajax(
+                f"{UNDERSTAT_URL}/getMatchData/{match_id}", filepath_data
+            )
+
+            # Remap rosters from {h/a: ...} to {team_id: ...} for compatibility
+            rosters_data = {}
+            for side in ("h", "a"):
+                team_id = str(match_info[side])
+                rosters_data[team_id] = ajax_data["rosters"].get(side, {})
+
+            shots_data = ajax_data["shots"]
+
+            return {
+                "match_info": match_info,
+                "rostersData": rosters_data,
+                "shotsData": shots_data,
+            }
+        except (ConnectionError, KeyError, json.JSONDecodeError) as e:
+            from ._config import logger
+            logger.debug(f"Error reading match {match_id}: {e}")
+            return None
 
 
-# Helper functions for safe type conversion from JavaScript data
-# These handle None values and invalid data gracefully
+# --- Safe type conversion helpers (handle None/invalid data) ---
 
 def _as_bool(value: Any) -> Optional[bool]:
-    """Safely convert value to boolean."""
+    """Convert to bool, returning None on failure."""
     try:
         return bool(value)
     except (TypeError, ValueError):
@@ -703,7 +823,7 @@ def _as_bool(value: Any) -> Optional[bool]:
 
 
 def _as_float(value: Any) -> Optional[float]:
-    """Safely convert value to float."""
+    """Convert to float, returning None on failure."""
     try:
         return float(value)
     except (TypeError, ValueError):
@@ -711,7 +831,7 @@ def _as_float(value: Any) -> Optional[float]:
 
 
 def _as_int(value: Any) -> Optional[int]:
-    """Safely convert value to integer."""
+    """Convert to int, returning None on failure."""
     try:
         return int(value)
     except (TypeError, ValueError):
@@ -719,7 +839,7 @@ def _as_int(value: Any) -> Optional[int]:
 
 
 def _as_str(value: Any) -> Optional[str]:
-    """Safely convert value to string and unescape HTML entities."""
+    """Convert to string and unescape HTML entities, returning None on failure."""
     try:
         return unescape(value)
     except (TypeError, ValueError):

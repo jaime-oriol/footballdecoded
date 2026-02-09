@@ -1,15 +1,13 @@
-"""A collection of tools to read and process soccer data from various sources."""
+"""Web scrapers for football data extraction (FotMob, Understat, WhoScored)."""
 
 __version__ = "1.8.7"
 
 __all__ = [
-    "FBref",
+    "FotMob",
     "Understat",
     "WhoScored",
-    "SofaScore",
 ]
 
-from .fbref import FBref
+from .fotmob import FotMob
 from .understat import Understat
 from .whoscored import WhoScored
-from .sofascore import SofaScore

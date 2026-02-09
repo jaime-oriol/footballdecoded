@@ -1,47 +1,7 @@
 """
-FootballDecoded Swarm Radar Visualization Module
-================================================
-
-Advanced radar chart system with integrated distribution context (swarm plots).
-Creates sophisticated player comparison visualizations combining radar charts
-with statistical distribution context.
-
-Key Features:
-- Dual visualization modes: Swarm Radar (with distribution context) and Traditional Radar
-- 10-metric radar system with dynamic metric reordering for visual balance
-- Integrated swarm plots showing metric distribution across dataset
-- Advanced color alternation system for single-player analysis
-- Comprehensive statistical context with percentile positioning
-- Professional sports analytics aesthetics with FootballDecoded branding
-
-Swarm Radar System:
-- Distribution Context: Swarm plots show where each metric value sits within dataset
-- Radar Integration: Individual floating axes for each metric with custom positioning
-- Color Psychology: Alternating ring colors for single-player depth analysis
-- Mathematical Precision: Polar coordinate system with precise angular positioning
-
-Traditional Radar System:
-- Clean geometric design with percentile-based scaling
-- Ring-based alternating colors for single-player analysis  
-- Solid color comparison for dual-player mode
-- Professional concentric circle grid system
-
-Technical Implementation:
-- PyPizza integration for professional radar visualization
-- Floating axes system for swarm plot integration
-- Affine transformations for precise metric positioning
-- Advanced color management with mathematical alternation patterns
-- Temporary file management for component integration
-
-Visual Design:
-- Unified FootballDecoded design language
-- Professional sports broadcast aesthetics
-- Mathematical precision in layout and positioning
-- Brand consistency with logo and typography integration
-
-Author: Jaime Oriol
-Created: 2025 - FootballDecoded Project
-Specialization: Advanced radar charts with statistical context
+Swarm radar and traditional radar charts for player comparison.
+10-metric system with distribution context (swarm plots) or
+clean geometric radar with ring-based alternating colors.
 """
 
 import pandas as pd
@@ -72,8 +32,7 @@ except ImportError:
     from mplsoccer import Radar
     USE_SOCCERPLOTS = False
 
-# Visual configuration consistent with FootballDecoded standards
-BACKGROUND_COLOR = '#313332'  # Professional dark theme across all modules
+BACKGROUND_COLOR = '#313332'
 
 def _detect_id_column(df_data):
     """Detect whether dataframe uses player or team IDs."""
@@ -100,76 +59,27 @@ def create_player_radar(df_data,
                        show_plot=True,
                        use_swarm=True,
                        team_logos=None):
-    """
-    Create advanced radar chart visualization with optional distribution context.
-    
-    Generates sophisticated radar charts with two distinct modes:
-    1. Swarm Radar: Integrates distribution context via swarm plots around radar
-    2. Traditional Radar: Clean geometric radar with advanced color systems
-    
-    Features:
-    - 10-metric radar system with mathematical precision
-    - Dynamic metric reordering for visual balance
-    - Single vs dual-player comparison modes
-    - Advanced color alternation for single-player depth
-    - Professional statistical visualization standards
-    - Integrated FootballDecoded branding system
-    
-    Args:
-        df_data: DataFrame with player statistics and dataset context
-        player_1_id: Primary player unique identifier
-        metrics: List of 10 statistical metric column names
-        metric_titles: List of 10 display titles for metrics
-        player_2_id: Optional secondary player for comparison
-        player_1_color: Primary player color (overridden by team_colors)
-        player_2_color: Secondary player color (overridden by team_colors)
-        team_colors: Optional team-based color scheme [primary, secondary] per player
-        radar_title: Visualization title (unused but kept for compatibility)
-        radar_description: Description text (unused but kept for compatibility)
-        negative_metrics: Legacy parameter (unused but kept for compatibility)
-        save_path: Output file path for saved visualization
-        show_plot: Whether to display the plot
-        use_swarm: True for Swarm Radar, False for Traditional Radar
-        team_logos: Team logo integration (unused but kept for compatibility)
-        
-    Returns:
-        None (saves visualization to specified path)
-        
-    Raises:
-        ValueError: If metrics count != 10 or metric_titles count != 10
-        
-    Note:
-        Requires exactly 10 metrics for proper radar geometry
-        Swarm mode requires seaborn for distribution visualization
-        Uses temporary files for component integration in swarm mode
-    """
-    
-    # Legacy parameter maintained for backward compatibility
+    """Create 10-metric radar chart (swarm or traditional). Requires exactly 10 metrics."""
     if negative_metrics is None:
         negative_metrics = []
 
-    # Inverse metrics: lower values = better performance
     if inverse_metrics is None:
         inverse_metrics = []
 
-    # Validate radar geometry requirements
     if len(metrics) != 10 or len(metric_titles) != 10:
         raise ValueError("Must provide exactly 10 metrics and 10 titles")
     
-    # Unified color system with team_colors taking priority
     if team_colors is None:
-        colors = [player_1_color, player_2_color]  # Fallback to individual colors
+        colors = [player_1_color, player_2_color]
     else:
-        colors = team_colors  # Use team-based color scheme
-    
-    # Detect ID column type and extract data from dataset
+        colors = team_colors
+
     id_column = _detect_id_column(df_data)
     player_1_data = df_data[df_data[id_column] == player_1_id].iloc[0]
     player_2_data = None
     if player_2_id:
         player_2_data = df_data[df_data[id_column] == player_2_id].iloc[0]
     
-    # Route to appropriate visualization mode
     if use_swarm:
         _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                            colors, save_path, show_plot, id_column, inverse_metrics)
@@ -179,30 +89,7 @@ def create_player_radar(df_data,
 
 def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                        colors, save_path, show_plot, id_column, inverse_metrics=None):
-    """
-    Create advanced swarm radar with integrated distribution context.
-    
-    Combines traditional radar visualization with swarm plots showing
-    statistical distribution context for each metric. Uses sophisticated
-    floating axes system for precise positioning.
-    
-    Technical Implementation:
-    - Individual swarm plots for each metric positioned around radar
-    - Floating axes with affine transformations for precise positioning
-    - Dynamic metric reordering (first metric + reversed remainder)
-    - Integrated PyPizza radar with swarm distribution context
-    - Temporary file management for component integration
-    
-    Args:
-        df_data: Complete dataset for distribution context
-        player_1_data: Primary player statistics
-        player_2_data: Optional secondary player statistics
-        metrics: List of metric column names
-        metric_titles: List of display titles
-        colors: Color scheme for players
-        save_path: Output file path
-        show_plot: Display flag
-    """
+    """Build radar with swarm plots showing dataset distribution around each metric."""
     
     comparison_df = df_data[[id_column] + metrics].copy()
     
@@ -223,12 +110,10 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     x_base, y_base = 0.325 + np.array(r_base) * np.cos(theta_mid), 0.3 + 0.89 * np.array(r_base) * np.sin(theta_mid)
     
-    # MANTENER LA ALTURA ORIGINAL para que esté alineado con la tabla
+    # Height must match stats_table for side-by-side alignment
     fig = plt.figure(constrained_layout=False, figsize=(9, 11), facecolor=BACKGROUND_COLOR)
     
     theta = np.linspace(0, 2*np.pi, 100)
-    # RADAR BASE: Central polar axis for background circles and radial lines
-    # Position maintained for alignment with swarm distribution plots
     radar_ax = fig.add_axes([0.025, 0, 0.95, 0.95], polar=True)
     radar_ax.plot(theta, theta*0 + 0.17, color='w', lw=1.2)
     for r in [0.3425, 0.5150, 0.6875, 0.86]:
@@ -254,10 +139,10 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         ax_save.spines['left'].set_color(None)
         ax_save.set_xlabel("")
         ax_save.tick_params(left=False, bottom=True, axis='both', which='major', 
-                           labelsize=8, zorder=10, pad=0, colors='w')  # Reducido de 9 a 8
+                           labelsize=8, zorder=10, pad=0, colors='w')
         
         rotation = 180 if theta_mid[idx] >= np.pi/2 and theta_mid[idx] <= 3*np.pi/2 else 0
-        plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation, family='DejaVu Sans')  # Añadido family='DejaVu Sans'
+        plt.xticks(path_effects=path_eff, fontweight='bold', rotation=rotation, family='DejaVu Sans')
         
         ax_mins.append(ax_save.get_xlim()[0])
         ax_maxs.append(ax_save.get_xlim()[1])
@@ -288,7 +173,7 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
         text_rotation_delta = 90 if theta_mid[idx] >= np.pi else -90
         radar_ax.text(theta_mid[idx], 0.92, metric_titles[idx], 
                      ha="center", va="center", fontweight="bold", 
-                     fontsize=10, color='w', family='DejaVu Sans',  # Añadido family='DejaVu Sans'
+                     fontsize=10, color='w', family='DejaVu Sans',
                      rotation=text_rotation_delta + (180/np.pi) * theta_mid[idx])
         
         plt.close(fig_save)
@@ -297,8 +182,6 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_ax.set_rmax(1)
     
-    # PIZZA RADAR: PyPizza integration axis for statistical radar overlay
-    # Positioned to align with swarm plots and maintain visual balance
     pizza_ax = fig.add_axes([0.09, 0.065, 0.82, 0.82], polar=True)
     pizza_ax.set_theta_offset(17)
     pizza_ax.axis('off')
@@ -333,14 +216,12 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
     
     radar_object.make_pizza(**kwargs)
     
-    # Footer removed
-    
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=BACKGROUND_COLOR)
     if show_plot:
         plt.show()
     else:
         plt.close()
-    
+
     for i in range(10):
         temp_file = f'temp_{i}.png'
         if os.path.exists(temp_file):
@@ -348,44 +229,13 @@ def _create_swarm_radar(df_data, player_1_data, player_2_data, metrics, metric_t
 
 def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, metric_titles,
                              colors, save_path, show_plot, id_column, inverse_metrics=None):
-    """
-    Create traditional geometric radar chart with advanced color systems.
+    """Build geometric radar with percentile ranges. Ring-alternating colors for 1 player, solid for 2."""
     
-    Generates clean geometric radar visualization with sophisticated
-    color management for single vs dual-player scenarios.
-    
-    Single Player Mode:
-    - Ring-based alternating color pattern for visual depth
-    - Mathematical color alternation starting with secondary color
-    - Comprehensive value labeling on concentric circles
-    
-    Dual Player Mode:
-    - Solid color overlay system for clear comparison
-    - Clean geometric polygons with team-based colors
-    - Professional sports analytics presentation
-    
-    Technical Implementation:
-    - Percentile-based range calculation (1st-99th percentile)
-    - 8 concentric circles with mathematical spacing
-    - Precise angular positioning for 10-metric system
-    - Advanced polygon clipping for ring-based coloring
-    
-    Args:
-        df_data: Complete dataset for range calculation
-        player_1_data: Primary player statistics
-        player_2_data: Optional secondary player statistics
-        metrics: List of metric column names
-        metric_titles: List of display titles
-        colors: Color scheme for players
-        save_path: Output file path
-        show_plot: Display flag
-    """
-    
-    # Usar la misma lógica de ordenamiento que el swarm radar
+    # Same metric ordering as swarm radar
     reordered_metrics = [metrics[0]] + list(reversed(metrics[1:]))
     reordered_titles = [metric_titles[0]] + list(reversed(metric_titles[1:]))
     
-    # Calcular percentiles para ranges
+    # Percentile-based ranges (1st-99th)
     ranges = []
     for metric in reordered_metrics:
         metric_data = df_data[metric].dropna()
@@ -393,54 +243,50 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         max_val = np.percentile(metric_data, 99)
         ranges.append((min_val, max_val))
     
-    # Configuración visual - más pequeño
     fig, ax = plt.subplots(figsize=(9, 10), facecolor=BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
     ax.set_aspect('equal')
-    ax.set(xlim=(-22, 22), ylim=(-23, 25))  # Más pequeño
-    
-    # Valores del jugador
+    ax.set(xlim=(-22, 22), ylim=(-23, 25))
+
     player_1_values = [player_1_data[m] for m in reordered_metrics]
     player_2_values = [player_2_data[m] for m in reordered_metrics] if player_2_data is not None else None
     
-    # 8 círculos concéntricos (más pequeños)
+    # Concentric circles
     radius_circles = [3, 5.5, 8, 10.5, 13, 15.5, 18, 20.5]
     for i, rad in enumerate(radius_circles):
-        if i == 0:  # Círculo interior
+        if i == 0:
             continue
-        elif i == len(radius_circles)-1:  # Círculo exterior
+        elif i == len(radius_circles)-1:
             color, lw, alpha = 'white', 1.2, 1.0
-        else:  # Círculos intermedios
+        else:
             color, lw, alpha = 'grey', 1, 0.4
             
         circle = plt.Circle(xy=(0, 0), radius=rad, fc='none', ec=color, lw=lw, alpha=alpha)
         ax.add_patch(circle)
     
-    # Coordenadas para labels
     n_params = len(reordered_metrics)
     angles = np.linspace(0, 2*np.pi, n_params, endpoint=False)
-    
-    # Labels de métricas (más cerca)
+
+    # Metric labels
     label_radius = 21.5
     for i, (angle, title) in enumerate(zip(angles, reordered_titles)):
         x = label_radius * np.sin(angle)
         y = label_radius * np.cos(angle)
         
-        # Rotación del texto
         rot_deg = -np.rad2deg(angle)
         if y < 0:
             rot_deg += 180
             
         ax.text(x, y, title, rotation=rot_deg, ha='center', va='center',
-                fontsize=10, fontweight='bold', color='white', family='DejaVu Sans')  # Añadido family='DejaVu Sans'
+                fontsize=10, fontweight='bold', color='white', family='DejaVu Sans')
     
-    # Líneas radiales (más cortas)
+    # Radial lines
     for angle in angles:
         x_end = 20.5 * np.sin(angle)
         y_end = 20.5 * np.cos(angle)
         ax.plot([0, x_end], [0, y_end], color='grey', linewidth=0.5, alpha=0.4)
     
-    # 7 valores en círculos - CORREGIDO PARA USAR MISMOS RANGES QUE EL POLÍGONO
+    # Value labels on concentric circles
     range_radius = [4.25, 6.75, 9.25, 11.75, 14.25, 16.75, 19.25]
 
     if inverse_metrics is None:
@@ -450,26 +296,21 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         for i, (angle, metric) in enumerate(zip(angles, reordered_metrics)):
             min_val, max_val = ranges[i]
 
-            # Calcular valor usando divisiones lineales del rango del polígono
             range_total = max_val - min_val
             if range_total == 0:
                 val = min_val
             else:
-                # Convertir radio a posición en el rango [0, 1]
-                rad_normalized = (rad - 3) / (20.5 - 3)  # 3 es radio mínimo, 20.5 máximo
+                rad_normalized = (rad - 3) / (20.5 - 3)
 
-                # INVERTIR si la métrica está en la lista de inversas
                 if metric in inverse_metrics:
-                    # Para métricas inversas: centro=max, extremo=min
+                    # Inverse: center=max, edge=min
                     val = max_val - rad_normalized * range_total
                 else:
-                    # Normal: centro=min, extremo=max
                     val = min_val + rad_normalized * range_total
 
             x = rad * np.sin(angle)
             y = rad * np.cos(angle)
 
-            # Formatear valor
             if val < 0.01:
                 label = f'{val:.3f}'
             elif val < 1:
@@ -479,12 +320,12 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
             else:
                 label = f'{int(val)}'
 
-            ax.text(x, y, label, ha='center', va='center', size=7, color='white',  # Reducido de 8 a 7
+            ax.text(x, y, label, ha='center', va='center', size=7, color='white',
                    bbox=dict(boxstyle='round,pad=0.15', facecolor=BACKGROUND_COLOR,
-                           edgecolor='none', alpha=0.9), family='DejaVu Sans')  # Añadido family='DejaVu Sans'
+                           edgecolor='none', alpha=0.9), family='DejaVu Sans')
     
-    # Función para convertir valor a coordenada (rango más pequeño)
     def get_radar_coordinates(values, ranges, inverse_metrics_list=None):
+        """Convert metric values to polar coordinates within the radar radius."""
         if inverse_metrics_list is None:
             inverse_metrics_list = []
 
@@ -492,19 +333,14 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         for i, (value, (min_val, max_val)) in enumerate(zip(values, ranges)):
             metric_name = reordered_metrics[i]
 
-            # Normalizar valor al rango 3-20.5
             if max_val == min_val:
-                norm_value = 11.75  # Punto medio
+                norm_value = 11.75
             else:
-                # INVERTIR si la métrica está en la lista de inversas
                 if metric_name in inverse_metrics_list:
-                    # Invertir: valor bajo (bueno) -> radar alto (extremo)
                     norm_value = 3 + (max_val - value) / (max_val - min_val) * 17.5
                 else:
-                    # Normal: valor alto -> radar alto
                     norm_value = 3 + (value - min_val) / (max_val - min_val) * 17.5
 
-            # Limitar al rango de círculos
             norm_value = max(3, min(20.5, norm_value))
 
             angle = angles[i]
@@ -514,76 +350,62 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
 
         return vertices
     
-    # Polígono jugador 1
+    # Player 1 polygon
     vertices_1 = get_radar_coordinates(player_1_values, ranges, inverse_metrics)
     
     if player_2_data is None:
-        # Solo un jugador - alternar colores por ANILLOS dentro del polígono
-        # EMPEZAR CON colors[1] en el centro
-        
-        # Primero crear el polígono base del jugador
+        # Single player: alternating ring colors inside polygon
         polygon_1 = Polygon(vertices_1, fc='none', alpha=1.0, zorder=1)
         ax.add_patch(polygon_1)
         
-        # RELLENAR EL CÍRCULO CENTRAL
         central_circle = plt.Circle(xy=(0, 0), radius=radius_circles[0], 
                                 fc=colors[0], ec='none', alpha=0.45, zorder=2)
         central_circle.set_clip_path(polygon_1)
         ax.add_patch(central_circle)
         
-        # Crear anillos alternados SOLO dentro del polígono del jugador
         theta = np.linspace(0, 2*np.pi, 100)
         
         for i in range(len(radius_circles)-1):
             inner_radius = radius_circles[i]
             outer_radius = radius_circles[i+1]
             
-            # Alternar colores por anillo - EMPEZAR CON colors[1]
-            color_idx = (i + 1) % 2  # Cambiado para empezar con colors[1]
-            
-            # Crear anillo como diferencia entre dos círculos
+            color_idx = (i + 1) % 2  # Start with colors[1]
             x_outer = outer_radius * np.cos(theta)
             y_outer = outer_radius * np.sin(theta)
             x_inner = inner_radius * np.cos(theta)
             y_inner = inner_radius * np.sin(theta)
             
-            # Crear el anillo
             ring_vertices = list(zip(x_outer, y_outer)) + list(zip(x_inner[::-1], y_inner[::-1]))
             ring_polygon = Polygon(ring_vertices, fc=colors[color_idx], alpha=0.45, zorder=2)
             
-            # Limitar el anillo al área del polígono del jugador
             ring_polygon.set_clip_path(polygon_1)
             ax.add_patch(ring_polygon)
         
-        # Contorno del jugador encima
+        # Player outline
         vertices_1_closed = vertices_1 + [vertices_1[0]]
         x_coords_1 = [v[0] for v in vertices_1_closed]
         y_coords_1 = [v[1] for v in vertices_1_closed]
         ax.plot(x_coords_1, y_coords_1, color=colors[0], linewidth=3, zorder=10)
         
     else:
-        # Dos jugadores - colores sólidos
+        # Two players: solid color polygons
         polygon_1 = Polygon(vertices_1, fc=colors[0], alpha=0.35, zorder=2)
         ax.add_patch(polygon_1)
         
-        # Contorno jugador 1
         vertices_1_closed = vertices_1 + [vertices_1[0]]
         x_coords_1 = [v[0] for v in vertices_1_closed]
         y_coords_1 = [v[1] for v in vertices_1_closed]
         ax.plot(x_coords_1, y_coords_1, color=colors[0], linewidth=3, zorder=3)
         
-        # Polígono jugador 2
+        # Player 2
         vertices_2 = get_radar_coordinates(player_2_values, ranges, inverse_metrics)
         polygon_2 = Polygon(vertices_2, fc=colors[1], alpha=0.35, zorder=2)
         ax.add_patch(polygon_2)
         
-        # Contorno jugador 2
         vertices_2_closed = vertices_2 + [vertices_2[0]]
         x_coords_2 = [v[0] for v in vertices_2_closed]
         y_coords_2 = [v[1] for v in vertices_2_closed]
         ax.plot(x_coords_2, y_coords_2, color=colors[1], linewidth=3, zorder=3)
-    
-    # Footer removed
     
     ax.axis('off')
     

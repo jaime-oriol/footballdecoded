@@ -1,11 +1,12 @@
 -- ====================================================================
--- FootballDecoded Database Schema - EXTRAS Tables (Portuguese Liga, etc)
+-- FootballDecoded v1 EXTRAS Tables
 -- ====================================================================
--- IMPORTANTE: Este script SOLO crea tablas nuevas, NO modifica las existentes
--- Preserva todos los datos en players_domestic, teams_domestic, players_european, teams_european
+-- Additive-only: creates players_extras + teams_extras for 7 extra leagues
+-- (POR, NED, BEL, TUR, SCO, SUI, USA). Does NOT touch v1 domestic/european tables.
+-- Same schema as players_domestic/teams_domestic (FBref + Understat JSONB).
 
 -- ====================================================================
--- NUEVAS TABLAS EXTRAS - Para ligas adicionales (Portugal, Holanda, etc)
+-- TABLES
 -- ====================================================================
 
 CREATE TABLE IF NOT EXISTS footballdecoded.players_extras (
@@ -53,7 +54,7 @@ CREATE TABLE IF NOT EXISTS footballdecoded.teams_extras (
 );
 
 -- ====================================================================
--- INDICES PARA TABLAS EXTRAS
+-- INDEXES (mirrors domestic table index strategy)
 -- ====================================================================
 
 -- Unique indexes for data integrity
@@ -129,7 +130,7 @@ CREATE INDEX IF NOT EXISTS idx_teams_extras_understat_metrics
     WHERE understat_metrics IS NOT NULL;
 
 -- ====================================================================
--- TRIGGERS PARA TABLAS EXTRAS
+-- TRIGGERS: auto-update updated_at (reuses function from setup.sql)
 -- ====================================================================
 
 DROP TRIGGER IF EXISTS update_players_extras_timestamp ON footballdecoded.players_extras;
@@ -143,7 +144,7 @@ CREATE TRIGGER update_teams_extras_timestamp
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_timestamp();
 
 -- ====================================================================
--- CONSTRAINTS PARA TABLAS EXTRAS
+-- CONSTRAINTS: unique IDs must be exactly 16 chars
 -- ====================================================================
 
 ALTER TABLE footballdecoded.players_extras 

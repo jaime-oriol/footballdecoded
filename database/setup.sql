@@ -1,9 +1,12 @@
 -- ====================================================================
--- FootballDecoded Database Schema - Sistema de IDs Únicos
+-- FootballDecoded v1 Database Schema
 -- ====================================================================
-
--- Note: PostGIS and btree_gist extensions removed for compatibility
--- These can be added later by a superuser if needed for spatial operations
+-- 4 tables: players/teams split by domestic (Big 5) vs european (UCL, etc).
+-- Players get FBref + Understat metrics as JSONB; teams same but no Transfermarkt.
+-- Unique IDs: SHA256(name+birth_year+nationality)[:16] for players,
+--             SHA256(team_name+league)[:16] for teams.
+-- Idempotent: safe to re-run (IF NOT EXISTS / DROP IF EXISTS everywhere).
+-- ====================================================================
 
 CREATE SCHEMA IF NOT EXISTS footballdecoded;
 
@@ -11,6 +14,7 @@ CREATE SCHEMA IF NOT EXISTS footballdecoded;
 -- TABLES
 -- ====================================================================
 
+-- Big 5 domestic leagues: ENG, ESP, ITA, GER, FRA
 CREATE TABLE IF NOT EXISTS footballdecoded.players_domestic (
     id SERIAL PRIMARY KEY,
     unique_player_id VARCHAR(16),
@@ -37,6 +41,7 @@ CREATE TABLE IF NOT EXISTS footballdecoded.players_domestic (
     processed_at TIMESTAMP DEFAULT NOW()
 );
 
+-- International competitions: UCL, World Cup, Euros (FBref only, no Understat)
 CREATE TABLE IF NOT EXISTS footballdecoded.players_european (
     id SERIAL PRIMARY KEY,
     unique_player_id VARCHAR(16),
@@ -96,7 +101,7 @@ CREATE TABLE IF NOT EXISTS footballdecoded.teams_european (
 );
 
 -- ====================================================================
--- ADD MISSING COLUMNS
+-- ADD MISSING COLUMNS (backward compat for DBs created before unique IDs)
 -- ====================================================================
 
 ALTER TABLE footballdecoded.players_domestic ADD COLUMN IF NOT EXISTS unique_player_id VARCHAR(16);
@@ -108,8 +113,9 @@ ALTER TABLE footballdecoded.teams_european ADD COLUMN IF NOT EXISTS unique_team_
 -- OPTIMIZED INDEXES
 -- ====================================================================
 
--- Unique indexes for data integrity
-CREATE UNIQUE INDEX IF NOT EXISTS idx_players_domestic_unique 
+-- Unique indexes: prevent duplicate rows for same player+league+season+team.
+-- Partial index (WHERE NOT NULL) allows rows without IDs during migration.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_players_domestic_unique
     ON footballdecoded.players_domestic(unique_player_id, league, season, team)
     WHERE unique_player_id IS NOT NULL;
 
@@ -209,9 +215,9 @@ CREATE INDEX IF NOT EXISTS idx_teams_domestic_timestamps
 CREATE INDEX IF NOT EXISTS idx_teams_european_timestamps 
     ON footballdecoded.teams_european(created_at, updated_at, processed_at);
 
--- JSONB indexes for metrics queries
-CREATE INDEX IF NOT EXISTS idx_players_domestic_fbref_metrics 
-    ON footballdecoded.players_domestic USING GIN (fbref_metrics) 
+-- GIN indexes for JSONB containment queries (@> operator)
+CREATE INDEX IF NOT EXISTS idx_players_domestic_fbref_metrics
+    ON footballdecoded.players_domestic USING GIN (fbref_metrics)
     WHERE fbref_metrics IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_players_domestic_understat_metrics 
@@ -235,7 +241,7 @@ CREATE INDEX IF NOT EXISTS idx_teams_european_fbref_metrics
     WHERE fbref_metrics IS NOT NULL;
 
 -- ====================================================================
--- TRIGGERS - SIMPLE VERSION
+-- TRIGGERS: auto-set updated_at on every UPDATE
 -- ====================================================================
 
 CREATE OR REPLACE FUNCTION footballdecoded.update_timestamp()
@@ -267,11 +273,11 @@ CREATE TRIGGER update_teams_european_timestamp
     FOR EACH ROW EXECUTE FUNCTION footballdecoded.update_timestamp();
 
 -- ====================================================================
--- CONSTRAINTS VALIDATION - Compatible with all PostgreSQL versions
+-- CONSTRAINTS: ensure unique IDs are exactly 16-char hex strings
 -- ====================================================================
 
--- Drop existing constraints if they exist (to handle re-runs)
-DO $$ 
+-- Drop-then-add pattern makes this script idempotent on re-runs
+DO $$
 BEGIN
     -- Drop constraints if they exist
     BEGIN

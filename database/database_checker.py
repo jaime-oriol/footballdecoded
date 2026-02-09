@@ -1,24 +1,18 @@
-# ====================================================================
-# FootballDecoded Database Status Checker
-# ====================================================================
-#
-# Sistema completo de monitoreo y diagnóstico para PostgreSQL:
-# - Status detallado de tablas con conteos y estadísticas
-# - Detección automática de problemas de datos
-# - Health scoring de 0-100 para evaluar estado general
-# - Cleanup automático de datos corruptos y duplicados
-# - Análisis de integridad de IDs únicos y transferencias
-# - Múltiples modos de ejecución vía CLI
-#
-# Uso:
-#   python database_checker.py                 # Status completo
-#   python database_checker.py --quick         # Status rápido
-#   python database_checker.py --problems      # Solo detección de problemas
-#   python database_checker.py --health        # Solo health score
-#   python database_checker.py --cleanup       # Limpiar datos automáticamente
-#   python database_checker.py --full          # Análisis completo
-#
-# ====================================================================
+"""Database monitoring and diagnostics for FootballDecoded PostgreSQL.
+
+Provides table status, problem detection, health scoring (0-100),
+auto-cleanup, unique ID integrity checks, and transfer analysis.
+
+CLI usage:
+    python database_checker.py                 # Full status
+    python database_checker.py --quick         # Quick status
+    python database_checker.py --integrity     # Unique ID integrity check
+    python database_checker.py --transfers     # Transfer analysis
+    python database_checker.py --problems      # Detect data problems
+    python database_checker.py --health        # Health score (0-100)
+    python database_checker.py --cleanup       # Auto-clean corrupt data
+    python database_checker.py --full          # Complete analysis
+"""
 
 import sys
 import os
@@ -30,51 +24,33 @@ from sqlalchemy import text
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database.connection import get_db_manager
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# ====================================================================
-# CONSISTENT VISUAL FORMATTING
-# ====================================================================
 
 LINE_WIDTH = 80
 
 def print_header(title: str):
-    """Consistent header formatting matching data_loader."""
+    """Print title with double-line separator."""
     print(title)
-    print("═" * LINE_WIDTH)
+    print("=" * LINE_WIDTH)
 
 def print_section(title: str):
-    """Consistent section formatting."""
+    """Print title with single-line separator."""
     print(title)
-    print("─" * LINE_WIDTH)
+    print("-" * LINE_WIDTH)
 
 def print_footer():
-    """Consistent footer formatting."""
-    print("═" * LINE_WIDTH)
-
-# ====================================================================
-# PROBLEM DETECTION AND HEALTH SCORING
-# ====================================================================
+    """Print double-line closing separator."""
+    print("=" * LINE_WIDTH)
 
 def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
-    """
-    Detectar problemas específicos en los datos con sugerencias de reparación.
-    
-    Analiza todas las tablas en busca de:
-    - Problemas críticos: duplicados, IDs corruptos, datos faltantes críticos
-    - Advertencias: calidad baja, problemas menores de formato
-    - Info: estadísticas y observaciones generales
-    
-    Args:
-        verbose: Si mostrar output detallado durante el análisis
-        
-    Returns:
-        Dict con problemas categorizados por severidad ('critical', 'warning', 'info')
+    """Scan all tables for data problems, grouped by severity.
+
+    Returns dict with 'critical' (duplicates, corrupt IDs), 'warning'
+    (out-of-range values), and 'info' (empty metrics) lists.
     """
     if verbose:
-        print_header("🔍 Detección de Problemas en Datos")
+        print_header("Data Problem Detection")
     
     db = get_db_manager()
     problems = {
@@ -84,7 +60,7 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
     }
     
     try:
-        # 1. Detectar IDs duplicados dentro de la misma liga/temporada/equipo
+        # Duplicate records within same league/season/team
         if verbose:
             print_section("CRITICAL ISSUES:")
         
@@ -131,7 +107,6 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
             try:
                 duplicates = pd.read_sql(query, db.engine)
             except Exception:
-                # Table doesn't exist, skip
                 continue
             if not duplicates.empty:
                 problem = {
@@ -145,7 +120,7 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
                 if verbose:
                     print(f"├─ CRITICAL: {problem['description']} in {table_name}")
         
-        # 2. Detectar valores fuera de rango
+        # Out-of-range age and birth_year values
         if verbose:
             print_section("WARNING ISSUES:")
         
@@ -163,7 +138,6 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
                 result = pd.read_sql(query, db.engine)
                 invalid_count = result.iloc[0]['count']
             except Exception:
-                # Table doesn't exist, skip
                 continue
             if invalid_count > 0:
                 table_name, field = check_name.rsplit('_', 1)
@@ -178,7 +152,7 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
                 if verbose:
                     print(f"├─ WARNING: {problem['description']} in {table_name}")
         
-        # 3. Detectar registros sin métricas
+        # Records with empty FBref metrics
         if verbose:
             print_section("INFO ISSUES:")
         
@@ -196,7 +170,6 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
                 result = pd.read_sql(query, db.engine)
                 empty_count = result.iloc[0]['count']
             except Exception:
-                # Table doesn't exist, skip
                 continue
             if empty_count > 0:
                 problem = {
@@ -231,30 +204,20 @@ def detect_data_problems(verbose: bool = True) -> Dict[str, List[Dict]]:
         return problems
 
 def calculate_health_score(verbose: bool = True) -> int:
-    """
-    Calcular puntuación de salud de la base de datos (0-100).
-    
-    El score se calcula empezando desde 100 y deduciendo puntos por:
-    - Problemas críticos: -10 puntos cada uno (máximo -50)
-    - Problemas warning: -5 puntos cada uno (máximo -30)  
-    - Problemas info: -2 puntos cada uno (máximo -20)
-    - Calidad de datos baja: hasta -20 puntos adicionales
-    
-    Args:
-        verbose: Si mostrar detalles del cálculo
-        
-    Returns:
-        int: Score de 0-100 (100 = perfecto, 0 = crítico)
+    """Calculate database health score (0-100).
+
+    Starts at 100 and deducts: critical -10 (max -50), warning -5
+    (max -30), info -2 (max -20), low quality up to -20. Bonus +5
+    for datasets over 10k records.
     """
     if verbose:
-        print_header("💚 Health Score de Base de Datos")
+        print_header("Database Health Score")
     
     db = get_db_manager()
     score = 100
     deductions = []
     
     try:
-        # Obtener estadísticas básicas
         tables = ['players_domestic', 'players_european', 'players_extras',
                   'teams_domestic', 'teams_european', 'teams_extras']
         total_records = 0
@@ -271,33 +234,28 @@ def calculate_health_score(verbose: bool = True) -> int:
                 print("└─ Database is empty")
             return 0
         
-        # Detectar problemas y calcular puntuaciones
         problems = detect_data_problems(verbose=False)
-        
-        # Deducciones por problemas críticos
+
         if problems['critical']:
             critical_deduction = min(50, len(problems['critical']) * 10)
             score -= critical_deduction
             deductions.append(f"Critical issues: -{critical_deduction} points")
         
-        # Deducciones por warnings
         if problems['warning']:
             warning_deduction = min(30, len(problems['warning']) * 5)
             score -= warning_deduction
             deductions.append(f"Warning issues: -{warning_deduction} points")
         
-        # Deducciones por problemas informativos
         if problems['info']:
             info_deduction = min(20, len(problems['info']) * 2)
             score -= info_deduction
             deductions.append(f"Info issues: -{info_deduction} points")
         
-        # Bonificación por volumen de datos
         if total_records > 10000:
-            score += 5  # Bonus for large dataset
+            score += 5
             deductions.append(f"Large dataset bonus: +5 points")
         
-        # Verificar calidad promedio de datos
+        # Penalize if avg data_quality_score across all tables is below 0.7
         try:
             avg_quality_query = """
                 SELECT AVG(data_quality_score) as avg_score
@@ -331,7 +289,6 @@ def calculate_health_score(verbose: bool = True) -> int:
         except:
             pass
         
-        # Asegurar que el score esté entre 0 y 100
         score = max(0, min(100, score))
         
         if verbose:
@@ -343,16 +300,16 @@ def calculate_health_score(verbose: bool = True) -> int:
             print_section("FINAL SCORE:")
             if score >= 90:
                 status = "EXCELLENT"
-                color = "\033[92m"  # Green
+                color = "\033[92m"
             elif score >= 70:
                 status = "GOOD"
-                color = "\033[93m"  # Yellow
+                color = "\033[93m"
             elif score >= 50:
                 status = "NEEDS ATTENTION"
-                color = "\033[91m"  # Red
+                color = "\033[91m"
             else:
                 status = "CRITICAL"
-                color = "\033[91m"  # Red
+                color = "\033[91m"
             
             reset_color = '\033[0m'
             print(f"├─ Health Score: {color}{score}/100{reset_color}")
@@ -368,7 +325,10 @@ def calculate_health_score(verbose: bool = True) -> int:
         return 0
 
 def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[str, int]:
-    """Limpiar automáticamente problemas detectados en la base de datos."""
+    """Auto-fix detected problems: duplicates, invalid values, empty records.
+
+    Returns counts of cleaned records by category. Use dry_run=False to apply.
+    """
     if verbose:
         mode_text = "DRY RUN" if dry_run else "LIVE RUN"
         print_header(f"Database Auto Cleanup - {mode_text}")
@@ -381,7 +341,6 @@ def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[st
     }
     
     try:
-        # Detectar problemas primero
         problems = detect_data_problems(verbose=False)
         
         if verbose:
@@ -396,7 +355,6 @@ def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[st
                 print("├─ Running in DRY RUN mode - no changes will be made")
                 print("├─ Run with dry_run=False to apply fixes")
         
-        # 1. Limpiar duplicados críticos
         for problem in problems['critical']:
             if problem['issue'] == 'Duplicate records':
                 if verbose:
@@ -405,7 +363,7 @@ def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[st
                 if not dry_run:
                     try:
                         with db.engine.begin() as conn:
-                            # Query más segura para limpiar duplicados
+                            # Keep only the row with lowest id per unique key
                             if 'player' in problem['table']:
                                 league_field = 'competition' if 'european' in problem['table'] else 'league'
                                 query = f"""
@@ -431,7 +389,6 @@ def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[st
                     except Exception as e:
                         logger.error(f"Error cleaning duplicates in {problem['table']}: {e}")
         
-        # 2. Limpiar valores fuera de rango
         for problem in problems['warning']:
             if 'Invalid' in problem['issue']:
                 if verbose:
@@ -451,7 +408,6 @@ def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[st
                     except Exception as e:
                         logger.error(f"Error cleaning invalid values in {problem['table']}: {e}")
         
-        # 3. Limpiar registros vacíos
         for problem in problems['info']:
             if problem['issue'] == 'Empty metrics':
                 if verbose:
@@ -498,12 +454,11 @@ def auto_cleanup_database(dry_run: bool = True, verbose: bool = True) -> Dict[st
         db.close()
         return cleanup_stats
 
-# ====================================================================
-# DATABASE STATUS FUNCTIONS
-# ====================================================================
-
 def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
-    """Check available data in database with unique ID reporting."""
+    """Full database status: per-table counts, transfers, and quality summary.
+
+    Returns dict mapping table names to DataFrames with aggregate stats.
+    """
     if verbose:
         print_header("FootballDecoded Database Status - Unique ID System")
     
@@ -511,7 +466,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
     results = {}
     
     try:
-        # Domestic players query with unique IDs
         query_players_domestic = """
         SELECT 
             league,
@@ -538,7 +492,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 print(f"├─ {row['league']} {row['season']}: {row['unique_players']} players | {row['total_records']} records | Ratio: {transfer_ratio:.2f} | Understat: {understat_pct:.1f}%")
             print()
         
-        # European players query with unique IDs
         query_players_european = """
         SELECT 
             competition,
@@ -563,7 +516,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 print(f"├─ {row['competition']} {row['season']}: {row['unique_players']} players | {row['total_records']} records | Ratio: {transfer_ratio:.2f}")
             print()
         
-        # Domestic teams query with unique IDs
         query_teams_domestic = """
         SELECT 
             league,
@@ -588,7 +540,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 print(f"├─ {row['league']} {row['season']}: {row['unique_teams']} teams | Understat: {understat_pct:.1f}%")
             print()
         
-        # European teams query with unique IDs
         query_teams_european = """
         SELECT 
             competition,
@@ -611,7 +562,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 print(f"├─ {row['competition']} {row['season']}: {row['unique_teams']} teams")
             print()
 
-        # Extras players query with unique IDs
         query_players_extras = """
         SELECT
             league,
@@ -639,11 +589,9 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                     print(f"├─ {row['league']} {row['season']}: {row['unique_players']} players | {row['total_records']} records | Ratio: {transfer_ratio:.2f} | Understat: {understat_pct:.1f}%")
                 print()
         except Exception:
-            # Table doesn't exist yet
             players_extras = pd.DataFrame()
             results['players_extras'] = players_extras
 
-        # Extras teams query with unique IDs
         query_teams_extras = """
         SELECT
             league,
@@ -669,15 +617,12 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                     print(f"├─ {row['league']} {row['season']}: {row['unique_teams']} teams | Understat: {understat_pct:.1f}%")
                 print()
         except Exception:
-            # Table doesn't exist yet
             teams_extras = pd.DataFrame()
             results['teams_extras'] = teams_extras
 
-        # Transfers report using unique IDs
         if verbose:
             print_section("TRANSFER ANALYSIS (Multi-team players)")
             
-            # Get transfers for domestic leagues
             transfers_domestic = db.get_transfers_by_unique_id('domestic')
             if not transfers_domestic.empty:
                 print("Domestic leagues:")
@@ -686,7 +631,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 if len(transfers_domestic) > 5:
                     print(f"└─ ... and {len(transfers_domestic) - 5} more transfers")
             
-            # Get transfers for european competitions
             transfers_european = db.get_transfers_by_unique_id('european')
             if not transfers_european.empty:
                 print("European competitions:")
@@ -699,7 +643,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                 print("└─ No transfers detected")
             print()
         
-        # Data quality summary
         if verbose:
             print_section("DATA QUALITY SUMMARY")
 
@@ -719,11 +662,9 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
                         row = result.iloc[0]
                         print(f"├─ {row['table_name']}: {row['total_records']} records | {row['unique_entities']} unique entities | Quality: {row['avg_quality_score']:.3f}")
                 except Exception:
-                    # Table doesn't exist or is empty, skip silently
                     pass
             print()
         
-        # Overall summary with unique counts
         if verbose:
             unique_counts = db.get_unique_entities_count()
 
@@ -747,7 +688,6 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
             total_all_records = total_domestic_records + total_european_records + total_domestic_teams + total_european_teams + total_extras_players + total_extras_teams
             print(f"├─ Total records: {total_all_records}")
 
-            # Transfer statistics
             total_transfers = len(transfers_domestic) + len(transfers_european) if 'transfers_domestic' in locals() and 'transfers_european' in locals() else 0
             if total_transfers > 0:
                 print(f"└─ Players with transfers: {total_transfers}")
@@ -765,7 +705,7 @@ def check_database_status(verbose: bool = True) -> Dict[str, pd.DataFrame]:
         return {}
 
 def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
-    """Check integrity of unique ID system."""
+    """Verify unique IDs: missing values, duplicates, and 16-char hex format."""
     if verbose:
         print_header("Unique ID System Integrity Check")
     
@@ -773,7 +713,6 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
     results = {}
     
     try:
-        # Check for missing unique IDs
         missing_ids_queries = {
             'players_domestic': "SELECT COUNT(*) as count FROM footballdecoded.players_domestic WHERE unique_player_id IS NULL",
             'players_european': "SELECT COUNT(*) as count FROM footballdecoded.players_european WHERE unique_player_id IS NULL",
@@ -793,11 +732,9 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
                     status = "OK" if missing_count == 0 else f"ERROR: {missing_count} missing"
                     print(f"├─ {table}: {status}")
             except Exception:
-                # Table doesn't exist, skip silently
                 continue
         print()
-        
-        # Check for duplicate unique IDs within same league/season/team
+
         print_section("Duplicate ID Check:")
         
         duplicate_queries = {
@@ -829,11 +766,9 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
                     status = "OK" if len(duplicates) == 0 else f"ERROR: {len(duplicates)} duplicates"
                     print(f"├─ {table}: {status}")
             except Exception:
-                # Table doesn't exist, skip silently
                 continue
         print()
-        
-        # Check ID format consistency
+
         print_section("ID Format Check:")
         
         format_queries = {
@@ -854,13 +789,12 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
                     status = "OK" if invalid_count == 0 else f"ERROR: {invalid_count} invalid format"
                     print(f"├─ {table}: {status}")
             except Exception:
-                # Table doesn't exist, skip silently
                 continue
-        
+
         print_footer()
         db.close()
         return results
-        
+
     except Exception as e:
         if verbose:
             print(f"Error checking ID integrity: {e}")
@@ -868,7 +802,7 @@ def check_unique_id_integrity(verbose: bool = True) -> Dict[str, any]:
         return {}
 
 def analyze_transfers(league: str = None, season: str = None, verbose: bool = True) -> pd.DataFrame:
-    """Detailed transfer analysis using unique ID system."""
+    """Analyze player transfers using unique IDs, optionally filtered by league/season."""
     if verbose:
         filter_text = f" for {league} {season}" if league and season else ""
         print_header(f"Transfer Analysis{filter_text}")
@@ -876,11 +810,8 @@ def analyze_transfers(league: str = None, season: str = None, verbose: bool = Tr
     db = get_db_manager()
     
     try:
-        # Get all transfers
         transfers_domestic = db.get_transfers_by_unique_id('domestic')
         transfers_european = db.get_transfers_by_unique_id('european')
-        
-        # Combine and filter
         all_transfers = pd.concat([transfers_domestic, transfers_european], ignore_index=True) if not transfers_domestic.empty or not transfers_european.empty else pd.DataFrame()
         
         if league:
@@ -898,7 +829,6 @@ def analyze_transfers(league: str = None, season: str = None, verbose: bool = Tr
                     print(f"   Teams: {transfer['teams_path']} | Quality: {transfer['avg_quality']:.3f}")
                 print()
                 
-                # Statistics
                 print_section("Transfer Statistics:")
                 print(f"├─ Average teams per transfer: {all_transfers['teams_count'].mean():.2f}")
                 print(f"├─ Max teams for one player: {all_transfers['teams_count'].max()}")
@@ -917,7 +847,7 @@ def analyze_transfers(league: str = None, season: str = None, verbose: bool = Tr
         return pd.DataFrame()
 
 def quick_status():
-    """Quick database status check with unique ID info."""
+    """Print compact overview: unique entity counts, record totals, transfers."""
     print_header("FootballDecoded Database Quick Status")
     
     db = get_db_manager()
@@ -932,7 +862,6 @@ def quick_status():
         print(f"└─ Unique european teams: {unique_counts.get('unique_european_teams', 0)}")
         print()
         
-        # Total records
         tables = [
             ('players_domestic', 'Domestic player records'),
             ('players_european', 'European player records'),
@@ -956,7 +885,6 @@ def quick_status():
         print(f"└─ TOTAL RECORDS: {total_records}")
         print()
         
-        # Quick transfer count
         transfers_domestic = db.get_transfers_by_unique_id('domestic')
         transfers_european = db.get_transfers_by_unique_id('european')
         total_transfers = len(transfers_domestic) + len(transfers_european)
@@ -971,13 +899,9 @@ def quick_status():
         print(f"└─ Error: {e}")
         db.close()
 
-# ====================================================================
-# MAIN EXECUTION
-# ====================================================================
-
 if __name__ == "__main__":
     import sys
-    
+
     if len(sys.argv) > 1:
         if sys.argv[1] == '--quick':
             quick_status()
@@ -987,32 +911,32 @@ if __name__ == "__main__":
             analyze_transfers(verbose=True)
         elif sys.argv[1] == '--problems':
             problems = detect_data_problems(verbose=True)
-            print(f"\n🚨 Problemas críticos: {len(problems['critical'])}")
-            print(f"⚠️ Advertencias: {len(problems['warning'])}")
-            print(f"ℹ️ Info: {len(problems['info'])}")
+            print(f"\nCritical issues: {len(problems['critical'])}")
+            print(f"Warnings: {len(problems['warning'])}")
+            print(f"Info: {len(problems['info'])}")
         elif sys.argv[1] == '--health':
             score = calculate_health_score(verbose=True)
-            print(f"\n💚 Health Score: {score}/100")
+            print(f"\nHealth Score: {score}/100")
         elif sys.argv[1] == '--cleanup':
-            print("🧹 Iniciando limpieza automática...")
+            print("Starting auto-cleanup...")
             auto_cleanup_database()
         elif sys.argv[1] == '--full':
-            print("🔍 Análisis completo de la base de datos\n")
+            print("Full database analysis\n")
             check_database_status(verbose=True)
             print("\n" + "="*60)
             problems = detect_data_problems(verbose=True)
             print("\n" + "="*60)
             score = calculate_health_score(verbose=True)
-            print(f"\n💚 Health Score Final: {score}/100")
+            print(f"\nFinal Health Score: {score}/100")
         else:
             print("Usage: python database_checker.py [--quick|--integrity|--transfers|--problems|--health|--cleanup|--full]")
-            print("\nOpciones:")
-            print("  --quick      Estado rápido de tablas")
-            print("  --integrity  Verificar integridad de IDs únicos")
-            print("  --transfers  Analizar transferencias")
-            print("  --problems   Detectar problemas en los datos")
-            print("  --health     Calcular score de salud (0-100)")
-            print("  --cleanup    Limpiar datos corruptos automáticamente")
-            print("  --full       Análisis completo con todas las opciones")
+            print("\nOptions:")
+            print("  --quick      Quick table status")
+            print("  --integrity  Verify unique ID integrity")
+            print("  --transfers  Analyze transfers")
+            print("  --problems   Detect data problems")
+            print("  --health     Calculate health score (0-100)")
+            print("  --cleanup    Auto-clean corrupt data")
+            print("  --full       Full analysis with all checks")
     else:
         check_database_status(verbose=True)
