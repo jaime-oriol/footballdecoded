@@ -648,7 +648,8 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
     positions_df['x_pitch'] = positions_df['avg_y_start']
     positions_df['y_pitch'] = positions_df['avg_x_start']
     
-    # Color normalization ranges    min_connection_xt = -0.1
+    # Color normalization ranges
+    min_connection_xt = -0.1
     max_connection_xt = 0.2
     min_player_xt = 0.0
     max_player_xt = 0.08
@@ -656,51 +657,50 @@ def plot_pass_network_first_half(network_csv_path, info_csv_path, aggregates_csv
 
     plt.style.use('default')
     fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400, facecolor=BACKGROUND_COLOR)
-    
+
     teams = [home_team, away_team]
-    
+
     connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
     player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
-    
+
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
-        'deepskyblue', 'cyan', 'lawngreen', 'yellow', 
+        'deepskyblue', 'cyan', 'lawngreen', 'yellow',
         'gold', 'lightpink', 'tomato'
     ])
-    
+
     for i, team in enumerate(teams):
         ax[i].set_facecolor(BACKGROUND_COLOR)
-        
-        pitch = VerticalPitch(pitch_type='opta', 
+
+        pitch = VerticalPitch(pitch_type='opta',
                              pitch_color=PITCH_COLOR,
                              line_color='white',
-                             linewidth=1, 
+                             linewidth=1,
                              pad_bottom=4)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
-        
+
         team_positions = positions_df[positions_df['team'] == team].copy()
         team_connections = connections_df[connections_df['team'] == team].copy()
         team_player_data = filtered_aggregates[filtered_aggregates['team'] == team].copy()
-        
+
         if team_positions.empty or team_player_data.empty:
             continue
-        
+
         max_passes_team = team_player_data['passes_completed'].max() if not team_player_data.empty else 50
-        
+
         player_stats = {}
-        
+
         for _, player in team_positions.iterrows():
             x = player['x_pitch']
             y = player['y_pitch']
             player_name = player['source_player']
-            
+
             if player_name not in team_player_data['entity_name'].values:
                 continue
-            
+
             passes_completed, xthreat_per_pass = _calculate_period_stats(
                 events_df, player_name, 'first_half'
             )
-            
-            
+
             marker_size = calculate_node_size_period(passes_completed, max_passes_team)
             node_radius = get_node_radius(marker_size)
             
@@ -971,7 +971,8 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
     positions_df['x_pitch'] = positions_df['avg_y_start']
     positions_df['y_pitch'] = positions_df['avg_x_start']
     
-    # Color normalization ranges    min_connection_xt = -0.1
+    # Color normalization ranges
+    min_connection_xt = -0.1
     max_connection_xt = 0.2
     min_player_xt = 0.0
     max_player_xt = 0.08
@@ -979,51 +980,50 @@ def plot_pass_network_second_half(network_csv_path, info_csv_path, aggregates_cs
 
     plt.style.use('default')
     fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=400, facecolor=BACKGROUND_COLOR)
-    
+
     teams = [home_team, away_team]
-    
+
     connection_norm = Normalize(vmin=min_connection_xt, vmax=max_connection_xt)
     player_norm = Normalize(vmin=min_player_xt, vmax=max_player_xt)
-    
+
     node_cmap = mcolors.LinearSegmentedColormap.from_list("", [
-        'deepskyblue', 'cyan', 'lawngreen', 'yellow', 
+        'deepskyblue', 'cyan', 'lawngreen', 'yellow',
         'gold', 'lightpink', 'tomato'
     ])
-    
+
     for i, team in enumerate(teams):
         ax[i].set_facecolor(BACKGROUND_COLOR)
-        
-        pitch = VerticalPitch(pitch_type='opta', 
+
+        pitch = VerticalPitch(pitch_type='opta',
                              pitch_color=PITCH_COLOR,
                              line_color='white',
-                             linewidth=1, 
+                             linewidth=1,
                              pad_bottom=4)
         pitch.draw(ax=ax[i], constrained_layout=False, tight_layout=False)
-        
+
         team_positions = positions_df[positions_df['team'] == team].copy()
         team_connections = connections_df[connections_df['team'] == team].copy()
         team_player_data = filtered_aggregates[filtered_aggregates['team'] == team].copy()
-        
+
         if team_positions.empty or team_player_data.empty:
             continue
-        
+
         max_passes_team = team_player_data['passes_completed'].max() if not team_player_data.empty else 50
-        
+
         player_stats = {}
-        
+
         for _, player in team_positions.iterrows():
             x = player['x_pitch']
             y = player['y_pitch']
             player_name = player['source_player']
-            
+
             if player_name not in team_player_data['entity_name'].values:
                 continue
-            
+
             passes_completed, xthreat_per_pass = _calculate_period_stats(
                 events_df, player_name, 'second_half'
             )
-            
-            
+
             marker_size = calculate_node_size_period(passes_completed, max_passes_team)
             node_radius = get_node_radius(marker_size)
             

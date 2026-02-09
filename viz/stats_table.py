@@ -20,7 +20,6 @@ def _format_player_name(name: str, max_length: int = 17) -> str:
     if len(name) <= max_length:
         return name
 
-    # Split name into parts
     parts = name.split()
 
     if len(parts) < 2:
@@ -278,17 +277,18 @@ def _create_passes_field(
                        arrowprops=dict(arrowstyle='->', color=success_color,
                                      alpha=0.9, lw=2.0, connectionstyle="arc3,rad=0.05"))
 
+    # Failed passes drawn twice: black outline underneath for contrast, then colored on top
     if len(failed) > 0:
         for _, pass_event in failed.iterrows():
-            ax.annotate('', 
-                       xy=(pass_event['end_y'], pass_event['end_x']), 
+            ax.annotate('',
+                       xy=(pass_event['end_y'], pass_event['end_x']),
                        xytext=(pass_event['y'], pass_event['x']),
-                       arrowprops=dict(arrowstyle='->', color='black', 
+                       arrowprops=dict(arrowstyle='->', color='black',
                                      alpha=1.0, lw=2.5, connectionstyle="arc3,rad=0.05"))
-            ax.annotate('', 
-                       xy=(pass_event['end_y'], pass_event['end_x']), 
+            ax.annotate('',
+                       xy=(pass_event['end_y'], pass_event['end_x']),
                        xytext=(pass_event['y'], pass_event['x']),
-                       arrowprops=dict(arrowstyle='->', color=failure_color, 
+                       arrowprops=dict(arrowstyle='->', color=failure_color,
                                      alpha=0.9, lw=1.8, connectionstyle="arc3,rad=0.05"))
     
     ax.set_title(title, color='white', fontsize=12, pad=3, family='DejaVu Sans')

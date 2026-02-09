@@ -397,7 +397,6 @@ def _create_traditional_radar(df_data, player_1_data, player_2_data, metrics, me
         y_coords_1 = [v[1] for v in vertices_1_closed]
         ax.plot(x_coords_1, y_coords_1, color=colors[0], linewidth=3, zorder=3)
         
-        # Player 2
         vertices_2 = get_radar_coordinates(player_2_values, ranges, inverse_metrics)
         polygon_2 = Polygon(vertices_2, fc=colors[1], alpha=0.35, zorder=2)
         ax.add_patch(polygon_2)

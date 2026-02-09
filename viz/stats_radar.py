@@ -33,10 +33,8 @@ def _shorten_long_name(name, max_length=13):
     
     parts = name.split()
     if len(parts) >= 2:
-        # Return first initial + last name
         return f"{parts[0][0]}. {parts[-1]}"
     else:
-        # If single name, truncate if too long
         return name[:max_length] + "..." if len(name) > max_length else name
 
 # Fixed dimensions for radar integration alignment
@@ -75,12 +73,10 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.set_ylim(0, 15)
     ax.axis('off')
 
-    # Layout coordinates
     y_start = 14.5
     logo1_x, text1_x, p1_value_x, p1_pct_x = 3.0, 3.4, 4.1, 4.5
     logo2_x, text2_x, p2_value_x, p2_pct_x = 6.2, 6.2, 6.7, 7.1
     
-    # Player 1 header
     team1_name = p1.get('team') or p1.get('team_name', '')
     player1_id = p1.get('unique_player_id', '')
     logo_key = player1_id if (team_logos and player1_id in team_logos) else team1_name
@@ -101,7 +97,6 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.text(text1_x, y_start - 0.425, f"{p1['league']} {p1['season']}", 
             fontsize=10, color='white', alpha=0.9, ha='left', fontweight='regular', family='DejaVu Sans')
     
-    # Player 2 header
     if p2 is not None:
         team2_name = p2.get('team') or p2.get('team_name', '')
         player2_id = p2.get('unique_player_id', '')
@@ -132,7 +127,6 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     y_line = y_start - 0.7
     ax.plot([0.5, 8.5], [y_line, y_line], color='grey', linewidth=0.5, alpha=0.6)
     
-    # Context: minutes and matches
     y_context = y_start - 1.2
     ax.text(0.7, y_context, "Minutes Played", fontsize=10, color='white', fontweight='bold', family='DejaVu Sans')
     min1 = int(p1.get('minutes_played', 0))
@@ -156,7 +150,6 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     y_line = y_context - 0.3
     ax.plot([0.5, 8.5], [y_line, y_line], color='grey', linewidth=0.5, alpha=0.6)
     
-    # Metric rows
     y_metrics = y_context - 0.7
     row_height = 1.0
     
@@ -230,7 +223,6 @@ def create_stats_table(df_data, player_1_id, metrics, metric_titles,
     ax.text(0.7, footer_y, f"*{footer_text}", 
             fontsize=10, color='white', ha='left', style='italic', fontweight='bold', va='center', family='DejaVu Sans')
     
-    # Percentile legend
     legend_y = footer_y - 0.8
     
     intervals = [(0, 20), (21, 40), (41, 60), (61, 80), (81, 100)]
@@ -291,6 +283,7 @@ def combine_radar_and_table(radar_path, table_path, output_path='combined_visual
     table_img = Image.open(table_path)
 
     if radar_type == 'auto':
+        # Traditional radars are near-square (~0.9); swarm radars are wider
         aspect_ratio = radar_img.size[0] / radar_img.size[1]
         radar_type = 'traditional' if 0.8 <= aspect_ratio <= 1.0 else 'swarm'
 
