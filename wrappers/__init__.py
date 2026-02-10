@@ -9,6 +9,7 @@ Sources:
     understat_data     -- Advanced xG metrics (Big 5 leagues only)
     whoscored_data     -- Spatial event data with x/y coordinates
     transfermarkt_data -- Player profiles, market values, contract details
+    elo_data           -- National team ELO rankings and match history
 """
 
 __version__ = "1.0.0"
@@ -78,6 +79,16 @@ from .transfermarkt_data import (
     clear_cache as transfermarkt_clear_cache,
 )
 
+# ELO Ratings
+from .elo_data import (
+    get_rankings as elo_get_rankings,
+    get_latest_matches as elo_get_latest_matches,
+    get_matches_for_year as elo_get_matches_for_year,
+    get_matches_range as elo_get_matches_range,
+    get_h2h as elo_get_h2h,
+    get_team_rating as elo_get_team_rating,
+)
+
 __all__ = [
     # FotMob
     "fotmob_extract_data",
@@ -132,13 +143,20 @@ __all__ = [
     # Transfermarkt
     "transfermarkt_get_player",
     "transfermarkt_clear_cache",
+    # ELO Ratings
+    "elo_get_rankings",
+    "elo_get_latest_matches",
+    "elo_get_matches_for_year",
+    "elo_get_matches_range",
+    "elo_get_h2h",
+    "elo_get_team_rating",
 ]
 
 
 def check_available_modules() -> dict[str, str]:
     """Return import status of each wrapper module (for debugging)."""
     status = {}
-    for name in ("fotmob_data", "understat_data", "whoscored_data"):
+    for name in ("fotmob_data", "understat_data", "whoscored_data", "elo_data"):
         try:
             __import__(f"{__package__}.{name}")
             status[name.removesuffix("_data")] = "Available"

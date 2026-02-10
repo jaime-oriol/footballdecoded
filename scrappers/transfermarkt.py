@@ -206,6 +206,7 @@ class Transfermarkt(BaseRequestsReader):
             "player_id": player_id,
             "position_specific": None,
             "primary_foot": None,
+            "nationality": None,
             "market_value_eur": None,
             "contract_start_date": None,
             "contract_end_date": None,
@@ -215,6 +216,7 @@ class Transfermarkt(BaseRequestsReader):
 
         profile["position_specific"] = self._extract_position(tree)
         profile["primary_foot"] = self._extract_foot(tree)
+        profile["nationality"] = self._extract_nationality(tree)
 
         if season:
             profile["market_value_eur"] = self._get_market_value_for_season(player_id, season)
@@ -324,6 +326,24 @@ class Transfermarkt(BaseRequestsReader):
                 return FOOT_MAPPING.get(foot, None)
         except Exception as e:
             logger.debug(f"Error extracting foot: {e}")
+        return None
+
+    def _extract_nationality(self, tree) -> Optional[str]:
+        """Extract primary nationality (first citizenship listed on profile)."""
+        try:
+            # Transfermarkt lists citizenship with flag images; text is the country name
+            xpath = "//span[text()='Citizenship:']//following::span[1]//img/@title"
+            flags = tree.xpath(xpath)
+            if flags:
+                return flags[0].strip()
+            # Fallback: text node instead of img title
+            xpath_text = "//span[text()='Citizenship:']//following::span[1]//text()"
+            texts = tree.xpath(xpath_text)
+            if texts:
+                name = next((t.strip() for t in texts if t.strip()), None)
+                return name
+        except Exception as e:
+            logger.debug(f"Error extracting nationality: {e}")
         return None
 
     def _extract_market_value(self, tree) -> Optional[float]:

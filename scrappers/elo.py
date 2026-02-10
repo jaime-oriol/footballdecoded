@@ -1,11 +1,12 @@
 """ELO ratings scraper for national football teams from eloratings.net.
 
-Fetches current rankings and recent match results via TSV endpoints.
+Fetches current rankings, recent and historical match results via TSV endpoints.
 All metric columns are prefixed with ``elo_``.
 
 Data sources:
     - ``{year}.tsv``: Rankings with 33 columns (rating, rank, changes, match record)
     - ``latest.tsv``: Recent match results with pre/post ratings
+    - ``{year}_results.tsv``: Historical match results for a specific year
     - ``en.teams.tsv``: Country code to name mapping (331 entries)
     - ``en.tournaments.tsv``: Tournament code to name mapping
 """
@@ -185,6 +186,75 @@ class EloRatings:
         filepath = self.data_dir / "latest.tsv"
         url = f"{ELO_BASE_URL}/latest.tsv"
         raw = self._fetch(url, filepath, max_age_days=1)
+        return self._parse_matches(raw)
+
+    def read_matches_for_year(self, year: int) -> pd.DataFrame:
+        """Fetch international match results for a specific year.
+
+        Parameters
+        ----------
+        year : int
+            Year to fetch (e.g. 2022).
+
+        Returns
+        -------
+        pd.DataFrame
+            One row per match, same format as read_latest_matches().
+        """
+        filepath = self.data_dir / f"matches_{year}.tsv"
+        url = f"{ELO_BASE_URL}/{year}_results.tsv"
+        raw = self._fetch(url, filepath, max_age_days=30)
+        df = self._parse_matches(raw)
+        if not df.empty:
+            logger.info("ELO matches for %d: %d results", year, len(df))
+        return df
+
+    def read_matches_range(self, start_year: int, end_year: int) -> pd.DataFrame:
+        """Fetch match results across multiple years.
+
+        Parameters
+        ----------
+        start_year : int
+            First year (inclusive).
+        end_year : int
+            Last year (inclusive).
+
+        Returns
+        -------
+        pd.DataFrame
+            Combined match results sorted by date descending.
+        """
+        frames = []
+        for year in range(start_year, end_year + 1):
+            try:
+                df = self.read_matches_for_year(year)
+                if not df.empty:
+                    frames.append(df)
+            except ConnectionError:
+                logger.warning("No match data available for year %d", year)
+        if not frames:
+            return pd.DataFrame()
+        combined = pd.concat(frames, ignore_index=True)
+        combined = combined.drop_duplicates(
+            subset=["date", "team1_code", "team2_code"], keep="first"
+        )
+        combined = combined.sort_values("date", ascending=False).reset_index(drop=True)
+        logger.info("ELO matches %d-%d: %d total results", start_year, end_year, len(combined))
+        return combined
+
+    def _parse_matches(self, raw: str) -> pd.DataFrame:
+        """Parse TSV match data into DataFrame.
+
+        Parameters
+        ----------
+        raw : str
+            Raw TSV text with 16 fields per line (MATCH_COLUMNS format).
+
+        Returns
+        -------
+        pd.DataFrame
+            Parsed match results.
+        """
         team_map = self._get_team_map()
         tournament_map = self._get_tournament_map()
 
@@ -242,7 +312,7 @@ class EloRatings:
         ]
         col_order = [c for c in col_order if c in df.columns]
         df = df[col_order].sort_values("date", ascending=False).reset_index(drop=True)
-        logger.info("ELO matches: %d results fetched", len(df))
+        logger.info("ELO matches: %d results parsed", len(df))
         return df
 
     # ------------------------------------------------------------------
