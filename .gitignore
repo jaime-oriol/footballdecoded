@@ -33,6 +33,7 @@ pip-log.txt
 *.mo
 
 # Data
+exports/
 .ipynb_checkpoints
 blog/notebooks/data/
 blog/notebooks/processing_log.csv
