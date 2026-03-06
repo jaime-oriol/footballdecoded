@@ -66,10 +66,19 @@ FootballDecoded/
 │   ├── goals_origin.py     # Goal origin maps (175 lines)
 │   └── assist_passes.py    # Assist pass visualizations (162 lines)
 │
-└── blog/                   # Assets & Utilities
-    ├── logos/              # Team logos (6 leagues)
-    ├── caras/              # Player face photos
-    └── get_match_ids.py    # Match ID extractor: WhoScored/Understat (221 lines)
+├── blog/                   # Assets & Utilities
+│   ├── logos/              # Team logos (6 leagues)
+│   ├── caras/              # Player face photos
+│   └── get_match_ids.py    # Match ID extractor: WhoScored/Understat (221 lines)
+│
+├── public_data/            # Public tracking/event datasets (git-ignored, ~18 GB)
+│   ├── statsbomb/          # StatsBomb open-data: 3,464 event files + 326 freeze-frame 360 files
+│   ├── dfl/                # DFL Bundesliga TRACAB 25Hz: 7 matches (match info + events + tracking XML)
+│   ├── wyscout/            # Wyscout Big 5 + EC + WC 2017/18: ~3M events, 7 leagues (JSON)
+│   ├── metrica/            # Metrica Sports sample: 3 tracking games (CSV + JSON)
+│   └── skillcorner/        # SkillCorner A-League 2024/25: 10 broadcast tracking matches (CSV + JSONL)
+│
+└── articulo.txt            # Blog portfolio plan: 4 technical articles (pitch control, tracking, xT, pressing)
 ```
 
 ## Quick Start
@@ -556,6 +565,31 @@ Each record includes:
 - User-Agent rotation
 - Aggressive file caching (30 days)
 
+## Public Data Portfolio
+
+Datasets in `public_data/` (git-ignored). All CC-BY 4.0 or equivalent open license.
+
+| Folder | Source | Content | Size |
+|--------|--------|---------|------|
+| `statsbomb/` | StatsBomb open-data | 3,464 event files + **326 freeze-frame 360 files** (21 competitions: Bundesliga 23/24, WC 2022, La Liga 20/21, Ligue 1, MLS, Euros, WWC...) | 14.3 GB |
+| `dfl/` | DFL/Bundesliga (Bassek et al. 2025, Nature Sci Data) | **7 Bundesliga matches TRACAB 25Hz**: match info + raw events + raw positions XML | 2.63 GB |
+| `wyscout/` | Wyscout (Pappalardo et al. 2019) | ~3M events across 5 Big 5 + EC + WC 2017/18, players, teams, coaches, PlayerRank | 1.05 GB |
+| `metrica/` | Metrica Sports | 3 sample games: tracking CSV (home+away) + events JSON + metadata XML | 0.24 GB |
+| `skillcorner/` | SkillCorner open-data | 10 A-League 2024/25 matches broadcast tracking: dynamic events CSV + phases CSV + extrapolated tracking JSONL | 54 MB |
+
+**Coverage summary:**
+- **Freeze frames** (22 player positions at event moment): StatsBomb 360 — 326 matches
+- **Official elite tracking** (25Hz, all players): DFL — 7 Bundesliga matches
+- **Broadcast tracking** (10fps, visible players only): SkillCorner — 10 A-League matches
+- **Event data at scale** (~3M events): Wyscout — Big 5 + EC + WC
+- **Continuous tracking reference**: Metrica — 3 sample games
+
+**Planned blog articles**: see `articulo.txt`
+1. Pitch Control from-scratch (Spearman 2018) — StatsBomb 360
+2. Elite tracking: velocities, accelerations, off-ball runs — DFL TRACAB
+3. xT / Possession Value (Markov chain) — Wyscout at scale
+4. Pressing intensity: PPDA, defensive line, triggers — StatsBomb + Wyscout
+
 ## References
 
 ### Internal Docs
@@ -564,6 +598,7 @@ Each record includes:
 - **Visualization**: viz/README.md
 - **Database v2 Schema**: database/setup_v2.sql
 - **Database v1 Schema**: database/setup.sql, database/setup_extras.sql (legacy)
+- **Blog article plan**: articulo.txt
 
 ### External
 
@@ -572,6 +607,11 @@ Each record includes:
 - [WhoScored](https://www.whoscored.com/)
 - [Transfermarkt](https://www.transfermarkt.com/)
 - [PostgreSQL Wiki](https://wiki.postgresql.org/wiki/Main_Page)
+- [StatsBomb open-data](https://github.com/statsbomb/open-data)
+- [DFL dataset (Figshare 28196177)](https://figshare.com/articles/dataset/28196177)
+- [Wyscout dataset (Figshare collection 4415000)](https://figshare.com/collections/4415000)
+- [SkillCorner open-data](https://github.com/SkillCorner/opendata)
+- [Metrica Sports sample-data](https://github.com/metrica-sports/sample-data)
 
 ---
 
